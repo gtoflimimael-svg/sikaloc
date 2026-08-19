@@ -443,7 +443,10 @@
   }
 
   .badge-neutral {
-    background-color: var(--color-surface-card);
+    /* `surface-card` est aussi le fond des cartes : un badge neutre posé dans
+       une carte y devenait invisible, dans les deux thèmes. Un cran plus
+       appuyé le détache sans le rendre criard. */
+    background-color: var(--color-surface-cream-strong);
     color: var(--color-ink);
   }
 
