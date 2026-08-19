@@ -62,7 +62,7 @@ export default async function PageBaux({
               href={option.valeur === 'tous' ? '/app/baux' : `/app/baux?statut=${option.valeur}`}
               className={`rounded-pill px-lg py-sm text-body-sm font-semibold transition-colors ${
                 actif
-                  ? 'bg-ink text-on-dark'
+                  ? 'bg-primary text-on-primary'
                   : 'bg-canvas text-mute hover:text-ink border border-hairline'
               }`}
             >

@@ -120,6 +120,7 @@ export default async function PageLogements() {
                   <ActionConfirmee
                     action={supprimerLogement.bind(null, logement.id)}
                     libelle="Supprimer"
+                    varianteDeclencheur="tertiary"
                     titreConfirmation="Supprimer ce logement ?"
                     messageConfirmation="Cette action est définitive. Elle échouera si un bail y est rattaché."
                     libelleConfirmation="Supprimer définitivement"

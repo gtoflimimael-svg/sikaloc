@@ -66,7 +66,7 @@ export default async function PageLocataires() {
                       </p>
                       <div className="mt-sm">
                         {actifs > 0 ? (
-                          <Badge ton="positive">
+                          <Badge ton="neutral">
                             {actifs} bail{actifs > 1 ? 'x' : ''} actif{actifs > 1 ? 's' : ''}
                           </Badge>
                         ) : (
@@ -86,6 +86,7 @@ export default async function PageLocataires() {
                     <ActionConfirmee
                       action={supprimerLocataire.bind(null, locataire.id)}
                       libelle="Supprimer"
+                      varianteDeclencheur="tertiary"
                       titreConfirmation={`Supprimer ${locataire.nom} ?`}
                       messageConfirmation="Cette action est définitive. Elle échouera si le locataire est rattaché à un bail — c'est la protection de vos historiques de paiement."
                       libelleConfirmation="Supprimer définitivement"

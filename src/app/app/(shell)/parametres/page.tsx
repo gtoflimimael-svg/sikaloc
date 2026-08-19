@@ -123,7 +123,7 @@ export default async function PageParametres({
               aria-current={estActif ? 'page' : undefined}
               className={`rounded-pill px-lg py-sm text-body-sm font-semibold transition-colors ${
                 estActif
-                  ? 'bg-ink text-on-dark'
+                  ? 'bg-primary text-on-primary'
                   : 'border border-hairline bg-canvas text-mute hover:text-ink'
               }`}
             >

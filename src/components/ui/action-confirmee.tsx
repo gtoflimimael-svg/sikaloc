@@ -20,6 +20,7 @@ export function ActionConfirmee({
   messageConfirmation,
   libelleConfirmation,
   variante = 'danger',
+  varianteDeclencheur,
   compact = true,
 }: {
   action: () => Promise<EtatFormulaire | void>
@@ -27,7 +28,15 @@ export function ActionConfirmee({
   titreConfirmation: string
   messageConfirmation: string
   libelleConfirmation?: string
+  /** Apparence du bouton de CONFIRMATION — celui qui agit vraiment. */
   variante?: 'danger' | 'secondary' | 'tertiary' | 'primary'
+  /**
+   * Apparence du DÉCLENCHEUR, quand elle doit différer. Dans une liste, un
+   * bouton rouge plein par ligne fait de l'action la plus dangereuse la plus
+   * voyante : on préfère un déclencheur discret et une confirmation franche.
+   * Par défaut, identique à `variante`.
+   */
+  varianteDeclencheur?: 'danger' | 'secondary' | 'tertiary' | 'primary'
   compact?: boolean
 }) {
   const [confirme, setConfirme] = useState(false)
@@ -52,7 +61,7 @@ export function ActionConfirmee({
         <button
           type="button"
           onClick={() => setConfirme(true)}
-          className={`btn btn-${variante} ${compact ? 'btn-sm' : ''}`}
+          className={`btn btn-${varianteDeclencheur ?? variante} ${compact ? 'btn-sm' : ''}`}
         >
           {libelle}
         </button>

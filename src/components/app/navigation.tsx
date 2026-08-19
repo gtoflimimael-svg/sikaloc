@@ -176,7 +176,7 @@ export function EnTeteMobile({
             type="button"
             aria-label="Fermer le menu"
             onClick={() => setOuvert(false)}
-            className="absolute inset-0 bg-ink/40"
+            className="absolute inset-0 bg-surface-dark/60"
           />
           <div className="relative flex h-full w-[280px] flex-col bg-canvas p-lg">
             <div className="mb-xl flex items-center justify-between px-md pt-sm">

@@ -137,8 +137,8 @@ export default async function PageTableauDeBord({
         </div>
 
         {impayes.length === 0 ? (
-          <div className="card-sage">
-            <p className="text-body-md font-semibold text-ink-deep">
+          <div className="rounded-lg bg-positive-pale p-xl">
+            <p className="text-body-md font-semibold text-positive-deep">
               Aucun loyer en retard.
             </p>
             <p className="mt-xs text-body-sm text-body">
