@@ -81,7 +81,16 @@ export default async function PageTableauDeBord({
       </div>
 
       {/* ── Métriques (§6.1.3) ─────────────────────────────────────────── */}
-      <section className="grid gap-lg sm:grid-cols-2 xl:grid-cols-4">
+      {/*
+        Deux colonnes au maximum, jamais quatre. Le conteneur de l'application
+        est plafonné à 1024 px : à quatre colonnes, chaque carte tombe à ~174 px
+        utiles, alors qu'un montant FCFA en display fait 244 px — et 300 px dès
+        qu'il passe à sept chiffres. Or `formaterFCFA` produit des espaces
+        insécables : le montant ne peut pas s'enrouler, il déborde. Réduire la
+        police ne ferait que repousser la casse au prochain bailleur au parc
+        plus important.
+      */}
+      <section className="grid gap-lg sm:grid-cols-2">
         <CarteMetrique
           label="Taux d'occupation"
           valeur={`${Number(metriques?.taux_occupation ?? 0).toLocaleString('fr-FR')} %`}
