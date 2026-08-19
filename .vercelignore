@@ -1,0 +1,28 @@
+# Secrets — ne doivent jamais quitter la machine.
+.env
+.env.local
+.env.*.local
+
+# Inutiles au build ou au runtime.
+#
+# Les motifs sont ancrés par une barre oblique de tête : sans elle, « supabase »
+# exclurait aussi `src/lib/supabase/`, et le build échouerait sur des modules
+# introuvables — c'est exactement ce qui s'est produit au premier essai.
+node_modules
+/.next
+/supabase
+/scripts
+/docs
+/apercu-*.pdf
+/AGENTS.md
+/CLAUDE.md
+/README.md
+
+# Outillage du design system et sauvegardes horodatées : utiles en local,
+# sans objet au build. Les exclure allège l'envoi, ce qui compte sur une
+# connexion instable.
+/.ds-sync
+/ds-bundle
+/.design-sync
+/.design-sync.backup-*
+/.backup-site-*

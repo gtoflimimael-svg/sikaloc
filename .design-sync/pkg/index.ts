@@ -1,0 +1,22 @@
+// Bundle + declaration entry for the Sikaloc design system sync.
+// Re-exports every component the design tool should be able to build with.
+
+export * from '../../src/components/ui/action-confirmee'
+export * from '../../src/components/ui/boutons'
+export * from '../../src/components/ui/champs'
+export * from '../../src/components/ui/logo'
+export * from '../../src/components/ui/retours'
+export * from '../../src/components/app/bandeau-abonnement'
+export * from '../../src/components/app/carte-metrique'
+export * from '../../src/components/app/fenetre-correction'
+export * from '../../src/components/app/formulaire-bail'
+export * from '../../src/components/app/formulaire-locataire'
+export * from '../../src/components/app/formulaire-logement'
+export * from '../../src/components/app/formulaire-paiement'
+export * from '../../src/components/app/menu-compte'
+export * from '../../src/components/app/navigation'
+export * from '../../src/components/app/onboarding'
+export * from '../../src/components/app/parametres'
+export * from '../../src/components/auth/carte-auth'
+export * from '../../src/components/auth/formulaires'
+export * from '../../src/components/marketing/pied-de-page'

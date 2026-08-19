@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/cron/cycle-grace",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/notifications",
+      "schedule": "15 2 * * *"
+    },
+    {
+      "path": "/api/cron/purge",
+      "schedule": "30 2 * * *"
+    }
+  ]
+}

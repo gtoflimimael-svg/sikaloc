@@ -1,0 +1,37 @@
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.pem
+
+# env
+.env
+.env*.local
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# supabase
+supabase/.temp/
+supabase/.branches/
+
+# Aperçus PDF régénérables via `npm run verifier:quittance`
+apercu-*.pdf
+
+# design-sync (claude.ai/design)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.design-sync/pkg/types/
+
+# Sauvegardes horodatées créées avant les gros chantiers — locales, jamais versionnées.
+.design-sync.backup-*/
+.backup-site-*/

@@ -1,0 +1,658 @@
+@import 'tailwindcss';
+
+/* ============================================================================
+   Sikaloc — Design System
+   Traduction directe de « new_design_sikaloc/DESIGN-Sikaloc.md » (alpha).
+   Identité indigo, canvas lavande, display serif Copernicus.
+   Règle d'or : aucun hex inline dans les composants, uniquement ces tokens.
+   ========================================================================= */
+
+@theme {
+  /* ── Couleurs : marque ────────────────────────────────────────────────── */
+  --color-primary: #5c5ccc;
+  --color-on-primary: #ffffff;
+  --color-primary-active: #3e3ea9;
+  --color-primary-disabled: #d8d8e6;
+  --color-primary-neutral: #8f8fdd;
+  --color-primary-pale: #dedeef;
+  --color-primary-on-dark: #9a9aef;
+
+  /* ── Couleurs : accents ───────────────────────────────────────────────── */
+  --color-accent-teal: #5d5db8;
+  --color-accent-amber: #5a5ae8;
+
+  /* ── Couleurs : texte ─────────────────────────────────────────────────── */
+  --color-ink: #131314;
+  --color-ink-deep: #3e3ea9;
+  --color-body-strong: #232325;
+  --color-body: #3a3a3d;
+  --color-mute: #64646c;
+  --color-muted: #64646c;
+  --color-mute-soft: #82828e;
+  --color-muted-soft: #82828e;
+  --color-on-dark: #e8e8f5;
+  --color-on-dark-mute: #9696a0;
+  --color-on-dark-soft: #9696a0;
+
+  /* ── Couleurs : surfaces ──────────────────────────────────────────────── */
+  /* `canvas` est la surface haute (cartes, champs) ; `canvas-soft` le sol de
+     page. Le blanc pur n'existe pas dans ce système. */
+  --color-canvas: #f4f4fb;
+  --color-canvas-soft: #e8e8f5;
+  --color-canvas-sage: #d2d2e8;
+  --color-surface-soft: #e8e8f5;
+  --color-surface-card: #dedeef;
+  --color-surface-cream-strong: #d2d2e8;
+  --color-surface-elevated: #dedeef;
+  --color-surface-dark: #151518;
+  --color-surface-dark-elevated: #202025;
+  --color-surface-dark-soft: #1b1b1f;
+
+  /* ── Couleurs : sémantique ────────────────────────────────────────────── */
+  /* Inchangées par le rebrand : le vert de succès n'est plus la couleur de
+     marque, il redevient purement sémantique. */
+  --color-positive: #5db872;
+  --color-success: #5db872;
+  --color-positive-pale: #e3f3e7;
+  --color-positive-deep: #2f6b3f;
+  --color-warning: #d4a017;
+  --color-warning-deep: #a37b12;
+  --color-warning-content: #6b5210;
+  --color-warning-pale: #faf0d4;
+  --color-negative: #c64545;
+  --color-error: #c64545;
+  --color-negative-pale: #f7e3e3;
+  --color-negative-deep: #a63a3a;
+  --color-negative-darkest: #8f2f2f;
+  --color-negative-bg: #3a1414;
+
+  /* ── Couleurs : filets ────────────────────────────────────────────────── */
+  --color-hairline: #d8d8e6;
+  --color-hairline-soft: #dfdfeb;
+  --color-hairline-strong: #c9c9dc;
+
+  /* ── Typographie ──────────────────────────────────────────────────────── */
+  /* StyreneB pour l'interface, Copernicus pour le display, JetBrains Mono pour
+     le technique — chargées par next/font dans layout.tsx.
+     Inter suit StyreneB dans la pile : les fichiers de marque ne contiennent
+     pas les caractères accentués (voir le commentaire de layout.tsx). */
+  --font-sans:
+    var(--font-styrene), var(--font-inter), 'Inter', system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-copernicus), Georgia, 'Times New Roman', serif;
+  --font-serif: var(--font-copernicus), Georgia, 'Times New Roman', serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Display — Copernicus, graisse 400, approches négatives. */
+  --text-display-mega: 80px;
+  --text-display-mega--line-height: 1.05;
+  --text-display-mega--letter-spacing: -2px;
+  --text-display-mega--font-weight: 400;
+
+  --text-display-xxl: 64px;
+  --text-display-xxl--line-height: 1.05;
+  --text-display-xxl--letter-spacing: -1.5px;
+  --text-display-xxl--font-weight: 400;
+
+  --text-display-xl: 48px;
+  --text-display-xl--line-height: 1.1;
+  --text-display-xl--letter-spacing: -1px;
+  --text-display-xl--font-weight: 400;
+
+  --text-display-lg: 36px;
+  --text-display-lg--line-height: 1.15;
+  --text-display-lg--letter-spacing: -0.5px;
+  --text-display-lg--font-weight: 400;
+
+  --text-display-md: 36px;
+  --text-display-md--line-height: 1.15;
+  --text-display-md--letter-spacing: -0.5px;
+  --text-display-md--font-weight: 400;
+
+  --text-display-sm: 28px;
+  --text-display-sm--line-height: 1.2;
+  --text-display-sm--letter-spacing: -0.3px;
+  --text-display-sm--font-weight: 400;
+
+  --text-display-xs: 22px;
+  --text-display-xs--line-height: 1.3;
+  --text-display-xs--font-weight: 500;
+
+  /* Titres et corps — StyreneB. */
+  --text-title-lg: 22px;
+  --text-title-lg--line-height: 1.3;
+  --text-title-lg--font-weight: 500;
+  --text-title-md: 18px;
+  --text-title-md--line-height: 1.4;
+  --text-title-md--font-weight: 500;
+  --text-title-sm: 16px;
+  --text-title-sm--line-height: 1.4;
+  --text-title-sm--font-weight: 500;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.55;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 1.55;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 1.55;
+
+  --text-caption: 13px;
+  --text-caption--line-height: 1.4;
+  --text-caption-uppercase: 12px;
+  --text-caption-uppercase--line-height: 1.4;
+  --text-caption-uppercase--letter-spacing: 1.5px;
+  --text-caption-uppercase--font-weight: 500;
+
+  --text-button: 14px;
+  --text-button--line-height: 1;
+  --text-button--font-weight: 500;
+  --text-nav-link: 14px;
+  --text-nav-link--line-height: 1.4;
+  --text-nav-link--font-weight: 500;
+  --text-code: 14px;
+  --text-code--line-height: 1.6;
+
+  /* ── Rayons ───────────────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* ── Espacements (base 4px) ───────────────────────────────────────────── */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-5xl: 96px;
+  --spacing-section: 96px;
+
+  /* ── Élévation ────────────────────────────────────────────────────────── */
+  /* Philosophie : la profondeur vient du contraste de surface, l'ombre est rare. */
+  --shadow-elevated: 0 2px 12px rgb(19 19 20 / 0.05);
+  --shadow-modal: 0 24px 48px rgb(19 19 20 / 0.14);
+
+  /* Philosophie : surface d'abord, ombre rare. */
+  --shadow-elevated: 0 4px 24px rgb(0 0 0 / 0.06);
+  --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.12);
+
+  /* ── Conteneurs ───────────────────────────────────────────────────────── */
+  --container-marketing: 1200px;
+  --container-app: 1024px;
+
+  /*
+   * ATTENTION — ne pas écrire `max-w-xl`, `max-w-2xl`, `max-w-md`…
+   *
+   * Les tokens d'espacement de Sikaloc (`--spacing-sm`, `--spacing-xl`, …)
+   * partagent leurs suffixes avec l'échelle de largeurs de Tailwind, et
+   * `--spacing-*` l'emporte : `max-w-xl` vaut 24 px et non 36 rem, ce qui
+   * réduit un paragraphe à un mot par ligne. Redéclarer `--container-xl` ne
+   * corrige rien, la priorité reste à l'espacement.
+   *
+   * Utiliser une largeur explicite — `max-w-[36rem]`, `max-w-[1200px]`.
+   */
+}
+
+/* ============================================================================
+   Base
+   ========================================================================= */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    /* Le canvas lavande est le sol de Sikaloc — jamais le blanc pur en fond de page. */
+    background-color: var(--color-canvas-soft);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tailwind n'attache pas de famille aux utilitaires `text-*` : les titres
+     display sont rattachés ici à Copernicus. */
+  .text-display-mega,
+  .text-display-xxl,
+  .text-display-xl,
+  .text-display-lg,
+  .text-display-md,
+  .text-display-sm {
+    font-family: var(--font-display);
+  }
+
+  /* Les montants FCFA s'alignent en colonne : chiffres tabulaires partout. */
+  .tabular,
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-pale);
+    color: var(--color-ink-deep);
+  }
+}
+
+/* ============================================================================
+   Composants — mappage 1:1 avec la section `components:` du design system.
+   ========================================================================= */
+
+@layer components {
+  /* ── Boutons — 40px, rayon md, StyreneB 14/500 ──────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    height: 40px;
+    padding: 12px 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: var(--text-button);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
+  }
+
+  .btn:disabled {
+    background-color: var(--color-primary-disabled);
+    color: var(--color-mute);
+    border-color: transparent;
+    cursor: not-allowed;
+  }
+
+  .btn-sm {
+    height: 32px;
+    padding: 8px 14px;
+    font-size: var(--text-caption);
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .btn-primary:hover:not(:disabled),
+  .btn-primary:active:not(:disabled) {
+    background-color: var(--color-primary-active);
+  }
+
+  .btn-secondary {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    border-color: var(--color-hairline);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-surface-card);
+  }
+
+  .btn-tertiary {
+    background-color: transparent;
+    color: var(--color-ink);
+  }
+
+  .btn-tertiary:hover:not(:disabled) {
+    background-color: var(--color-surface-card);
+  }
+
+  .btn-danger {
+    background-color: var(--color-negative);
+    color: #ffffff;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--color-negative-deep);
+  }
+
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+
+  /* ── Champs — 40px, rayon md ────────────────────────────────────────────── */
+  .field-label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-body-strong);
+    font-size: var(--text-body-sm);
+    font-weight: 500;
+  }
+
+  .field-hint {
+    margin-top: var(--spacing-xs);
+    color: var(--color-mute);
+    font-size: var(--text-caption);
+  }
+
+  .field-error {
+    margin-top: var(--spacing-xs);
+    color: var(--color-negative);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  .input {
+    display: block;
+    width: 100%;
+    height: 40px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: inherit;
+    font-size: var(--text-body-md);
+    line-height: 1.4;
+  }
+
+  .input::placeholder {
+    color: var(--color-mute-soft);
+  }
+
+  .input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
+  }
+
+  select.input {
+    /* Le chevron natif suffit ; on garde la hauteur de champ canonique. */
+    appearance: auto;
+  }
+
+  /* ── Cartes — la profondeur vient du contraste de surface ───────────────── */
+  .card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+  }
+
+  .card-lg {
+    padding: var(--spacing-xl);
+  }
+
+  .card-sage {
+    background-color: var(--color-surface-cream-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+  }
+
+  .card-dark {
+    background-color: var(--color-surface-dark);
+    color: var(--color-on-dark);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+  }
+
+  /* ── Badges — pilule 4px/12px ───────────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .badge-positive {
+    background-color: var(--color-positive-pale);
+    color: var(--color-positive-deep);
+  }
+
+  .badge-warning {
+    background-color: var(--color-warning-pale);
+    color: var(--color-warning-content);
+  }
+
+  .badge-negative {
+    background-color: var(--color-negative-pale);
+    color: var(--color-negative-darkest);
+  }
+
+  .badge-neutral {
+    background-color: var(--color-surface-card);
+    color: var(--color-ink);
+  }
+
+  /* ── Tableaux ───────────────────────────────────────────────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table thead th {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--color-hairline);
+    color: var(--color-mute);
+    font-size: var(--text-caption-uppercase);
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .data-table tbody td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-hairline-soft);
+    color: var(--color-body);
+    font-size: var(--text-body-sm);
+  }
+
+  .data-table tbody tr:hover td {
+    background-color: var(--color-surface-soft);
+  }
+
+  /* ── Navigation latérale ────────────────────────────────────────────────── */
+  .sidebar-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-mute);
+    font-size: var(--text-nav-link);
+    font-weight: 500;
+  }
+
+  .sidebar-row:hover {
+    background-color: var(--color-surface-soft);
+    color: var(--color-ink);
+  }
+
+  .sidebar-row-active,
+  .sidebar-row-active:hover {
+    background-color: var(--color-surface-card);
+    color: var(--color-ink);
+  }
+}
+
+/* ============================================================================
+   Utilitaires
+   ========================================================================= */
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Impression : la page de quittance doit sortir propre depuis le navigateur. */
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff;
+  }
+}
+
+/* ============================================================================
+   Mode nuit
+   Le thème ne redéfinit QUE des variables : aucun composant ne porte de classe
+   `dark:`, tout bascule parce que les utilitaires lisent `var(--color-*)`.
+   Deux déclencheurs — la préférence système, et l'attribut `data-theme` posé
+   par le sélecteur, qui l'emporte dans les deux sens.
+
+   Les rôles s'inversent : le sol devient l'encre, les surfaces s'éclaircissent
+   par paliers. L'indigo est remonté en luminosité — `#5c5ccc` sur fond sombre
+   passe sous le seuil AA pour du texte.
+   ========================================================================= */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='clair']) {
+  --color-primary: #8f8fe8;
+  --color-on-primary: #131314;
+  --color-primary-active: #a5a5f0;
+  --color-primary-disabled: #35353f;
+  --color-primary-neutral: #6f6fd0;
+  --color-primary-pale: #26263a;
+  --color-primary-on-dark: #a5a5f0;
+
+  --color-accent-teal: #8a8ad8;
+  --color-accent-amber: #9a9af5;
+
+  --color-ink: #f2f2f7;
+  --color-ink-deep: #c9c9f2;
+  --color-body-strong: #e4e4ec;
+  --color-body: #c8c8d2;
+  --color-mute: #9696a4;
+  --color-muted: #9696a4;
+  --color-mute-soft: #75757f;
+  --color-muted-soft: #75757f;
+  --color-on-dark: #f2f2f7;
+  --color-on-dark-mute: #9696a4;
+  --color-on-dark-soft: #9696a4;
+
+  --color-canvas: #1e1e24;
+  --color-canvas-soft: #151518;
+  --color-canvas-sage: #26263a;
+  --color-surface-soft: #1b1b21;
+  --color-surface-card: #24242c;
+  --color-surface-cream-strong: #2c2c36;
+  --color-surface-elevated: #2c2c36;
+  --color-surface-dark: #0e0e11;
+  --color-surface-dark-elevated: #1b1b21;
+  --color-surface-dark-soft: #141418;
+
+  --color-positive: #6fc985;
+  --color-success: #6fc985;
+  --color-positive-pale: #1c2f22;
+  --color-positive-deep: #a8e0b8;
+  --color-warning: #e0b23a;
+  --color-warning-deep: #f0c964;
+  --color-warning-content: #f2d78f;
+  --color-warning-pale: #332a12;
+  --color-negative: #e06a6a;
+  --color-error: #e06a6a;
+  --color-negative-pale: #341d1d;
+  --color-negative-deep: #ef8a8a;
+  --color-negative-darkest: #f4a8a8;
+  --color-negative-bg: #2a1212;
+
+  --color-hairline: #33333d;
+  --color-hairline-soft: #2a2a33;
+  --color-hairline-strong: #454552;
+
+  --shadow-elevated: 0 2px 12px rgb(0 0 0 / 0.4);
+  --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.55);
+  color-scheme: dark;
+  }
+}
+
+:root[data-theme='sombre'] {
+  --color-primary: #8f8fe8;
+  --color-on-primary: #131314;
+  --color-primary-active: #a5a5f0;
+  --color-primary-disabled: #35353f;
+  --color-primary-neutral: #6f6fd0;
+  --color-primary-pale: #26263a;
+  --color-primary-on-dark: #a5a5f0;
+
+  --color-accent-teal: #8a8ad8;
+  --color-accent-amber: #9a9af5;
+
+  --color-ink: #f2f2f7;
+  --color-ink-deep: #c9c9f2;
+  --color-body-strong: #e4e4ec;
+  --color-body: #c8c8d2;
+  --color-mute: #9696a4;
+  --color-muted: #9696a4;
+  --color-mute-soft: #75757f;
+  --color-muted-soft: #75757f;
+  --color-on-dark: #f2f2f7;
+  --color-on-dark-mute: #9696a4;
+  --color-on-dark-soft: #9696a4;
+
+  --color-canvas: #1e1e24;
+  --color-canvas-soft: #151518;
+  --color-canvas-sage: #26263a;
+  --color-surface-soft: #1b1b21;
+  --color-surface-card: #24242c;
+  --color-surface-cream-strong: #2c2c36;
+  --color-surface-elevated: #2c2c36;
+  --color-surface-dark: #0e0e11;
+  --color-surface-dark-elevated: #1b1b21;
+  --color-surface-dark-soft: #141418;
+
+  --color-positive: #6fc985;
+  --color-success: #6fc985;
+  --color-positive-pale: #1c2f22;
+  --color-positive-deep: #a8e0b8;
+  --color-warning: #e0b23a;
+  --color-warning-deep: #f0c964;
+  --color-warning-content: #f2d78f;
+  --color-warning-pale: #332a12;
+  --color-negative: #e06a6a;
+  --color-error: #e06a6a;
+  --color-negative-pale: #341d1d;
+  --color-negative-deep: #ef8a8a;
+  --color-negative-darkest: #f4a8a8;
+  --color-negative-bg: #2a1212;
+
+  --color-hairline: #33333d;
+  --color-hairline-soft: #2a2a33;
+  --color-hairline-strong: #454552;
+
+  --shadow-elevated: 0 2px 12px rgb(0 0 0 / 0.4);
+  --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.55);
+  color-scheme: dark;
+}
+
+:root { color-scheme: light; }
+:root[data-theme='clair'] { color-scheme: light; }

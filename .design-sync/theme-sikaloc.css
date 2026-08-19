@@ -1,0 +1,49 @@
+/* ============================================================================
+   Sikaloc — complément design system (claude.ai/design uniquement)
+
+   Depuis le portage du rebrand dans l'app, `src/app/globals.css` est de nouveau
+   LA source de vérité : tokens, échelles et couche composants en viennent
+   directement. Ce fichier ne redéfinit donc plus rien — il ne fait qu'ajouter
+   ce dont le design system a besoin et que l'application n'utilise pas.
+   ========================================================================= */
+
+/* ── Liaison des familles de polices ─────────────────────────────────────
+   Dans l'app, next/font définit --font-styrene / --font-copernicus /
+   --font-jetbrains / --font-inter sur <html>. Le design system n'a pas de
+   runtime Next : sans ces liaisons, `var(--font-styrene)` serait indéfini et
+   TOUTE la valeur de --font-sans deviendrait invalide (les pages basculeraient
+   en serif système). Les noms ci-dessous correspondent aux @font-face de
+   pkg/fonts.css.                                                            */
+:root {
+  --font-styrene: StyreneB;
+  --font-copernicus: Copernicus;
+  --font-jetbrains: 'JetBrains Mono';
+  --font-inter: Inter;
+}
+
+/* ============================================================================
+   Classes nouvelles apportées par le document — sans composant React associé,
+   mais utilisables par l'agent de design pour composer des écrans.
+   ========================================================================= */
+.top-nav { height: 64px; background-color: var(--color-canvas); color: var(--color-ink); font-size: var(--text-nav-link); font-weight: 500; }
+.hero-band { background-color: var(--color-canvas); color: var(--color-ink); padding: var(--spacing-section); }
+.hero-illustration-card { background-color: var(--color-canvas); border-radius: var(--radius-xl); }
+.feature-card { background-color: var(--color-surface-card); color: var(--color-ink); padding: var(--spacing-xl); border-radius: var(--radius-lg); }
+.model-comparison-card { background-color: var(--color-canvas); color: var(--color-ink); padding: var(--spacing-xl); border-radius: var(--radius-lg); }
+.connector-tile { background-color: var(--color-canvas); color: var(--color-ink); padding: var(--spacing-lg); border-radius: var(--radius-lg); font-size: var(--text-title-sm); font-weight: 500; }
+.product-mockup-card-dark { background-color: var(--color-surface-dark); color: var(--color-on-dark); padding: var(--spacing-xl); border-radius: var(--radius-lg); }
+.code-window-card { background-color: var(--color-surface-dark); color: var(--color-on-dark); padding: var(--spacing-lg); border-radius: var(--radius-lg); font-family: var(--font-mono); font-size: var(--text-code); line-height: 1.6; }
+.cookie-consent-card { background-color: var(--color-surface-dark); color: var(--color-on-dark); padding: var(--spacing-lg); border-radius: var(--radius-lg); font-size: var(--text-body-sm); }
+.pricing-tier-card { background-color: var(--color-canvas); color: var(--color-ink); padding: var(--spacing-xl); border-radius: var(--radius-lg); }
+.pricing-tier-card-featured { background-color: var(--color-surface-dark); color: var(--color-on-dark); padding: var(--spacing-xl); border-radius: var(--radius-lg); }
+.callout-card-coral { background-color: var(--color-primary); color: var(--color-on-primary); padding: var(--spacing-xl); border-radius: var(--radius-lg); }
+.cta-band-coral { background-color: var(--color-primary); color: var(--color-on-primary); padding: var(--spacing-section); border-radius: var(--radius-lg); }
+.cta-band-dark { background-color: var(--color-surface-dark); color: var(--color-on-dark); padding: var(--spacing-section); border-radius: var(--radius-lg); }
+.footer { background-color: var(--color-surface-dark); color: var(--color-on-dark-soft); padding: var(--spacing-section); font-size: var(--text-body-sm); }
+.badge-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: var(--radius-pill); background-color: var(--color-surface-card); color: var(--color-ink); font-size: var(--text-caption); font-weight: 500; }
+.badge-coral { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: var(--radius-pill); background-color: var(--color-primary); color: var(--color-on-primary); font-size: var(--text-caption-uppercase); font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; }
+.category-tab { padding: 8px 14px; border-radius: var(--radius-md); background-color: transparent; color: var(--color-muted); font-size: var(--text-nav-link); font-weight: 500; }
+.category-tab-active { padding: 8px 14px; border-radius: var(--radius-md); background-color: var(--color-surface-card); color: var(--color-ink); font-size: var(--text-nav-link); font-weight: 500; }
+.button-secondary-on-dark { display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: var(--radius-md); background-color: var(--color-surface-dark-elevated); color: var(--color-on-dark); font-size: var(--text-button); font-weight: 500; }
+.text-link { color: var(--color-primary); font-size: var(--text-body-md); text-decoration: none; }
+.text-link:hover { text-decoration: underline; }

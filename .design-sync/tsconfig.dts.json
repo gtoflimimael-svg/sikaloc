@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./pkg/types",
+    "rootDir": "..",
+    "incremental": false,
+    "strict": false,
+    "plugins": []
+  },
+  "include": ["./pkg/index.ts"]
+}

@@ -1,0 +1,63 @@
+{
+  "projectId": "3ebc7f63-63bc-4b03-ad2e-431b4068ebd5",
+  "shape": "package",
+  "pkg": "sikaloc-mvp",
+  "globalName": "Sikaloc",
+  "entry": ".design-sync/pkg/index.ts",
+  "srcDir": "../../src",
+  "tsconfig": "../tsconfig.sync.json",
+  "cssEntry": "./styles.css",
+  "extraFonts": [
+    "./fonts.css"
+  ],
+  "componentSrcMap": {
+    "ActionConfirmee": "../../src/components/ui/action-confirmee.tsx",
+    "Alerte": "../../src/components/ui/retours.tsx",
+    "AssistantOnboarding": "../../src/components/app/onboarding.tsx",
+    "Avatar": "../../src/components/ui/retours.tsx",
+    "Badge": "../../src/components/ui/retours.tsx",
+    "BandeauAbonnement": "../../src/components/app/bandeau-abonnement.tsx",
+    "BarreLaterale": "../../src/components/app/navigation.tsx",
+    "BoutonAction": "../../src/components/ui/action-confirmee.tsx",
+    "BoutonSoumettre": "../../src/components/ui/boutons.tsx",
+    "BoutonSouscription": "../../src/components/app/parametres.tsx",
+    "CarteAuth": "../../src/components/auth/carte-auth.tsx",
+    "CarteMetrique": "../../src/components/app/carte-metrique.tsx",
+    "ChampCase": "../../src/components/ui/champs.tsx",
+    "ChampMontant": "../../src/components/ui/champs.tsx",
+    "ChampSelection": "../../src/components/ui/champs.tsx",
+    "ChampTexte": "../../src/components/ui/champs.tsx",
+    "EnTeteMobile": "../../src/components/app/navigation.tsx",
+    "EnTetePage": "../../src/components/ui/retours.tsx",
+    "EtatVide": "../../src/components/ui/retours.tsx",
+    "FenetreCorrection": "../../src/components/app/fenetre-correction.tsx",
+    "FormulaireBail": "../../src/components/app/formulaire-bail.tsx",
+    "FormulaireConnexion": "../../src/components/auth/formulaires.tsx",
+    "FormulaireInscription": "../../src/components/auth/formulaires.tsx",
+    "FormulaireLocataire": "../../src/components/app/formulaire-locataire.tsx",
+    "FormulaireLogement": "../../src/components/app/formulaire-logement.tsx",
+    "FormulaireMotDePasse": "../../src/components/app/parametres.tsx",
+    "FormulaireMotDePasseOublie": "../../src/components/auth/formulaires.tsx",
+    "FormulaireNouveauMotDePasse": "../../src/components/auth/formulaires.tsx",
+    "FormulairePaiement": "../../src/components/app/formulaire-paiement.tsx",
+    "FormulairePreferences": "../../src/components/app/parametres.tsx",
+    "FormulaireProfil": "../../src/components/app/parametres.tsx",
+    "FormulaireSignature": "../../src/components/app/parametres.tsx",
+    "IconeSikaloc": "../../src/components/ui/logo.tsx",
+    "LienParrainageCopiable": "../../src/components/app/parametres.tsx",
+    "MarqueSikaloc": "../../src/components/ui/logo.tsx",
+    "MenuCompte": "../../src/components/app/menu-compte.tsx",
+    "PiedDePage": "../../src/components/marketing/pied-de-page.tsx",
+    "Spinner": "../../src/components/ui/boutons.tsx"
+  },
+  "overrides": {
+    "EnTeteMobile": {
+      "viewport": "420x760",
+      "cardMode": "column"
+    },
+    "CarteMetrique": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
