@@ -187,6 +187,19 @@
   --container-marketing: 1200px;
   --container-app: 1024px;
 
+  /* ── Mouvement ────────────────────────────────────────────────────────── */
+  /* Une seule famille de courbes pour tout le site : `doux` pour ce qui entre
+     (décélération franche, l'élément arrive et se pose), `net` pour ce qui
+     réagit sous le doigt, `ressort` réservé aux confirmations. */
+  --ease-doux: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-net: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-ressort: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --duree-instant: 120ms;
+  --duree-rapide: 180ms;
+  --duree-moyenne: 280ms;
+  --duree-lente: 460ms;
+
   /*
    * ATTENTION — ne pas écrire `max-w-xl`, `max-w-2xl`, `max-w-md`…
    *
@@ -207,6 +220,11 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    /* Les ancres de la page d'accueil glissent au lieu de sauter.
+       `prefers-reduced-motion` remet le saut instantané, plus bas. */
+    scroll-behavior: smooth;
+    /* L'en-tête collant ne doit pas recouvrir la section visée. */
+    scroll-padding-top: 5rem;
   }
 
   body {
@@ -500,6 +518,321 @@
   .sidebar-row-active:hover {
     background-color: var(--color-surface-card);
     color: var(--color-ink);
+  }
+}
+
+/* ============================================================================
+   Mouvement
+   ----------------------------------------------------------------------------
+   Trois règles tiennent tout le système :
+
+   1. Le mouvement explique, il ne décore pas. Une carte monte de 10 px parce
+      qu'elle vient d'arriver ; elle ne flotte pas en permanence.
+   2. Ce qui entre est plus lent que ce qui sort. L'œil a besoin de temps pour
+      lire une nouveauté, aucun pour acter une disparition.
+   3. Rien ne dépasse 500 ms. Au-delà, une animation cesse d'être une réponse
+      et devient une attente.
+
+   Tout est désactivé sous `prefers-reduced-motion` — y compris les
+   transitions, pas seulement les animations : le vertige vient autant d'un
+   survol qui glisse que d'une entrée qui monte.
+   ========================================================================= */
+
+@keyframes sika-apparait {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sika-monte {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sika-glisse {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sika-page {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sika-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes sika-chatoiement {
+  from {
+    background-position: -160% 0;
+  }
+  to {
+    background-position: 260% 0;
+  }
+}
+
+@keyframes sika-souffle {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
+}
+
+@layer components {
+  .anim-apparait {
+    animation: sika-apparait var(--duree-moyenne) var(--ease-doux) both;
+    animation-delay: var(--delai, 0ms);
+  }
+
+  .anim-monte {
+    animation: sika-monte var(--duree-lente) var(--ease-doux) both;
+    animation-delay: var(--delai, 0ms);
+  }
+
+  .anim-glisse {
+    animation: sika-glisse var(--duree-moyenne) var(--ease-doux) both;
+    animation-delay: var(--delai, 0ms);
+  }
+
+  /* Entrée de page, posée sur un conteneur remonté à chaque navigation. */
+  .anim-page {
+    animation: sika-page var(--duree-moyenne) var(--ease-doux) both;
+  }
+
+  .anim-pulse {
+    animation: sika-pulse 1.4s var(--ease-net) infinite;
+  }
+
+  .anim-souffle {
+    animation: sika-souffle 9s var(--ease-net) infinite;
+  }
+
+  /*
+   * Cascade — les enfants directs entrent l'un après l'autre.
+   *
+   * Le décalage s'arrête à douze : au-delà, le dernier élément d'une liste
+   * attendrait presque une seconde, ce qui se lit comme une lenteur et non
+   * comme une intention.
+   */
+  .anim-cascade > * {
+    animation: sika-monte var(--duree-lente) var(--ease-doux) both;
+  }
+
+  .anim-cascade > *:nth-child(1) { animation-delay: 0ms; }
+  .anim-cascade > *:nth-child(2) { animation-delay: 45ms; }
+  .anim-cascade > *:nth-child(3) { animation-delay: 90ms; }
+  .anim-cascade > *:nth-child(4) { animation-delay: 135ms; }
+  .anim-cascade > *:nth-child(5) { animation-delay: 180ms; }
+  .anim-cascade > *:nth-child(6) { animation-delay: 225ms; }
+  .anim-cascade > *:nth-child(7) { animation-delay: 270ms; }
+  .anim-cascade > *:nth-child(8) { animation-delay: 315ms; }
+  .anim-cascade > *:nth-child(9) { animation-delay: 360ms; }
+  .anim-cascade > *:nth-child(10) { animation-delay: 405ms; }
+  .anim-cascade > *:nth-child(11) { animation-delay: 450ms; }
+  .anim-cascade > *:nth-child(n + 12) { animation-delay: 495ms; }
+
+  /* Squelette de chargement — chatoiement plutôt que clignotement. */
+  .squelette {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-card);
+  }
+
+  .squelette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      100deg,
+      transparent 20%,
+      color-mix(in srgb, var(--color-canvas) 70%, transparent) 50%,
+      transparent 80%
+    );
+    background-size: 220% 100%;
+    animation: sika-chatoiement 1.6s linear infinite;
+  }
+
+  /*
+   * Lien de navigation marketing — le soulignement se déploie depuis la
+   * gauche plutôt que d'apparaître d'un bloc.
+   */
+  .lien-anime {
+    position: relative;
+  }
+
+  .lien-anime::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    height: 1.5px;
+    width: 100%;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duree-moyenne) var(--ease-doux);
+  }
+
+  .lien-anime:hover::after,
+  .lien-anime:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* Conteneur de tableau : le débordement défile dans la carte, jamais la page. */
+  .table-defilante {
+    overflow-x: auto;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Micro-interactions ─────────────────────────────────────────────────── */
+
+@layer components {
+  .btn {
+    transition:
+      background-color var(--duree-rapide) var(--ease-net),
+      color var(--duree-rapide) var(--ease-net),
+      border-color var(--duree-rapide) var(--ease-net),
+      transform var(--duree-instant) var(--ease-net),
+      box-shadow var(--duree-rapide) var(--ease-net);
+  }
+
+  /* Un bouton s'enfonce sous le doigt : c'est le seul retour tactile dont
+     dispose un navigateur mobile. */
+  .btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+
+  .btn-icon {
+    transition:
+      background-color var(--duree-rapide) var(--ease-net),
+      border-color var(--duree-rapide) var(--ease-net),
+      transform var(--duree-instant) var(--ease-net);
+  }
+
+  .btn-icon:hover {
+    background-color: var(--color-surface-card);
+  }
+
+  .btn-icon:active {
+    transform: scale(0.93);
+  }
+
+  .input {
+    transition:
+      border-color var(--duree-rapide) var(--ease-net),
+      box-shadow var(--duree-rapide) var(--ease-net),
+      background-color var(--duree-rapide) var(--ease-net);
+  }
+
+  .card {
+    transition:
+      background-color var(--duree-moyenne) var(--ease-net),
+      box-shadow var(--duree-moyenne) var(--ease-net),
+      transform var(--duree-moyenne) var(--ease-doux);
+  }
+
+  .sidebar-row {
+    transition:
+      background-color var(--duree-rapide) var(--ease-net),
+      color var(--duree-rapide) var(--ease-net),
+      padding-left var(--duree-moyenne) var(--ease-doux);
+  }
+
+  .sidebar-row:hover {
+    padding-left: 18px;
+  }
+
+  .data-table tbody tr {
+    transition: background-color var(--duree-rapide) var(--ease-net);
+  }
+
+  .badge {
+    transition: background-color var(--duree-rapide) var(--ease-net);
+  }
+}
+
+/* ── Transitions de vue (navigation) ───────────────────────────────────── */
+
+::view-transition-old(root) {
+  animation: 140ms var(--ease-net) both sika-sortie;
+}
+
+::view-transition-new(root) {
+  animation: var(--duree-moyenne) var(--ease-doux) 60ms both sika-page;
+}
+
+@keyframes sika-sortie {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ── Respect de prefers-reduced-motion ─────────────────────────────────── */
+/*
+   Une seule règle, volontairement brutale : tout ce qui bouge s'arrête.
+   `1ms` plutôt que `none` pour que les callbacks `animationend` continuent de
+   se déclencher — sinon un composant qui attend la fin d'une animation reste
+   figé.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .sidebar-row:hover {
+    padding-left: 14px;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
   }
 }
 

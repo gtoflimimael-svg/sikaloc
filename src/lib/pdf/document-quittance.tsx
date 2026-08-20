@@ -1,5 +1,8 @@
+import { join } from 'node:path'
+
 import {
   Document,
+  Font,
   Image,
   Page,
   StyleSheet,
@@ -14,11 +17,47 @@ import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
  * Quittance de loyer / Reçu — template Bénin.
  * Mentions obligatoires : spec §6.1.10.
  *
- * Sur la police : le document utilise Helvetica, intégrée au standard PDF.
- * Enregistrer Inter imposerait de télécharger un fichier de police à chaque
- * rendu — un aller-retour réseau au milieu d'une fonction serverless, pour un
- * document qui n'a pas vocation à être une pièce de marque.
+ * Polices de marque : Copernicus pour les titres, StyreneB pour le corps — les
+ * mêmes familles que le site (`src/app/layout.tsx`). Les fichiers sont lus
+ * localement sur le disque de la fonction serverless plutôt que récupérés par
+ * URL : react-pdf accepte les deux, mais un aller-retour réseau au milieu
+ * d'un rendu PDF est une latence et un point de panne qu'on peut s'éviter — le
+ * fichier ne pèse que quelques dizaines de kilo-octets. `next.config.ts`
+ * (`outputFileTracingIncludes`) garantit que ces fichiers suivent bien le
+ * paquet déployé, faute de quoi ce chemin serait introuvable en production.
  */
+const DOSSIER_POLICES = join(process.cwd(), 'src/app/fonts')
+
+// L'enregistrement est mémoïsé au niveau du module : une fonction serverless
+// réutilisée entre requêtes (Fluid Compute) ne doit pas ré-enregistrer les
+// mêmes polices à chaque appel.
+let policesEnregistrees = false
+
+function enregistrerPolices(): void {
+  if (policesEnregistrees) return
+  policesEnregistrees = true
+
+  Font.register({
+    family: 'Copernicus',
+    fonts: [
+      { src: join(DOSSIER_POLICES, 'Copernicus-Book.ttf'), fontWeight: 400 },
+      { src: join(DOSSIER_POLICES, 'Copernicus-Bold.ttf'), fontWeight: 700 },
+      { src: join(DOSSIER_POLICES, 'Copernicus-Extrabold.ttf'), fontWeight: 800 },
+      { src: join(DOSSIER_POLICES, 'Copernicus-Heavy.ttf'), fontWeight: 900 },
+    ],
+  })
+
+  Font.register({
+    family: 'StyreneB',
+    fonts: [
+      { src: join(DOSSIER_POLICES, 'StyreneB-Regular.otf'), fontWeight: 400 },
+      { src: join(DOSSIER_POLICES, 'StyreneB-Medium.otf'), fontWeight: 500 },
+      { src: join(DOSSIER_POLICES, 'StyreneB-Bold.otf'), fontWeight: 700 },
+    ],
+  })
+}
+
+enregistrerPolices()
 
 const couleurs = {
   ink: '#131314',
@@ -32,6 +71,8 @@ const couleurs = {
   primaryPale: '#DEDEEF',
   warningPale: '#FAF0D4',
   warningContent: '#6B5210',
+  warningDeep: '#A37B12',
+  positiveDeep: '#2F6B3F',
 }
 
 const styles = StyleSheet.create({
@@ -39,7 +80,7 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 40,
     paddingHorizontal: 42,
-    fontFamily: 'Helvetica',
+    fontFamily: 'StyreneB',
     fontSize: 10,
     color: couleurs.body,
     // 1.4 plutôt que 1.5 : la quittance doit tenir sur une seule page, une
@@ -65,24 +106,52 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   motMarque: {
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Copernicus',
+    fontWeight: 800,
     fontSize: 17,
     color: couleurs.ink,
     letterSpacing: -0.5,
   },
   blocNumero: { alignItems: 'flex-end' },
   etiquetteNumero: { fontSize: 8, color: couleurs.mute, textTransform: 'uppercase' },
-  numero: { fontFamily: 'Helvetica-Bold', fontSize: 11, color: couleurs.ink },
+  numero: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 11, color: couleurs.ink },
 
   titre: {
-    fontFamily: 'Helvetica-Bold',
-    fontSize: 21,
-    lineHeight: 1.2,
+    fontFamily: 'Copernicus',
+    fontWeight: 800,
+    fontSize: 22,
+    lineHeight: 1.15,
     color: couleurs.ink,
     letterSpacing: -0.6,
     marginBottom: 3,
   },
   sousTitre: { fontSize: 9.5, color: couleurs.mute, marginBottom: 12 },
+
+  // Bandeau de synthèse — loyer, montant réglé, solde : lisible d'un regard,
+  // sans avoir à parcourir le détail du paiement pour se faire une idée.
+  recapitulatif: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: couleurs.hairline,
+  },
+  recapCellule: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRightWidth: 1,
+    borderRightColor: couleurs.hairline,
+  },
+  recapEtiquette: {
+    fontSize: 7.5,
+    color: couleurs.mute,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 3,
+  },
+  recapValeur: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 12, color: couleurs.ink },
 
   colonnes: { flexDirection: 'row', gap: 14, marginBottom: 12 },
   colonne: {
@@ -98,12 +167,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 6,
   },
-  nomPartie: { fontFamily: 'Helvetica-Bold', fontSize: 11, color: couleurs.ink },
+  nomPartie: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 11, color: couleurs.ink },
   lignePartie: { fontSize: 9, color: couleurs.body },
 
   section: { marginBottom: 8 },
   titreSection: {
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'StyreneB',
+    fontWeight: 700,
     fontSize: 10.5,
     color: couleurs.ink,
     marginBottom: 6,
@@ -117,7 +187,7 @@ const styles = StyleSheet.create({
     borderBottomColor: couleurs.hairline,
   },
   ligneEtiquette: { fontSize: 9.5, color: couleurs.mute },
-  ligneValeur: { fontSize: 9.5, color: couleurs.ink, fontFamily: 'Helvetica-Bold' },
+  ligneValeur: { fontSize: 9.5, color: couleurs.ink, fontFamily: 'StyreneB', fontWeight: 700 },
 
   encadreMontant: {
     backgroundColor: couleurs.primaryPale,
@@ -127,16 +197,21 @@ const styles = StyleSheet.create({
   },
   etiquetteMontant: { fontSize: 8.5, color: couleurs.inkDeep, marginBottom: 2 },
   montantChiffres: {
-    fontFamily: 'Helvetica-Bold',
-    fontSize: 18,
+    fontFamily: 'Copernicus',
+    fontWeight: 800,
+    fontSize: 19,
     lineHeight: 1.2,
     color: couleurs.inkDeep,
     letterSpacing: -0.4,
   },
   montantLettres: {
+    // StyreneB n'est fournie qu'en trois graisses droites (regular, medium,
+    // bold) : pas d'italique enregistrée, donc pas de `fontStyle: 'italic'` —
+    // react-pdf échouerait à résoudre la police. L'espacement des lettres
+    // recrée la même distance visuelle avec le montant en chiffres au-dessus.
     fontSize: 9,
     color: couleurs.inkDeep,
-    fontStyle: 'italic',
+    letterSpacing: 0.2,
     marginTop: 3,
   },
 
@@ -165,12 +240,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
+  // Deux signataires côte à côte : le document vaut décharge pour les deux
+  // parties, la signature du locataire a donc la même place que la vôtre.
   blocSignature: {
-    marginTop: 4,
+    marginTop: 6,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 20,
   },
-  cadreSignature: { width: 180, alignItems: 'center' },
+  cadreSignature: { flex: 1, alignItems: 'center' },
   etiquetteSignature: { fontSize: 8, color: couleurs.mute, marginBottom: 3 },
   imageSignature: { height: 36, objectFit: 'contain', marginBottom: 3 },
   zoneSignatureVide: {
@@ -187,8 +265,9 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.muteSoft,
     width: '100%',
     paddingTop: 4,
+    alignItems: 'center',
   },
-  nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'Helvetica-Bold' },
+  nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'StyreneB', fontWeight: 700 },
 
   filigrane: {
     position: 'absolute',
@@ -197,7 +276,8 @@ const styles = StyleSheet.create({
     fontSize: 62,
     color: couleurs.muteSoft,
     opacity: 0.12,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Copernicus',
+    fontWeight: 900,
     transform: 'rotate(-28deg)',
   },
 
@@ -245,6 +325,8 @@ export interface DonneesQuittance {
 
   /** Signature du bailleur en data URI, ou null si non téléversée. */
   signatureDataUri: string | null
+  /** Signature du locataire en data URI, ou null si non recueillie. */
+  signatureLocataireDataUri: string | null
 
   /**
    * Le plan Gratuit produit une quittance basique sans mention de timbre
@@ -313,6 +395,31 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           Période du {formaterDate(donnees.periodeDebut)} au {formaterDate(donnees.periodeFin)}
           {donnees.estPartiel ? ' — paiement partiel' : ''}
         </Text>
+
+        {/* ── Synthèse ───────────────────────────────────────────────────── */}
+        {/* Trois chiffres, lisibles d'un regard, avant même le détail qui
+            suit — le loyer dû, ce qui a été réglé, et ce qu'il reste. */}
+        <View style={styles.recapitulatif}>
+          <View style={styles.recapCellule}>
+            <Text style={styles.recapEtiquette}>Loyer mensuel</Text>
+            <Text style={styles.recapValeur}>{formaterFCFA(donnees.loyerMensuel)}</Text>
+          </View>
+          <View style={styles.recapCellule}>
+            <Text style={styles.recapEtiquette}>Montant réglé</Text>
+            <Text style={styles.recapValeur}>{formaterFCFA(donnees.montant)}</Text>
+          </View>
+          <View style={[styles.recapCellule, { borderRightWidth: 0 }]}>
+            <Text style={styles.recapEtiquette}>Solde restant</Text>
+            <Text
+              style={[
+                styles.recapValeur,
+                soldeRestant > 0 ? { color: couleurs.warningDeep } : { color: couleurs.positiveDeep },
+              ]}
+            >
+              {formaterFCFA(soldeRestant)}
+            </Text>
+          </View>
+        </View>
 
         {/* ── Parties ────────────────────────────────────────────────────── */}
         <View style={styles.colonnes}>
@@ -386,7 +493,10 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           ) : null}
         </View>
 
-        {/* ── Signature ──────────────────────────────────────────────────── */}
+        {/* ── Signatures ─────────────────────────────────────────────────── */}
+        {/* Les deux parties signent : le document vaut décharge pour le
+            bailleur (il reconnaît avoir reçu la somme) et pour le locataire
+            (il reconnaît l'avoir versée). */}
         <View style={styles.blocSignature}>
           <View style={styles.cadreSignature}>
             <Text style={styles.etiquetteSignature}>Signature du bailleur</Text>
@@ -397,6 +507,18 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
             )}
             <View style={styles.traitSignature}>
               <Text style={styles.nomSignataire}>{donnees.bailleurNom}</Text>
+            </View>
+          </View>
+
+          <View style={styles.cadreSignature}>
+            <Text style={styles.etiquetteSignature}>Signature du locataire</Text>
+            {donnees.signatureLocataireDataUri ? (
+              <Image style={styles.imageSignature} src={donnees.signatureLocataireDataUri} />
+            ) : (
+              <View style={styles.zoneSignatureVide} />
+            )}
+            <View style={styles.traitSignature}>
+              <Text style={styles.nomSignataire}>{donnees.locataireNom}</Text>
             </View>
           </View>
         </View>

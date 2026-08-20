@@ -24,17 +24,23 @@ export default async function PageDetailBail({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await bailleurOnboarde()
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const { data: bail } = await supabase
-    .from('baux')
-    .select(
-      '*, logement:logements(id, adresse, ville, pays, type), locataire:locataires(id, nom, telephone, email)',
-    )
-    .eq('id', id)
-    .maybeSingle()
+  // `bailleurOnboarde()` ne conditionne pas la requête suivante — `id` vient
+  // des params, et les RLS scopent la ligne de toute façon. Les deux partent
+  // donc en parallèle ; seul le `notFound()` qui suit reste séquentiel, car
+  // lui dépend réellement du résultat.
+  const [, { data: bail }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase
+      .from('baux')
+      .select(
+        '*, logement:logements(id, adresse, ville, pays, type), locataire:locataires(id, nom, telephone, email)',
+      )
+      .eq('id', id)
+      .maybeSingle(),
+  ])
 
   if (!bail) notFound()
 
@@ -172,7 +178,7 @@ export default async function PageDetailBail({
             }
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-hairline">
+          <div className="table-defilante">
             <table className="data-table">
               <thead>
                 <tr>

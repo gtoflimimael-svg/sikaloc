@@ -20,11 +20,11 @@ export default async function PageCorrigerPaiement({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await bailleurOnboarde()
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const [{ data: paiement }, { data: baux }] = await Promise.all([
+  const [, { data: paiement }, { data: baux }] = await Promise.all([
+    bailleurOnboarde(),
     supabase.from('paiements').select('*').eq('id', id).maybeSingle(),
     supabase
       .from('baux')

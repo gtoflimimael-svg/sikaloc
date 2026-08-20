@@ -4,9 +4,12 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { aujourdhuiISO } from '@/lib/format'
-import { bailleurAvecEcriture } from '@/lib/session'
+import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaLocataire, type EtatFormulaire } from '@/lib/validation'
+
+const TAILLE_MAX_SIGNATURE = 2 * 1024 * 1024
+const TYPES_SIGNATURE = ['image/png', 'image/jpeg', 'image/webp']
 
 function lireFormulaire(donnees: FormData) {
   return schemaLocataire.safeParse({
@@ -91,4 +94,94 @@ export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
 
   revalidatePath('/app/locataires')
   return { succes: 'Locataire supprimé.' }
+}
+
+// ─── Signature du locataire ─────────────────────────────────────────────────
+//
+// Recueillie par le bailleur depuis la fiche du locataire, au même titre que
+// sa propre signature en Paramètres (§6.1.10) : le locataire n'a pas de
+// compte Sikaloc, il ne peut donc pas la téléverser lui-même. Une fois
+// enregistrée, elle est réutilisée sur chaque quittance de ce locataire.
+
+export async function televerserSignatureLocataire(
+  locataireId: string,
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const fichier = donnees.get('signature')
+
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    return { erreur: 'Sélectionnez une image de signature.' }
+  }
+
+  if (!TYPES_SIGNATURE.includes(fichier.type)) {
+    return { erreur: 'Formats acceptés : PNG, JPEG ou WebP.' }
+  }
+
+  if (fichier.size > TAILLE_MAX_SIGNATURE) {
+    return { erreur: 'L’image ne doit pas dépasser 2 Mo.' }
+  }
+
+  const bailleur = await bailleurCourant()
+  const supabase = await creerClientServeur()
+
+  // Les RLS vérifient déjà que le locataire appartient au bailleur ; on relit
+  // son chemin actuel pour purger un ancien fichier si l'extension change.
+  const { data: locataire } = await supabase
+    .from('locataires')
+    .select('signature_chemin')
+    .eq('id', locataireId)
+    .maybeSingle()
+
+  if (!locataire) return { erreur: 'Locataire introuvable.' }
+
+  const extension =
+    fichier.type === 'image/png' ? 'png' : fichier.type === 'image/webp' ? 'webp' : 'jpg'
+  const chemin = `${bailleur.id}/locataires/${locataireId}.${extension}`
+
+  const { error: erreurUpload } = await supabase.storage
+    .from('signatures')
+    .upload(chemin, fichier, { contentType: fichier.type, upsert: true })
+
+  if (erreurUpload) return { erreur: `Téléversement impossible : ${erreurUpload.message}` }
+
+  if (locataire.signature_chemin && locataire.signature_chemin !== chemin) {
+    await supabase.storage.from('signatures').remove([locataire.signature_chemin])
+  }
+
+  const { error } = await supabase
+    .from('locataires')
+    .update({ signature_chemin: chemin })
+    .eq('id', locataireId)
+
+  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+
+  revalidatePath(`/app/locataires/${locataireId}/modifier`)
+  return { succes: 'Signature du locataire enregistrée. Elle apparaîtra sur ses prochaines quittances.' }
+}
+
+export async function supprimerSignatureLocataire(locataireId: string): Promise<EtatFormulaire> {
+  const supabase = await creerClientServeur()
+
+  const { data: locataire } = await supabase
+    .from('locataires')
+    .select('signature_chemin')
+    .eq('id', locataireId)
+    .maybeSingle()
+
+  if (!locataire) return { erreur: 'Locataire introuvable.' }
+
+  if (locataire.signature_chemin) {
+    await supabase.storage.from('signatures').remove([locataire.signature_chemin])
+  }
+
+  const { error } = await supabase
+    .from('locataires')
+    .update({ signature_chemin: null })
+    .eq('id', locataireId)
+
+  if (error) return { erreur: `Suppression impossible : ${error.message}` }
+
+  revalidatePath(`/app/locataires/${locataireId}/modifier`)
+  return { succes: 'Signature du locataire supprimée.' }
 }

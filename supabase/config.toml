@@ -253,16 +253,32 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Gabarits Sikaloc — remplacent le message brut « Supabase Auth » par un
+# email à l'en-tête et aux couleurs de la marque (mêmes gabarits que
+# `src/lib/emails.ts`, en HTML statique ici car GoTrue ne passe pas par notre
+# code applicatif). Seuls `confirmation` et `recovery` sont câblés à un écran
+# de l'application (inscription et mot de passe oublié) ; les autres modèles
+# GoTrue (invite, magic_link, email_change, reauthentication) ne correspondent
+# à aucun parcours de Sikaloc et restent sur le défaut.
+#
+# Cette section ne s'applique en production qu'après un `supabase link` puis
+# `supabase config push` — modifier ce fichier seul ne change rien sur le
+# projet hébergé tant que cette commande n'a pas été lancée.
+[auth.email.template.confirmation]
+subject = "Sikaloc — confirmez votre compte"
+content_path = "./supabase/templates/confirmation.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+[auth.email.template.recovery]
+subject = "Sikaloc — réinitialisez votre mot de passe"
+content_path = "./supabase/templates/recovery.html"
+
+# Avis de sécurité envoyé à chaque changement de mot de passe réussi (voir
+# `changerMotDePasse` dans `src/lib/actions/parametres.ts`) : la seule façon
+# de repérer un mot de passe changé par quelqu'un d'autre que soi.
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Sikaloc — votre mot de passe a été modifié"
+content_path = "./supabase/templates/password_changed_notification.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.

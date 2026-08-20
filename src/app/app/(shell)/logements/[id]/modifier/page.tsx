@@ -14,15 +14,13 @@ export default async function PageModifierLogement({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await bailleurOnboarde()
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const { data: logement } = await supabase
-    .from('logements')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle()
+  const [, { data: logement }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase.from('logements').select('*').eq('id', id).maybeSingle(),
+  ])
 
   if (!logement) notFound()
 

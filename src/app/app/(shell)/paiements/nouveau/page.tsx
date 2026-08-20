@@ -13,15 +13,18 @@ export default async function PageNouveauPaiement({
 }: {
   searchParams: Promise<{ bail?: string }>
 }) {
-  await bailleurOnboarde()
-  const { bail } = await searchParams
-  const supabase = await creerClientServeur()
+  const [{ bail }, supabase] = await Promise.all([searchParams, creerClientServeur()])
 
-  const { data: baux } = await supabase
-    .from('baux')
-    .select('id, loyer_mensuel, logement:logements(adresse), locataire:locataires(nom)')
-    .eq('statut', 'Actif')
-    .order('created_at', { ascending: false })
+  // `bailleurOnboarde()` ne fait que vérifier l'accès ; la liste des baux est
+  // scopée par les RLS indépendamment. Les deux partent en parallèle.
+  const [, { data: baux }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase
+      .from('baux')
+      .select('id, loyer_mensuel, logement:logements(adresse), locataire:locataires(nom)')
+      .eq('statut', 'Actif')
+      .order('created_at', { ascending: false }),
+  ])
 
   const options = (baux ?? []).map((b) => {
     const logement = Array.isArray(b.logement) ? b.logement[0] : b.logement

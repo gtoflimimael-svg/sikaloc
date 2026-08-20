@@ -26,17 +26,19 @@ export default async function PageQuittance({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const bailleur = await bailleurOnboarde()
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const { data: quittance } = await supabase
-    .from('quittances')
-    .select(
-      '*, paiement:paiements(*), bail:baux(loyer_mensuel, logement:logements(adresse, ville, pays, type), locataire:locataires(nom, telephone))',
-    )
-    .eq('id', id)
-    .maybeSingle()
+  const [bailleur, { data: quittance }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase
+      .from('quittances')
+      .select(
+        '*, paiement:paiements(*), bail:baux(loyer_mensuel, logement:logements(adresse, ville, pays, type), locataire:locataires(nom, telephone))',
+      )
+      .eq('id', id)
+      .maybeSingle(),
+  ])
 
   if (!quittance) notFound()
 
@@ -233,7 +235,7 @@ export default async function PageQuittance({
               <p className="text-caption text-warning-content">
                 Le plan Gratuit émet des quittances basiques, sans mention du droit
                 de timbre.{' '}
-                <Link href="/app/parametres?onglet=abonnement" className="underline">
+                <Link href="/app/parametres/abonnement" className="underline">
                   Passer au plan Standard
                 </Link>{' '}
                 pour des quittances conformes.
@@ -250,7 +252,7 @@ export default async function PageQuittance({
               <p className="text-caption text-warning-content">
                 Aucune signature enregistrée : le document sort avec un cadre de
                 signature vide.{' '}
-                <Link href="/app/parametres?onglet=signature" className="underline">
+                <Link href="/app/parametres/signature" className="underline">
                   Ajouter ma signature
                 </Link>
               </p>

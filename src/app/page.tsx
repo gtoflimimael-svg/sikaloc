@@ -145,7 +145,7 @@ export default async function PageAccueil() {
                 Conçu pour les bailleurs au Bénin
               </span>
 
-              <h1 className="text-display-lg text-ink sm:text-display-xl lg:text-display-xxl xl:text-display-mega">
+              <h1 className="anim-monte text-display-lg font-extrabold tracking-tight text-ink sm:text-display-xl lg:text-display-xxl xl:text-display-mega">
                 Gérez vos loyers
                 <br />
                 sans effort
@@ -198,7 +198,7 @@ export default async function PageAccueil() {
           <p className="text-caption-uppercase uppercase text-primary">
             Comment ça marche
           </p>
-          <h2 className="mt-sm max-w-[42rem] text-display-md text-ink">
+          <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
             Trois clics entre le paiement reçu et la quittance envoyée
           </h2>
           <p className="mt-md max-w-[42rem] text-body-lg text-mute">
@@ -208,13 +208,13 @@ export default async function PageAccueil() {
 
           {/* Étapes posées sur un filet plutôt que dans des cartes : la lecture
               reste horizontale et la page respire. */}
-          <ol className="mt-3xl grid gap-xl md:grid-cols-3">
+          <ol className="anim-cascade mt-3xl grid gap-xl md:grid-cols-3">
             {etapes.map((etape) => (
               <li key={etape.numero} className="border-t border-hairline-strong pt-lg">
                 <p className="text-caption-uppercase uppercase text-primary">
                   Étape {etape.numero}
                 </p>
-                <h3 className="mt-md text-display-sm text-ink">{etape.titre}</h3>
+                <h3 className="mt-md text-display-sm font-bold text-ink">{etape.titre}</h3>
                 <p className="mt-sm text-body-md text-body">{etape.texte}</p>
               </li>
             ))}
@@ -228,14 +228,14 @@ export default async function PageAccueil() {
           <p className="text-caption-uppercase uppercase text-primary">
             Fonctionnalités
           </p>
-          <h2 className="mt-sm max-w-[42rem] text-display-md text-ink">
+          <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
             Tout ce qu&apos;un bailleur fait vraiment, et rien de plus
           </h2>
 
-          <div className="mt-3xl grid gap-lg md:grid-cols-2 lg:grid-cols-3">
+          <div className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2 lg:grid-cols-3">
             {fonctionnalites.map((f) => (
               <article key={f.titre} className="card card-lg">
-                <h3 className="text-title-lg text-ink">{f.titre}</h3>
+                <h3 className="text-title-lg font-bold text-ink">{f.titre}</h3>
                 <p className="mt-sm text-body-md text-body">{f.texte}</p>
               </article>
             ))}
@@ -248,7 +248,7 @@ export default async function PageAccueil() {
         <div className="mx-auto max-w-[1200px]">
           <div className="mx-auto max-w-[42rem] text-center">
             <p className="text-caption-uppercase uppercase text-primary">Tarifs</p>
-            <h2 className="mt-sm text-display-md text-ink">Un tarif, sans surprise</h2>
+            <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">Un tarif, sans surprise</h2>
             <p className="mt-md text-body-lg text-mute">
               Commencez gratuitement. Passez au plan Standard quand votre parc
               grandit — par Mobile Money, sans engagement.
@@ -257,8 +257,8 @@ export default async function PageAccueil() {
 
           <div className="mx-auto mt-3xl grid max-w-[56rem] gap-xl md:grid-cols-2 md:items-start">
             <div className="card card-lg">
-              <p className="text-title-lg text-ink">Gratuit</p>
-              <p className="mt-sm text-display-md tabular text-ink">0 FCFA</p>
+              <p className="text-title-lg font-bold text-ink">Gratuit</p>
+              <p className="mt-sm text-display-md font-extrabold tabular tracking-tight text-ink">0 FCFA</p>
               <p className="mt-xs text-body-sm text-mute">Pour démarrer</p>
 
               <ul className="mt-xl space-y-md text-body-md text-body">
@@ -276,10 +276,10 @@ export default async function PageAccueil() {
             {/* Le plan payant est le moment produit dense : surface sombre. */}
             <div className="rounded-lg border-t-2 border-t-primary bg-surface-dark p-xl text-on-dark md:-mt-md md:pb-2xl">
               <div className="flex items-center justify-between gap-md">
-                <p className="text-title-lg text-on-dark">Standard</p>
+                <p className="text-title-lg font-bold text-on-dark">Standard</p>
                 <span className="badge bg-surface-card text-ink">Recommandé</span>
               </div>
-              <p className="mt-sm text-display-md tabular text-on-dark">
+              <p className="mt-sm text-display-md font-extrabold tabular tracking-tight text-on-dark">
                 {formaterFCFA(PRIX_STANDARD_FCFA)}
               </p>
               <p className="mt-xs text-body-sm text-on-dark-mute">par mois, sans engagement</p>
@@ -311,7 +311,7 @@ export default async function PageAccueil() {
           <p className="text-caption-uppercase uppercase text-primary">
             Bon à savoir
           </p>
-          <h2 className="mt-sm text-display-md text-ink">Questions fréquentes</h2>
+          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">Questions fréquentes</h2>
 
           {/* Filets plutôt que cartes : une FAQ se parcourt, elle ne se collectionne pas. */}
           <div className="mt-2xl border-t border-hairline">
@@ -339,7 +339,7 @@ export default async function PageAccueil() {
       <section className="px-xl pb-5xl">
         <div className="mx-auto max-w-[1200px]">
           <div className="rounded-xl bg-surface-dark px-xl py-5xl text-center">
-            <h2 className="mx-auto max-w-[40rem] text-display-lg text-on-dark">
+            <h2 className="mx-auto max-w-[40rem] text-display-lg font-extrabold tracking-tight text-on-dark">
               Votre prochaine quittance peut être prête dans deux minutes
             </h2>
             <p className="mx-auto mt-lg max-w-[34rem] text-body-lg text-on-dark-mute">

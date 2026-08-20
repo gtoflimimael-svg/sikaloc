@@ -126,7 +126,7 @@ export default async function PageHistoriquePaiements({
             </span>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-hairline">
+          <div className="table-defilante">
             <table className="data-table">
               <thead>
                 <tr>

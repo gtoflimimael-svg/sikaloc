@@ -13,14 +13,18 @@ import { lienRelanceImpaye } from '@/lib/whatsapp'
 export const metadata: Metadata = { title: 'Impayés' }
 
 export default async function PageImpayes() {
-  const bailleur = await bailleurOnboarde()
   const supabase = await creerClientServeur()
 
-  const { data } = await supabase
-    .from('v_impayes')
-    .select('*')
-    // Tri par ancienneté, le plus ancien en haut (§6.1.8).
-    .order('periode_debut', { ascending: true })
+  // Comme sur `/app/logements` : la vue est scopée par RLS, pas par l'objet
+  // `bailleur` (qui ne sert plus qu'à lire le droit aux relances WhatsApp).
+  const [bailleur, { data }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase
+      .from('v_impayes')
+      .select('*')
+      // Tri par ancienneté, le plus ancien en haut (§6.1.8).
+      .order('periode_debut', { ascending: true }),
+  ])
 
   const impayes = (data ?? []) as Impaye[]
   const total = impayes.reduce((somme, i) => somme + Number(i.montant_du), 0)
@@ -62,7 +66,7 @@ export default async function PageImpayes() {
                 Les relances WhatsApp sont réservées au plan Standard. Vous
                 pouvez toujours consulter vos impayés et contacter vos locataires
                 directement.{' '}
-                <Link href="/app/parametres?onglet=abonnement" className="underline">
+                <Link href="/app/parametres/abonnement" className="underline">
                   Voir le plan Standard
                 </Link>
               </Alerte>
@@ -133,7 +137,7 @@ export default async function PageImpayes() {
                       </a>
                     ) : (
                       <Link
-                        href="/app/parametres?onglet=abonnement"
+                        href="/app/parametres/abonnement"
                         className="btn btn-tertiary btn-sm"
                       >
                         Débloquer les relances

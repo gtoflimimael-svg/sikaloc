@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 
-import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import { BoutonSoumettre } from '@/components/ui/boutons'
+import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
 import { ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
+import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import {
   connecter,
   definirNouveauMotDePasse,
@@ -37,10 +38,12 @@ export function FormulaireConnexion({ suite }: { suite?: string }) {
       />
 
       <div>
-        <ChampTexte
+        {/* Pas de jauge ici : évaluer la force de ce que l'on tape sur un écran
+            de connexion n'apprend rien et annonce à qui regarde par-dessus
+            l'épaule combien de caractères il reste à deviner. */}
+        <ChampMotDePasse
           nom="motDePasse"
           libelle="Mot de passe"
-          type="password"
           autoComplete="current-password"
           requis
           erreur={etat.erreursChamps?.motDePasse}
@@ -59,12 +62,29 @@ export function FormulaireConnexion({ suite }: { suite?: string }) {
   )
 }
 
+/**
+ * Inscription en deux temps : d'abord qui vous êtes, ensuite à quoi vous
+ * ressemblez.
+ *
+ * L'ordre compte. Ouvrir sur le choix d'un avatar donne l'impression d'un jeu
+ * là où le bailleur vient créer un outil de travail ; et si le formulaire
+ * échoue à la validation, il a personnalisé un personnage pour rien.
+ *
+ * Les deux étapes vivent dans un seul <form> : passer de l'une à l'autre
+ * masque des champs sans les démonter, la saisie survit donc au retour arrière.
+ */
 export function FormulaireInscription({ codeParrain }: { codeParrain?: string }) {
   const [etat, action] = useActionState(inscrire, ETAT_INITIAL)
+  const [etape, setEtape] = useState<1 | 2>(1)
+
   // Amorce stable le temps du formulaire : sans compte, il n'y a pas encore
   // d'identifiant pour dériver un avatar. Figée par useState pour que l'aperçu
   // ne saute pas à chaque rendu.
   const [grainePremierAvatar] = useState(() => Math.random().toString(36).slice(2))
+
+  // Une erreur renvoyée par le serveur porte toujours sur l'étape 1 : c'est là
+  // que vivent tous les champs validés.
+  const etapeVisible = etat.erreursChamps ? 1 : etape
 
   if (etat.succes) {
     return <Alerte ton="succes">{etat.succes}</Alerte>
@@ -81,72 +101,109 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
         </Alerte>
       ) : null}
 
-      <div className="rounded-lg border border-hairline bg-surface-soft p-lg">
-        <p className="field-label">Votre avatar</p>
-        <p className="mb-lg text-caption text-mute">
-          Il vous représentera dans l&apos;application. Vous pourrez en changer
-          à tout moment depuis vos paramètres.
+      <div>
+        <p className="text-caption font-semibold text-primary">
+          Étape {etapeVisible} sur 2 ·{' '}
+          {etapeVisible === 1 ? 'Vos informations' : 'Votre avatar'}
         </p>
-        <SelecteurAvatar nom="avatar" identifiant={grainePremierAvatar} taille={96} />
+        <div className="mt-xs flex gap-xs" aria-hidden="true">
+          {[1, 2].map((numero) => (
+            <span
+              key={numero}
+              className={`h-1 flex-1 rounded-pill transition-colors duration-300 ${
+                numero <= etapeVisible ? 'bg-primary' : 'bg-hairline'
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
-      <ChampTexte
-        nom="nom"
-        libelle="Votre nom complet"
-        autoComplete="name"
-        placeholder="Koffi Adjovi"
-        requis
-        erreur={etat.erreursChamps?.nom}
-      />
+      {/* ── Étape 1 — informations personnelles ──────────────────────────── */}
+      <div className={etapeVisible === 1 ? 'space-y-lg anim-apparait' : 'hidden'}>
+        <ChampTexte
+          nom="nom"
+          libelle="Votre nom complet"
+          autoComplete="name"
+          placeholder="Koffi Adjovi"
+          requis
+          erreur={etat.erreursChamps?.nom}
+        />
 
-      <ChampTexte
-        nom="telephone"
-        libelle="Téléphone"
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        placeholder="+229 97 00 00 00"
-        aide="Utilisé sur vos quittances et pour vous joindre."
-        requis
-        erreur={etat.erreursChamps?.telephone}
-      />
+        <ChampTexte
+          nom="telephone"
+          libelle="Téléphone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="+229 97 00 00 00"
+          aide="Utilisé sur vos quittances et pour vous joindre."
+          requis
+          erreur={etat.erreursChamps?.telephone}
+        />
 
-      <ChampTexte
-        nom="email"
-        libelle="Adresse email"
-        type="email"
-        autoComplete="email"
-        placeholder="vous@exemple.bj"
-        requis
-        erreur={etat.erreursChamps?.email}
-      />
+        <ChampTexte
+          nom="email"
+          libelle="Adresse email"
+          type="email"
+          autoComplete="email"
+          placeholder="vous@exemple.bj"
+          requis
+          erreur={etat.erreursChamps?.email}
+        />
 
-      <ChampTexte
-        nom="motDePasse"
-        libelle="Mot de passe"
-        type="password"
-        autoComplete="new-password"
-        aide="8 caractères minimum, avec au moins une lettre et un chiffre."
-        requis
-        erreur={etat.erreursChamps?.motDePasse}
-      />
+        <ChampMotDePasse
+          nom="motDePasse"
+          libelle="Mot de passe"
+          jauge
+          requis
+          erreur={etat.erreursChamps?.motDePasse}
+        />
 
-      <ChampTexte
-        nom="nbLogements"
-        libelle="Combien de logements gérez-vous ?"
-        type="number"
-        inputMode="numeric"
-        min={0}
-        max={1000}
-        placeholder="5"
-        erreur={etat.erreursChamps?.nbLogements}
-      />
+        <ChampTexte
+          nom="nbLogements"
+          libelle="Combien de logements gérez-vous ?"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={1000}
+          placeholder="5"
+          erreur={etat.erreursChamps?.nbLogements}
+        />
+
+        <button
+          type="button"
+          onClick={() => setEtape(2)}
+          className="btn btn-primary w-full"
+        >
+          Continuer
+        </button>
+      </div>
+
+      {/* ── Étape 2 — avatar ─────────────────────────────────────────────── */}
+      <div className={etapeVisible === 2 ? 'space-y-lg anim-apparait' : 'hidden'}>
+        <div>
+          <p className="field-label">Choisissez votre avatar</p>
+          <p className="mb-lg text-caption text-mute">
+            Il vous représentera dans l&apos;application. Vous pourrez en changer
+            à tout moment depuis vos paramètres.
+          </p>
+          <SelecteurAvatar nom="avatar" identifiant={grainePremierAvatar} taille={96} />
+        </div>
+
+        <BoutonSoumettre pleineLargeur libelleEnCours="Création…">
+          Créer mon compte
+        </BoutonSoumettre>
+
+        <button
+          type="button"
+          onClick={() => setEtape(1)}
+          className="btn btn-secondary w-full"
+        >
+          Revenir à mes informations
+        </button>
+      </div>
 
       <input type="hidden" name="codeParrain" value={codeParrain ?? ''} />
-
-      <BoutonSoumettre pleineLargeur libelleEnCours="Création…">
-        Créer mon compte
-      </BoutonSoumettre>
 
       <p className="text-caption text-mute">
         En créant un compte, vous acceptez les{' '}
@@ -168,7 +225,7 @@ export function FormulaireMotDePasseOublie() {
 
   if (etat.succes) {
     return (
-      <div className="space-y-lg">
+      <div className="space-y-lg anim-apparait">
         <Alerte ton="succes">{etat.succes}</Alerte>
         <Link href="/connexion" className="btn btn-secondary w-full">
           Retour à la connexion
@@ -205,21 +262,17 @@ export function FormulaireNouveauMotDePasse() {
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
-      <ChampTexte
+      <ChampMotDePasse
         nom="motDePasse"
         libelle="Nouveau mot de passe"
-        type="password"
-        autoComplete="new-password"
-        aide="8 caractères minimum, avec au moins une lettre et un chiffre."
+        jauge
         requis
         erreur={etat.erreursChamps?.motDePasse}
       />
 
-      <ChampTexte
+      <ChampMotDePasse
         nom="confirmation"
         libelle="Confirmez le mot de passe"
-        type="password"
-        autoComplete="new-password"
         requis
         erreur={etat.erreursChamps?.confirmation}
       />

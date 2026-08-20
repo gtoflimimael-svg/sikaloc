@@ -1,15 +1,19 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useState } from 'react'
 
-import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
+import { CaptureSignature } from '@/components/app/capture-signature'
 import { BoutonAction } from '@/components/ui/action-confirmee'
 import { BoutonSoumettre } from '@/components/ui/boutons'
+import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
 import { ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
+import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import { souscrire } from '@/lib/actions/abonnement'
 import {
   changerMotDePasse,
+  modifierAvatar,
   modifierPreferences,
   modifierProfil,
   supprimerSignature,
@@ -20,23 +24,60 @@ import type { EtatFormulaire } from '@/lib/validation'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
+/**
+ * Avatar — bloc autonome.
+ *
+ * Séparé des informations personnelles : ce sont deux gestes différents.
+ * On change d'avatar par jeu, on corrige son numéro de téléphone parce qu'il
+ * est faux sur les quittances ; les mélanger obligeait à réenregistrer l'un
+ * pour toucher à l'autre.
+ */
+export function FormulaireAvatar({ bailleur }: { bailleur: Bailleur }) {
+  const [etat, action] = useActionState(modifierAvatar, ETAT_INITIAL)
+
+  return (
+    <form action={action} className="card card-lg space-y-lg">
+      <div>
+        <h2 className="text-title-lg font-semibold text-ink">Votre avatar</h2>
+        <p className="mt-xxs text-body-sm text-mute">
+          Il vous représente dans l’application. Il n’apparaît pas sur vos
+          quittances.
+        </p>
+      </div>
+
+      {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
+      {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
+
+      <SelecteurAvatar
+        nom="avatar"
+        identifiant={bailleur.id}
+        valeurInitiale={bailleur.avatar}
+        taille={96}
+      />
+
+      <BoutonSoumettre libelleEnCours="Enregistrement…">
+        Enregistrer mon avatar
+      </BoutonSoumettre>
+    </form>
+  )
+}
+
 export function FormulaireProfil({ bailleur }: { bailleur: Bailleur }) {
   const [etat, action] = useActionState(modifierProfil, ETAT_INITIAL)
 
   return (
     <form action={action} className="card card-lg space-y-lg">
+      <div>
+        <h2 className="text-title-lg font-semibold text-ink">
+          Vos informations personnelles
+        </h2>
+        <p className="mt-xxs text-body-sm text-mute">
+          Elles figurent dans le bloc bailleur de chaque quittance.
+        </p>
+      </div>
+
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
       {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
-
-      <div className="rounded-lg border border-hairline bg-surface-soft p-lg">
-        <p className="field-label">Votre avatar</p>
-        <SelecteurAvatar
-          nom="avatar"
-          identifiant={bailleur.id}
-          valeurInitiale={bailleur.avatar}
-          taille={96}
-        />
-      </div>
 
       <ChampTexte
         nom="nom"
@@ -76,7 +117,7 @@ export function FormulaireProfil({ bailleur }: { bailleur: Bailleur }) {
       </div>
 
       <BoutonSoumettre libelleEnCours="Enregistrement…">
-        Enregistrer le profil
+        Enregistrer mes informations
       </BoutonSoumettre>
     </form>
   )
@@ -84,7 +125,6 @@ export function FormulaireProfil({ bailleur }: { bailleur: Bailleur }) {
 
 export function FormulaireSignature({ signatureExistante }: { signatureExistante: boolean }) {
   const [etat, action] = useActionState(televerserSignature, ETAT_INITIAL)
-  const [nomFichier, setNomFichier] = useState<string | null>(null)
 
   return (
     <div className="space-y-lg">
@@ -92,31 +132,7 @@ export function FormulaireSignature({ signatureExistante }: { signatureExistante
         {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
         {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 
-        <div>
-          <label htmlFor="signature" className="field-label">
-            Image de votre signature
-          </label>
-          <input
-            id="signature"
-            name="signature"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            required
-            onChange={(e) => setNomFichier(e.target.files?.[0]?.name ?? null)}
-            className="block w-full text-body-sm text-body file:mr-lg file:rounded-xl file:border-0 file:bg-canvas-soft file:px-lg file:py-md file:text-body-sm file:font-semibold file:text-ink hover:file:bg-surface-elevated"
-          />
-          <p className="field-hint">
-            PNG, JPEG ou WebP, 2 Mo maximum. Une signature sur fond blanc ou
-            transparent donne le meilleur rendu à l&apos;impression.
-          </p>
-          {nomFichier ? (
-            <p className="mt-xs text-body-sm font-semibold text-ink">{nomFichier}</p>
-          ) : null}
-        </div>
-
-        <BoutonSoumettre libelleEnCours="Téléversement…">
-          {signatureExistante ? 'Remplacer la signature' : 'Enregistrer la signature'}
-        </BoutonSoumettre>
+        <CaptureSignature />
       </form>
 
       {signatureExistante ? (
@@ -175,7 +191,7 @@ function Bascule({
   return (
     <label
       htmlFor={nom}
-      className="flex cursor-pointer items-start gap-md rounded-md border border-hairline p-lg"
+      className="flex cursor-pointer items-start gap-md rounded-md border border-hairline p-lg transition-colors hover:bg-surface-soft"
     >
       <input
         id={nom}
@@ -192,29 +208,55 @@ function Bascule({
   )
 }
 
+/**
+ * Changement de mot de passe.
+ *
+ * Le mot de passe actuel est exigé, et l'oubli renvoie vers l'envoi d'un lien
+ * par email : c'est le seul chemin qui ne suppose pas qu'une session ouverte
+ * appartient forcément au titulaire du compte.
+ */
 export function FormulaireMotDePasse() {
   const [etat, action] = useActionState(changerMotDePasse, ETAT_INITIAL)
 
   return (
     <form action={action} className="card card-lg space-y-lg">
+      <div>
+        <h2 className="text-title-lg font-semibold text-ink">Mot de passe</h2>
+        <p className="mt-xxs text-body-sm text-mute">
+          Il protège l’accès à vos baux, vos paiements et vos quittances.
+        </p>
+      </div>
+
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
       {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 
-      <ChampTexte
+      <ChampMotDePasse
+        nom="motDePasseActuel"
+        libelle="Mot de passe actuel"
+        autoComplete="current-password"
+        requis
+        erreur={etat.erreursChamps?.motDePasseActuel}
+      />
+
+      <p className="-mt-xs text-caption text-mute">
+        Vous ne vous en souvenez plus ?{' '}
+        <Link href="/mot-de-passe-oublie" className="font-semibold text-ink underline">
+          Recevez un lien par email
+        </Link>{' '}
+        — c’est la seule façon sûre de reprendre la main sur un compte.
+      </p>
+
+      <ChampMotDePasse
         nom="motDePasse"
         libelle="Nouveau mot de passe"
-        type="password"
-        autoComplete="new-password"
-        aide="8 caractères minimum, avec au moins une lettre et un chiffre."
+        jauge
         requis
         erreur={etat.erreursChamps?.motDePasse}
       />
 
-      <ChampTexte
+      <ChampMotDePasse
         nom="confirmation"
-        libelle="Confirmez le mot de passe"
-        type="password"
-        autoComplete="new-password"
+        libelle="Confirmez le nouveau mot de passe"
         requis
         erreur={etat.erreursChamps?.confirmation}
       />

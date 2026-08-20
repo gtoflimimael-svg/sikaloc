@@ -105,6 +105,7 @@ const exemple: DonneesQuittance = {
   estPartiel: false,
 
   signatureDataUri: null,
+  signatureLocataireDataUri: null,
   mentionsConformes: true,
 }
 

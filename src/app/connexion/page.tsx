@@ -23,6 +23,8 @@ export default async function PageConnexion({
     <CarteAuth
       titre="Bon retour"
       description="Connectez-vous pour retrouver vos baux et vos quittances."
+      illustrationGauche="reflexion"
+      illustrationDroite="pause"
       bas={
         <>
           Pas encore de compte ?{' '}

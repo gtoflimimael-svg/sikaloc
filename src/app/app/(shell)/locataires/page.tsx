@@ -12,13 +12,15 @@ import { bailleurOnboarde } from '@/lib/session'
 export const metadata: Metadata = { title: 'Locataires' }
 
 export default async function PageLocataires() {
-  await bailleurOnboarde()
   const supabase = await creerClientServeur()
 
-  const { data: locataires } = await supabase
-    .from('locataires')
-    .select('*, baux(id, statut)')
-    .order('nom', { ascending: true })
+  // Le résultat de `bailleurOnboarde()` n'est même pas utilisé ici : il ne
+  // sert qu'à vérifier l'accès, ce que les RLS vérifient de toute façon sur la
+  // requête elle-même. Les deux partent donc en parallèle plutôt qu'à la suite.
+  const [, { data: locataires }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase.from('locataires').select('*, baux(id, statut)').order('nom', { ascending: true }),
+  ])
 
   const liste = locataires ?? []
 

@@ -53,8 +53,23 @@ export function capacites(
   }
 }
 
-/** Message affiché quand le plafond de logements est atteint. */
-export const MESSAGE_LIMITE_LOGEMENTS =
-  `Le plan Gratuit est limité à ${LIMITE_LOGEMENTS_GRATUIT} logements. ` +
-  `Passez au plan Standard (${PRIX_STANDARD_FCFA.toLocaleString('fr-FR')} FCFA/mois) ` +
-  `pour en enregistrer autant que vous le souhaitez.`
+/**
+ * Message affiché quand le plafond de logements est atteint.
+ *
+ * Le nombre déjà enregistré est rappelé : « limité à 2 logements » sans dire
+ * qu'on en a déjà 2 se lit comme s'il en restait, et le bailleur repart en
+ * boucle vers un formulaire qui va le refuser.
+ */
+export function messageLimiteLogements(enregistres?: number): string {
+  const constat =
+    enregistres === undefined
+      ? `Le plan Gratuit est limité à ${LIMITE_LOGEMENTS_GRATUIT} logements.`
+      : `Vos ${enregistres} logements sont enregistrés, et le plan Gratuit est ` +
+        `limité à ${LIMITE_LOGEMENTS_GRATUIT}.`
+
+  return (
+    `${constat} Passez au plan Standard ` +
+    `(${PRIX_STANDARD_FCFA.toLocaleString('fr-FR')} FCFA/mois) ` +
+    'pour en enregistrer autant que vous le souhaitez.'
+  )
+}

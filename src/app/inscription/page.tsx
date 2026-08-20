@@ -17,6 +17,8 @@ export default async function PageInscription({
     <CarteAuth
       titre="Créer votre compte"
       description="Deux minutes pour votre première quittance conforme."
+      illustrationGauche="joie"
+      illustrationDroite="plante"
       bas={
         <>
           Vous avez déjà un compte ?{' '}

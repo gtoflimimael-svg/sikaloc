@@ -4,9 +4,11 @@ import { revalidatePath } from 'next/cache'
 
 import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
 import {
+  avatarOptionnel,
   erreursChamps,
-  schemaNouveauMotDePasse,
+  schemaChangementMotDePasse,
   schemaPreferences,
   schemaProfil,
   type EtatFormulaire,
@@ -23,7 +25,6 @@ export async function modifierProfil(
     nom: donnees.get('nom'),
     telephone: donnees.get('telephone'),
     adresse: donnees.get('adresse') ?? '',
-    avatar: donnees.get('avatar') ?? '',
   })
 
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
@@ -37,14 +38,40 @@ export async function modifierProfil(
       nom: analyse.data.nom,
       telephone: analyse.data.telephone,
       adresse: analyse.data.adresse || null,
-      avatar: analyse.data.avatar || null,
     })
     .eq('id', bailleur.id)
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
 
-  revalidatePath('/app/parametres')
-  return { succes: 'Profil mis à jour.' }
+  // Le nom du bailleur apparaît dans le shell et sur les quittances : c'est
+  // tout l'espace applicatif qu'il faut réinvalider, pas seulement cet écran.
+  revalidatePath('/app', 'layout')
+  return { succes: 'Informations mises à jour.' }
+}
+
+/** Avatar seul — bloc distinct des informations personnelles. */
+export async function modifierAvatar(
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const analyse = avatarOptionnel.safeParse(donnees.get('avatar') ?? '')
+
+  if (!analyse.success) {
+    return { erreur: 'Cet avatar n’est pas valide. Recomposez-le puis réessayez.' }
+  }
+
+  const bailleur = await bailleurCourant()
+  const supabase = await creerClientServeur()
+
+  const { error } = await supabase
+    .from('bailleurs')
+    .update({ avatar: analyse.data || null })
+    .eq('id', bailleur.id)
+
+  if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+
+  revalidatePath('/app', 'layout')
+  return { succes: 'Avatar mis à jour.' }
 }
 
 export async function modifierPreferences(
@@ -146,21 +173,64 @@ export async function supprimerSignature(): Promise<EtatFormulaire> {
   return { succes: 'Signature supprimée.' }
 }
 
+/**
+ * Changement de mot de passe depuis les paramètres.
+ *
+ * Le mot de passe actuel est revérifié auprès de GoTrue avant d'accepter le
+ * nouveau. C'est ce qui distingue « changer son mot de passe » de « prendre le
+ * compte » : sans cette étape, une session laissée ouverte sur un poste
+ * partagé suffisait à verrouiller définitivement le bailleur dehors.
+ *
+ * Les tentatives échouées passent par le même compteur que la connexion : on
+ * ne veut pas offrir ici un oracle de mot de passe sans limite de débit.
+ */
 export async function changerMotDePasse(
   _etat: EtatFormulaire,
   donnees: FormData,
 ): Promise<EtatFormulaire> {
-  const analyse = schemaNouveauMotDePasse.safeParse({
+  const analyse = schemaChangementMotDePasse.safeParse({
+    motDePasseActuel: donnees.get('motDePasseActuel'),
     motDePasse: donnees.get('motDePasse'),
     confirmation: donnees.get('confirmation'),
   })
 
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const bailleur = await bailleurCourant()
+
+  const blocage = await verifierBlocage(bailleur.email)
+  if (blocage.bloque) {
+    return {
+      erreur:
+        `Trop de tentatives. Réessayez dans ${blocage.minutesRestantes} minute` +
+        `${blocage.minutesRestantes > 1 ? 's' : ''}.`,
+    }
+  }
+
   const supabase = await creerClientServeur()
+
+  // Revérification du mot de passe actuel. `signInWithPassword` réémet la
+  // session du même utilisateur : le bailleur n'est pas déconnecté.
+  const { error: erreurReauth } = await supabase.auth.signInWithPassword({
+    email: bailleur.email,
+    password: analyse.data.motDePasseActuel,
+  })
+
+  if (erreurReauth) {
+    await enregistrerTentative(bailleur.email, false, null)
+    return {
+      erreursChamps: { motDePasseActuel: 'Ce mot de passe ne correspond pas à votre compte.' },
+    }
+  }
+
+  await enregistrerTentative(bailleur.email, true, null)
+
   const { error } = await supabase.auth.updateUser({ password: analyse.data.motDePasse })
 
   if (error) return { erreur: `Changement impossible : ${error.message}` }
 
-  return { succes: 'Mot de passe mis à jour.' }
+  return {
+    succes:
+      'Mot de passe mis à jour. Vos autres sessions restent ouvertes : déconnectez-vous partout si vous soupçonnez un accès non autorisé.',
+  }
 }

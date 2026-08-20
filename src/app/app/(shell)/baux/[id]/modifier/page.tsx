@@ -14,11 +14,11 @@ export default async function PageModifierBail({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await bailleurOnboarde()
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const [{ data: bail }, { data: logements }, { data: locataires }] = await Promise.all([
+  const [, { data: bail }, { data: logements }, { data: locataires }] = await Promise.all([
+    bailleurOnboarde(),
     supabase.from('baux').select('*').eq('id', id).maybeSingle(),
     supabase.from('logements').select('id, adresse, ville, baux(id, statut)').order('adresse'),
     supabase.from('locataires').select('id, nom, telephone').order('nom'),

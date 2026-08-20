@@ -91,6 +91,8 @@ export type Locataire = {
   date_consentement: string | null
   /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
   avatar: string | null
+  /** Chemin dans le bucket `signatures`. NULL = aucune signature recueillie. */
+  signature_chemin: string | null
   created_at: string
 }
 

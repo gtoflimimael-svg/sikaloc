@@ -33,7 +33,7 @@ export async function souscrire(_etat: EtatFormulaire): Promise<EtatFormulaire> 
   const resultat = await initierPaiement({
     montant: MONTANT_ABONNEMENT,
     description: 'Abonnement Sikaloc — plan Standard (1 mois)',
-    urlRetour: `${base}/app/parametres?onglet=abonnement&retour=1`,
+    urlRetour: `${base}/app/parametres/abonnement?retour=1`,
     clientNom: bailleur.nom,
     clientEmail: bailleur.email,
     clientTelephone: bailleur.telephone,

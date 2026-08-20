@@ -33,7 +33,7 @@ interface Message {
 
 function urlAbonnement(): string {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  return `${base}/app/parametres?onglet=abonnement`
+  return `${base}/app/parametres/abonnement`
 }
 
 export function composer(modele: ModeleEmail, variables: VariablesEmail): Message {
@@ -94,6 +94,23 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
   }
 }
 
+/**
+ * Échappe le HTML — seul `message.titre` en a besoin : c'est le seul champ du
+ * gabarit à embarquer une valeur fournie par le bailleur (son prénom, extrait
+ * de `nom`). Un nom contenant `<script>` ou une balise `<img onerror=…>` ne
+ * doit pas pouvoir s'exécuter dans le client mail de son propriétaire — les
+ * autres champs (`corps`, l'URL d'action) sont entièrement composés par le
+ * serveur et n'ont pas besoin de ce traitement.
+ */
+function echapperHtml(valeur: string): string {
+  return valeur
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
 /** Gabarit HTML — tokens du design system, en styles inline (contrainte email). */
 function rendreHtml(message: Message): string {
   const accent =
@@ -131,7 +148,7 @@ function rendreHtml(message: Message): string {
           <div style="height:4px;width:48px;background:${accent};border-radius:2px;margin:24px 0;"></div>
 
           <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;line-height:1.3;
-                     color:#131314;letter-spacing:-0.5px;">${message.titre}</h1>
+                     color:#131314;letter-spacing:-0.5px;">${echapperHtml(message.titre)}</h1>
 
           ${paragraphes}
           ${bouton}

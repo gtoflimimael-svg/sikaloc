@@ -28,7 +28,7 @@ export function empreinte(pdf: Buffer): string {
   return createHash('sha256').update(pdf).digest('hex')
 }
 
-/** Charge la signature du bailleur et l'encode en data URI pour le PDF. */
+/** Charge une signature (bailleur ou locataire) et l'encode en data URI pour le PDF. */
 async function chargerSignature(chemin: string | null): Promise<string | null> {
   if (!chemin) return null
 
@@ -87,7 +87,7 @@ export async function rassemblerDonnees(
     admin
       .from('baux')
       .select(
-        'loyer_mensuel, logement:logements(adresse, ville, pays, type), locataire:locataires(nom, telephone)',
+        'loyer_mensuel, logement:logements(adresse, ville, pays, type), locataire:locataires(nom, telephone, signature_chemin)',
       )
       .eq('id', paiement.bail_id)
       .single(),
@@ -109,6 +109,13 @@ export async function rassemblerDonnees(
 
   const type: 'Quittance' | 'Reçu' = paiement.est_partiel ? 'Reçu' : 'Quittance'
 
+  // Les deux signatures sont indépendantes : les charger en parallèle évite de
+  // doubler la latence de deux allers-retours Storage successifs.
+  const [signatureBailleur, signatureLocataire] = await Promise.all([
+    chargerSignature(bailleur.signature_chemin),
+    chargerSignature(locataire.signature_chemin ?? null),
+  ])
+
   return {
     // Le numéro vient toujours de la base (trigger d'attribution) ; il est
     // passé ici après l'insertion de la ligne `quittances`.
@@ -123,6 +130,7 @@ export async function rassemblerDonnees(
 
     locataireNom: locataire.nom,
     locataireTelephone: locataire.telephone,
+    signatureLocataireDataUri: signatureLocataire,
 
     logementAdresse: logement.adresse,
     logementVille: logement.ville,
@@ -139,7 +147,7 @@ export async function rassemblerDonnees(
     typePaiement: paiement.type_paiement,
     estPartiel: paiement.est_partiel,
 
-    signatureDataUri: await chargerSignature(bailleur.signature_chemin),
+    signatureDataUri: signatureBailleur,
     mentionsConformes: capacites(bailleur).quittanceConforme,
     apercu: options.apercu,
   }

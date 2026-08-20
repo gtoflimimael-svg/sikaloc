@@ -23,17 +23,19 @@ export default async function PageConfirmationPaiement({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await bailleurOnboarde()
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const { data: paiement } = await supabase
-    .from('paiements')
-    .select(
-      '*, bail:baux(id, loyer_mensuel, jour_echeance, logement:logements(adresse, ville), locataire:locataires(nom, telephone)), quittance:quittances(id)',
-    )
-    .eq('id', id)
-    .maybeSingle()
+  const [, { data: paiement }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase
+      .from('paiements')
+      .select(
+        '*, bail:baux(id, loyer_mensuel, jour_echeance, logement:logements(adresse, ville), locataire:locataires(nom, telephone)), quittance:quittances(id)',
+      )
+      .eq('id', id)
+      .maybeSingle(),
+  ])
 
   if (!paiement) notFound()
 

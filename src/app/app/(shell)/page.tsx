@@ -21,11 +21,10 @@ export default async function PageTableauDeBord({
 }: {
   searchParams: Promise<{ bienvenue?: string }>
 }) {
-  const bailleur = await bailleurOnboarde()
-  const { bienvenue } = await searchParams
-  const supabase = await creerClientServeur()
+  const [{ bienvenue }, supabase] = await Promise.all([searchParams, creerClientServeur()])
 
-  const [metriquesReponse, impayesReponse, paiementsReponse] = await Promise.all([
+  const [bailleur, metriquesReponse, impayesReponse, paiementsReponse] = await Promise.all([
+    bailleurOnboarde(),
     supabase.from('v_metriques_dashboard').select('*').maybeSingle(),
     supabase
       .from('v_impayes')
@@ -215,7 +214,7 @@ export default async function PageTableauDeBord({
             }
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-hairline">
+          <div className="table-defilante">
             <table className="data-table">
               <thead>
                 <tr>

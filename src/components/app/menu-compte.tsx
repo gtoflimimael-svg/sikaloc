@@ -77,7 +77,7 @@ export function MenuCompte({
             Paramètres du compte
           </Link>
           <Link
-            href="/app/parametres?onglet=parrainage"
+            href="/app/parametres/parrainage"
             role="menuitem"
             className="block rounded-md px-md py-sm text-body-sm text-body hover:bg-canvas-soft"
           >

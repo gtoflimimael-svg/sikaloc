@@ -13,13 +13,18 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
 export const metadata: Metadata = { title: 'Logements' }
 
 export default async function PageLogements() {
-  const bailleur = await bailleurOnboarde()
   const supabase = await creerClientServeur()
 
-  const { data: logements } = await supabase
-    .from('logements')
-    .select('*, baux(id, statut, loyer_mensuel, locataire:locataires(nom))')
-    .order('created_at', { ascending: false })
+  // La liste des logements est scopée par les RLS (cookie de session), pas
+  // par l'objet `bailleur` — celui-ci ne sert plus bas que pour son plafond de
+  // plan. Les deux lectures partent donc en parallèle.
+  const [bailleur, { data: logements }] = await Promise.all([
+    bailleurOnboarde(),
+    supabase
+      .from('logements')
+      .select('*, baux(id, statut, loyer_mensuel, locataire:locataires(nom))')
+      .order('created_at', { ascending: false }),
+  ])
 
   const liste = logements ?? []
   const limite = capacites(bailleur).maxLogements
@@ -32,7 +37,7 @@ export default async function PageLogements() {
         description="Les biens que vous mettez en location."
         action={
           plafondAtteint ? (
-            <Link href="/app/parametres?onglet=abonnement" className="btn btn-primary">
+            <Link href="/app/parametres/abonnement" className="btn btn-primary">
               Passer au plan Standard
             </Link>
           ) : (

@@ -1,10 +1,9 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Shuffle } from 'lucide-react'
+import { Check, Shuffle } from 'lucide-react'
 import { useState } from 'react'
 
 import {
-  CATEGORIES,
   NB_OPTIONS,
   auHasard,
   encoder,
@@ -12,28 +11,23 @@ import {
   type Categorie,
   type ConfigAvatar,
 } from '@/lib/avatar/config'
-
-const LIBELLES: Record<Categorie, string> = {
-  coiffure: 'Coiffure',
-  visage: 'Visage',
-  pilosite: 'Barbe',
-  tenue: 'Tenue',
-  accessoire: 'Lunettes',
-}
+import { LIBELLES_CATEGORIES, NOMS_OPTIONS } from '@/lib/avatar/noms'
 
 /** Ordre d'affichage : du plus structurant au plus accessoire. */
 const ORDRE: Categorie[] = ['coiffure', 'visage', 'pilosite', 'tenue', 'accessoire']
 
 /**
- * Sélecteur d'avatar — un aperçu et cinq pas-à-pas.
+ * Sélecteur d'avatar — on voit ce qu'on choisit.
  *
- * Le choix des flèches plutôt que d'une galerie de vignettes est délibéré :
- * une galerie de 24 coiffures ferait 24 requêtes d'image, là où le pas-à-pas
- * n'en déclenche qu'une par changement. Sur une connexion mobile béninoise,
- * c'est la différence entre utilisable et pénible.
+ * La version précédente faisait défiler chaque catégorie à la flèche, en
+ * affichant « 7 / 24 » : il fallait parcourir les vingt-quatre coiffures pour
+ * savoir à quoi elles ressemblaient. Ici, chaque option est une vignette
+ * cliquable, comme le choix d'emoji de Notion ou d'avatar de Snapchat.
  *
- * La valeur est publiée dans un <input hidden> : le formulaire parent la poste
- * sans avoir besoin d'état partagé.
+ * Le coût réseau, qui justifiait le pas-à-pas, est tenu par trois choix :
+ * une seule catégorie est montée à la fois, les vignettes sont immuables donc
+ * mises en cache définitivement, et le chargement est différé (`lazy`) pour
+ * que seules les vignettes réellement visibles descendent.
  */
 export function SelecteurAvatar({
   nom,
@@ -51,13 +45,7 @@ export function SelecteurAvatar({
   const [config, setConfig] = useState<ConfigAvatar>(() =>
     resoudre(identifiant, valeurInitiale),
   )
-
-  function decaler(cat: Categorie, pas: number) {
-    setConfig((c) => {
-      const total = NB_OPTIONS[cat]
-      return { ...c, [cat]: (c[cat] + pas + total) % total }
-    })
-  }
+  const [categorie, setCategorie] = useState<Categorie>('coiffure')
 
   const valeur = encoder(config)
 
@@ -65,67 +53,116 @@ export function SelecteurAvatar({
     <div className="space-y-lg">
       <input type="hidden" name={nom} value={valeur} />
 
-      <div className="flex flex-wrap items-center gap-xl">
+      {/* ── Aperçu ───────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-lg">
         <span
-          className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill"
+          className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill ring-2 ring-primary/25"
           style={{ width: taille, height: taille, backgroundColor: '#f4f4fb' }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            key={valeur}
             src={`/avatar/${valeur}.svg`}
             alt="Aperçu de votre avatar"
             width={taille}
             height={taille}
+            className="anim-apparait"
             style={{ display: 'block', width: '100%', height: '100%' }}
           />
         </span>
 
-        <button
-          type="button"
-          onClick={() => setConfig(auHasard())}
-          className="btn btn-secondary btn-sm"
-        >
-          <Shuffle size={15} strokeWidth={2} aria-hidden="true" />
-          Au hasard
-        </button>
+        <div className="min-w-0">
+          <p className="text-body-sm text-mute">
+            Cliquez sur ce qui vous ressemble. Votre avatar se met à jour aussitôt.
+          </p>
+          <button
+            type="button"
+            onClick={() => setConfig(auHasard())}
+            className="btn btn-secondary btn-sm mt-sm"
+          >
+            <Shuffle size={15} strokeWidth={2} aria-hidden="true" />
+            Surprenez-moi
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-xs">
-        {ORDRE.map((cat) => (
-          <div
-            key={cat}
-            className="flex items-center justify-between gap-sm rounded-md border border-hairline bg-canvas px-md py-xs"
-          >
-            <span className="min-w-0 flex-1 truncate text-body-sm text-body">{LIBELLES[cat]}</span>
-            <span className="flex items-center gap-xxs">
-              <button
-                type="button"
-                onClick={() => decaler(cat, -1)}
-                aria-label={`${LIBELLES[cat]} — précédent`}
-                className="btn-icon"
-                style={{ width: 30, height: 30 }}
-              >
-                <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
-              </button>
-              <span className="w-[3rem] shrink-0 text-center text-caption tabular text-mute">
-                {config[cat] + 1} / {NB_OPTIONS[cat]}
-              </span>
-              <button
-                type="button"
-                onClick={() => decaler(cat, 1)}
-                aria-label={`${LIBELLES[cat]} — suivant`}
-                className="btn-icon"
-                style={{ width: 30, height: 30 }}
-              >
-                <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
-              </button>
-            </span>
-          </div>
-        ))}
+      {/* ── Catégories ───────────────────────────────────────────────────── */}
+      <div
+        role="tablist"
+        aria-label="Éléments de l’avatar"
+        className="no-scrollbar -mx-xxs flex gap-xs overflow-x-auto px-xxs pb-xxs"
+      >
+        {ORDRE.map((cat) => {
+          const actif = cat === categorie
+
+          return (
+            <button
+              key={cat}
+              type="button"
+              role="tab"
+              aria-selected={actif}
+              onClick={() => setCategorie(cat)}
+              className={`shrink-0 rounded-pill px-md py-xs text-body-sm font-medium transition-colors duration-150 ${
+                actif
+                  ? 'bg-primary text-on-primary'
+                  : 'border border-hairline bg-canvas text-mute hover:text-ink'
+              }`}
+            >
+              {LIBELLES_CATEGORIES[cat]}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* ── Vignettes ────────────────────────────────────────────────────── */}
+      <div
+        role="tabpanel"
+        aria-label={LIBELLES_CATEGORIES[categorie]}
+        key={categorie}
+        className="anim-apparait grid max-h-[19rem] grid-cols-4 gap-xs overflow-y-auto rounded-lg bg-canvas p-xs sm:grid-cols-5 md:grid-cols-6"
+      >
+        {Array.from({ length: NB_OPTIONS[categorie] }, (_, index) => {
+          const choisi = config[categorie] === index
+          const libelle = NOMS_OPTIONS[categorie][index]
+
+          return (
+            <button
+              key={index}
+              type="button"
+              title={libelle}
+              aria-label={`${LIBELLES_CATEGORIES[categorie]} : ${libelle}`}
+              aria-pressed={choisi}
+              onClick={() => setConfig((c) => ({ ...c, [categorie]: index }))}
+              className={`relative aspect-square overflow-hidden rounded-md transition-[transform,background-color,box-shadow] duration-150 hover:-translate-y-0.5 ${
+                choisi
+                  ? 'bg-primary-pale shadow-[inset_0_0_0_2px_var(--color-primary)]'
+                  : 'bg-surface-soft hover:bg-surface-elevated'
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/avatar/vignette/${categorie}-${index}.svg`}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                width={96}
+                height={96}
+                style={{ display: 'block', width: '100%', height: '100%' }}
+              />
+
+              {choisi ? (
+                <span className="absolute right-xxs top-xxs inline-flex size-4 items-center justify-center rounded-pill bg-primary text-on-primary">
+                  <Check size={11} strokeWidth={3} aria-hidden="true" />
+                </span>
+              ) : null}
+            </button>
+          )
+        })}
       </div>
 
       <p className="text-caption text-mute">
-        {CATEGORIES.length} réglages ·{' '}
+        {NOMS_OPTIONS[categorie][config[categorie]]} ·{' '}
         {Object.values(NB_OPTIONS)
           .reduce((a, b) => a * b, 1)
           .toLocaleString('fr-FR')}{' '}

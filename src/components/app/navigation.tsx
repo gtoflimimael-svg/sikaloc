@@ -1,24 +1,26 @@
 'use client'
 
-import Link from 'next/link'
 import {
   Banknote,
   House,
   LayoutDashboard,
+  LogOut,
   Menu,
+  Plus,
   ScrollText,
   Settings,
   TriangleAlert,
   Users,
   X,
 } from 'lucide-react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-import { AvatarPeep } from '@/components/ui/avatar-peep'
-import { SelecteurTheme } from '@/components/ui/theme'
 import { useEffect, useState } from 'react'
 
+import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { MarqueSikaloc } from '@/components/ui/logo'
+import { SelecteurTheme } from '@/components/ui/theme'
+import { deconnecter } from '@/lib/actions/auth'
 
 export interface LienNav {
   href: string
@@ -77,6 +79,7 @@ function LiensNavigation({
           <Link
             key={lien.href}
             href={lien.href}
+            prefetch
             onClick={onNavigation}
             aria-current={actif ? 'page' : undefined}
             className={`sidebar-row ${actif ? 'sidebar-row-active' : ''}`}
@@ -116,24 +119,37 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
   )
 }
 
+/**
+ * En-tête et tiroir mobile.
+ *
+ * Le tiroir porte tout ce que la barre latérale et l'en-tête de bureau
+ * offrent : l'action principale, la navigation, le thème, et surtout le bloc
+ * compte avec la déconnexion. Une application où l'on ne peut pas se
+ * déconnecter depuis son téléphone n'est pas « adaptée au mobile », elle est
+ * amputée — c'était le cas ici, l'avatar mobile menant droit aux paramètres.
+ */
 export function EnTeteMobile({
   impayes,
   nomBailleur,
   idBailleur,
   avatarBailleur,
+  emailBailleur,
+  plan,
 }: {
   impayes: number
   nomBailleur: string
   idBailleur: string
   avatarBailleur: string | null
+  emailBailleur: string
+  plan: string
 }) {
   const chemin = usePathname()
   const [ouvert, setOuvert] = useState(false)
 
-  // Une navigation depuis le drawer doit le refermer.
+  // Une navigation depuis le tiroir doit le refermer.
   useEffect(() => setOuvert(false), [chemin])
 
-  // Un drawer ouvert ne doit pas laisser la page défiler derrière lui.
+  // Un tiroir ouvert ne doit pas laisser la page défiler derrière lui.
   useEffect(() => {
     document.body.style.overflow = ouvert ? 'hidden' : ''
     return () => {
@@ -141,9 +157,19 @@ export function EnTeteMobile({
     }
   }, [ouvert])
 
+  // Échap referme, comme partout ailleurs dans l'application.
+  useEffect(() => {
+    if (!ouvert) return
+    function surEchap(evenement: KeyboardEvent) {
+      if (evenement.key === 'Escape') setOuvert(false)
+    }
+    document.addEventListener('keydown', surEchap)
+    return () => document.removeEventListener('keydown', surEchap)
+  }, [ouvert])
+
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-hairline bg-canvas px-lg lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-sm border-b border-hairline bg-canvas/95 px-lg backdrop-blur lg:hidden">
         <button
           type="button"
           onClick={() => setOuvert(true)}
@@ -156,18 +182,30 @@ export function EnTeteMobile({
 
         <MarqueSikaloc href="/app" taille="sm" />
 
-        <Link
-          href="/app/parametres"
-          aria-label="Paramètres du compte"
-          className="inline-flex items-center rounded-pill"
-        >
-          <AvatarPeep
-            id={idBailleur}
-            avatar={avatarBailleur}
-            nom={nomBailleur}
-            taille={40}
-          />
-        </Link>
+        <div className="flex items-center gap-xs">
+          <Link
+            href="/app/paiements/nouveau"
+            aria-label="Enregistrer un paiement"
+            className="btn btn-primary size-9 rounded-pill p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-md"
+          >
+            <Plus size={17} strokeWidth={2.2} aria-hidden="true" />
+            <span className="hidden sm:inline">Paiement</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setOuvert(true)}
+            aria-label="Ouvrir le menu du compte"
+            className="inline-flex items-center rounded-pill"
+          >
+            <AvatarPeep
+              id={idBailleur}
+              avatar={avatarBailleur}
+              nom={nomBailleur}
+              taille={36}
+            />
+          </button>
+        </div>
       </header>
 
       {ouvert ? (
@@ -176,10 +214,11 @@ export function EnTeteMobile({
             type="button"
             aria-label="Fermer le menu"
             onClick={() => setOuvert(false)}
-            className="absolute inset-0 bg-surface-dark/60"
+            className="anim-apparait absolute inset-0 bg-surface-dark/60"
           />
-          <div className="relative flex h-full w-[280px] flex-col bg-canvas p-lg">
-            <div className="mb-xl flex items-center justify-between px-md pt-sm">
+
+          <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-lg">
+            <div className="mb-lg flex items-center justify-between px-md pt-sm">
               <MarqueSikaloc href="/app" taille="sm" />
               <button
                 type="button"
@@ -191,11 +230,52 @@ export function EnTeteMobile({
               </button>
             </div>
 
+            {/* Bloc compte — l'équivalent mobile du menu en haut à droite. */}
+            <div className="mb-lg rounded-lg border border-hairline bg-surface-soft p-md">
+              <div className="flex items-center gap-sm">
+                <AvatarPeep
+                  id={idBailleur}
+                  avatar={avatarBailleur}
+                  nom={nomBailleur}
+                  taille={40}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-body-sm font-semibold text-ink">
+                    {nomBailleur}
+                  </p>
+                  <p className="truncate text-caption text-mute">{emailBailleur}</p>
+                </div>
+              </div>
+              <span className="badge badge-neutral mt-sm">Plan {plan}</span>
+            </div>
+
+            <Link
+              href="/app/paiements/nouveau"
+              onClick={() => setOuvert(false)}
+              className="btn btn-primary mb-lg w-full"
+            >
+              Enregistrer un paiement
+            </Link>
+
             <LiensNavigation
               chemin={chemin}
               impayes={impayes}
               onNavigation={() => setOuvert(false)}
             />
+
+            <div className="mt-auto space-y-md pt-xl">
+              <SelecteurTheme />
+
+              <form action={deconnecter}>
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-sm rounded-md border border-hairline px-md py-sm text-body-sm font-semibold text-negative-darkest transition-colors hover:bg-negative/5"
+                >
+                  <LogOut size={17} strokeWidth={2} aria-hidden="true" />
+                  Se déconnecter
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       ) : null}

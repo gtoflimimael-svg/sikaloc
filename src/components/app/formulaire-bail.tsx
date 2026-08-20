@@ -30,27 +30,24 @@ export function FormulaireBail({
 }) {
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
 
+  // Garde-fou : les pages appelantes diagnostiquent le manque en amont (voir
+  // `bail-impossible.tsx`) et n'affichent pas ce formulaire dans ce cas. Ce
+  // repli n'existe donc que pour ne jamais rendre un <select> vide.
   if (logements.length === 0 || locataires.length === 0) {
     return (
-      <div className="card card-lg space-y-lg">
+      <div className="card card-lg space-y-lg anim-monte">
         <Alerte ton="attention">
-          Un bail relie un logement à un locataire. Il vous manque
-          {logements.length === 0 ? ' un logement' : ''}
-          {logements.length === 0 && locataires.length === 0 ? ' et' : ''}
-          {locataires.length === 0 ? ' un locataire' : ''}.
+          Un bail relie un logement à un locataire, et aucun couple disponible
+          n’a pu être constitué pour le moment.
         </Alerte>
 
         <div className="flex flex-wrap gap-md">
-          {logements.length === 0 ? (
-            <Link href="/app/logements/nouveau" className="btn btn-primary">
-              Ajouter un logement
-            </Link>
-          ) : null}
-          {locataires.length === 0 ? (
-            <Link href="/app/locataires/nouveau" className="btn btn-tertiary">
-              Ajouter un locataire
-            </Link>
-          ) : null}
+          <Link href="/app/logements" className="btn btn-secondary">
+            Voir mes logements
+          </Link>
+          <Link href="/app/locataires" className="btn btn-secondary">
+            Voir mes locataires
+          </Link>
         </div>
       </div>
     )

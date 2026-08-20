@@ -42,7 +42,7 @@ export function BandeauAbonnement({ bailleur }: { bailleur: Bailleur }) {
         </p>
 
         <Link
-          href="/app/parametres?onglet=abonnement"
+          href="/app/parametres/abonnement"
           className="btn btn-primary btn-sm shrink-0"
         >
           Régler mon abonnement

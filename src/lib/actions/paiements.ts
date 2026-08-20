@@ -115,20 +115,32 @@ export async function enregistrerPaiement(
 export async function validerPaiement(id: string): Promise<EtatFormulaire> {
   const supabase = await creerClientServeur()
 
-  const { error } = await supabase
-    .from('paiements')
-    .update({ statut: 'Validé', valide_le: new Date().toISOString() })
-    .eq('id', id)
+  // `genererEtStocker` relit le paiement par id et n'utilise jamais son
+  // `statut` pour composer le document (voir `DonneesQuittance`) : rien
+  // n'oblige donc à attendre que l'écriture du statut soit passée avant de
+  // lancer la génération. C'est le point de la confirmation de paiement où la
+  // latence se sent le plus — les deux partent en parallèle plutôt que bout à
+  // bout.
+  const [ecriture, quittance] = await Promise.allSettled([
+    supabase
+      .from('paiements')
+      .update({ statut: 'Validé', valide_le: new Date().toISOString() })
+      .eq('id', id),
+    genererEtStocker(id),
+  ])
 
-  if (error) return { erreur: `Validation impossible : ${error.message}` }
+  if (ecriture.status === 'rejected' || ecriture.value.error) {
+    const message =
+      ecriture.status === 'rejected'
+        ? String(ecriture.reason)
+        : ecriture.value.error?.message
+    return { erreur: `Validation impossible : ${message}` }
+  }
 
-  let quittanceId: string
-  try {
-    const quittance = await genererEtStocker(id)
-    quittanceId = quittance.id
-  } catch (erreur) {
+  if (quittance.status === 'rejected') {
     // Le paiement reste validé : c'est un fait comptable. Seul le document a
     // échoué, et il est régénérable depuis la fiche du paiement.
+    const erreur = quittance.reason
     return {
       erreur:
         erreur instanceof Error
@@ -141,7 +153,7 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
   revalidatePath('/app/paiements')
   revalidatePath('/app/impayes')
 
-  redirect(`/app/quittances/${quittanceId}`)
+  redirect(`/app/quittances/${quittance.value.id}`)
 }
 
 /** Régénère le document d'un paiement déjà validé. */

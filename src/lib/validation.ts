@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { CRITERES, estPrevisible, LONGUEUR_MINIMALE } from '@/lib/mot-de-passe'
+
 /**
  * Schémas de validation partagés.
  *
@@ -22,12 +24,39 @@ const telephone = z
   .max(20, 'Le numéro de téléphone est trop long.')
   .regex(/^[\d\s+()-]+$/, 'Le numéro ne doit contenir que des chiffres.')
 
+/**
+ * Les exigences viennent de `@/lib/mot-de-passe` : la jauge affichée pendant la
+ * frappe et ce schéma appliquent littéralement la même liste, il ne peut donc
+ * pas y avoir de mot de passe annoncé « solide » puis refusé à l'envoi.
+ *
+ * 72 octets est la limite de bcrypt, utilisé par GoTrue : au-delà, la fin du
+ * mot de passe serait silencieusement ignorée.
+ */
 const motDePasse = z
   .string()
-  .min(8, 'Le mot de passe doit contenir au moins 8 caractères.')
   .max(72, 'Le mot de passe ne peut pas dépasser 72 caractères.')
-  .regex(/[a-zA-Z]/, 'Le mot de passe doit contenir au moins une lettre.')
-  .regex(/\d/, 'Le mot de passe doit contenir au moins un chiffre.')
+  .superRefine((valeur, contexte) => {
+    for (const critere of CRITERES) {
+      if (critere.obligatoire && !critere.satisfait(valeur)) {
+        contexte.addIssue({
+          code: 'custom',
+          message:
+            critere.cle === 'longueur'
+              ? `Le mot de passe doit contenir au moins ${LONGUEUR_MINIMALE} caractères.`
+              : `Il manque ${critere.libelle.toLowerCase()}.`,
+        })
+        return
+      }
+    }
+
+    if (estPrevisible(valeur)) {
+      contexte.addIssue({
+        code: 'custom',
+        message:
+          'Ce mot de passe est trop courant ou trop régulier. Choisissez-en un moins devinable.',
+      })
+    }
+  })
 
 const dateISO = z
   .string()
@@ -80,6 +109,29 @@ export const schemaNouveauMotDePasse = z
   .refine((d) => d.motDePasse === d.confirmation, {
     message: 'Les deux mots de passe ne correspondent pas.',
     path: ['confirmation'],
+  })
+
+/**
+ * Changement depuis les paramètres : le mot de passe actuel est exigé.
+ *
+ * Sans lui, un navigateur laissé ouvert quelques minutes suffit à prendre le
+ * contrôle définitif du compte — c'est la raison pour laquelle tous les vrais
+ * services le demandent, et la raison pour laquelle l'oubli passe par un lien
+ * envoyé par email plutôt que par ce formulaire.
+ */
+export const schemaChangementMotDePasse = z
+  .object({
+    motDePasseActuel: z.string().min(1, 'Saisissez votre mot de passe actuel.'),
+    motDePasse,
+    confirmation: z.string(),
+  })
+  .refine((d) => d.motDePasse === d.confirmation, {
+    message: 'Les deux mots de passe ne correspondent pas.',
+    path: ['confirmation'],
+  })
+  .refine((d) => d.motDePasse !== d.motDePasseActuel, {
+    message: 'Le nouveau mot de passe doit être différent de l’actuel.',
+    path: ['motDePasse'],
   })
 
 // ─── Entités métier ─────────────────────────────────────────────────────────
@@ -155,7 +207,6 @@ export const schemaProfil = z.object({
   nom: texteObligatoire('Le nom', 2, 120),
   telephone,
   adresse: z.string().trim().max(300).optional().or(z.literal('')),
-  avatar: avatarOptionnel,
 })
 
 export const schemaPreferences = z.object({

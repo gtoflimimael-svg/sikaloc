@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { capacites, MESSAGE_LIMITE_LOGEMENTS } from '@/lib/plan'
+import { capacites, messageLimiteLogements } from '@/lib/plan'
 import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaLogement, type EtatFormulaire } from '@/lib/validation'
@@ -36,7 +36,7 @@ export async function creerLogement(
       .from('logements')
       .select('id', { count: 'exact', head: true })
 
-    if ((count ?? 0) >= limite) return { erreur: MESSAGE_LIMITE_LOGEMENTS }
+    if ((count ?? 0) >= limite) return { erreur: messageLimiteLogements(count ?? 0) }
   }
 
   const { error } = await supabase.from('logements').insert({

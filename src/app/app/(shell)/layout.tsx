@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
 import { MenuCompte } from '@/components/app/menu-compte'
 import { BarreLaterale, EnTeteMobile } from '@/components/app/navigation'
-import { bailleurCourant } from '@/lib/session'
+import { TransitionPage } from '@/components/ui/transition-page'
 import { abonnementActif } from '@/lib/plan'
+import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
 export default async function LayoutApplication({
@@ -12,14 +13,20 @@ export default async function LayoutApplication({
 }: {
   children: React.ReactNode
 }) {
-  const bailleur = await bailleurCourant()
   const supabase = await creerClientServeur()
 
-  // Compteur d'impayés affiché en pastille de navigation. `head: true` ne
-  // rapatrie aucune ligne : seul le total voyage.
-  const { count } = await supabase
-    .from('v_impayes')
-    .select('bail_id', { count: 'exact', head: true })
+  // Ce layout enveloppe CHAQUE page de l'application : la moindre latence
+  // gagnée ici se paie à chaque navigation. Le profil du bailleur et le
+  // compteur d'impayés sont deux lectures indépendantes — toutes deux scopées
+  // par les RLS via le cookie de session, aucune n'a besoin du résultat de
+  // l'autre — donc parties en parallèle plutôt qu'à la suite.
+  //
+  // `head: true` sur le compteur ne rapatrie aucune ligne : seul le total
+  // voyage.
+  const [bailleur, { count }] = await Promise.all([
+    bailleurCourant(),
+    supabase.from('v_impayes').select('bail_id', { count: 'exact', head: true }),
+  ])
 
   const impayes = count ?? 0
   const plan = abonnementActif(bailleur) ? 'Standard' : 'Gratuit'
@@ -34,6 +41,8 @@ export default async function LayoutApplication({
           nomBailleur={bailleur.nom}
           idBailleur={bailleur.id}
           avatarBailleur={bailleur.avatar}
+          emailBailleur={bailleur.email}
+          plan={plan}
         />
 
         <BandeauAbonnement bailleur={bailleur} />
@@ -52,7 +61,9 @@ export default async function LayoutApplication({
         </header>
 
         <main className="flex-1 px-lg py-xl sm:px-xl sm:py-2xl">
-          <div className="mx-auto max-w-[1100px]">{children}</div>
+          <div className="mx-auto max-w-[1100px]">
+            <TransitionPage>{children}</TransitionPage>
+          </div>
         </main>
       </div>
     </div>
