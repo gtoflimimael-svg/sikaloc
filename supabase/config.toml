@@ -156,15 +156,24 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:3000"
+# ATTENTION — ces valeurs sont volontairement celles de PRODUCTION, pas de
+# `localhost`. La CLI Supabase n'a qu'un seul `config.toml` pour le dev local
+# et le `config push` distant : si ce fichier pointait vers `localhost`, un
+# `config push` un peu rapide (pour pousser un tout autre changement) écraserait
+# silencieusement `site_url` et la liste blanche de redirection en production —
+# et cassait net la confirmation d'inscription et la réinitialisation de mot
+# de passe pour de vrais bailleurs. Mieux vaut une gêne locale assumée qu'une
+# régression de production invisible.
+#
+# Pour tester les emails d'auth EN LOCAL malgré cela : remplacez temporairement
+# ces deux valeurs par leurs équivalents `http://localhost:3000`, sans les
+# committer, ou pointez directement vers l'environnement distant depuis
+# `.env.local` (ce que fait déjà le développement courant de l'application).
+site_url = "https://sikaloc.com"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = [
-  "http://localhost:3000",
-  "http://localhost:3000/auth/callback",
-  "http://localhost:3000/auth/callback?next=/reinitialiser-mot-de-passe",
-]
+additional_redirect_urls = ["https://sikaloc.com", "https://www.sikaloc.com"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 #
 # Sikaloc — note sur la spec §6.1.1 (« JWT avec expiration 7 jours »). L'intention
@@ -233,25 +242,39 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+#
+# `true` à dessein, même si cela ralentit un test local (voir l'avertissement
+# sur `site_url` plus haut : ce fichier reflète la production).
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
-max_frequency = "1s"
+max_frequency = "1m0s"
 # Number of characters used in the email OTP.
-otp_length = 6
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# SMTP de production — Resend, dont le domaine sikaloc.com est déjà vérifié
+# pour l'envoi (même compte que `src/lib/emails.ts`). Sans ceci, le plan
+# gratuit de Supabase refuse toute personnalisation de gabarit d'email
+# (« Email template modification is not available for free tier projects
+# using the default email provider ») et plafonne à 2 emails/heure — les deux
+# limites qui bloquaient le déploiement des gabarits ci-dessous.
+#
+# `env(RESEND_API_KEY)` est résolu par la CLI au moment du `supabase config
+# push`, depuis l'environnement du shell qui l'exécute — pas depuis
+# `.env.local`, que la CLI Supabase ne charge pas elle-même. Exportez la
+# variable avant de pousser si vous relancez cette commande :
+#   export RESEND_API_KEY="<la clé de .env.local>"
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 587
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "no-reply@sikaloc.com"
+sender_name = "Sikaloc"
 
 # Gabarits Sikaloc — remplacent le message brut « Supabase Auth » par un
 # email à l'en-tête et aux couleurs de la marque (mêmes gabarits que
@@ -275,11 +298,23 @@ content_path = "./supabase/templates/recovery.html"
 # Avis de sécurité envoyé à chaque changement de mot de passe réussi (voir
 # `changerMotDePasse` dans `src/lib/actions/parametres.ts`) : la seule façon
 # de repérer un mot de passe changé par quelqu'un d'autre que soi.
+#
+# NON CONFIRMÉ EN PRODUCTION : `supabase config push` l'a accepté sans erreur
+# la première fois, mais l'a ensuite retiré silencieusement du fichier local
+# en réécrivant `config.toml` après coup — signe probable que
+# `auth.email.notification.*` n'est pas (encore ?) répercuté par cette
+# version de la CLI/API. Vérifiez dans le tableau de bord → Authentication →
+# Emails → « Password Changed » si ce gabarit y apparaît ; sinon, collez son
+# contenu (`supabase/templates/password_changed_notification.html`)
+# directement dans le champ correspondant du tableau de bord.
 [auth.email.notification.password_changed]
 enabled = true
 subject = "Sikaloc — votre mot de passe a été modifié"
 content_path = "./supabase/templates/password_changed_notification.html"
 
+# Avis de sécurité envoyé à chaque changement de mot de passe réussi (voir
+# `changerMotDePasse` dans `src/lib/actions/parametres.ts`) : la seule façon
+# de repérer un mot de passe changé par quelqu'un d'autre que soi.
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
 enable_signup = false
@@ -326,8 +361,8 @@ max_enrolled_factors = 10
 
 # Control MFA via App Authenticator (TOTP)
 [auth.mfa.totp]
-enroll_enabled = false
-verify_enabled = false
+enroll_enabled = true
+verify_enabled = true
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]
