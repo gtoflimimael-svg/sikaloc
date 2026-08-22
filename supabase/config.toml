@@ -215,7 +215,17 @@ password_requirements = "letters_digits"
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+#
+# `2` est le plafond du fournisseur d'email PAR DÉFAUT de Supabase (plan
+# gratuit) — indépendant du SMTP configuré juste en dessous. Passer à Resend
+# (voir `[auth.email.smtp]`) lève la limite de personnalisation des gabarits,
+# mais ne touche pas à celle-ci : ce sont deux réglages distincts. Laissé à sa
+# valeur par défaut lors du premier `config push`, elle bloquait déjà toute
+# inscription au-delà de la deuxième de l'heure — « email rate limit
+# exceeded » sur le formulaire d'inscription en est le symptôme direct.
+# Portée à 30, au même niveau que les autres limites « généreuses » de ce
+# fichier ; la vraie limite de débit reste celle du compte Resend.
+email_sent = 30
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -299,22 +309,25 @@ content_path = "./supabase/templates/recovery.html"
 # `changerMotDePasse` dans `src/lib/actions/parametres.ts`) : la seule façon
 # de repérer un mot de passe changé par quelqu'un d'autre que soi.
 #
-# NON CONFIRMÉ EN PRODUCTION : `supabase config push` l'a accepté sans erreur
-# la première fois, mais l'a ensuite retiré silencieusement du fichier local
-# en réécrivant `config.toml` après coup — signe probable que
-# `auth.email.notification.*` n'est pas (encore ?) répercuté par cette
-# version de la CLI/API. Vérifiez dans le tableau de bord → Authentication →
-# Emails → « Password Changed » si ce gabarit y apparaît ; sinon, collez son
-# contenu (`supabase/templates/password_changed_notification.html`)
-# directement dans le champ correspondant du tableau de bord.
-[auth.email.notification.password_changed]
-enabled = true
-subject = "Sikaloc — votre mot de passe a été modifié"
-content_path = "./supabase/templates/password_changed_notification.html"
-
-# Avis de sécurité envoyé à chaque changement de mot de passe réussi (voir
-# `changerMotDePasse` dans `src/lib/actions/parametres.ts`) : la seule façon
-# de repérer un mot de passe changé par quelqu'un d'autre que soi.
+# DÉSACTIVÉ : `supabase config push` (CLI 2.114.0) échoue dur sur cette
+# section précise avec une erreur de chemin doublé
+# (`.../supabase/supabase/templates/password_changed_notification.html` —
+# le fichier réel est à `supabase/templates/...`, sans doublon). Les deux
+# gabarits `auth.email.template.*` juste au-dessus utilisent exactement le
+# même chemin relatif et se poussent sans problème : le bug de résolution
+# est propre à `auth.email.notification.*`, pas à ce fichier. Un premier
+# `config push` avait déjà accepté cette section sans erreur avant de la
+# retirer silencieusement du fichier local au push suivant — signe que ce
+# bloc n'était de toute façon pas fiable. Le bloquer ici évite qu'il
+# n'empêche le reste de `config push` de passer (notamment
+# `auth.rate_limit`). Pour l'activer malgré tout : configurez le gabarit
+# manuellement dans le tableau de bord → Authentication → Emails →
+# « Password Changed », en y collant le contenu de
+# `supabase/templates/password_changed_notification.html`.
+# [auth.email.notification.password_changed]
+# enabled = true
+# subject = "Sikaloc — votre mot de passe a été modifié"
+# content_path = "./supabase/templates/password_changed_notification.html"
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
 enable_signup = false
