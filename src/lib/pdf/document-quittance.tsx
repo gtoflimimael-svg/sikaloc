@@ -3,14 +3,26 @@ import { join } from 'node:path'
 import {
   Document,
   Font,
+  G,
   Image,
   Page,
+  Path,
   StyleSheet,
+  Svg,
   Text,
   View,
 } from '@react-pdf/renderer'
 
 import { formaterDate, formaterFCFA, formaterHorodatage, formaterPeriode } from '@/lib/format'
+import {
+  COULEUR_MARQUE,
+  HAUTEUR_MARQUE,
+  LARGEUR_MARQUE,
+  RATIO_MARQUE,
+  TRACES_ICONE,
+  TRACES_TEXTE,
+  TRANSFORM_ICONE,
+} from '@/lib/marque'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
 
 /**
@@ -98,20 +110,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   marque: { flexDirection: 'row', alignItems: 'center' },
-  pastille: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: couleurs.primary,
-    marginRight: 8,
-  },
-  motMarque: {
-    fontFamily: 'Copernicus',
-    fontWeight: 800,
-    fontSize: 17,
-    color: couleurs.ink,
-    letterSpacing: -0.5,
-  },
   blocNumero: { alignItems: 'flex-end' },
   etiquetteNumero: { fontSize: 8, color: couleurs.mute, textTransform: 'uppercase' },
   numero: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 11, color: couleurs.ink },
@@ -338,6 +336,37 @@ export interface DonneesQuittance {
   apercu?: boolean
 }
 
+/**
+ * Le logo Sikaloc en en-tête de quittance — tracés vectoriels, pas une image
+ * rasterisée : react-pdf sait rendre du SVG directement (`Svg`/`Path`/`G`),
+ * ce qui évite de charger un fichier et garde un rendu net à toute résolution
+ * d'impression. Les tracés viennent de `src/lib/marque.ts`, source unique
+ * partagée avec le logo web et le logo email.
+ */
+function LogoQuittance() {
+  const hauteur = 17
+  const largeur = Math.round(hauteur * RATIO_MARQUE)
+
+  return (
+    <Svg
+      width={largeur}
+      height={hauteur}
+      viewBox={`0 0 ${LARGEUR_MARQUE} ${HAUTEUR_MARQUE}`}
+    >
+      <G transform={TRANSFORM_ICONE} fill={COULEUR_MARQUE}>
+        {TRACES_ICONE.map((d, i) => (
+          <Path key={i} d={d} />
+        ))}
+      </G>
+      {TRACES_TEXTE.map(({ transform, d }, i) => (
+        <G key={i} transform={transform} fill={COULEUR_MARQUE}>
+          <Path d={d} />
+        </G>
+      ))}
+    </Svg>
+  )
+}
+
 function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
   return (
     <View style={styles.ligne}>
@@ -376,8 +405,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
         {/* ── En-tête ────────────────────────────────────────────────────── */}
         <View style={styles.enTete}>
           <View style={styles.marque}>
-            <View style={styles.pastille} />
-            <Text style={styles.motMarque}>Sikaloc</Text>
+            <LogoQuittance />
           </View>
           <View style={styles.blocNumero}>
             <Text style={styles.etiquetteNumero}>N° de document</Text>

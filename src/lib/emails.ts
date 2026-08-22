@@ -31,9 +31,22 @@ interface Message {
   ton: 'info' | 'attention' | 'grave'
 }
 
+function urlBase(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+}
+
 function urlAbonnement(): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  return `${base}/app/parametres/abonnement`
+  return `${urlBase()}/app/parametres/abonnement`
+}
+
+/**
+ * Logo en PNG, pas en SVG : Outlook ignore purement et simplement le SVG
+ * inline dans un `<img>`. Le fichier est rendu à 3x (voir
+ * `scripts/generer-logo-email.ts`) et affiché ici à sa taille /3 — la
+ * technique standard pour rester net sur écran Retina en email.
+ */
+function urlLogo(): string {
+  return `${urlBase()}/marque/logo-email.png`
 }
 
 export function composer(modele: ModeleEmail, variables: VariablesEmail): Message {
@@ -140,10 +153,8 @@ function rendreHtml(message: Message): string {
              style="max-width:560px;background:#F4F4FB;border:1px solid #D8D8E6;border-radius:24px;">
         <tr><td style="padding:32px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 
-          <div style="display:inline-block;width:28px;height:28px;border-radius:14px;
-                      background:#5C5CCC;vertical-align:middle;"></div>
-          <span style="font-size:20px;font-weight:800;color:#131314;vertical-align:middle;
-                       margin-left:8px;letter-spacing:-0.5px;">Sikaloc</span>
+          <img src="${urlLogo()}" width="124" height="28" alt="Sikaloc"
+               style="display:block;width:124px;height:28px;border:0;" />
 
           <div style="height:4px;width:48px;background:${accent};border-radius:2px;margin:24px 0;"></div>
 

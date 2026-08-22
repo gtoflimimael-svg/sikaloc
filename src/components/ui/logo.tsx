@@ -1,86 +1,117 @@
 import Link from 'next/link'
 
+import {
+  COULEUR_MARQUE,
+  COULEUR_MARQUE_SUR_SOMBRE,
+  HAUTEUR_MARQUE,
+  LARGEUR_MARQUE,
+  RATIO_MARQUE,
+  TRACES_ICONE,
+  TRACES_TEXTE,
+  TRANSFORM_ICONE,
+} from '@/lib/marque'
+
 /**
- * Marque Sikaloc — wordmark accompagné d'une icône « maison qui pousse ».
+ * Marque Sikaloc — le véritable logo (icône tracée + wordmark « Sikaloc_ »).
  *
- * L'icône reprend le motif de la feuille sur un toit : l'argent qui pousse,
- * signature indigo du design system.
+ * Les tracés eux-mêmes vivent dans `src/lib/marque.ts` : ce fichier n'est plus
+ * que leur rendu React, la même donnée servant aussi au PDF des quittances et
+ * au logo email (voir le commentaire d'en-tête de ce module pour le pourquoi).
+ *
+ * Le nom de la marque se termine par un tiret bas — « Sikaloc_ », pas
+ * « Sikaloc ». Dans une police à chasse fixe, il se lit comme un curseur de
+ * terminal : c'est le détail qui fait la marque, pas une coquille.
  */
-export function MarqueSikaloc({
-  href = '/',
-  taille = 'md',
-  surSombre = false,
-}: {
-  href?: string | null
-  taille?: 'sm' | 'md' | 'lg'
-  surSombre?: boolean
-}) {
-  const tailles = {
-    sm: { icone: 24, texte: 'text-display-xs' },
-    md: { icone: 30, texte: 'text-display-sm' },
-    lg: { icone: 36, texte: 'text-display-md' },
-  }[taille]
 
-  const contenu = (
-    <span className="inline-flex items-center gap-sm">
-      <IconeSikaloc taille={tailles.icone} />
-      <span
-        className={`${tailles.texte} font-extrabold tracking-tight ${
-          surSombre ? 'text-on-dark' : 'text-ink'
-        }`}
-      >
-        Sikaloc
-      </span>
-    </span>
-  )
+const HAUTEURS: Record<'sm' | 'md' | 'lg', number> = { sm: 28, md: 40, lg: 56 }
 
-  if (!href) return contenu
-
+/** Les deux tracés de l'icône — motif original, inchangé. */
+function TracesIcone() {
   return (
-    <Link href={href} className="inline-flex items-center">
-      {contenu}
-    </Link>
+    <g transform={TRANSFORM_ICONE}>
+      {TRACES_ICONE.map((d, i) => (
+        <path key={i} d={d} />
+      ))}
+    </g>
   )
 }
 
-export function IconeSikaloc({ taille = 30 }: { taille?: number }) {
+/** Le wordmark « Sikaloc_ », en JetBrains Mono Thin — tracés figés, voir `src/lib/marque.ts`. */
+function TracesTexte() {
+  return (
+    <>
+      {TRACES_TEXTE.map(({ transform, d }, i) => (
+        <g key={i} transform={transform}>
+          <path d={d} />
+        </g>
+      ))}
+    </>
+  )
+}
+
+/** Icône seule — buste sans le nom, pour les espaces trop étroits pour le wordmark. */
+export function IconeSikaloc({
+  taille = 30,
+  couleur = COULEUR_MARQUE,
+  className = '',
+}: {
+  taille?: number
+  couleur?: string
+  className?: string
+}) {
   return (
     <svg
       width={taille}
       height={taille}
-      viewBox="0 0 32 32"
-      fill="none"
-      aria-hidden="true"
+      viewBox="0 0 600 600"
+      fill={couleur}
+      stroke="none"
       role="presentation"
+      aria-hidden="true"
+      className={className}
     >
-      <rect width="32" height="32" rx="9" fill="#5C5CCC" />
-      {/* Toit */}
-      <path
-        d="M8.5 15.5 16 9.5l7.5 6"
-        stroke="#FFFFFF"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Murs */}
-      <path
-        d="M10.5 15v7.5h11V15"
-        stroke="#FFFFFF"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* La pousse : le loyer qui rentre */}
-      <path
-        d="M16 22.5v-3.6"
-        stroke="#C7C7F2"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16 19.2c0-1.4 1.1-2.5 2.4-2.5 0 1.4-1 2.5-2.4 2.5Z"
-        fill="#C7C7F2"
-      />
+      <TracesIcone />
     </svg>
+  )
+}
+
+/** Icône + wordmark « Sikaloc_ » — la marque complète. */
+export function MarqueSikaloc({
+  href = '/',
+  taille = 'md',
+  surSombre = false,
+  className = '',
+}: {
+  href?: string | null
+  taille?: 'sm' | 'md' | 'lg'
+  surSombre?: boolean
+  className?: string
+}) {
+  const hauteur = HAUTEURS[taille]
+  const largeur = Math.round(hauteur * RATIO_MARQUE)
+  const couleur = surSombre ? COULEUR_MARQUE_SUR_SOMBRE : COULEUR_MARQUE
+
+  const svg = (
+    <svg
+      width={largeur}
+      height={hauteur}
+      viewBox={`0 0 ${LARGEUR_MARQUE} ${HAUTEUR_MARQUE}`}
+      fill={couleur}
+      stroke="none"
+      role="img"
+      aria-label="Sikaloc"
+      className={className}
+    >
+      <TracesIcone />
+      <TracesTexte />
+    </svg>
+  )
+
+  if (!href) return svg
+
+  return (
+    <Link href={href} className="inline-flex items-center">
+      {svg}
+    </Link>
   )
 }

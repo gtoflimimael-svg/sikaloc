@@ -49,6 +49,18 @@ export function CaptureSignature({
 
   useEffect(() => arreterCamera, [arreterCamera])
 
+  // Attache le flux à l'élément vidéo une fois qu'il est monté. `ouvrirCamera`
+  // ne peut pas le faire lui-même : au moment où `setCameraActive(true)`
+  // s'exécute, le <video> conditionnel n'est pas encore dans le DOM (le rendu
+  // React n'a pas eu lieu), donc `video.current` y vaut encore `null` — sans
+  // cet effet, le flux ne s'affichait jamais et « Capturer » photographiait
+  // une vidéo vide.
+  useEffect(() => {
+    if (!cameraActive || !flux.current || !video.current) return
+    video.current.srcObject = flux.current
+    void video.current.play().catch(() => undefined)
+  }, [cameraActive])
+
   /** Publie le fichier retenu dans l'<input> caché que le formulaire poste. */
   const publier = useCallback(
     (fichier: File | null) => {
@@ -102,11 +114,6 @@ export function CaptureSignature({
 
       flux.current = media
       setCameraActive(true)
-
-      if (video.current) {
-        video.current.srcObject = media
-        await video.current.play().catch(() => undefined)
-      }
     } catch {
       setErreur(
         'Accès à la caméra refusé. Autorisez-la dans votre navigateur, ou prenez la photo avec votre appareil photo puis importez-la.',
