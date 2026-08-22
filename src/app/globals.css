@@ -571,6 +571,20 @@
   }
 }
 
+/* Miroir de `sika-glisse`, pour les panneaux ancrés à droite : un tiroir doit
+   entrer par le bord dont il vient, sinon le mouvement contredit la géométrie
+   et se lit comme un défaut. Mêmes durée et courbe — c'est le même geste. */
+@keyframes sika-glisse-droite {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes sika-page {
   from {
     opacity: 0;
@@ -626,6 +640,11 @@
 
   .anim-glisse {
     animation: sika-glisse var(--duree-moyenne) var(--ease-doux) both;
+    animation-delay: var(--delai, 0ms);
+  }
+
+  .anim-glisse-droite {
+    animation: sika-glisse-droite var(--duree-moyenne) var(--ease-doux) both;
     animation-delay: var(--delai, 0ms);
   }
 

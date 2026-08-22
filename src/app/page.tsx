@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react'
 import Link from 'next/link'
 
+import { MenuMobile } from '@/components/marketing/menu-mobile'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { Illustration } from '@/components/ui/illustration'
 import { MarqueSikaloc } from '@/components/ui/logo'
@@ -131,10 +132,28 @@ export default async function PageAccueil() {
     <div className="min-h-screen bg-canvas-soft">
       {/* ── Navigation ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur">
-        <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-xl">
-          <MarqueSikaloc />
+        <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-sm px-lg lg:px-xl">
+          {/*
+            Le wordmark fait 178 px de large en taille `md` — à lui seul, plus
+            de la moitié d'un écran de 360 px. La barre passe donc à la taille
+            `sm` sous `lg`, comme le fait déjà l'en-tête de l'application
+            (`EnTeteMobile`). Deux rendus plutôt qu'une classe responsive :
+            la taille pilote la largeur du SVG, pas seulement sa police.
 
-          <div className="hidden items-center gap-xl md:flex">
+            Le basculement se fait à `lg` et non à `md` : à exactement 768 px,
+            le wordmark en taille `md`, les trois ancres, le sélecteur de thème
+            et les deux boutons réclamaient ensemble 854 px pour 768 px
+            disponibles — l'en-tête débordait. Le tiroir couvre donc aussi la
+            tranche 768–1023 px, celle des tablettes en portrait.
+          */}
+          <span className="lg:hidden">
+            <MarqueSikaloc taille="sm" />
+          </span>
+          <span className="hidden lg:block">
+            <MarqueSikaloc />
+          </span>
+
+          <div className="hidden items-center gap-xl lg:flex">
             <Link href="#fonctionnalites" className="text-nav-link text-body hover:text-ink">
               Fonctionnalités
             </Link>
@@ -146,6 +165,13 @@ export default async function PageAccueil() {
             </Link>
           </div>
 
+          {/*
+            Sous `md`, la barre ne garde qu'une seule action plus le tiroir :
+            « Se connecter » et « Commencer » côte à côte poussaient l'en-tête
+            à 447 px de large pour un écran de 360 px, et la page débordait
+            horizontalement. « Commencer » reste dehors — un CTA rangé dans un
+            menu n'est plus un CTA — et le reste passe dans le tiroir.
+          */}
           <div className="flex items-center gap-sm">
             <div className="hidden sm:block">
               <SelecteurTheme compact />
@@ -156,7 +182,7 @@ export default async function PageAccueil() {
               </Link>
             ) : (
               <>
-                <Link href="/connexion" className="btn btn-secondary btn-sm">
+                <Link href="/connexion" className="btn btn-secondary btn-sm max-lg:hidden">
                   Se connecter
                 </Link>
                 <Link href="/inscription" className="btn btn-primary btn-sm">
@@ -164,6 +190,8 @@ export default async function PageAccueil() {
                 </Link>
               </>
             )}
+
+            <MenuMobile connecte={Boolean(utilisateur)} />
           </div>
         </nav>
       </header>
@@ -345,7 +373,14 @@ export default async function PageAccueil() {
             </p>
           </div>
 
-          <div className="mx-auto mt-3xl grid max-w-[56rem] gap-xl md:grid-cols-2 md:items-start">
+          {/*
+            `[&>*]:min-w-0` : un élément de grille a `min-width: auto`, donc une
+            largeur minimale égale à celle de son contenu. Les cartes réclamaient
+            ainsi 300 px dans une colonne de 256 px et débordaient de la page
+            sous 360 px de large. Les autoriser à passer sous leur minimum de
+            contenu laisse le texte se replier normalement.
+          */}
+          <div className="mx-auto mt-3xl grid max-w-[56rem] gap-xl [&>*]:min-w-0 md:grid-cols-2 md:items-start">
             <div className="card card-lg">
               <p className="text-title-lg font-bold text-ink">Gratuit</p>
               <p className="mt-sm text-display-md font-extrabold tabular tracking-tight text-ink">0 FCFA</p>
@@ -364,7 +399,17 @@ export default async function PageAccueil() {
                 <Puce>Tableau de bord et suivi des impayés</Puce>
               </ul>
 
-              <Link href="/inscription" className="btn btn-secondary mt-xl w-full">
+              {/*
+                `.btn` est en `white-space: nowrap` et à hauteur fixe : le
+                libellé imposait donc une largeur minimale de 236 px à la
+                carte, qui débordait de sa colonne de 256 px sous 360 px de
+                large. On autorise le retour à la ligne et on laisse la
+                hauteur s'adapter, plutôt que de raccourcir le libellé.
+              */}
+              <Link
+                href="/inscription"
+                className="btn btn-secondary mt-xl h-auto min-h-10 w-full whitespace-normal py-sm leading-snug"
+              >
                 Commencer gratuitement
               </Link>
             </div>
@@ -388,7 +433,10 @@ export default async function PageAccueil() {
                 <Puce surSombre>Support par email</Puce>
               </ul>
 
-              <Link href="/inscription" className="btn btn-primary mt-xl w-full">
+              <Link
+                href="/inscription"
+                className="btn btn-primary mt-xl h-auto min-h-10 w-full whitespace-normal py-sm leading-snug"
+              >
                 Passer au plan Standard
               </Link>
             </div>
