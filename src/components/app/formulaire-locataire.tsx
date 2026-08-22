@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 
 import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import { BoutonSoumettre } from '@/components/ui/boutons'
@@ -21,8 +21,17 @@ export function FormulaireLocataire({
 }) {
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
   const modification = Boolean(locataire)
-  // Amorce figée : un locataire pas encore créé n'a pas d'identifiant.
-  const [grainePremierAvatar] = useState(() => Math.random().toString(36).slice(2))
+  // Amorce figée : un locataire pas encore créé n'a pas d'identifiant. Fixe le
+  // temps de l'hydratation (`Math.random()` y donnerait une valeur différente
+  // au rendu serveur et au premier rendu client — mésappariement d'hydratation,
+  // voir le même correctif dans `formulaires.tsx`), puis remplacée par un vrai
+  // hasard une fois montée ; la `key` sur <SelecteurAvatar> le fait recalculer
+  // l'avatar à partir de cette nouvelle graine.
+  const [grainePremierAvatar, setGrainePremierAvatar] = useState('sikaloc')
+
+  useEffect(() => {
+    if (!locataire) setGrainePremierAvatar(Math.random().toString(36).slice(2))
+  }, [locataire])
 
   return (
     <form action={envoyer} className="card card-lg space-y-lg">
@@ -35,6 +44,7 @@ export function FormulaireLocataire({
           vos listes.
         </p>
         <SelecteurAvatar
+          key={locataire?.id ?? grainePremierAvatar}
           nom="avatar"
           identifiant={locataire?.id ?? grainePremierAvatar}
           valeurInitiale={locataire?.avatar}

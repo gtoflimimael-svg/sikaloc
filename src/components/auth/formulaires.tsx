@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
@@ -78,9 +78,20 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
   const [etape, setEtape] = useState<1 | 2>(1)
 
   // Amorce stable le temps du formulaire : sans compte, il n'y a pas encore
-  // d'identifiant pour dériver un avatar. Figée par useState pour que l'aperçu
-  // ne saute pas à chaque rendu.
-  const [grainePremierAvatar] = useState(() => Math.random().toString(36).slice(2))
+  // d'identifiant pour dériver un avatar. `Math.random()` dans l'initialiseur
+  // de useState y donnait une valeur différente au rendu serveur et au rendu
+  // client initial (chacun l'évalue de son côté) : un mésappariement
+  // d'hydratation (erreur React #418) qui invalidait tout le sous-arbre — y
+  // compris l'étape 2, encore masquée mais déjà montée. La graine de départ
+  // est donc fixe (identique des deux côtés), puis un vrai hasard la remplace
+  // dans un effet, qui ne s'exécute qu'après l'hydratation ; la `key` posée
+  // sur <SelecteurAvatar> force son remontage pour recalculer l'avatar à
+  // partir de cette nouvelle graine.
+  const [grainePremierAvatar, setGrainePremierAvatar] = useState('sikaloc')
+
+  useEffect(() => {
+    setGrainePremierAvatar(Math.random().toString(36).slice(2))
+  }, [])
 
   // Une erreur renvoyée par le serveur porte toujours sur l'étape 1 : c'est là
   // que vivent tous les champs validés.
@@ -187,7 +198,12 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
             Il vous représentera dans l&apos;application. Vous pourrez en changer
             à tout moment depuis vos paramètres.
           </p>
-          <SelecteurAvatar nom="avatar" identifiant={grainePremierAvatar} taille={96} />
+          <SelecteurAvatar
+            key={grainePremierAvatar}
+            nom="avatar"
+            identifiant={grainePremierAvatar}
+            taille={96}
+          />
         </div>
 
         <BoutonSoumettre pleineLargeur libelleEnCours="Création…">
