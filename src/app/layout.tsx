@@ -55,16 +55,41 @@ const inter = Inter({
   weight: ['400', '500', '600', '800', '900'],
 })
 
+/**
+ * Le titre porte les mots réellement cherchés (« quittance de loyer »,
+ * « Bénin ») ; le H1 de la page d'accueil porte l'accroche émotionnelle. Les
+ * deux leviers ne se disputent plus la même ligne.
+ *
+ * Les métadonnées Open Graph ne sont pas décoratives ici : WhatsApp est le
+ * canal de distribution principal du produit, et sans elles un lien partagé
+ * dans une conversation s'affiche sans titre, sans description et sans image.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL('https://sikaloc.com'),
   title: {
-    default: 'Sikaloc — Gérez vos loyers sans effort',
+    default: 'Quittances de loyer conformes au Bénin — Sikaloc',
     template: '%s · Sikaloc',
   },
   description:
-    'Sikaloc est l’outil des bailleurs au Bénin : suivi des loyers, détection des impayés et quittances PDF conformes envoyées par WhatsApp en moins de 3 clics.',
+    'Suivez vos loyers au Bénin : impayés détectés automatiquement et quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp.',
   applicationName: 'Sikaloc',
   authors: [{ name: 'Sikaloc' }],
   keywords: ['gestion locative', 'quittance de loyer', 'Bénin', 'bailleur', 'loyer'],
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: 'Sikaloc',
+    url: '/',
+    title: 'Quittances de loyer conformes au Bénin — Sikaloc',
+    description:
+      'Quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp. Gratuit jusqu’à 2 logements.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Quittances de loyer conformes au Bénin — Sikaloc',
+    description:
+      'Quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp.',
+  },
 }
 
 export const viewport: Viewport = {

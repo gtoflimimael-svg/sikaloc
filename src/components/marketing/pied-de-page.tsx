@@ -37,9 +37,12 @@ export function PiedDePage() {
         <div className="grid gap-3xl md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <MarqueSikaloc href={null} surSombre />
+            {/* « Outil » a disparu de l'accroche marketing, mais reste dans la
+                mention légale ci-dessous, où il est porteur : c'est lui qui
+                établit que Sikaloc n'est pas partie au contrat de bail. */}
             <p className="mt-md max-w-[20rem] text-body-sm">
-              L&apos;outil des bailleurs au Bénin. Quittances conformes, impayés
-              sous contrôle, locataires informés par WhatsApp.
+              Les quittances des bailleurs au Bénin. Numérotées, horodatées,
+              envoyées au locataire sur WhatsApp.
             </p>
           </div>
 

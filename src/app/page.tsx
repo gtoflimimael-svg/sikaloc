@@ -9,58 +9,93 @@ import { formaterFCFA } from '@/lib/format'
 import { LIMITE_LOGEMENTS_GRATUIT, PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
 
+/**
+ * Trois étapes, à l'impératif, chacune close par un bénéfice de sécurité.
+ *
+ * Chaque promesse est adossée à un mécanisme réel du produit — la fenêtre de
+ * correction de 5 minutes (`src/lib/paiement-utils.ts`) et l'empreinte SHA-256
+ * enregistrée à l'émission (`src/lib/quittance.ts`). C'est ce qui permet de
+ * tenir un registre « protection » sans écrire une seule promesse invérifiable.
+ */
 const etapes = [
   {
     numero: '1',
-    titre: 'Enregistrez vos baux',
+    titre: 'Sécurisez votre bail',
     texte:
       'Logement, locataire, loyer, jour d’échéance. Trois minutes pour tout mettre à plat, une fois pour toutes.',
   },
   {
     numero: '2',
-    titre: 'Saisissez le paiement',
+    titre: 'Tracez chaque paiement',
     texte:
-      'Montant, mois concerné, mode de règlement. Sikaloc calcule la période et vous montre un récapitulatif avant de valider.',
+      'Montant, période, mode de règlement. Sikaloc calcule et vous montre le récapitulatif avant validation. Cinq minutes pour corriger, puis le paiement est figé — c’est ce qui rend la quittance opposable.',
   },
   {
     numero: '3',
-    titre: 'Envoyez la quittance',
+    titre: 'Gardez la preuve',
     texte:
-      'Le PDF conforme est généré, numéroté et horodaté. Un bouton l’envoie au locataire sur WhatsApp.',
+      'Le PDF est généré, numéroté et horodaté, avec son empreinte d’intégrité : si le document reçu est contesté, la moindre modification se voit. Un bouton l’envoie au locataire sur WhatsApp.',
   },
 ]
 
+/**
+ * Fonctionnalités, ordonnées selon la pyramide du positionnement : la preuve
+ * d'abord (le levier dominant), puis le contrôle, puis l'efficacité.
+ *
+ * Règle tenue ici : on décrit ce que le document EST, jamais ce qu'un tribunal
+ * en fera. « Fait preuve du paiement » est vérifiable — c'est une décharge
+ * signée des deux parties ; « vous protège en justice » ne l'est pas, et
+ * contredirait les CGU, qui excluent tout conseil juridique.
+ *
+ * Les capacités réservées au plan Standard le disent dans leur propre texte :
+ * la landing ne peut pas promettre au visiteur ce que `capacites()` refusera
+ * au compte gratuit qu'il vient de créer (`src/lib/plan.ts`).
+ */
 const fonctionnalites = [
   {
-    titre: 'Quittances conformes Bénin',
+    titre: 'Des quittances qui font preuve',
     texte:
-      'Montant en lettres, mention du droit de timbre, décharge, horodatage et votre signature incrustée. Numérotation infalsifiable.',
+      'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et votre signature. Chaque document reçoit un numéro continu et une empreinte d’intégrité. Le plan Standard y ajoute la mention du droit de timbre.',
   },
   {
-    titre: 'Impayés détectés tout seuls',
+    titre: 'Aucun loyer ne s’échappe',
     texte:
-      'Chaque bail a son jour d’échéance et sa tolérance. Passé le délai, le loyer bascule en impayé et remonte en haut du tableau de bord.',
+      'Chaque bail a son jour d’échéance et sa tolérance. Passé le délai, le loyer bascule en impayé et remonte en haut de votre tableau de bord. Vous agissez avant que le retard ne s’enlise.',
   },
   {
-    titre: 'Relance WhatsApp en un clic',
+    titre: 'Relancez sans confrontation',
     texte:
-      'Le message est déjà rédigé avec le nom, la période, le montant et la date d’échéance. Vous relisez, vous envoyez.',
+      'Le message est pré-rédigé avec le nom, la période, le montant et l’échéance. Vous relisez, vous envoyez depuis votre propre WhatsApp — Sikaloc n’écrit jamais à votre place. Les relances se débloquent avec le plan Standard.',
   },
   {
-    titre: 'Vos chiffres en un coup d’œil',
+    titre: 'Votre parc, chiffres à l’appui',
     texte:
-      'Taux d’occupation, taux de recouvrement, impayés, chiffre d’affaires du mois. Mis à jour à chaque paiement.',
+      'Taux d’occupation, taux de recouvrement, impayés, chiffre d’affaires du mois. Mis à jour à chaque paiement. Vous savez où vous en êtes, sans surprise.',
   },
   {
-    titre: 'Le locataire n’a rien à installer',
+    titre: 'Rien à installer pour le locataire',
     texte:
-      'Il reçoit un lien de téléchargement sécurisé, valable 30 jours. Pas de compte, pas de mot de passe.',
+      'Il reçoit sa quittance sur WhatsApp, par un lien de téléchargement sécurisé valable 30 jours. Pas de compte, pas de mot de passe. La preuve est entre ses mains.',
   },
   {
-    titre: 'Vos données restent les vôtres',
+    titre: 'Vos données, cloisonnées',
     texte:
-      'Chaque bailleur ne voit que ses propres données, isolées au niveau de la base. Hébergement en Europe.',
+      'Chaque bailleur ne voit que ses propres données, isolées au niveau de la base. Hébergement en Europe, échanges chiffrés.',
   },
+]
+
+/**
+ * Ligne de preuves du hero — trois faits vrais pour LES DEUX plans.
+ *
+ * La mention du droit de timbre en est délibérément absente : elle n'existe
+ * que sur le plan Standard, alors que le CTA situé juste en dessous fait
+ * souscrire au plan Gratuit. L'annoncer ici reviendrait à vendre au visiteur
+ * l'inverse de ce que son compte produira.
+ */
+const preuves = [
+  'Numérotation continue et horodatage',
+  'Montant en lettres et décharge',
+  'Envoi au locataire sur WhatsApp',
 ]
 
 const questions = [
@@ -79,6 +114,13 @@ const questions = [
   {
     q: 'Et si je me trompe en saisissant un paiement ?',
     r: 'Vous avez 5 minutes après validation pour corriger. Passé ce délai, le paiement est figé — c’est ce qui rend la quittance opposable.',
+  },
+  {
+    // Prolonge la première question au lieu de la contredire : elle renvoie au
+    // conseil du bailleur, cette réponse ne peut donc pas promettre qu'il n'a
+    // « plus à vérifier lui-même », comme le proposait le rapport d'origine.
+    q: 'Pourquoi Sikaloc insiste-t-il autant sur les quittances ?',
+    r: 'Parce qu’une quittance mal rédigée se retourne contre le bailleur. Sikaloc pose les mentions attendues à chaque paiement, sans que vous ayez à les ressaisir — la mention du droit de timbre étant ajoutée avec le plan Standard. Cela ne remplace pas l’avis de votre conseil, mais vous n’avez plus à reconstituer une preuve après coup.',
   },
 ]
 
@@ -145,24 +187,69 @@ export default async function PageAccueil() {
                 Conçu pour les bailleurs au Bénin
               </span>
 
-              <h1 className="anim-monte text-display-lg font-extrabold tracking-tight text-ink sm:text-display-xl lg:text-display-xxl xl:text-display-mega">
-                Gérez vos loyers
-                <br />
-                sans effort
+              {/*
+                Pas d'`anim-monte` sur le H1 : il est l'élément LCP de la page,
+                et l'animation le maintient à `opacity: 0` pendant 460 ms — le
+                navigateur ne compte comme « peint » que ce qui est visible.
+                L'entrée animée est déplacée sur le sous-titre, qui ne l'est pas.
+                Pas de <br /> non plus : la coupure manuelle était calibrée pour
+                l'ancien titre de 27 caractères, sur quatre tailles différentes.
+                `text-balance` répartit les lignes proprement à toutes tailles.
+              */}
+              {/*
+                Plafonné à `display-xxl`, sans le palier `xl:display-mega` de
+                l'ancien titre : celui-ci tenait en 27 caractères, celui-là en
+                fait 55. À 80 px, il occupait cinq lignes et 420 px de haut, ce
+                qui repoussait le bouton principal sous la ligne de flottaison
+                sur un écran de 900 px. Mesuré, pas supposé.
+              */}
+              <h1 className="text-balance text-display-lg font-extrabold tracking-tight text-ink sm:text-display-xl lg:text-display-xxl">
+                Vos quittances de loyer tiendront-elles devant un juge ?
               </h1>
 
-              <p className="mt-xl max-w-[36rem] text-body-lg text-body">
-                Sikaloc remplace le carnet et le tableur. Enregistrez un paiement,
-                obtenez une quittance PDF conforme, envoyez-la au locataire sur
-                WhatsApp — le tout en moins de trois clics.
+              <p className="anim-monte mt-xl max-w-[36rem] text-body-lg text-body">
+                Sikaloc génère vos quittances : numérotées, horodatées, montant
+                en lettres, décharge et signature. Vos locataires les reçoivent
+                sur WhatsApp, et vous gardez la preuve de chaque loyer encaissé.
               </p>
 
+              {/* Empilée sous 640 px : en une seule ligne à séparateurs « · »,
+                  les trois preuves passaient à la ligne n'importe où. */}
+              <ul
+                role="list"
+                className="mt-lg flex flex-col gap-xs sm:flex-row sm:flex-wrap sm:gap-lg"
+              >
+                {preuves.map((preuve) => (
+                  <li key={preuve} className="flex items-start gap-xs text-body-sm text-body">
+                    <Check
+                      size={17}
+                      strokeWidth={2.5}
+                      aria-hidden="true"
+                      className="mt-xxs shrink-0 text-primary"
+                    />
+                    <span>{preuve}</span>
+                  </li>
+                ))}
+              </ul>
+
               <div className="mt-2xl flex flex-wrap items-center gap-md">
+                {/*
+                  Libellé court à dessein : `.btn` est en `white-space: nowrap`
+                  et à hauteur fixe, il ne peut donc ni revenir à la ligne ni
+                  s'élargir. « Protéger mes revenus — Gratuit jusqu'à 2
+                  logements » réclamait 416 px pour 296 px disponibles à 360 px
+                  de large : la page débordait horizontalement. L'argument de
+                  gratuité vit sur la ligne de réassurance, juste en dessous,
+                  qui interpole déjà la constante.
+                */}
                 <Link href="/inscription" className="btn btn-primary">
-                  Créer mon compte gratuitement
+                  Protéger mes revenus
                 </Link>
-                <Link href="#etapes" className="btn btn-tertiary">
-                  Voir comment ça marche
+                <Link
+                  href="/exemple-quittance"
+                  className="lien-anime text-body-sm font-medium text-ink"
+                >
+                  Voir un exemple de quittance
                 </Link>
               </div>
 
@@ -198,8 +285,11 @@ export default async function PageAccueil() {
           <p className="text-caption-uppercase uppercase text-primary">
             Comment ça marche
           </p>
+          {/* Le chiffre reste : c'est la promesse la plus crédible du site,
+              et la seule mesurable. Seul le mot d'arrivée change — « preuve »
+              plutôt que « quittance » — pour rejoindre le registre du hero. */}
           <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
-            Trois clics entre le paiement reçu et la quittance envoyée
+            Trois clics entre le paiement reçu et la preuve envoyée
           </h2>
           <p className="mt-md max-w-[42rem] text-body-lg text-mute">
             C&apos;est la promesse de Sikaloc, et c&apos;est mesurable : moins de deux
@@ -264,7 +354,13 @@ export default async function PageAccueil() {
               <ul className="mt-xl space-y-md text-body-md text-body">
                 <Puce>Jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements</Puce>
                 <Puce>Baux, locataires et paiements illimités</Puce>
-                <Puce>Quittances PDF basiques</Puce>
+                {/* Ni « basiques » (qui dévalorise) ni « standards » (qui
+                    entrerait en collision avec le nom du plan payant) : on
+                    décrit ce que le document contient, et ce qui lui manque. */}
+                <Puce>
+                  Quittances PDF numérotées et horodatées — sans la mention du
+                  droit de timbre
+                </Puce>
                 <Puce>Tableau de bord et suivi des impayés</Puce>
               </ul>
 
@@ -298,7 +394,20 @@ export default async function PageAccueil() {
             </div>
           </div>
 
-          <p className="mt-xl text-center text-body-sm text-mute">
+          {/*
+            Remplace le bloc « Garantie » proposé par le rapport Axe 1 : le mot
+            « garantie » crée un engagement contractuel que les CGU excluent
+            explicitement (§7, limitation de responsabilité). Une différence de
+            plan énoncée en clair vaut mieux qu'une promesse qu'on ne tiendra pas.
+          */}
+          <p className="mx-auto mt-xl max-w-[44rem] text-center text-body-sm text-mute">
+            Les quittances du plan Standard portent en plus la mention du droit
+            de timbre, à la charge du locataire (art. 423 du CGI, modifié par la
+            LF 2025). Sikaloc ne calcule pas ce montant et ne fournit pas de
+            conseil juridique.
+          </p>
+
+          <p className="mt-lg text-center text-body-sm text-mute">
             Parrainez un bailleur : vous recevez chacun 1 mois offert dès sa
             première souscription payante.
           </p>
@@ -343,12 +452,16 @@ export default async function PageAccueil() {
               Votre prochaine quittance peut être prête dans deux minutes
             </h2>
             <p className="mx-auto mt-lg max-w-[34rem] text-body-lg text-on-dark-mute">
-              Créez votre compte, enregistrez votre premier bail, saisissez un
-              paiement. C&apos;est tout.
+              Ne laissez plus vos quittances au hasard. Enregistrez votre premier
+              bail, saisissez un paiement, et gardez la preuve. C&apos;est tout.
             </p>
             <Link href="/inscription" className="btn btn-primary mt-2xl">
-              Créer mon compte
+              Protéger mes revenus
             </Link>
+            <p className="mt-lg text-body-sm text-on-dark-mute">
+              Gratuit jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements · Sans carte
+              bancaire · Mobile Money accepté
+            </p>
           </div>
         </div>
       </section>
