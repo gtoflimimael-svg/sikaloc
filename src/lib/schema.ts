@@ -94,7 +94,7 @@ function colonnesAttendues(source: string, nomType: string): string[] {
  * `quittances_numero_document_key` est dans ce cas — la chercher en base serait
  * une fausse alerte.
  */
-function objetsDeclares(): ObjetManquant[] {
+function objetsDeclares(): ObjetManquant[] | null {
   const dossier = join(process.cwd(), 'supabase/migrations')
 
   let fichiers: string[]
@@ -103,10 +103,13 @@ function objetsDeclares(): ObjetManquant[] {
       .filter((f) => f.endsWith('.sql'))
       .sort()
   } catch {
-    // Les migrations ne sont pas déployées avec la fonction : dans ce cas le
-    // contrôle se limite aux colonnes, ce que l'appelant saura signaler.
-    return []
+    // Les migrations n'accompagnent pas la fonction déployée. Rendre un tableau
+    // vide ferait passer « je n'ai rien pu lire » pour « rien à vérifier » —
+    // exactement le silence que ce module existe pour supprimer.
+    return null
   }
+
+  if (fichiers.length === 0) return null
 
   // Les noms peuvent être nus ou entre guillemets — les politiques de ce projet
   // portent des libellés français avec espaces et accents.
@@ -239,7 +242,11 @@ export async function verifierSchema(): Promise<RapportSchema> {
   const objetsManquants: ObjetManquant[] = []
   let inventaireIndisponible: string | undefined
 
-  if (attendus.length > 0) {
+  if (attendus === null) {
+    inventaireIndisponible =
+      'migrations introuvables à l’exécution — seules les colonnes ont été ' +
+      'vérifiées. Contrôler `outputFileTracingIncludes` dans next.config.ts.'
+  } else if (attendus.length > 0) {
     const reponse = await fetch(`${url}/rest/v1/rpc/inventaire_schema`, {
       method: 'POST',
       headers: { ...entetes, 'Content-Type': 'application/json' },
@@ -267,7 +274,7 @@ export async function verifierSchema(): Promise<RapportSchema> {
     tablesVerifiees: Object.keys(TABLES).length,
     colonnesVerifiees,
     ecarts,
-    objetsVerifies: attendus.length,
+    objetsVerifies: attendus?.length ?? 0,
     objetsManquants,
     ...(inventaireIndisponible ? { inventaireIndisponible } : {}),
   }
