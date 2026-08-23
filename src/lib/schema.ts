@@ -1,7 +1,9 @@
 import 'server-only'
 
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+
+import { OBJETS_DECLARES } from '@/lib/schema-objets'
 
 /**
  * Comparaison du schéma réel de la base à ce que le code attend.
@@ -82,120 +84,6 @@ function colonnesAttendues(source: string, nomType: string): string[] {
   return [...source.slice(debut, fin).matchAll(/^\s{2}([a-z_][a-z0-9_]*)\??:/gm)].map((m) => m[1])
 }
 
-/**
- * Objets de schéma déclarés par les migrations, dans l'ordre des fichiers.
- *
- * Les migrations sont la bonne source de vérité ici : la panne à prévenir est
- * exactement « migration écrite, jamais appliquée ». Un objet nommé dans un
- * fichier et absent de la base désigne donc, sans ambiguïté, une migration
- * restée sur l'étagère.
- *
- * L'ordre compte : une migration peut supprimer ce qu'une précédente a créé.
- * `quittances_numero_document_key` est dans ce cas — la chercher en base serait
- * une fausse alerte.
- */
-function objetsDeclares(): ObjetManquant[] | null {
-  const dossier = join(process.cwd(), 'supabase/migrations')
-
-  let fichiers: string[]
-  try {
-    fichiers = readdirSync(dossier)
-      .filter((f) => f.endsWith('.sql'))
-      .sort()
-  } catch {
-    // Les migrations n'accompagnent pas la fonction déployée. Rendre un tableau
-    // vide ferait passer « je n'ai rien pu lire » pour « rien à vérifier » —
-    // exactement le silence que ce module existe pour supprimer.
-    return null
-  }
-
-  if (fichiers.length === 0) return null
-
-  // Les noms peuvent être nus ou entre guillemets — les politiques de ce projet
-  // portent des libellés français avec espaces et accents.
-  const nom = String.raw`(?:"([^"]+)"|([a-zA-Z_][\w]*))`
-
-  const MOTIFS: { categorie: string; expression: RegExp }[] = [
-    { categorie: 'contrainte', expression: new RegExp(String.raw`add\s+constraint\s+${nom}`, 'gi') },
-    { categorie: 'politique', expression: new RegExp(String.raw`create\s+policy\s+${nom}`, 'gi') },
-    {
-      categorie: 'fonction',
-      expression: new RegExp(
-        String.raw`create\s+(?:or\s+replace\s+)?function\s+(?:[a-zA-Z_]\w*\.)?${nom}`,
-        'gi',
-      ),
-    },
-    {
-      categorie: 'vue',
-      expression: new RegExp(
-        String.raw`create\s+(?:or\s+replace\s+)?view\s+(?:[a-zA-Z_]\w*\.)?${nom}`,
-        'gi',
-      ),
-    },
-    {
-      categorie: 'index',
-      expression: new RegExp(
-        String.raw`create\s+(?:unique\s+)?index\s+(?:concurrently\s+)?(?:if\s+not\s+exists\s+)?${nom}`,
-        'gi',
-      ),
-    },
-    { categorie: 'declencheur', expression: new RegExp(String.raw`create\s+trigger\s+${nom}`, 'gi') },
-  ]
-
-  const SUPPRESSIONS: { categorie: string; expression: RegExp }[] = [
-    {
-      categorie: 'contrainte',
-      expression: new RegExp(String.raw`drop\s+constraint\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
-    },
-    {
-      categorie: 'politique',
-      expression: new RegExp(String.raw`drop\s+policy\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
-    },
-    {
-      categorie: 'index',
-      expression: new RegExp(String.raw`drop\s+index\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
-    },
-    {
-      categorie: 'declencheur',
-      expression: new RegExp(String.raw`drop\s+trigger\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
-    },
-  ]
-
-  const declares = new Map<string, ObjetManquant>()
-
-  for (const fichier of fichiers) {
-    let sql: string
-    try {
-      sql = readFileSync(join(dossier, fichier), 'utf8')
-    } catch {
-      continue
-    }
-
-    // Les commentaires SQL contiennent des exemples et des noms cités ; les
-    // lire produirait des attentes qu'aucune instruction ne crée.
-    const instructions = sql
-      .split('\n')
-      .filter((ligne) => !ligne.trimStart().startsWith('--'))
-      .join('\n')
-
-    for (const { categorie, expression } of MOTIFS) {
-      for (const trouve of instructions.matchAll(expression)) {
-        const valeur = trouve[1] ?? trouve[2]
-        if (valeur) declares.set(`${categorie}:${valeur}`, { categorie, nom: valeur, migration: fichier })
-      }
-    }
-
-    for (const { categorie, expression } of SUPPRESSIONS) {
-      for (const trouve of instructions.matchAll(expression)) {
-        const valeur = trouve[1] ?? trouve[2]
-        if (valeur) declares.delete(`${categorie}:${valeur}`)
-      }
-    }
-  }
-
-  return [...declares.values()]
-}
-
 export async function verifierSchema(): Promise<RapportSchema> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const cle = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -238,15 +126,17 @@ export async function verifierSchema(): Promise<RapportSchema> {
   }
 
   // ── Objets hors colonnes ─────────────────────────────────────────────────
-  const attendus = objetsDeclares()
+  const attendus = OBJETS_DECLARES
   const objetsManquants: ObjetManquant[] = []
   let inventaireIndisponible: string | undefined
 
-  if (attendus === null) {
+  if (attendus.length === 0) {
+    // La liste est figée au build à partir des migrations. Vide, elle signale
+    // que le générateur n'a pas tourné — pas qu'il n'y a rien à vérifier.
     inventaireIndisponible =
-      'migrations introuvables à l’exécution — seules les colonnes ont été ' +
-      'vérifiées. Contrôler `outputFileTracingIncludes` dans next.config.ts.'
-  } else if (attendus.length > 0) {
+      'liste des objets vide — `npm run generer:objets` n’a pas produit son ' +
+      'contenu avant le build.'
+  } else {
     const reponse = await fetch(`${url}/rest/v1/rpc/inventaire_schema`, {
       method: 'POST',
       headers: { ...entetes, 'Content-Type': 'application/json' },
@@ -274,7 +164,7 @@ export async function verifierSchema(): Promise<RapportSchema> {
     tablesVerifiees: Object.keys(TABLES).length,
     colonnesVerifiees,
     ecarts,
-    objetsVerifies: attendus?.length ?? 0,
+    objetsVerifies: attendus.length,
     objetsManquants,
     ...(inventaireIndisponible ? { inventaireIndisponible } : {}),
   }

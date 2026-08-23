@@ -5,7 +5,7 @@
   "description": "Sikaloc — SaaS de gestion locative pour bailleurs individuels au Bénin",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run generer:objets && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -18,7 +18,8 @@
     "db:status": "supabase status",
     "verifier:schema": "tsx scripts/verifier-schema.ts",
     "banc:signature": "node scripts/banc-signature.cjs",
-    "banc:parcours": "node scripts/banc-parcours-signature.cjs"
+    "banc:parcours": "node scripts/banc-parcours-signature.cjs",
+    "generer:objets": "tsx scripts/generer-objets-schema.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

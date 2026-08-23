@@ -61,11 +61,12 @@ const nextConfig: NextConfig = {
   // polices, un chemin construit dynamiquement échappe au traçage statique.
   outputFileTracingIncludes: {
     '/*': ['./src/app/fonts/Copernicus-*.ttf', './src/app/fonts/StyreneB-*.otf'],
-    // Le contrôle de schéma lit les deux descriptions qu'il compare : les types
-    // pour les colonnes, les migrations pour les contraintes, politiques et
-    // autres objets. Sans ces chemins, la fonction déployée ne trouverait ni
-    // l'une ni l'autre et n'aurait plus rien à vérifier.
-    '/api/cron/schema': ['./src/lib/types/database.ts', './supabase/migrations/*.sql'],
+    // Le contrôle de schéma lit ce fichier pour connaître les colonnes
+    // attendues. Les objets (contraintes, politiques…) passaient par le même
+    // mécanisme, mais les migrations n'arrivaient pas dans la fonction
+    // déployée : leur liste est désormais figée au build par
+    // `npm run generer:objets`, et embarquée comme un import ordinaire.
+    '/api/cron/schema': ['./src/lib/types/database.ts'],
   },
   async headers() {
     return [
