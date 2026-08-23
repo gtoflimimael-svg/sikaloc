@@ -17,7 +17,8 @@
     "db:reset": "supabase db reset",
     "db:status": "supabase status",
     "verifier:schema": "tsx scripts/verifier-schema.ts",
-    "banc:signature": "node scripts/banc-signature.cjs"
+    "banc:signature": "node scripts/banc-signature.cjs",
+    "banc:parcours": "node scripts/banc-parcours-signature.cjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
@@ -28,7 +29,9 @@
     "next": "16.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-easy-crop": "^6.2.3",
     "server-only": "^0.0.1",
+    "signature_pad": "^5.1.4",
     "zod": "4.3.5"
   },
   "devDependencies": {

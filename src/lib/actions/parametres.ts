@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
 import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
 import {
   avatarOptionnel,
@@ -15,7 +16,6 @@ import {
 } from '@/lib/validation'
 
 const TAILLE_MAX_SIGNATURE = 2 * 1024 * 1024
-const TYPES_SIGNATURE = ['image/png', 'image/jpeg', 'image/webp']
 
 export async function modifierProfil(
   _etat: EtatFormulaire,
@@ -118,23 +118,30 @@ export async function televerserSignature(
     return { erreur: 'Sélectionnez une image de signature.' }
   }
 
-  if (!TYPES_SIGNATURE.includes(fichier.type)) {
-    return { erreur: 'Formats acceptés : PNG, JPEG ou WebP.' }
-  }
-
   if (fichier.size > TAILLE_MAX_SIGNATURE) {
     return { erreur: 'L’image ne doit pas dépasser 2 Mo.' }
   }
 
+  // Le format est jugé sur les octets de tête, jamais sur `fichier.type` : ce
+  // champ n'est qu'une chaîne envoyée par le client, au même titre que le nom du
+  // fichier. C'est aussi lui qui décidera de l'extension et du `contentType`
+  // enregistrés, pour qu'aucune valeur d'origine cliente ne subsiste.
+  const format = await reconnaitreFormat(fichier)
+
+  if (!format) {
+    return { erreur: 'Formats acceptés : PNG, JPEG ou WebP.' }
+  }
+
+  const { type: typeReel, extension } = DESCRIPTION_FORMAT[format]
+
   const bailleur = await bailleurCourant()
   const supabase = await creerClientServeur()
 
-  const extension = fichier.type === 'image/png' ? 'png' : fichier.type === 'image/webp' ? 'webp' : 'jpg'
   const chemin = `${bailleur.id}/signature.${extension}`
 
   const { error: erreurUpload } = await supabase.storage
     .from('signatures')
-    .upload(chemin, fichier, { contentType: fichier.type, upsert: true })
+    .upload(chemin, fichier, { contentType: typeReel, upsert: true })
 
   if (erreurUpload) return { erreur: `Téléversement impossible : ${erreurUpload.message}` }
 
