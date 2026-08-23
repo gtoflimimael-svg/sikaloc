@@ -106,7 +106,6 @@ const exemple: DonneesQuittance = {
 
   signatureDataUri: null,
   signatureLocataireDataUri: null,
-  mentionsConformes: true,
 }
 
 // Le script tourne en CommonJS (le projet n'est pas en `type: module`) : le

@@ -3,8 +3,14 @@ import type { Bailleur, PlanAbonnement } from '@/lib/types/database'
 /**
  * Limites des plans — spec §4.2.
  *
- * Plan Gratuit : jusqu'à 2 logements, quittances basiques sans mention de
- * timbre, pas de relances WhatsApp.
+ * Plan Gratuit : jusqu'à 2 logements, pas de relances WhatsApp.
+ *
+ * La mention du droit de timbre n'est plus une capacité de plan. Elle l'a été,
+ * et c'était une erreur : ce n'est pas une fonctionnalité mais une information
+ * légale — deux paragraphes de texte, sans calcul ni coût. La réserver aux
+ * comptes payants revenait à priver le locataire d'un bailleur gratuit d'un
+ * avertissement fiscal qui le concerne, lui. Toutes les quittances la portent
+ * désormais, quel que soit le plan.
  */
 
 export const LIMITE_LOGEMENTS_GRATUIT = 2
@@ -15,8 +21,6 @@ export interface CapacitesPlan {
   plan: PlanAbonnement
   /** Nombre maximum de logements, ou null si illimité. */
   maxLogements: number | null
-  /** La mention du droit de timbre n'apparaît que sur les quittances Standard. */
-  quittanceConforme: boolean
   /** Les relances WhatsApp d'impayés sont réservées au plan Standard. */
   relancesWhatsApp: boolean
 }
@@ -40,7 +44,6 @@ export function capacites(
     return {
       plan: 'Standard',
       maxLogements: null,
-      quittanceConforme: true,
       relancesWhatsApp: true,
     }
   }
@@ -48,7 +51,6 @@ export function capacites(
   return {
     plan: 'Gratuit',
     maxLogements: LIMITE_LOGEMENTS_GRATUIT,
-    quittanceConforme: false,
     relancesWhatsApp: false,
   }
 }

@@ -148,7 +148,6 @@ export async function rassemblerDonnees(
     estPartiel: paiement.est_partiel,
 
     signatureDataUri: signatureBailleur,
-    mentionsConformes: capacites(bailleur).quittanceConforme,
     apercu: options.apercu,
   }
 }

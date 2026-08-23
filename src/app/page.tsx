@@ -63,16 +63,16 @@ const etapes = [
  * signée des deux parties ; « vous protège en justice » ne l'est pas, et
  * contredirait les CGU, qui excluent tout conseil juridique.
  *
- * Les capacités réservées au plan Standard le disent dans leur propre texte :
- * la landing ne peut pas promettre au visiteur ce que `capacites()` refusera
- * au compte gratuit qu'il vient de créer (`src/lib/plan.ts`).
+ * La seule capacité encore réservée au plan Standard — les relances WhatsApp —
+ * le dit dans son propre texte : la landing ne peut pas promettre au visiteur
+ * ce que `capacites()` refusera au compte gratuit qu'il vient de créer.
  */
 const fonctionnalites = [
   {
     Icone: FileCheck,
     titre: 'Des quittances qui font preuve',
     texte:
-      'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et votre signature. Chaque document reçoit un numéro continu et une empreinte d’intégrité. Le plan Standard y ajoute la mention du droit de timbre.',
+      'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et votre signature. Chaque document reçoit un numéro continu, une empreinte d’intégrité et la mention du droit de timbre.',
   },
   {
     Icone: BellRing,
@@ -109,14 +109,13 @@ const fonctionnalites = [
 /**
  * Ligne de preuves du hero — trois faits vrais pour LES DEUX plans.
  *
- * La mention du droit de timbre en est délibérément absente : elle n'existe
- * que sur le plan Standard, alors que le CTA situé juste en dessous fait
- * souscrire au plan Gratuit. L'annoncer ici reviendrait à vendre au visiteur
- * l'inverse de ce que son compte produira.
+ * La mention du droit de timbre y figure depuis qu'elle n'est plus réservée au
+ * plan payant : le visiteur qui clique sur un CTA gratuit obtiendra bien le
+ * document décrit ici.
  */
 const preuves = [
+  'Mentions attendues au Bénin, droit de timbre compris',
   'Numérotation continue et horodatage',
-  'Montant en lettres et décharge',
   'Envoi au locataire sur WhatsApp',
 ]
 
@@ -125,10 +124,9 @@ const preuves = [
  * sociale que Sikaloc n'a pas encore.
  *
  * Les trois affirmations sont vérifiables, ce qui n'était pas le cas de celles
- * du rapport. « Conforme droit béninois · Mentions obligatoires incluses »
- * promettait sans réserve ce que le plan Gratuit ne fait pas : ses quittances
- * sortent sans la mention du droit de timbre (`src/lib/plan.ts`). La réserve
- * est donc portée par la sous-ligne, là où elle se lit.
+ * du rapport. La sous-ligne du premier badge portait jusqu'ici la réserve
+ * « au plan Standard » : elle n'a plus lieu d'être, la mention du droit de
+ * timbre figurant désormais sur toute quittance, quel que soit le plan.
  *
  * « Développé au Bénin » a été écarté : rien dans le dépôt ne permet de
  * l'établir, et une barre de confiance ne peut pas s'ouvrir sur une
@@ -139,7 +137,7 @@ const confiance = [
   {
     Icone: ShieldCheck,
     titre: 'Calibré pour le droit béninois',
-    detail: 'Droit de timbre au plan Standard',
+    detail: 'Mention du droit de timbre incluse',
   },
   {
     Icone: Lock,
@@ -159,10 +157,10 @@ const confiance = [
  * Les quatre situations du rapport ont été refondues sur deux points.
  *
  * D'abord un retournement : sa première situation affirmait qu'une quittance
- * sans mention du droit de timbre « peut être rejetée » — or c'est exactement
- * le document que produit le plan Gratuit de Sikaloc. La page aurait disqualifié
- * sa propre offre d'entrée, deux sections avant de la vendre. La douleur est
- * donc ramenée à ce qui est vrai dans tous les cas : l'absence de trace.
+ * sans mention du droit de timbre « peut être rejetée » — c'était alors le
+ * document que produisait le plan Gratuit, et la page aurait disqualifié sa
+ * propre offre d'entrée. La douleur est ramenée à ce qui est vrai dans tous
+ * les cas : l'absence de trace.
  *
  * Ensuite le registre : « Vous perdez des heures », « Vous hésitez à relancer »
  * reprochent au bailleur sa façon de faire. Le rapport pose pourtant lui-même
@@ -213,7 +211,7 @@ const preuvesSerieux = [
     points: [
       'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et signature.',
       'Un numéro continu et une empreinte SHA-256 par document : toute modification du fichier devient détectable.',
-      'La mention du droit de timbre est ajoutée avec le plan Standard.',
+      'La mention du droit de timbre figure sur toute quittance, quel que soit votre plan.',
     ],
     lien: { href: '/exemple-quittance', libelle: 'Voir un exemple de quittance' },
   },
@@ -248,7 +246,7 @@ const questions = [
      * applique réellement.
      */
     q: 'Quelle est la différence entre le plan Gratuit et le plan Standard ?',
-    r: `Trois choses, et rien d’autre. Le plan Gratuit s’arrête à ${LIMITE_LOGEMENTS_GRATUIT} logements, ses quittances sortent sans la mention du droit de timbre, et les relances WhatsApp n’y sont pas disponibles. Tout le reste — baux, locataires, paiements, tableau de bord, suivi des impayés, numérotation et horodatage des quittances — est identique sur les deux plans.`,
+    r: `Deux choses, et rien d’autre. Le plan Gratuit s’arrête à ${LIMITE_LOGEMENTS_GRATUIT} logements, et les relances WhatsApp n’y sont pas disponibles. Tout le reste est identique — y compris les quittances elles-mêmes : mêmes mentions, même numérotation, même horodatage, même mention du droit de timbre.`,
   },
   {
     q: 'Comment je paie mon abonnement ?',
@@ -263,7 +261,7 @@ const questions = [
     // conseil du bailleur, cette réponse ne peut donc pas promettre qu'il n'a
     // « plus à vérifier lui-même », comme le proposait le rapport d'origine.
     q: 'Pourquoi Sikaloc insiste-t-il autant sur les quittances ?',
-    r: 'Parce qu’une quittance mal rédigée se retourne contre le bailleur. Sikaloc pose les mentions attendues à chaque paiement, sans que vous ayez à les ressaisir — la mention du droit de timbre étant ajoutée avec le plan Standard. Cela ne remplace pas l’avis de votre conseil, mais vous n’avez plus à reconstituer une preuve après coup.',
+    r: 'Parce qu’une quittance mal rédigée se retourne contre le bailleur. Sikaloc pose les mentions attendues à chaque paiement, sans que vous ayez à les ressaisir, quel que soit votre plan. Cela ne remplace pas l’avis de votre conseil, mais vous n’avez plus à reconstituer une preuve après coup.',
   },
 ]
 
@@ -684,10 +682,9 @@ export default async function PageAccueil() {
               <p className="mt-xs text-body-sm text-mute">Pour démarrer</p>
 
               {/*
-                Les deux exclusions listées sont les seules que le code applique
-                réellement : `capacites()` ne verrouille que le nombre de
-                logements, la mention du droit de timbre et les relances
-                WhatsApp. Le rapport voulait y ajouter « Export historique » et
+                La seule exclusion listée est la seule que le code applique
+                réellement : `capacites()` ne verrouille plus que le nombre de
+                logements et les relances WhatsApp. Le rapport voulait y ajouter « Export historique » et
                 « Support par email » — ni l'un ni l'autre n'est appliqué par le
                 code, et l'export n'existe nulle part. Les afficher comme
                 avantages payants aurait rendu plus visible une promesse que le
@@ -702,20 +699,17 @@ export default async function PageAccueil() {
                 <Puce>Baux, locataires et paiements illimités</Puce>
                 <Puce>Tableau de bord, suivi des impayés et historique</Puce>
                 <Puce>Quittances PDF numérotées et horodatées</Puce>
-                <Puce exclu>Mention du droit de timbre</Puce>
+                <Puce>Mention du droit de timbre</Puce>
                 <Puce exclu>Relances WhatsApp des impayés</Puce>
               </ul>
 
-              {/* Chaque plan renvoie vers l'exemple qu'il produit réellement.
-                  Un seul exemple pour les deux mentait par omission : depuis
-                  cette carte, le visiteur voyait un document Standard, mention
-                  du droit de timbre comprise, qu'un compte gratuit ne produit
-                  pas. */}
+              {/* Un seul exemple désormais : les deux plans produisent le même
+                  document. */}
               <Link
-                href="/exemple-quittance-gratuit"
+                href="/exemple-quittance"
                 className="lien-anime mt-lg inline-block text-body-sm font-medium text-ink"
               >
-                Voir une quittance du plan Gratuit
+                Voir un exemple de quittance
               </Link>
 
               {/*
@@ -787,10 +781,10 @@ export default async function PageAccueil() {
             plan énoncée en clair vaut mieux qu'une promesse qu'on ne tiendra pas.
           */}
           <p className="mx-auto mt-xl max-w-[44rem] text-center text-body-sm text-mute">
-            Les quittances du plan Standard portent en plus la mention du droit
-            de timbre, à la charge du locataire (art. 423 du CGI, modifié par la
-            LF 2025). Sikaloc ne calcule pas ce montant et ne fournit pas de
-            conseil juridique.
+            Toutes les quittances portent la mention du droit de timbre, à la
+            charge du locataire (art. 423 du CGI, modifié par la LF 2025), quel
+            que soit votre plan. Sikaloc ne calcule pas ce montant et ne fournit
+            pas de conseil juridique.
           </p>
 
           <p className="mt-lg text-center text-body-sm text-mute">

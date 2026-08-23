@@ -107,7 +107,7 @@ export default async function PageAbonnement({
           ) : (
             <ul className="mt-lg space-y-sm text-body-md text-body">
               <li>· Jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements</li>
-              <li>· Quittances basiques, sans mention du droit de timbre</li>
+              <li>· Quittances complètes, mention du droit de timbre comprise</li>
               <li>· Relances WhatsApp non disponibles</li>
             </ul>
           )}
@@ -122,10 +122,8 @@ export default async function PageAbonnement({
 
           <ul className="mt-xl space-y-sm text-body-md text-on-dark">
             <li>· Logements illimités</li>
-            <li>· Quittances conformes Bénin (droit de timbre)</li>
             <li>· Relances WhatsApp des impayés</li>
-            <li>· Historique complet</li>
-            <li>· Support par email</li>
+            <li>· Quittances complètes, mention du droit de timbre comprise</li>
           </ul>
 
           <div className="mt-xl">

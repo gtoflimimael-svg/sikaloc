@@ -19,10 +19,10 @@ import { rendrePdf } from '@/lib/quittance'
  *   - les données sont fictives, et le numéro de document le dit en toutes
  *     lettres plutôt que d'imiter la numérotation réelle (`Q-2026…`).
  *
- * `mentionsConformes: true` : l'exemple montre une quittance du plan Standard,
- * mention du droit de timbre comprise. C'est ce que la ligne de preuves du hero
- * annonce comme réservé au plan Standard — les deux surfaces disent la même
- * chose.
+ * Un seul exemple, et non un par plan : depuis que la mention du droit de
+ * timbre est imprimée sur toutes les quittances, les deux plans produisent le
+ * même document. La route `/exemple-quittance-gratuit`, qui montrait la version
+ * amputée, a disparu avec la distinction qu'elle illustrait.
  */
 
 /** Rendu une fois au build puis servi depuis le cache : le document est fixe. */
@@ -64,7 +64,6 @@ export async function GET() {
     signatureDataUri: null,
     signatureLocataireDataUri: null,
 
-    mentionsConformes: true,
     apercu: true,
   })
 

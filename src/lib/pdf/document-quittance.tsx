@@ -326,11 +326,6 @@ export interface DonneesQuittance {
   /** Signature du locataire en data URI, ou null si non recueillie. */
   signatureLocataireDataUri: string | null
 
-  /**
-   * Le plan Gratuit produit une quittance basique sans mention de timbre
-   * (spec §4.2). Le plan Standard ajoute les mentions de conformité Bénin.
-   */
-  mentionsConformes: boolean
 
   /** Aperçu écran : marque le document d'un filigrane. */
   apercu?: boolean
@@ -387,9 +382,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
    * rattachant au paiement effectivement encaissé.
    */
   const timbrePotentiellementDu =
-    donnees.mentionsConformes &&
-    donnees.modePaiement === 'Espèces' &&
-    donnees.montant > 100_000
+    donnees.modePaiement === 'Espèces' && donnees.montant > 100_000
 
   return (
     <Document
@@ -563,16 +556,17 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
         ) : null}
 
         <View style={{ marginTop: 8 }}>
-          {donnees.mentionsConformes ? (
-            <Text style={styles.mentionLegale}>
-              Droit de timbre — En cas de paiement en espèces supérieur à
-              100 000 FCFA, un droit de timbre de 1 % peut être exigible
-              conformément à l&apos;article 423 du CGI (modifié par la LF 2025).
-              Pour les paiements par Mobile Money ou virement, ce droit
-              n&apos;est pas applicable. Sikaloc ne calcule pas ce montant :
-              son acquittement relève de la responsabilité des parties.
-            </Text>
-          ) : null}
+          {/* Imprimée sur toute quittance, quel que soit le plan : c'est une
+              information légale qui concerne le locataire autant que le
+              bailleur, pas une fonctionnalité à vendre. */}
+          <Text style={styles.mentionLegale}>
+            Droit de timbre — En cas de paiement en espèces supérieur à
+            100 000 FCFA, un droit de timbre de 1 % peut être exigible
+            conformément à l&apos;article 423 du CGI (modifié par la LF 2025).
+            Pour les paiements par Mobile Money ou virement, ce droit
+            n&apos;est pas applicable. Sikaloc ne calcule pas ce montant :
+            son acquittement relève de la responsabilité des parties.
+          </Text>
 
           <Text style={styles.mentionLegale}>
             Document généré électroniquement par la plateforme Sikaloc sous la

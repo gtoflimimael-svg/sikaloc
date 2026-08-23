@@ -13,7 +13,6 @@ import {
   formaterPeriode,
 } from '@/lib/format'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
-import { capacites } from '@/lib/plan'
 import { urlSignee } from '@/lib/quittance'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -67,7 +66,6 @@ export default async function PageQuittance({
       })
     : null
 
-  const mentionsConformes = capacites(bailleur).quittanceConforme
 
   return (
     <div className="mx-auto max-w-[48rem] space-y-xl">
@@ -223,24 +221,15 @@ export default async function PageQuittance({
           </div>
 
           <div className="mt-xl space-y-sm border-t border-hairline pt-lg">
-            {mentionsConformes ? (
-              <p className="text-caption text-mute">
-                <strong>Droit de timbre</strong> — Conformément à la législation en
-                vigueur au {quittance.pays}, le droit de timbre est à la charge du
-                locataire. Ce document est généré à titre informatif ;
-                l&apos;acquittement effectif du droit de timbre relève de la
-                responsabilité des parties.
-              </p>
-            ) : (
-              <p className="text-caption text-warning-content">
-                Le plan Gratuit émet des quittances basiques, sans mention du droit
-                de timbre.{' '}
-                <Link href="/app/parametres/abonnement" className="underline">
-                  Passer au plan Standard
-                </Link>{' '}
-                pour des quittances conformes.
-              </p>
-            )}
+            {/* Plus de branche « passez au Standard » : la mention figure
+                désormais sur toute quittance, quel que soit le plan. */}
+            <p className="text-caption text-mute">
+              <strong>Droit de timbre</strong> — Conformément à la législation en
+              vigueur au {quittance.pays}, le droit de timbre est à la charge du
+              locataire. Ce document est généré à titre informatif ;
+              l&apos;acquittement effectif du droit de timbre relève de la
+              responsabilité des parties.
+            </p>
 
             <p className="text-caption text-mute">
               Document généré électroniquement par la plateforme Sikaloc sous la

@@ -70,12 +70,13 @@ export default function PageConditions() {
         <ul>
           <li>
             Le plan <strong>Gratuit</strong> permet de gérer jusqu&apos;à{' '}
-            {LIMITE_LOGEMENTS_GRATUIT} logements et produit des quittances
-            basiques, sans mention du droit de timbre ni relances WhatsApp.
+            {LIMITE_LOGEMENTS_GRATUIT} logements, sans relances WhatsApp. Les
+            quittances qu&apos;il produit sont identiques à celles du plan
+            Standard, mention du droit de timbre comprise.
           </li>
           <li>
             Le plan <strong>Standard</strong>, à {formaterFCFA(PRIX_STANDARD_FCFA)}{' '}
-            par mois, lève ces limites. Il est payable par Mobile Money, sans
+            par mois, lève ces deux limites. Il est payable par Mobile Money, sans
             engagement de durée.
           </li>
           <li>
