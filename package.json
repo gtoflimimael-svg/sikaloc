@@ -15,7 +15,8 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:status": "supabase status"
+    "db:status": "supabase status",
+    "verifier:schema": "tsx scripts/verifier-schema.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
