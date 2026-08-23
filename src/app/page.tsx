@@ -691,8 +691,8 @@ export default async function PageAccueil() {
               <ul className="mt-xl space-y-md text-body-md text-body">
                 <Puce>Jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements</Puce>
                 <Puce>Baux, locataires et paiements illimités</Puce>
+                <Puce>Tableau de bord, suivi des impayés et historique</Puce>
                 <Puce>Quittances PDF numérotées et horodatées</Puce>
-                <Puce>Tableau de bord et suivi des impayés</Puce>
                 <Puce exclu>Mention du droit de timbre</Puce>
                 <Puce exclu>Relances WhatsApp des impayés</Puce>
               </ul>
@@ -727,11 +727,27 @@ export default async function PageAccueil() {
               <p className="mt-xs text-body-sm text-on-dark-mute">par mois, sans engagement</p>
 
               <ul className="mt-xl space-y-md text-body-md text-on-dark">
+              {/*
+                Les quatre premières lignes sont communes aux deux plans, et
+                répétées à dessein : c'est ce qui rend le basculement ✗ → ✓ des
+                deux dernières lisible en diagonale d'une carte à l'autre.
+
+                Deux lignes ont disparu, toutes deux fausses.
+                « Historique complet et export » l'était doublement :
+                `/app/paiements` n'appelle jamais `capacites()`, l'historique est
+                donc déjà servi aux comptes gratuits — le tableau de bord leur
+                affiche même le lien « Historique complet » — et l'export
+                n'existe nulle part dans le code.
+                « Support par email » vendait une adresse publique : elle est
+                dans le pied de page de cette même landing, et c'est le canal
+                d'exercice des droits RGPD, dû à tout le monde.
+              */}
                 <Puce surSombre>Logements illimités</Puce>
-                <Puce surSombre>Quittances conformes Bénin (droit de timbre)</Puce>
+                <Puce surSombre>Baux, locataires et paiements illimités</Puce>
+                <Puce surSombre>Tableau de bord, suivi des impayés et historique</Puce>
+                <Puce surSombre>Quittances PDF numérotées et horodatées</Puce>
+                <Puce surSombre>Mention du droit de timbre (art. 423 du CGI)</Puce>
                 <Puce surSombre>Relances WhatsApp des impayés</Puce>
-                <Puce surSombre>Historique complet et export</Puce>
-                <Puce surSombre>Support par email</Puce>
               </ul>
 
               <Link
