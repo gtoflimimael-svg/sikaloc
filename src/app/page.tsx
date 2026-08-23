@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Smartphone,
   TriangleAlert,
+  X,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -236,6 +237,17 @@ const questions = [
   {
     q: 'Le locataire doit-il créer un compte ?',
     r: 'Non. Il reçoit sa quittance par WhatsApp, via un lien de téléchargement sécurisé valable 30 jours.',
+  },
+  {
+    /*
+     * La réponse du rapport annonçait « quittances PDF standards » et
+     * « export historique ». La première formule entre en collision avec le nom
+     * du plan payant ; la seconde vend une fonctionnalité absente du code. La
+     * réponse ci-dessous ne cite que les trois différences que `capacites()`
+     * applique réellement.
+     */
+    q: 'Quelle est la différence entre le plan Gratuit et le plan Standard ?',
+    r: `Trois choses, et rien d’autre. Le plan Gratuit s’arrête à ${LIMITE_LOGEMENTS_GRATUIT} logements, ses quittances sortent sans la mention du droit de timbre, et les relances WhatsApp n’y sont pas disponibles. Tout le reste — baux, locataires, paiements, tableau de bord, suivi des impayés, numérotation et horodatage des quittances — est identique sur les deux plans.`,
   },
   {
     q: 'Comment je paie mon abonnement ?',
@@ -662,17 +674,27 @@ export default async function PageAccueil() {
               <p className="mt-sm text-display-md font-extrabold tabular tracking-tight text-ink">0 FCFA</p>
               <p className="mt-xs text-body-sm text-mute">Pour démarrer</p>
 
+              {/*
+                Les deux exclusions listées sont les seules que le code applique
+                réellement : `capacites()` ne verrouille que le nombre de
+                logements, la mention du droit de timbre et les relances
+                WhatsApp. Le rapport voulait y ajouter « Export historique » et
+                « Support par email » — ni l'un ni l'autre n'est appliqué par le
+                code, et l'export n'existe nulle part. Les afficher comme
+                avantages payants aurait rendu plus visible une promesse que le
+                produit ne tient pas.
+
+                Ni « basiques » (qui dévalorise) ni « standards » (qui entrerait
+                en collision avec le nom du plan payant) : on décrit ce que le
+                document contient, puis ce qui lui manque.
+              */}
               <ul className="mt-xl space-y-md text-body-md text-body">
                 <Puce>Jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements</Puce>
                 <Puce>Baux, locataires et paiements illimités</Puce>
-                {/* Ni « basiques » (qui dévalorise) ni « standards » (qui
-                    entrerait en collision avec le nom du plan payant) : on
-                    décrit ce que le document contient, et ce qui lui manque. */}
-                <Puce>
-                  Quittances PDF numérotées et horodatées — sans la mention du
-                  droit de timbre
-                </Puce>
+                <Puce>Quittances PDF numérotées et horodatées</Puce>
                 <Puce>Tableau de bord et suivi des impayés</Puce>
+                <Puce exclu>Mention du droit de timbre</Puce>
+                <Puce exclu>Relances WhatsApp des impayés</Puce>
               </ul>
 
               {/*
@@ -691,7 +713,10 @@ export default async function PageAccueil() {
             </div>
 
             {/* Le plan payant est le moment produit dense : surface sombre. */}
-            <div className="rounded-lg border-t-2 border-t-primary bg-surface-dark p-xl text-on-dark md:-mt-md md:pb-2xl">
+            {/* `max-md:order-first` : sur mobile, les deux cartes s'empilent et
+                le plan recommandé passe devant. Sur un écran étroit, la première
+                carte est souvent la seule vue avant de reprendre le défilement. */}
+            <div className="rounded-lg border-t-2 border-t-primary bg-surface-dark p-xl text-on-dark max-md:order-first md:-mt-md md:pb-2xl">
               <div className="flex items-center justify-between gap-md">
                 <p className="text-title-lg font-bold text-on-dark">Standard</p>
                 <span className="badge bg-surface-card text-ink">Recommandé</span>
@@ -748,8 +773,16 @@ export default async function PageAccueil() {
 
           {/* Filets plutôt que cartes : une FAQ se parcourt, elle ne se collectionne pas. */}
           <div className="mt-2xl border-t border-hairline">
-            {questions.map((item) => (
-              <details key={item.q} className="group border-b border-hairline py-lg">
+            {/* La première question est ouverte d'emblée : c'est celle qui
+                décide, et une FAQ entièrement repliée oblige à deviner laquelle
+                mérite un clic. Les suivantes restent fermées pour ne pas
+                allonger la page de six réponses sur mobile. */}
+            {questions.map((item, rang) => (
+              <details
+                key={item.q}
+                open={rang === 0}
+                className="group border-b border-hairline py-lg"
+              >
                 <summary className="flex cursor-pointer list-none items-start justify-between gap-lg text-body-lg font-medium text-ink">
                   {item.q}
                   <span
@@ -795,22 +828,40 @@ export default async function PageAccueil() {
   )
 }
 
+/**
+ * Ligne de plan tarifaire.
+ *
+ * `exclu` marque ce que le plan ne fait PAS. Le texte n'est pas barré, à la
+ * différence de ce que propose le rapport : un texte barré se lit mal, se
+ * copie mal, et passe à travers certains lecteurs d'écran. La croix, la
+ * couleur atténuée et le libellé au négatif suffisent à faire la différence —
+ * et `<span className="sr-only">` la dit explicitement à qui écoute la page.
+ */
 function Puce({
   children,
   surSombre = false,
+  exclu = false,
 }: {
   children: React.ReactNode
   surSombre?: boolean
+  exclu?: boolean
 }) {
+  const Icone = exclu ? X : Check
+
   return (
-    <li className="flex items-start gap-sm">
-      <Check
+    <li className={`flex items-start gap-sm ${exclu ? 'text-mute' : ''}`}>
+      <Icone
         size={20}
         strokeWidth={2.5}
         aria-hidden="true"
-        className={`mt-xxs shrink-0 ${surSombre ? 'text-primary-on-dark' : 'text-primary'}`}
+        className={`mt-xxs shrink-0 ${
+          exclu ? 'text-mute' : surSombre ? 'text-primary-on-dark' : 'text-primary'
+        }`}
       />
-      <span>{children}</span>
+      <span>
+        <span className="sr-only">{exclu ? 'Non inclus : ' : 'Inclus : '}</span>
+        {children}
+      </span>
     </li>
   )
 }
