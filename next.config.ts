@@ -55,8 +55,13 @@ const nextConfig: NextConfig = {
   // dynamiquement (`path.join(process.cwd(), …)`) n'est pas repéré par le
   // traçage statique de Next.js, donc les .ttf/.otf ne suivraient pas dans le
   // paquet déployé sans cette inclusion explicite.
+  // `src/lib/types/database.ts` est LU À L'EXÉCUTION par le contrôle de schéma
+  // (`src/lib/schema.ts`) : c'est la description du schéma dont le code se sert,
+  // et la comparer suppose de la lire telle qu'elle est écrite. Comme pour les
+  // polices, un chemin construit dynamiquement échappe au traçage statique.
   outputFileTracingIncludes: {
     '/*': ['./src/app/fonts/Copernicus-*.ttf', './src/app/fonts/StyreneB-*.otf'],
+    '/api/cron/schema': ['./src/lib/types/database.ts'],
   },
   async headers() {
     return [
