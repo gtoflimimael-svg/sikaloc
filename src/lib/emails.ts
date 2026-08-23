@@ -40,6 +40,14 @@ function urlAbonnement(): string {
 }
 
 /**
+ * L'écran d'export. Les messages de suspension annonçaient des données
+ * « exportables » sans jamais dire où — la promesse existait, le chemin non.
+ */
+function urlExport(): string {
+  return `${urlBase()}/app/parametres/donnees`
+}
+
+/**
  * Logo en PNG, pas en SVG : Outlook ignore purement et simplement le SVG
  * inline dans un `<img>`. Le fichier est rendu à 3x (voir
  * `scripts/generer-logo-email.ts`) et affiché ici à sa taille /3 — la
@@ -87,7 +95,7 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
         titre: `${prenom}, votre compte est suspendu`,
         corps: [
           'Votre abonnement est impayé depuis 30 jours : votre compte Sikaloc est suspendu.',
-          'Vos données sont conservées et restent exportables. Sans régularisation, elles seront définitivement supprimées 90 jours après le premier impayé.',
+          `Vos données restent consultables et téléchargeables : vous pouvez récupérer à tout moment une archive complète de vos quittances et de vos paiements depuis ${urlExport()}. Sans régularisation, elles seront définitivement supprimées 90 jours après le premier impayé.`,
           'Un règlement rétablit immédiatement l’accès complet.',
         ],
         action,

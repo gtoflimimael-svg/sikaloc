@@ -13,6 +13,7 @@ export const CLES_PARAMETRES = [
   'preferences',
   'parrainage',
   'abonnement',
+  'donnees',
 ] as const
 
 export type CleParametre = (typeof CLES_PARAMETRES)[number]
@@ -61,6 +62,13 @@ export const SECTIONS_PARAMETRES: SectionParametre[] = [
     details:
       'Votre plan actuel, le passage au plan Standard par Mobile Money et votre historique de facturation.',
     description: 'Votre plan, votre paiement et vos factures.',
+  },
+  {
+    cle: 'donnees',
+    titre: 'Mes données',
+    details:
+      'Téléchargez tout ce que Sikaloc détient sur vous : paiements, quittances et leurs PDF, dans une seule archive.',
+    description: 'Récupérez une copie complète de vos données, à tout moment.',
   },
 ]
 

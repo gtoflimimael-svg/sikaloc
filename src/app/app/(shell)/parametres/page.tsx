@@ -1,4 +1,12 @@
-import { ChevronRight, CreditCard, Gift, PenLine, SlidersHorizontal, UserRound } from 'lucide-react'
+import {
+  ChevronRight,
+  CreditCard,
+  DatabaseBackup,
+  Gift,
+  PenLine,
+  SlidersHorizontal,
+  UserRound,
+} from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -19,6 +27,7 @@ const ICONES: Record<CleParametre, typeof UserRound> = {
   preferences: SlidersHorizontal,
   parrainage: Gift,
   abonnement: CreditCard,
+  donnees: DatabaseBackup,
 }
 
 export default async function PageParametres({
