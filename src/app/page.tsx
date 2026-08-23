@@ -17,6 +17,7 @@ import Link from 'next/link'
 
 import { MenuMobile } from '@/components/marketing/menu-mobile'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
+import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
 import { Illustration } from '@/components/ui/illustration'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
@@ -705,6 +706,18 @@ export default async function PageAccueil() {
                 <Puce exclu>Relances WhatsApp des impayés</Puce>
               </ul>
 
+              {/* Chaque plan renvoie vers l'exemple qu'il produit réellement.
+                  Un seul exemple pour les deux mentait par omission : depuis
+                  cette carte, le visiteur voyait un document Standard, mention
+                  du droit de timbre comprise, qu'un compte gratuit ne produit
+                  pas. */}
+              <Link
+                href="/exemple-quittance-gratuit"
+                className="lien-anime mt-lg inline-block text-body-sm font-medium text-ink"
+              >
+                Voir une quittance du plan Gratuit
+              </Link>
+
               {/*
                 `.btn` est en `white-space: nowrap` et à hauteur fixe : le
                 libellé imposait donc une largeur minimale de 236 px à la
@@ -850,6 +863,9 @@ export default async function PageAccueil() {
       </main>
 
       <PiedDePage />
+
+      {/* Ne rend rien tant que NEXT_PUBLIC_WHATSAPP_SUPPORT n'est pas renseignée. */}
+      <WidgetWhatsApp />
     </div>
   )
 }
