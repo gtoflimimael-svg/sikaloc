@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Check, Lock, ShieldCheck, Smartphone, TriangleAlert } from 'lucide-react'
 import Link from 'next/link'
 
 import { MenuMobile } from '@/components/marketing/menu-mobile'
@@ -97,6 +97,78 @@ const preuves = [
   'Numérotation continue et horodatage',
   'Montant en lettres et décharge',
   'Envoi au locataire sur WhatsApp',
+]
+
+/**
+ * Barre de confiance — trois raisons de rester, à la place d'une preuve
+ * sociale que Sikaloc n'a pas encore.
+ *
+ * Les trois affirmations sont vérifiables, ce qui n'était pas le cas de celles
+ * du rapport. « Conforme droit béninois · Mentions obligatoires incluses »
+ * promettait sans réserve ce que le plan Gratuit ne fait pas : ses quittances
+ * sortent sans la mention du droit de timbre (`src/lib/plan.ts`). La réserve
+ * est donc portée par la sous-ligne, là où elle se lit.
+ *
+ * « Développé au Bénin » a été écarté : rien dans le dépôt ne permet de
+ * l'établir, et une barre de confiance ne peut pas s'ouvrir sur une
+ * affirmation invérifiable. Le Mobile Money et WhatsApp disent la même chose
+ * — c'est un produit local — et se prouvent en ouvrant l'application.
+ */
+const confiance = [
+  {
+    Icone: ShieldCheck,
+    titre: 'Calibré pour le droit béninois',
+    detail: 'Droit de timbre au plan Standard',
+  },
+  {
+    Icone: Lock,
+    titre: 'Données sécurisées',
+    detail: 'Hébergement en Europe, chiffré',
+  },
+  {
+    Icone: Smartphone,
+    titre: 'Mobile Money et WhatsApp',
+    detail: 'Sans carte bancaire ni installation',
+  },
+]
+
+/**
+ * Section douleur — nommer la situation, jamais reprocher la pratique.
+ *
+ * Les quatre situations du rapport ont été refondues sur deux points.
+ *
+ * D'abord un retournement : sa première situation affirmait qu'une quittance
+ * sans mention du droit de timbre « peut être rejetée » — or c'est exactement
+ * le document que produit le plan Gratuit de Sikaloc. La page aurait disqualifié
+ * sa propre offre d'entrée, deux sections avant de la vendre. La douleur est
+ * donc ramenée à ce qui est vrai dans tous les cas : l'absence de trace.
+ *
+ * Ensuite le registre : « Vous perdez des heures », « Vous hésitez à relancer »
+ * reprochent au bailleur sa façon de faire. Le rapport pose pourtant lui-même
+ * la règle (§5.1) : « on n'agite pas la douleur pour faire du chantage ». Les
+ * situations décrivent donc ce qui arrive, pas ce qu'il aurait fallu faire.
+ *
+ * Aucune ne conclut sur le sort d'un procès : « impossible de prouver devant
+ * un juge » est un pronostic juridique, que les CGU excluent.
+ */
+const douleurs = [
+  {
+    situation: 'Votre locataire affirme avoir payé le mois dernier.',
+    consequence:
+      'Sans écrit daté et numéroté, la discussion devient parole contre parole.',
+  },
+  {
+    situation: 'Vous ne savez plus avec certitude qui a réglé quel mois.',
+    consequence: 'Le retard se découvre tard, quand il s’est déjà accumulé.',
+  },
+  {
+    situation: 'La relance attend le bon moment, et le bon moment ne vient pas.',
+    consequence: 'Plus le silence dure, plus la conversation devient difficile.',
+  },
+  {
+    situation: 'Chaque quittance est réécrite à la main, une par une.',
+    consequence: 'Une mention oubliée, et le document perd de sa valeur.',
+  },
 ]
 
 const questions = [
@@ -303,6 +375,83 @@ export default async function PageAccueil() {
                 className="relative w-full max-w-[28rem] text-ink"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Barre de confiance ─────────────────────────────────────────── */}
+      {/* Posée juste sous le hero : le visiteur vient de lire une question
+          inquiétante, il lui faut une raison de continuer avant la suite.
+          Bande basse et filets plutôt qu'une vraie section — elle se traverse,
+          elle ne se lit pas. */}
+      <section
+        aria-label="Ce sur quoi vous pouvez compter"
+        className="border-y border-hairline bg-canvas px-xl py-xl"
+      >
+        <ul
+          role="list"
+          className="mx-auto flex max-w-[62rem] flex-col gap-lg sm:flex-row sm:justify-between sm:gap-xl"
+        >
+          {confiance.map(({ Icone, titre, detail }) => (
+            <li key={titre} className="flex items-start gap-sm">
+              <Icone
+                size={22}
+                strokeWidth={1.9}
+                aria-hidden="true"
+                className="mt-xxs shrink-0 text-primary"
+              />
+              <div className="min-w-0">
+                <p className="text-body-sm font-semibold text-ink">{titre}</p>
+                <p className="text-caption text-mute">{detail}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* ── Douleur ────────────────────────────────────────────────────── */}
+      {/* Entre la confiance et la solution : le visiteur doit se reconnaître
+          avant qu'on lui montre quoi que ce soit. */}
+      <section id="situations" className="px-xl py-5xl">
+        <div className="mx-auto max-w-[48rem]">
+          <p className="text-caption-uppercase uppercase text-primary">
+            Ce que vivent les bailleurs
+          </p>
+          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
+            Vous reconnaissez-vous dans l&apos;une de ces situations ?
+          </h2>
+
+          <ul role="list" className="anim-cascade mt-2xl space-y-md">
+            {douleurs.map(({ situation, consequence }) => (
+              <li
+                key={situation}
+                className="flex items-start gap-md rounded-lg border border-hairline border-l-2 border-l-warning-deep bg-surface-soft px-lg py-md"
+              >
+                <TriangleAlert
+                  size={18}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="mt-xxs shrink-0 text-warning-deep"
+                />
+                <div className="min-w-0">
+                  <p className="text-body-md font-semibold text-ink">{situation}</p>
+                  <p className="mt-xxs text-body-sm text-mute">{consequence}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-2xl border-t border-hairline pt-xl">
+            {/* Pas de pronostic judiciaire ici : ce qui manque dans les quatre
+                cas est factuel — une trace écrite —, et c'est exactement ce que
+                Sikaloc produit. La promesse reste donc tenable. */}
+            <p className="text-body-lg font-semibold text-ink">
+              Dans les quatre cas, il manque la même chose : un écrit daté,
+              numéroté, que personne ne peut réécrire après coup.
+            </p>
+            <Link href="/inscription" className="btn btn-primary mt-lg">
+              Protéger mes revenus
+            </Link>
           </div>
         </div>
       </section>
