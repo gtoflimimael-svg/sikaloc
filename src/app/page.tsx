@@ -1,4 +1,17 @@
-import { Check, Lock, ShieldCheck, Smartphone, TriangleAlert } from 'lucide-react'
+import {
+  BellRing,
+  ChartColumn,
+  Check,
+  Database,
+  FileCheck,
+  Lock,
+  MessageCircle,
+  Scale,
+  Send,
+  ShieldCheck,
+  Smartphone,
+  TriangleAlert,
+} from 'lucide-react'
 import Link from 'next/link'
 
 import { MenuMobile } from '@/components/marketing/menu-mobile'
@@ -54,31 +67,37 @@ const etapes = [
  */
 const fonctionnalites = [
   {
+    Icone: FileCheck,
     titre: 'Des quittances qui font preuve',
     texte:
       'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et votre signature. Chaque document reçoit un numéro continu et une empreinte d’intégrité. Le plan Standard y ajoute la mention du droit de timbre.',
   },
   {
+    Icone: BellRing,
     titre: 'Aucun loyer ne s’échappe',
     texte:
       'Chaque bail a son jour d’échéance et sa tolérance. Passé le délai, le loyer bascule en impayé et remonte en haut de votre tableau de bord. Vous agissez avant que le retard ne s’enlise.',
   },
   {
+    Icone: MessageCircle,
     titre: 'Relancez sans confrontation',
     texte:
       'Le message est pré-rédigé avec le nom, la période, le montant et l’échéance. Vous relisez, vous envoyez depuis votre propre WhatsApp — Sikaloc n’écrit jamais à votre place. Les relances se débloquent avec le plan Standard.',
   },
   {
+    Icone: ChartColumn,
     titre: 'Votre parc, chiffres à l’appui',
     texte:
       'Taux d’occupation, taux de recouvrement, impayés, chiffre d’affaires du mois. Mis à jour à chaque paiement. Vous savez où vous en êtes, sans surprise.',
   },
   {
+    Icone: Send,
     titre: 'Rien à installer pour le locataire',
     texte:
       'Il reçoit sa quittance sur WhatsApp, par un lien de téléchargement sécurisé valable 30 jours. Pas de compte, pas de mot de passe. La preuve est entre ses mains.',
   },
   {
+    Icone: Database,
     titre: 'Vos données, cloisonnées',
     texte:
       'Chaque bailleur ne voit que ses propres données, isolées au niveau de la base. Hébergement en Europe, échanges chiffrés.',
@@ -168,6 +187,44 @@ const douleurs = [
   {
     situation: 'Chaque quittance est réécrite à la main, une par une.',
     consequence: 'Une mention oubliée, et le document perd de sa valeur.',
+  },
+]
+
+/**
+ * Preuve de sérieux — ce qui remplace les témoignages tant qu'il n'y a pas
+ * d'utilisateurs à citer.
+ *
+ * Deux blocs seulement, et non les trois du rapport : le troisième demandait
+ * une photo du fondateur et une citation signée de son nom, que le rapport
+ * lui-même laisse « à fournir par le fondateur ». Inventer une phrase et la
+ * signer du nom de quelqu'un serait un faux ; le bloc attend donc son texte.
+ *
+ * Le bloc juridique ne reprend pas « une preuve datée irréfutable » (§9.3) :
+ * le PDF imprime lui-même que sa signature est simple et non qualifiée. Il
+ * décrit ce que le document contient et ce qui le rend vérifiable — l'empreinte
+ * SHA-256 — puis renvoie à l'exemple réel, qui vaut mieux que l'adjectif.
+ */
+const preuvesSerieux = [
+  {
+    Icone: Scale,
+    titre: 'Une quittance que l’on peut vérifier',
+    points: [
+      'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et signature.',
+      'Un numéro continu et une empreinte SHA-256 par document : toute modification du fichier devient détectable.',
+      'La mention du droit de timbre est ajoutée avec le plan Standard.',
+    ],
+    lien: { href: '/exemple-quittance', libelle: 'Voir un exemple de quittance' },
+  },
+  {
+    Icone: Lock,
+    titre: 'Vos données restent cloisonnées',
+    points: [
+      'Chaque bailleur ne voit que ses propres données, isolées au niveau de la base.',
+      'Hébergement en Europe (Francfort), échanges chiffrés en HTTPS.',
+      'Vos données ne sont ni vendues, ni louées, ni utilisées à des fins publicitaires.',
+      'Les quittances vivent dans un stockage privé, partagées par liens signés à durée limitée.',
+    ],
+    lien: { href: '/legal/confidentialite', libelle: 'Lire la politique de confidentialité' },
   },
 ]
 
@@ -500,10 +557,80 @@ export default async function PageAccueil() {
           </h2>
 
           <div className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2 lg:grid-cols-3">
-            {fonctionnalites.map((f) => (
-              <article key={f.titre} className="card card-lg">
-                <h3 className="text-title-lg font-bold text-ink">{f.titre}</h3>
-                <p className="mt-sm text-body-md text-body">{f.texte}</p>
+            {/* Icônes lucide, pas les emojis du rapport : le projet n'en
+                utilise aucun dans son copy, et leur rendu change d'un Android
+                à l'autre sur un marché où c'est le parc dominant. */}
+            {fonctionnalites.map(({ Icone, titre, texte }) => (
+              <article key={titre} className="card card-lg">
+                <Icone
+                  size={24}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                  className="text-primary"
+                />
+                <h3 className="mt-md text-title-lg font-bold text-ink">{titre}</h3>
+                <p className="mt-sm text-body-md text-body">{texte}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Preuve de sérieux ──────────────────────────────────────────── */}
+      {/* Entre les fonctionnalités et le prix : le visiteur sait ce que fait le
+          produit, il lui reste à savoir s'il peut le croire. Sans clients à
+          citer, on donne ce qui se vérifie — et un lien pour le vérifier. */}
+      {/*
+        Fond hérité et simple filet en haut, plutôt qu'un `bg-canvas` de plus :
+        les sections alternent canvas / canvas-soft d'un bout à l'autre de la
+        page, et une section supplémentaire cassait la parité — « confiance »
+        et « tarifs » se retrouvaient sur le même fond, collés. Le filet
+        sépare de « fonctionnalités » sans consommer d'alternance.
+      */}
+      <section id="confiance" className="border-t border-hairline px-xl py-5xl">
+        <div className="mx-auto max-w-[56rem]">
+          <p className="text-caption-uppercase uppercase text-primary">
+            Pourquoi nous croire
+          </p>
+          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
+            Ce que vous pouvez vérifier vous-même
+          </h2>
+          <p className="mt-md max-w-[42rem] text-body-lg text-mute">
+            Sikaloc n&apos;a pas encore d&apos;avis clients à afficher. À la
+            place, voici ce qui est contrôlable avant même de créer un compte.
+          </p>
+
+          <div className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2 [&>*]:min-w-0">
+            {preuvesSerieux.map(({ Icone, titre, points, lien }) => (
+              <article key={titre} className="card card-lg">
+                <Icone
+                  size={26}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                  className="text-primary"
+                />
+                <h3 className="mt-md text-title-lg font-bold text-ink">{titre}</h3>
+
+                <ul role="list" className="mt-md space-y-sm">
+                  {points.map((point) => (
+                    <li key={point} className="flex items-start gap-sm text-body-sm text-body">
+                      <Check
+                        size={17}
+                        strokeWidth={2.5}
+                        aria-hidden="true"
+                        className="mt-xxs shrink-0 text-primary"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href={lien.href}
+                  className="lien-anime mt-lg inline-block text-body-sm font-semibold text-ink"
+                >
+                  {lien.libelle}
+                </Link>
               </article>
             ))}
           </div>
