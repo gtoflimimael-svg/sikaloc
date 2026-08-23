@@ -337,6 +337,14 @@ export default async function PageAccueil() {
         </nav>
       </header>
 
+      {/*
+        Repère `main` : la page n'en avait aucun. Les lecteurs d'écran s'en
+        servent pour sauter la navigation et atteindre le contenu directement —
+        sans lui, il faut retraverser l'en-tête à chaque arrivée sur la page.
+        Les écrans d'authentification (`CarteAuth`) en portaient déjà un.
+      */}
+      <main id="contenu">
+
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden px-xl py-5xl">
         {/* Formes décoratives — purement atmosphériques, jamais interactives. */}
@@ -838,6 +846,8 @@ export default async function PageAccueil() {
           </div>
         </div>
       </section>
+
+      </main>
 
       <PiedDePage />
     </div>
