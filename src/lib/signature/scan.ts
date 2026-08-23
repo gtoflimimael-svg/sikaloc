@@ -15,14 +15,41 @@
  * est plus sombre que l'autre.
  */
 
-/** Largeur maximale conservée — au-delà, on ne gagne que du poids de fichier. */
-const LARGEUR_MAX = 1600
+/**
+ * Largeur maximale conservée.
+ *
+ * 1600 auparavant. Un téléphone photographie en 3000-4000 px : à 1600, une
+ * signature cadrée de loin ne conservait qu'une centaine de pixels de haut une
+ * fois recadrée — trop peu pour une impression propre. Le seuillage est
+ * linéaire en nombre de pixels, le surcoût reste de quelques dizaines de
+ * millisecondes.
+ */
+const LARGEUR_MAX = 2400
 
 /** Sensibilité du seuillage : un trait doit être 15 % plus sombre que son voisinage. */
 const SENSIBILITE = 0.15
 
 /** Marge laissée autour du trait, en proportion de la plus grande dimension. */
 const MARGE = 0.04
+
+/**
+ * Douceur du bord du trait.
+ *
+ * L'ancienne version peignait un masque binaire, puis forçait une opacité
+ * minimale de 25 % : 87 % des pixels d'encre sortaient à opacité maximale et le
+ * trait avait des bords en escalier — découpé aux ciseaux plutôt qu'écrit.
+ *
+ * L'opacité suit maintenant une rampe continue autour du seuil local :
+ *   - au-dessous de `seuil × (1 − RAMPE_PLEINE)`, l'encre est pleine ;
+ *   - au-dessus de `seuil × (1 + BORD_DOUX)`, elle est transparente ;
+ *   - entre les deux, elle s'interpole.
+ *
+ * `BORD_DOUX` déborde volontairement au-dessus du seuil : sans cette bande, la
+ * transition s'arrêterait net à la frontière du masque et le bord resterait
+ * dur, quelle que soit la finesse de la rampe.
+ */
+const RAMPE_PLEINE = 0.35
+const BORD_DOUX = 0.06
 
 export interface ResultatScan {
   /** PNG à fond transparent, prêt à téléverser. */
@@ -176,16 +203,44 @@ export async function detourerSignature(source: Blob | string): Promise<Resultat
       const seuil = (total / compte) * (1 - SENSIBILITE)
       const p = y * l + x
 
-      if (gris[p] < seuil) {
-        masque[p] = 1
-        // L'opacité suit l'écart au seuil : les bords du trait restent lissés
-        // au lieu de sortir en escalier.
-        intensite[p] = Math.min(1, (seuil - gris[p]) / Math.max(1, seuil * 0.55))
-      }
+      // Le masque reste binaire : il sert à décider quelles composantes garder
+      // et où recadrer. L'opacité, elle, est continue — c'est ce qui donne au
+      // trait un bord d'encre plutôt qu'une découpe.
+      if (gris[p] < seuil) masque[p] = 1
+
+      const plein = seuil * (1 - RAMPE_PLEINE)
+      const vide = seuil * (1 + BORD_DOUX)
+      const brut = (vide - gris[p]) / Math.max(1, vide - plein)
+      intensite[p] = brut <= 0 ? 0 : brut >= 1 ? 1 : brut
     }
   }
 
   retirerTaches(masque, l, h, Math.max(12, Math.round((l * h) / 20000)))
+
+  /*
+   * Les pixels du bord du trait sont, par définition, un peu plus clairs que le
+   * seuil : ils ne sont donc PAS dans le masque. Les peindre suppose d'élargir
+   * la zone d'un pixel autour de ce qui a survécu au dépoussiérage — sans quoi
+   * la rampe d'opacité s'arrêterait net à la frontière du masque et le bord
+   * resterait aussi dur qu'avant.
+   *
+   * La dilatation part du masque nettoyé, pas du masque brut : une poussière
+   * déjà écartée ne doit pas revenir par son halo.
+   */
+  const zone = new Uint8Array(l * h)
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < l; x++) {
+      if (!masque[y * l + x]) continue
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx
+          const ny = y + dy
+          if (nx < 0 || ny < 0 || nx >= l || ny >= h) continue
+          zone[ny * l + nx] = 1
+        }
+      }
+    }
+  }
 
   // ── Recadrage sur le trait ───────────────────────────────────────────────
   let minX = l
@@ -228,14 +283,18 @@ export async function detourerSignature(source: Blob | string): Promise<Resultat
       const source = (y + minY) * l + (x + minX)
       const cible = (y * largeur + x) * 4
 
-      if (!masque[source]) continue
+      if (!zone[source]) continue
+
+      const opacite = intensite[source]
+      if (opacite <= 0) continue
 
       // Encre d'un noir légèrement bleuté : à l'impression, un noir pur sur
       // fond crème donne un trait plus dur que l'original au stylo.
       image.data[cible] = 19
       image.data[cible + 1] = 19
       image.data[cible + 2] = 26
-      image.data[cible + 3] = Math.round(255 * Math.max(0.25, intensite[source]))
+      // Plus de plancher d'opacité : c'est lui qui rendait chaque bord abrupt.
+      image.data[cible + 3] = Math.round(255 * opacite)
     }
   }
 
