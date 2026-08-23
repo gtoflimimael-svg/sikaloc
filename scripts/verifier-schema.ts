@@ -51,7 +51,9 @@ async function main() {
   const rapport = await verifierSchema()
 
   console.log(
-    `  ${rapport.colonnesVerifiees} colonnes vérifiées sur ${rapport.tablesVerifiees} tables.`,
+    `  ${rapport.colonnesVerifiees} colonnes vérifiées sur ${rapport.tablesVerifiees} tables.\n` +
+      `  ${rapport.objetsVerifies} objets déclarés par les migrations ` +
+      '(contraintes, politiques, fonctions, vues, index, déclencheurs).',
   )
 
   if (rapport.conforme) {

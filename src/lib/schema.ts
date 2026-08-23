@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /**
@@ -49,11 +49,28 @@ export interface EcartSchema {
   tableInaccessible: boolean
 }
 
+/** Objet déclaré par une migration mais introuvable dans la base. */
+export interface ObjetManquant {
+  categorie: string
+  nom: string
+  /** Fichier de migration qui le déclare — désigne la migration à appliquer. */
+  migration: string
+}
+
 export interface RapportSchema {
   conforme: boolean
   tablesVerifiees: number
   colonnesVerifiees: number
   ecarts: EcartSchema[]
+  /** Objets vérifiés au-delà des colonnes : contraintes, politiques, etc. */
+  objetsVerifies: number
+  objetsManquants: ObjetManquant[]
+  /**
+   * Renseigné quand l'inventaire n'a pas pu être lu — fonction absente ou
+   * droits insuffisants. Distinguer « rien ne manque » de « je n'ai pas pu
+   * regarder » est le cœur du problème que ce module traite.
+   */
+  inventaireIndisponible?: string
 }
 
 /** Extrait les noms de colonnes d'un bloc `export type X = { … }`. */
@@ -63,6 +80,117 @@ function colonnesAttendues(source: string, nomType: string): string[] {
   const fin = source.indexOf('\n}', debut)
 
   return [...source.slice(debut, fin).matchAll(/^\s{2}([a-z_][a-z0-9_]*)\??:/gm)].map((m) => m[1])
+}
+
+/**
+ * Objets de schéma déclarés par les migrations, dans l'ordre des fichiers.
+ *
+ * Les migrations sont la bonne source de vérité ici : la panne à prévenir est
+ * exactement « migration écrite, jamais appliquée ». Un objet nommé dans un
+ * fichier et absent de la base désigne donc, sans ambiguïté, une migration
+ * restée sur l'étagère.
+ *
+ * L'ordre compte : une migration peut supprimer ce qu'une précédente a créé.
+ * `quittances_numero_document_key` est dans ce cas — la chercher en base serait
+ * une fausse alerte.
+ */
+function objetsDeclares(): ObjetManquant[] {
+  const dossier = join(process.cwd(), 'supabase/migrations')
+
+  let fichiers: string[]
+  try {
+    fichiers = readdirSync(dossier)
+      .filter((f) => f.endsWith('.sql'))
+      .sort()
+  } catch {
+    // Les migrations ne sont pas déployées avec la fonction : dans ce cas le
+    // contrôle se limite aux colonnes, ce que l'appelant saura signaler.
+    return []
+  }
+
+  // Les noms peuvent être nus ou entre guillemets — les politiques de ce projet
+  // portent des libellés français avec espaces et accents.
+  const nom = String.raw`(?:"([^"]+)"|([a-zA-Z_][\w]*))`
+
+  const MOTIFS: { categorie: string; expression: RegExp }[] = [
+    { categorie: 'contrainte', expression: new RegExp(String.raw`add\s+constraint\s+${nom}`, 'gi') },
+    { categorie: 'politique', expression: new RegExp(String.raw`create\s+policy\s+${nom}`, 'gi') },
+    {
+      categorie: 'fonction',
+      expression: new RegExp(
+        String.raw`create\s+(?:or\s+replace\s+)?function\s+(?:[a-zA-Z_]\w*\.)?${nom}`,
+        'gi',
+      ),
+    },
+    {
+      categorie: 'vue',
+      expression: new RegExp(
+        String.raw`create\s+(?:or\s+replace\s+)?view\s+(?:[a-zA-Z_]\w*\.)?${nom}`,
+        'gi',
+      ),
+    },
+    {
+      categorie: 'index',
+      expression: new RegExp(
+        String.raw`create\s+(?:unique\s+)?index\s+(?:concurrently\s+)?(?:if\s+not\s+exists\s+)?${nom}`,
+        'gi',
+      ),
+    },
+    { categorie: 'declencheur', expression: new RegExp(String.raw`create\s+trigger\s+${nom}`, 'gi') },
+  ]
+
+  const SUPPRESSIONS: { categorie: string; expression: RegExp }[] = [
+    {
+      categorie: 'contrainte',
+      expression: new RegExp(String.raw`drop\s+constraint\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
+    },
+    {
+      categorie: 'politique',
+      expression: new RegExp(String.raw`drop\s+policy\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
+    },
+    {
+      categorie: 'index',
+      expression: new RegExp(String.raw`drop\s+index\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
+    },
+    {
+      categorie: 'declencheur',
+      expression: new RegExp(String.raw`drop\s+trigger\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
+    },
+  ]
+
+  const declares = new Map<string, ObjetManquant>()
+
+  for (const fichier of fichiers) {
+    let sql: string
+    try {
+      sql = readFileSync(join(dossier, fichier), 'utf8')
+    } catch {
+      continue
+    }
+
+    // Les commentaires SQL contiennent des exemples et des noms cités ; les
+    // lire produirait des attentes qu'aucune instruction ne crée.
+    const instructions = sql
+      .split('\n')
+      .filter((ligne) => !ligne.trimStart().startsWith('--'))
+      .join('\n')
+
+    for (const { categorie, expression } of MOTIFS) {
+      for (const trouve of instructions.matchAll(expression)) {
+        const valeur = trouve[1] ?? trouve[2]
+        if (valeur) declares.set(`${categorie}:${valeur}`, { categorie, nom: valeur, migration: fichier })
+      }
+    }
+
+    for (const { categorie, expression } of SUPPRESSIONS) {
+      for (const trouve of instructions.matchAll(expression)) {
+        const valeur = trouve[1] ?? trouve[2]
+        if (valeur) declares.delete(`${categorie}:${valeur}`)
+      }
+    }
+  }
+
+  return [...declares.values()]
 }
 
 export async function verifierSchema(): Promise<RapportSchema> {
@@ -106,21 +234,72 @@ export async function verifierSchema(): Promise<RapportSchema> {
     }
   }
 
+  // ── Objets hors colonnes ─────────────────────────────────────────────────
+  const attendus = objetsDeclares()
+  const objetsManquants: ObjetManquant[] = []
+  let inventaireIndisponible: string | undefined
+
+  if (attendus.length > 0) {
+    const reponse = await fetch(`${url}/rest/v1/rpc/inventaire_schema`, {
+      method: 'POST',
+      headers: { ...entetes, 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+
+    if (!reponse.ok) {
+      inventaireIndisponible =
+        `inventaire illisible (HTTP ${reponse.status}) — la migration ` +
+        '20260824000100_inventaire_schema.sql est-elle appliquée ?'
+    } else {
+      const lignes = (await reponse.json()) as { categorie: string; nom: string }[]
+      const presents = new Set(lignes.map((l) => `${l.categorie}:${l.nom}`))
+
+      for (const objet of attendus) {
+        if (!presents.has(`${objet.categorie}:${objet.nom}`)) objetsManquants.push(objet)
+      }
+    }
+  }
+
   return {
-    conforme: ecarts.length === 0,
+    // Un inventaire illisible n'est pas une conformité : c'est précisément le
+    // silence qui avait laissé la panne du 20 août passer trois jours.
+    conforme: ecarts.length === 0 && objetsManquants.length === 0 && !inventaireIndisponible,
     tablesVerifiees: Object.keys(TABLES).length,
     colonnesVerifiees,
     ecarts,
+    objetsVerifies: attendus.length,
+    objetsManquants,
+    ...(inventaireIndisponible ? { inventaireIndisponible } : {}),
   }
 }
 
 /** Résumé lisible d'un écart, pour un journal ou un email. */
 export function decrireEcarts(rapport: RapportSchema): string {
-  return rapport.ecarts
-    .map((e) =>
-      e.tableInaccessible
-        ? `• table « ${e.table} » injoignable`
-        : `• ${e.table} : ${e.colonnesManquantes.join(', ')}`,
+  const lignes = rapport.ecarts.map((e) =>
+    e.tableInaccessible
+      ? `• table « ${e.table} » injoignable`
+      : `• ${e.table} : ${e.colonnesManquantes.join(', ')}`,
+  )
+
+  if (rapport.inventaireIndisponible) {
+    lignes.push(`• ${rapport.inventaireIndisponible}`)
+  }
+
+  // Groupé par migration : c'est le fichier à appliquer, pas l'objet isolé, qui
+  // constitue l'action à mener.
+  const parMigration = new Map<string, ObjetManquant[]>()
+  for (const objet of rapport.objetsManquants) {
+    const liste = parMigration.get(objet.migration) ?? []
+    liste.push(objet)
+    parMigration.set(objet.migration, liste)
+  }
+
+  for (const [migration, objets] of parMigration) {
+    lignes.push(
+      `• ${migration} — non appliquée ? ${objets.length} objet(s) absent(s) : ` +
+        objets.map((o) => `${o.categorie} ${o.nom}`).join(', '),
     )
-    .join('\n')
+  }
+
+  return lignes.join('\n')
 }

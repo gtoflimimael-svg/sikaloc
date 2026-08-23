@@ -10,9 +10,15 @@ import { decrireEcarts, verifierSchema } from '@/lib/schema'
  * en silence : l'erreur était attrapée proprement et rendue au formulaire, donc
  * invisible côté serveur. Personne ne pouvait le savoir sans essayer.
  *
- * Cette tâche ferme ce trou. Elle compare chaque colonne attendue par le code à
- * ce que la base contient réellement, et n'écrit **que si quelque chose
- * manque** — une alerte qui parle tous les jours n'est plus une alerte.
+ * Cette tâche ferme ce trou. Elle compare deux descriptions du schéma à ce que
+ * la base contient réellement : les types pour les colonnes, les migrations pour
+ * les contraintes, politiques, fonctions, vues, index et déclencheurs. Elle
+ * n'écrit **que si quelque chose manque** — une alerte qui parle tous les jours
+ * n'est plus une alerte.
+ *
+ * Le volet « objets » est né d'un angle mort : le 24 août 2026, ce contrôle
+ * annonçait « conforme » alors que deux contraintes manquaient en production. Il
+ * disait vrai sur ce qu'il regardait ; il ne regardait pas assez.
  *
  * Volontairement PAS branchée sur le build : un contrôle exécuté au
  * déploiement ferait échouer une mise en ligne de simple correctif visuel
@@ -21,6 +27,7 @@ import { decrireEcarts, verifierSchema } from '@/lib/schema'
  */
 
 // Rejouer 111 vérifications de colonnes dépasse le délai d'une requête ordinaire.
+// L'inventaire des autres objets tient, lui, en un seul appel.
 export const maxDuration = 120
 
 const DESTINATAIRE =
@@ -77,6 +84,7 @@ export async function POST(request: NextRequest) {
       conforme: true,
       tables: rapport.tablesVerifiees,
       colonnes: rapport.colonnesVerifiees,
+      objets: rapport.objetsVerifies,
     })
   }
 
@@ -84,7 +92,7 @@ export async function POST(request: NextRequest) {
   console.error('[cron/schema] écarts détectés :\n' + details)
 
   const envoye = await alerter(
-    'Sikaloc — une colonne manque en base de données',
+    'Sikaloc — la base ne correspond plus au code',
     `Le contrôle quotidien a trouvé un écart entre ce que le code attend et ce\n` +
       `que la base contient.\n\n` +
       `${details}\n\n` +
@@ -93,14 +101,27 @@ export async function POST(request: NextRequest) {
       `production. C'est exactement ce qui avait cassé la génération de\n` +
       `quittance pendant trois jours, en août 2026.\n\n` +
       `CE QU'IL FAUT FAIRE\n` +
-      `Ajouter la ou les colonnes manquantes dans le SQL Editor de Supabase,\n` +
-      `puis relancer « npm run verifier:schema » pour confirmer.\n\n` +
-      `Les fonctionnalités qui dépendent de ces colonnes sont probablement\n` +
-      `cassées en ce moment même, sans lever la moindre erreur serveur.`,
+      `Depuis la réconciliation des historiques du 24 août 2026, la voie normale\n` +
+      `fonctionne :\n\n` +
+      `  npx supabase db push --linked\n` +
+      `  npm run verifier:schema\n\n` +
+      `Si le message ci-dessus signale un inventaire illisible, c'est la migration\n` +
+      `20260824000100_inventaire_schema.sql qui manque : la même commande\n` +
+      `l'applique.\n\n` +
+      `Les fonctionnalités qui en dépendent sont peut-être cassées en ce moment\n` +
+      `même, sans lever la moindre erreur serveur.`,
   )
 
   return NextResponse.json(
-    { conforme: false, ecarts: rapport.ecarts, alerteEnvoyee: envoye },
+    {
+      conforme: false,
+      ecarts: rapport.ecarts,
+      objetsManquants: rapport.objetsManquants,
+      ...(rapport.inventaireIndisponible
+        ? { inventaireIndisponible: rapport.inventaireIndisponible }
+        : {}),
+      alerteEnvoyee: envoye,
+    },
     { status: 500 },
   )
 }
