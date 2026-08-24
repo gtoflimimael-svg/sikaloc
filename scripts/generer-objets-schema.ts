@@ -1,7 +1,7 @@
 /**
  * Fige la liste des objets déclarés par les migrations.
  *
- *   npm run generer:objets      (appelé automatiquement par `npm run build`)
+ *   npm run generer:objets      (à relancer après toute nouvelle migration)
  *
  * Le contrôle de schéma a besoin de savoir ce que les migrations promettent :
  * contraintes, politiques, fonctions, vues, index, déclencheurs. Lire le dossier
@@ -9,17 +9,21 @@
  * n'arrivent pas dans la fonction déployée, et le contrôle se retrouvait à
  * vérifier zéro objet en annonçant « conforme ».
  *
- * La liste est donc calculée ici, au build, où les migrations sont forcément
- * présentes, et écrite dans un module TypeScript ordinaire que le bundler
- * embarque comme n'importe quel import. Plus rien à tracer, plus rien à perdre.
+ * La liste est donc calculée ici et écrite dans un module TypeScript ordinaire
+ * que le bundler embarque comme n'importe quel import. Plus rien à tracer, plus
+ * rien à perdre.
  *
- * Le fichier produit est versionné : sa relecture en revue montre ce que le
- * contrôle surveillera réellement.
+ * Pourquoi pas au build : `.vercelignore` exclut délibérément `/scripts` et
+ * `/supabase` pour alléger l'envoi. Ni ce script ni les migrations n'existent
+ * sur Vercel — c'était d'ailleurs la vraie raison pour laquelle la lecture à
+ * l'exécution échouait. Le fichier produit est donc versionné, et
+ * `npm run verifier:schema` refuse de passer s'il a pris du retard sur les
+ * migrations.
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-interface ObjetDeclare {
+export interface ObjetDeclare {
   categorie: string
   nom: string
   migration: string
@@ -78,7 +82,7 @@ const SUPPRESSIONS: { categorie: string; expression: RegExp }[] = [
   },
 ]
 
-function extraire(): ObjetDeclare[] {
+export function extraire(): ObjetDeclare[] {
   const fichiers = readdirSync(DOSSIER)
     .filter((f) => f.endsWith('.sql'))
     .sort()
@@ -121,15 +125,16 @@ function extraire(): ObjetDeclare[] {
   )
 }
 
-const objets = extraire()
-
-const contenu = `// Fichier généré par \`npm run generer:objets\` — ne pas modifier à la main.
+export function ecrire(): ObjetDeclare[] {
+  const objets = extraire()
+  const contenu = `// Fichier généré par \`npm run generer:objets\` — ne pas modifier à la main.
 //
 // Liste des objets que les migrations promettent à la base. Le contrôle de
 // schéma compare cette liste à l'inventaire réel de la production.
 //
-// Figée au build : lire \`supabase/migrations\` à l'exécution ne fonctionne pas,
-// les fichiers n'accompagnant pas la fonction déployée.
+// Figée ici parce que \`.vercelignore\` exclut \`/supabase\` : les migrations
+// n'accompagnent pas la fonction déployée et sont illisibles à l'exécution.
+// \`npm run verifier:schema\` signale si cette liste a pris du retard.
 
 export interface ObjetDeclare {
   categorie: string
@@ -141,12 +146,19 @@ export interface ObjetDeclare {
 export const OBJETS_DECLARES: ObjetDeclare[] = ${JSON.stringify(objets, null, 2)}
 `
 
-writeFileSync(SORTIE, contenu, 'utf8')
+  writeFileSync(SORTIE, contenu, 'utf8')
+  return objets
+}
 
-const parCategorie = new Map<string, number>()
-for (const o of objets) parCategorie.set(o.categorie, (parCategorie.get(o.categorie) ?? 0) + 1)
+// Lancé directement : on écrit. Importé par le contrôle de schéma : on se
+// contente d'exposer `extraire`, qui sert alors à détecter un retard.
+if (process.argv[1] && process.argv[1].endsWith('generer-objets-schema.ts')) {
+  const objets = ecrire()
+  const parCategorie = new Map<string, number>()
+  for (const o of objets) parCategorie.set(o.categorie, (parCategorie.get(o.categorie) ?? 0) + 1)
 
-console.log(
-  `${objets.length} objets figés dans src/lib/schema-objets.ts — ` +
-    [...parCategorie].map(([c, n]) => `${n} ${c}`).join(', '),
-)
+  console.log(
+    `${objets.length} objets figés dans src/lib/schema-objets.ts — ` +
+      [...parCategorie].map(([c, n]) => `${n} ${c}`).join(', '),
+  )
+}

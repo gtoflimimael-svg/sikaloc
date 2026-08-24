@@ -3,8 +3,9 @@
 // Liste des objets que les migrations promettent à la base. Le contrôle de
 // schéma compare cette liste à l'inventaire réel de la production.
 //
-// Figée au build : lire `supabase/migrations` à l'exécution ne fonctionne pas,
-// les fichiers n'accompagnant pas la fonction déployée.
+// Figée ici parce que `.vercelignore` exclut `/supabase` : les migrations
+// n'accompagnent pas la fonction déployée et sont illisibles à l'exécution.
+// `npm run verifier:schema` signale si cette liste a pris du retard.
 
 export interface ObjetDeclare {
   categorie: string

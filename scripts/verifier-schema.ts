@@ -35,8 +35,44 @@ const resoudre = (Module as unknown as { _resolveFilename: (...a: unknown[]) => 
   return resoudre.call(this, demande, ...reste)
 }
 
+/**
+ * Refuse de continuer si la liste figée a pris du retard sur les migrations.
+ *
+ * La liste est versionnée parce que `.vercelignore` exclut `/supabase` : les
+ * migrations n'atteignent jamais la fonction déployée. Ce choix a un revers —
+ * ajouter une migration sans relancer le générateur laisserait ses objets hors
+ * surveillance, sans le moindre signe. Ce contrôle tourne ici parce que c'est le
+ * seul endroit où les deux versions sont disponibles côte à côte.
+ */
+async function verifierFraicheur(): Promise<boolean> {
+  const { extraire } = await import('./generer-objets-schema')
+  const { OBJETS_DECLARES } = await import('../src/lib/schema-objets')
+
+  const cle = (o: { categorie: string; nom: string }) => `${o.categorie}:${o.nom}`
+  const frais = new Set(extraire().map(cle))
+  const fige = new Set(OBJETS_DECLARES.map(cle))
+
+  const absents = [...frais].filter((k) => !fige.has(k))
+  const surnumeraires = [...fige].filter((k) => !frais.has(k))
+
+  if (absents.length === 0 && surnumeraires.length === 0) return true
+
+  console.error('✗ La liste figée ne correspond plus aux migrations.\n')
+  if (absents.length > 0) {
+    console.error(`  Déclarés par une migration mais absents de la liste :\n    ${absents.join('\n    ')}`)
+  }
+  if (surnumeraires.length > 0) {
+    console.error(`  Dans la liste mais plus déclarés :\n    ${surnumeraires.join('\n    ')}`)
+  }
+  console.error('\n  Relancez « npm run generer:objets », puis committez le fichier produit.')
+
+  return false
+}
+
 async function main() {
   const { decrireEcarts, verifierSchema } = await import('../src/lib/schema')
+
+  if (!(await verifierFraicheur())) process.exit(1)
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error(
