@@ -13,13 +13,22 @@
  */
 
 export interface Editeur {
-  /** Dénomination exacte, telle qu'immatriculée. */
+  /**
+   * Dénomination. Pour une activité non immatriculée exercée en nom propre,
+   * c'est le nom et le prénom de la personne physique.
+   */
   denomination: string | null
-  /** Forme juridique : entreprise individuelle, SARL, SAS… */
+  /** Forme juridique : personne physique, entreprise individuelle, SARL, SAS… */
   formeJuridique: string | null
   /** Adresse du siège, complète. */
   adresse: string | null
-  /** Numéro d'immatriculation — RCCM au Bénin. `false` si non immatriculé. */
+  /**
+   * Numéro d'immatriculation — RCCM au Bénin.
+   *
+   * `false` pour une activité non encore immatriculée : la page l'écrit alors
+   * en toutes lettres plutôt que de laisser une ligne vide. Une mention absente
+   * se lit comme un oubli ; une mention explicite se lit comme un état de fait.
+   */
   immatriculation: string | false | null
   /** Personne responsable de ce qui est publié sur le site. */
   directeurPublication: string | null

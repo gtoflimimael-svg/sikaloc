@@ -39,7 +39,11 @@ export default function PageMentions() {
           <Ligne etiquette="Siège" valeur={EDITEUR.adresse} />
           <Ligne
             etiquette="Immatriculation"
-            valeur={EDITEUR.immatriculation === false ? 'Non immatriculé' : EDITEUR.immatriculation}
+            valeur={
+              EDITEUR.immatriculation === false
+                ? 'Activité non immatriculée à ce jour'
+                : EDITEUR.immatriculation
+            }
           />
           <Ligne etiquette="Directeur de la publication" valeur={EDITEUR.directeurPublication} />
           <Ligne etiquette="Contact" valeur={EDITEUR.email} />
