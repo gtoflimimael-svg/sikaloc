@@ -197,6 +197,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "inscriptions_guide_email_unique",
+    "migration": "20260824000300_inscriptions_guide.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "inscriptions_guide_statut_idx",
+    "migration": "20260824000300_inscriptions_guide.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "locataires_bailleur_id_idx",
     "migration": "20260817000100_schema_initial.sql"
   },

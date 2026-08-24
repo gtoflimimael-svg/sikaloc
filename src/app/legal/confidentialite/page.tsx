@@ -58,6 +58,34 @@ export default function PageConfidentialite() {
           gestion de l&apos;abonnement. Elles ne sont ni vendues, ni louées, ni
           utilisées à des fins publicitaires.
         </p>
+        <p>
+          Une seule finalité distincte existe : l&apos;envoi du guide
+          «&nbsp;Ce que contient une quittance Sikaloc&nbsp;» aux personnes qui
+          en font la demande depuis la page d&apos;accueil. Ces personnes
+          n&apos;ont pas de compte ; leur adresse est conservée séparément et
+          n&apos;est jamais rapprochée des données de gestion locative.
+        </p>
+      </Section>
+
+      <Section titre="3 bis. Demande du guide — base légale et retrait">
+        <p>
+          <strong>Base légale&nbsp;:</strong> votre consentement, recueilli en
+          deux temps. L&apos;adresse saisie ne reçoit qu&apos;un message de
+          confirmation&nbsp;; le guide n&apos;est envoyé qu&apos;après que vous
+          avez cliqué le lien qu&apos;il contient. Sans ce clic, rien d&apos;autre
+          ne vous est adressé.
+        </p>
+        <p>
+          <strong>Données collectées&nbsp;:</strong> votre adresse email, la date
+          de la demande et celle de la confirmation. Rien d&apos;autre — ni nom,
+          ni téléphone, ni traceur publicitaire.
+        </p>
+        <p>
+          <strong>Retrait&nbsp;:</strong> chaque message contient un lien de
+          désinscription. Un seul clic suffit, sans justification et sans étape
+          intermédiaire. La date du retrait est conservée, précisément pour ne
+          pas vous réinscrire par erreur.
+        </p>
       </Section>
 
       <Section titre="4. Consentement du locataire">
@@ -95,6 +123,12 @@ export default function PageConfidentialite() {
           suspendu et données archivées à J+30, suppression définitive des données
           personnelles à J+90. Le bailleur peut exporter ses documents avant
           suppression.
+        </p>
+        <p>
+          Les adresses inscrites au guide sont conservées trois ans à compter du
+          dernier échange, ou jusqu&apos;à votre désinscription si elle intervient
+          avant. Une adresse restée sans confirmation est effacée au bout de
+          trente jours.
         </p>
       </Section>
 

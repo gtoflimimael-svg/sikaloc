@@ -184,6 +184,22 @@ export type EmailAEnvoyer = {
   derniere_erreur: string | null
 }
 
+/**
+ * Prospect inscrit au guide. Aucun lien avec `Bailleur` : ces personnes n'ont
+ * pas de compte, et la table n'est accessible qu'à la clé de service.
+ */
+export type InscriptionGuide = {
+  id: string
+  email: string
+  statut: 'en_attente' | 'confirme' | 'desinscrit'
+  jeton: string
+  origine: string
+  cree_le: string
+  confirme_le: string | null
+  desinscrit_le: string | null
+  dernier_envoi_le: string | null
+}
+
 export type JournalPurge = {
   id: string
   bailleur_id: string
@@ -284,6 +300,7 @@ export interface Database {
       emails_a_envoyer: Ligne<EmailAEnvoyer>
       journal_purges: Ligne<JournalPurge>
       compteurs_documents: Ligne<CompteurDocuments>
+      inscriptions_guide: Ligne<InscriptionGuide>
     }
     Views: {
       v_impayes: Vue<Impaye>

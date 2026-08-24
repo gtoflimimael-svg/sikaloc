@@ -41,6 +41,7 @@ const TABLES: Record<string, string> = {
   emails_a_envoyer: 'EmailAEnvoyer',
   journal_purges: 'JournalPurge',
   compteurs_documents: 'CompteurDocuments',
+  inscriptions_guide: 'InscriptionGuide',
 }
 
 export interface EcartSchema {

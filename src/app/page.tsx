@@ -16,6 +16,7 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { FormulaireGuide } from '@/components/marketing/formulaire-guide'
 import { MenuMobile } from '@/components/marketing/menu-mobile'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
@@ -25,6 +26,17 @@ import { SelecteurTheme } from '@/components/ui/theme'
 import { formaterFCFA } from '@/lib/format'
 import { LIMITE_LOGEMENTS_GRATUIT, PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
+
+/**
+ * Arguments de la section « Guide ». Chacun renvoie à une section réelle du
+ * document — si le guide change, cette liste doit changer avec lui.
+ */
+const POINTS_GUIDE = [
+  'La différence entre une quittance et un reçu, et pourquoi elle compte',
+  'Ce que Sikaloc écrit quand un loyer n’est payé qu’en partie',
+  'Le numéro continu, l’horodatage et l’empreinte enregistrée à l’émission',
+  'Les cinq minutes de correction, et ce qui se passe ensuite',
+]
 
 /**
  * Captures de la section « Aperçu du produit ».
@@ -929,6 +941,59 @@ export default async function PageAccueil() {
                 <p className="mt-md max-w-[40rem] text-body-md text-body">{item.r}</p>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Guide ──────────────────────────────────────────────────────── */}
+      {/*
+        Placée après la FAQ, avant l'appel final : elle s'adresse au visiteur
+        qui a lu jusqu'ici sans cliquer « Commencer ». Pas plus tôt — un
+        formulaire d'email posé avant les tarifs entrerait en concurrence avec
+        l'inscription, qui est gratuite et prend deux minutes.
+
+        Le guide décrit ce que Sikaloc écrit sur ses documents, sans dire ce que
+        la loi exige : les CGU excluent le conseil juridique, et le titre le
+        reflète.
+      */}
+      <section id="guide" className="bg-canvas px-xl py-5xl">
+        <div className="mx-auto max-w-[56rem]">
+          <div className="grid gap-2xl md:grid-cols-[1.15fr_1fr] md:items-start">
+            <div>
+              <p className="text-caption-uppercase uppercase text-primary">
+                Guide gratuit
+              </p>
+              <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
+                Ce que contient une quittance Sikaloc
+              </h2>
+              <p className="mt-md text-body-lg text-mute">
+                Dix points, décrits un par un : ce que le document nomme, ce
+                qu&apos;il calcule, et ce qui le rend difficile à contester.
+              </p>
+
+              <ul role="list" className="mt-lg space-y-sm">
+                {POINTS_GUIDE.map((point) => (
+                  <li key={point} className="flex items-start gap-sm text-body-sm text-body">
+                    <Check
+                      size={17}
+                      strokeWidth={2.5}
+                      aria-hidden="true"
+                      className="mt-xxs shrink-0 text-primary"
+                    />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="mt-lg text-body-sm text-mute">
+                Le guide décrit un outil. Il ne remplace pas l&apos;avis d&apos;un
+                professionnel du droit.
+              </p>
+            </div>
+
+            <div className="card card-lg">
+              <FormulaireGuide />
+            </div>
           </div>
         </div>
       </section>

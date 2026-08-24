@@ -82,9 +82,34 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  /*
+   * Adresses du guide restées sans confirmation.
+   *
+   * La politique de confidentialité annonce trente jours ; une durée écrite
+   * dans un texte légal et appliquée par personne ne vaut rien. Ces lignes
+   * n'ont jamais donné lieu à un consentement : elles sont effacées, pas
+   * marquées.
+   *
+   * Les adresses confirmées, elles, relèvent de la conservation de trois ans et
+   * ne sont pas touchées ici.
+   */
+  const limite = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: abandonnees, error: erreurGuide } = await admin
+    .from('inscriptions_guide')
+    .delete()
+    .eq('statut', 'en_attente')
+    .lt('cree_le', limite)
+    .select('id')
+
+  if (erreurGuide) {
+    problemes.push(`inscriptions_guide : ${erreurGuide.message}`)
+  }
+
   return NextResponse.json({
     purges_traitees: (aTraiter ?? []).length,
     fichiers_supprimes: supprimes,
+    inscriptions_guide_abandonnees: (abandonnees ?? []).length,
     ...(problemes.length ? { problemes } : {}),
   })
 }
