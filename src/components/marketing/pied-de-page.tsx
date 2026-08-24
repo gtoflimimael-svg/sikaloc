@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
+import { mentionsCompletes } from '@/lib/mentions-legales'
 
 const colonnes = [
   {
@@ -18,6 +19,11 @@ const colonnes = [
       { libelle: 'Politique de confidentialité', href: '/legal/confidentialite' },
       { libelle: "Conditions d'utilisation", href: '/legal/conditions' },
       { libelle: 'Mentions sur les quittances', href: '/legal/conditions#quittances' },
+      // La page de mentions légales répond 404 tant que l'éditeur n'est pas
+      // renseigné : on ne publie pas un lien vers une page qui n'existe pas.
+      ...(mentionsCompletes()
+        ? [{ libelle: 'Mentions légales', href: '/legal/mentions' }]
+        : []),
     ],
   },
   {
