@@ -45,7 +45,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `${BASE}/exemple-quittance-gratuit`,
+      // Le pendant de l'exemple de quittance : un paiement partiel, avec son
+      // solde imprimé. Il a remplacé `/exemple-quittance-gratuit`, route
+      // supprimée avec la distinction entre plans qu'elle illustrait — et que
+      // ce plan du site continuait d'annoncer aux moteurs, donc une 404.
+      url: `${BASE}/exemple-recu`,
       lastModified: derniereRevision,
       changeFrequency: 'monthly',
       priority: 0.7,
