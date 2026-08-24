@@ -135,7 +135,7 @@ function echapperHtml(valeur: string): string {
 /** Gabarit HTML — tokens du design system, en styles inline (contrainte email). */
 function rendreHtml(message: Message): string {
   const accent =
-    message.ton === 'grave' ? '#A63A3A' : message.ton === 'attention' ? '#A37B12' : '#5C5CCC'
+    message.ton === 'grave' ? '#A63A3A' : message.ton === 'attention' ? '#A37B12' : '#5555BC'
 
   const paragraphes = message.corps
     .map(
@@ -146,7 +146,7 @@ function rendreHtml(message: Message): string {
 
   const bouton = message.action
     ? `<a href="${message.action.url}"
-          style="display:inline-block;background:#5C5CCC;color:#FFFFFF;text-decoration:none;
+          style="display:inline-block;background:#5555BC;color:#FFFFFF;text-decoration:none;
                  font-weight:600;font-size:16px;padding:14px 24px;border-radius:24px;">
          ${message.action.libelle}
        </a>`

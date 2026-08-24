@@ -47,7 +47,7 @@ const SUPPORTS: Record<Categorie, Partial<Record<Categorie, number>>> = {
   accessoire: { coiffure: COIFFURE_NEUTRE, visage: VISAGE_NEUTRE },
 }
 
-const TRAIT = '#5C5CCC'
+const TRAIT = '#5555BC'
 const PAPIER = '#F4F4FB'
 
 function couche(cat: Categorie, index: number): string {

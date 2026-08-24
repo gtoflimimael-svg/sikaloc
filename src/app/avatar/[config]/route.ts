@@ -28,7 +28,7 @@ const CADRE = '133 105 950 950'
  * `currentColor` : l'avatar garde donc son propre fond clair dans les deux
  * thèmes, comme le ferait une photo.
  */
-const TRAIT = '#5C5CCC'
+const TRAIT = '#5555BC'
 const PAPIER = '#F4F4FB'
 
 export async function GET(

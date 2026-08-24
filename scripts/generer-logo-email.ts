@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path'
 
 import sharp from 'sharp'
 
-import { RATIO_MARQUE, svgMarque } from '../src/lib/marque'
+import { COULEUR_MARQUE, RATIO_MARQUE, svgMarque } from '../src/lib/marque'
 
 const HAUTEUR_AFFICHAGE = 28
 const ECHELLE = 3
@@ -29,7 +29,10 @@ async function main() {
   const hauteur = HAUTEUR_AFFICHAGE * ECHELLE
   const largeur = Math.round(hauteur * RATIO_MARQUE)
 
-  const svg = svgMarque({ couleur: '#5C5CCC' })
+  // La teinte vient du jeton, jamais d'une copie : écrite en dur ici, elle a
+  // survécu à un changement de couleur de marque et le PNG des emails est
+  // resté sur l'ancienne valeur sans que rien ne le signale.
+  const svg = svgMarque({ couleur: COULEUR_MARQUE })
   const destination = join(process.cwd(), 'public/marque/logo-email.png')
 
   await mkdir(dirname(destination), { recursive: true })

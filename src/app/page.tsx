@@ -272,7 +272,7 @@ export default async function PageAccueil() {
     <div className="min-h-screen bg-canvas-soft">
       {/* ── Navigation ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur">
-        <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-sm px-lg lg:px-xl">
+        <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-sm px-lg xl:px-xl">
           {/*
             Le wordmark fait 178 px de large en taille `md` — à lui seul, plus
             de la moitié d'un écran de 360 px. La barre passe donc à la taille
@@ -293,7 +293,16 @@ export default async function PageAccueil() {
             <MarqueSikaloc />
           </span>
 
-          <div className="hidden items-center gap-xl lg:flex">
+          {/*
+            L'écart entre les ancres et les marges internes ne passent à leur
+            valeur confortable qu'à partir de `xl`. À exactement 1024 px, la
+            largeur du point de bascule, la barre consommait 949 px pour 960 px
+            disponibles : 11 px de marge, de quoi déborder au premier libellé
+            rallongé ou à la première ancre ajoutée. Les deux réglages rendent
+            32 px sans que rien ne se voie, et la respiration d'origine revient
+            dès 1280 px, où la place ne manque plus.
+          */}
+          <div className="hidden items-center gap-lg lg:flex xl:gap-xl">
             <Link href="#fonctionnalites" className="text-nav-link text-body hover:text-ink">
               Fonctionnalités
             </Link>

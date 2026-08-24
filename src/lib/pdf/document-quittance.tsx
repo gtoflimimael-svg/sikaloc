@@ -76,7 +76,7 @@ const couleurs = {
   body: '#3A3A3D',
   mute: '#64646C',
   muteSoft: '#82828E',
-  primary: '#5C5CCC',
+  primary: '#5555BC',
   inkDeep: '#3E3EA9',
   canvasSoft: '#F4F4FB',
   hairline: '#D8D8E6',

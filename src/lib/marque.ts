@@ -15,7 +15,7 @@
  * inchangée, wordmark JetBrains Mono Thin converti en tracés).
  */
 
-export const COULEUR_MARQUE = '#5C5CCC'
+export const COULEUR_MARQUE = '#5555BC'
 /** `--color-primary-on-dark` du design system : un cran plus clair, pour rester lisible sur fond sombre. */
 export const COULEUR_MARQUE_SUR_SOMBRE = '#9A9AEF'
 

@@ -9,7 +9,7 @@
 
 @theme {
   /* ── Couleurs : marque ────────────────────────────────────────────────── */
-  --color-primary: #5c5ccc;
+  --color-primary: #5555bc;
   --color-on-primary: #ffffff;
   --color-primary-active: #3e3ea9;
   --color-primary-disabled: #d8d8e6;
@@ -26,8 +26,8 @@
   --color-ink-deep: #3e3ea9;
   --color-body-strong: #232325;
   --color-body: #3a3a3d;
-  --color-mute: #64646c;
-  --color-muted: #64646c;
+  --color-mute: #616169;
+  --color-muted: #616169;
   --color-mute-soft: #82828e;
   --color-muted-soft: #82828e;
   --color-on-dark: #e8e8f5;
@@ -59,7 +59,7 @@
   --color-warning-deep: #a37b12;
   --color-warning-content: #6b5210;
   --color-warning-pale: #faf0d4;
-  --color-negative: #c64545;
+  --color-negative: #a63a3a;
   --color-error: #c64545;
   --color-negative-pale: #f7e3e3;
   --color-negative-deep: #a63a3a;
@@ -885,7 +885,7 @@
    par le sélecteur, qui l'emporte dans les deux sens.
 
    Les rôles s'inversent : le sol devient l'encre, les surfaces s'éclaircissent
-   par paliers. L'indigo est remonté en luminosité — `#5c5ccc` sur fond sombre
+   par paliers. L'indigo est remonté en luminosité — `#5555bc` sur fond sombre
    passe sous le seuil AA pour du texte.
    ========================================================================= */
 
