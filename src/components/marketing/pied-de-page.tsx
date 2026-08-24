@@ -24,6 +24,7 @@ const colonnes = [
     titre: 'Aide',
     liens: [
       { libelle: 'Comment ça marche', href: '/#etapes' },
+      { libelle: 'Le blog', href: '/blog' },
       { libelle: 'Questions fréquentes', href: '/#faq' },
       { libelle: 'Nous écrire', href: 'mailto:bonjour@sikaloc.com' },
     ],

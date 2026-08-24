@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { ARTICLES } from '@/lib/articles'
 
 /**
  * Plan du site.
@@ -54,6 +55,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    {
+      url: `${BASE}/blog`,
+      lastModified: derniereRevision,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    // Une entrée par article, engendrée depuis la même source que les pages :
+    // un plan du site tenu à la main finit toujours par annoncer une page morte,
+    // comme ce fut le cas de `/exemple-quittance-gratuit`.
+    ...ARTICLES.map((article) => ({
+      url: `${BASE}/blog/${article.slug}`,
+      lastModified: new Date(article.publieLe),
+      changeFrequency: 'yearly' as const,
+      priority: 0.5,
+    })),
     {
       url: `${BASE}/legal/conditions`,
       lastModified: derniereRevision,
