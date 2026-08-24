@@ -13,6 +13,7 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { MenuMobile } from '@/components/marketing/menu-mobile'
@@ -24,6 +25,40 @@ import { SelecteurTheme } from '@/components/ui/theme'
 import { formaterFCFA } from '@/lib/format'
 import { LIMITE_LOGEMENTS_GRATUIT, PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
+
+/**
+ * Captures de la section « Aperçu du produit ».
+ *
+ * Produites par `npm run capturer:demo`, qui photographie l'application réelle
+ * sur le jeu de démonstration local. À refaire après toute refonte visuelle de
+ * l'espace connecté : une capture périmée promet un produit qui n'existe plus.
+ */
+const apercus = [
+  {
+    fichier: 'tableau-de-bord.png',
+    alt: 'Tableau de bord Sikaloc : taux d’occupation, taux de recouvrement, impayés et loyers en retard.',
+    etiquette: 'Votre tableau de bord',
+    titre: 'Qui a payé, qui doit encore',
+    texte:
+      'Le montant encaissé ce mois-ci, les loyers en retard et depuis combien de jours. Sans ouvrir un cahier.',
+  },
+  {
+    fichier: 'saisie-paiement.png',
+    alt: 'Formulaire d’enregistrement d’un paiement : bail, montant, mois concerné, mode de paiement.',
+    etiquette: 'Enregistrer un paiement',
+    titre: 'Six champs, pas un de plus',
+    texte:
+      'Mobile Money, espèces ou virement. Un montant inférieur au loyer produit un reçu plutôt qu’une quittance — la distinction est faite pour vous.',
+  },
+  {
+    fichier: 'liste-paiements.png',
+    alt: 'Historique des paiements avec statut payé ou partiel, et le lien vers la quittance émise.',
+    etiquette: 'Votre historique',
+    titre: 'Chaque encaissement, son document',
+    texte:
+      'La quittance est générée à la confirmation et reste téléchargeable. Vous gardez la trace de tout ce que vous avez encaissé.',
+  },
+]
 
 /**
  * Trois étapes, à l'impératif, chacune close par un bénéfice de sécurité.
@@ -571,6 +606,65 @@ export default async function PageAccueil() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      {/* ── Démo visuelle ──────────────────────────────────────────────── */}
+      {/*
+        Placée juste après les trois étapes : le visiteur vient de comprendre
+        que c'est simple, mais il n'a toujours pas vu le produit. Montrer
+        l'écran avant de demander un compte enlève la peur de l'inconnu.
+
+        Les captures viennent de la VRAIE application, prises par
+        `npm run capturer:demo` sur le jeu de démonstration local. Les personnes
+        et les montants sont inventés — c'est dit sous la grille, parce qu'une
+        capture qu'on laisse passer pour de vrais chiffres est un mensonge par
+        omission.
+      */}
+      <section id="demo" className="px-xl py-5xl">
+        <div className="mx-auto max-w-[1200px]">
+          <p className="text-caption-uppercase uppercase text-primary">Aperçu du produit</p>
+          <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
+            Voyez ce que vous allez utiliser
+          </h2>
+          <p className="mt-md max-w-[42rem] text-body-lg text-mute">
+            Pas de surprise au moment de créer votre compte : voici les trois
+            écrans où vous passerez l&apos;essentiel de votre temps.
+          </p>
+
+          <ul className="anim-cascade mt-3xl grid gap-xl md:grid-cols-3">
+            {apercus.map((apercu, rang) => (
+              <li key={apercu.fichier}>
+                <div className="overflow-hidden rounded-lg border border-hairline bg-canvas">
+                  <Image
+                    src={`/demo/${apercu.fichier}`}
+                    alt={apercu.alt}
+                    width={2560}
+                    height={1720}
+                    // Les deux premières sont susceptibles d'entrer dans le
+                    // premier écran sur un grand moniteur.
+                    priority={rang === 0}
+                    className="block h-auto w-full"
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                  />
+                </div>
+                <p className="mt-lg text-caption-uppercase uppercase text-primary">
+                  {apercu.etiquette}
+                </p>
+                <h3 className="mt-xs text-display-sm font-bold text-ink">{apercu.titre}</h3>
+                <p className="mt-sm text-body-md text-body">{apercu.texte}</p>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-2xl text-body-sm text-mute">
+            Captures de l&apos;application réelle. Les locataires, montants et
+            adresses sont fictifs.{' '}
+            <Link href="/exemple-quittance" className="font-semibold text-ink underline">
+              Voir une vraie quittance
+            </Link>
+            .
+          </p>
         </div>
       </section>
 

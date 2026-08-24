@@ -79,5 +79,9 @@ export default defineConfig([
     '.design-sync/**',
     '.design-sync.backup-*/**',
     '.backup-site-*/**',
+
+    // Dossier de travail de la CLI Supabase, recréé à chaque
+    // `supabase start`. Rien de ce qu'il contient n'est écrit ici.
+    'supabase/.temp/**',
   ]),
 ])
