@@ -67,7 +67,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://sikaloc.com'),
   title: {
-    default: 'Quittances de loyer conformes au Bénin — Sikaloc',
+    default: 'Quittances de loyer pour bailleurs au Bénin — Sikaloc',
     template: '%s · Sikaloc',
   },
   description:
@@ -75,18 +75,35 @@ export const metadata: Metadata = {
   applicationName: 'Sikaloc',
   authors: [{ name: 'Sikaloc' }],
   keywords: ['gestion locative', 'quittance de loyer', 'Bénin', 'bailleur', 'loyer'],
+
+  /*
+   * Vérification de propriété auprès des moteurs.
+   *
+   * Renseignez `VERIFICATION_GOOGLE` (Search Console) ou `VERIFICATION_BING`
+   * dans Vercel, puis redéployez : la balise apparaît seule. Aucun changement
+   * de code n'est nécessaire.
+   *
+   * Les valeurs sont lues au build, pas à la requête : une variable modifiée
+   * demande un redéploiement — un clic dans Vercel — pour prendre effet.
+   */
+  verification: {
+    ...(process.env.VERIFICATION_GOOGLE ? { google: process.env.VERIFICATION_GOOGLE } : {}),
+    ...(process.env.VERIFICATION_BING
+      ? { other: { 'msvalidate.01': process.env.VERIFICATION_BING } }
+      : {}),
+  },
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
     siteName: 'Sikaloc',
     url: '/',
-    title: 'Quittances de loyer conformes au Bénin — Sikaloc',
+    title: 'Quittances de loyer pour bailleurs au Bénin — Sikaloc',
     description:
       'Quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp. Gratuit jusqu’à 2 logements.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Quittances de loyer conformes au Bénin — Sikaloc',
+    title: 'Quittances de loyer pour bailleurs au Bénin — Sikaloc',
     description:
       'Quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp.',
   },

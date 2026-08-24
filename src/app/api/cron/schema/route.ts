@@ -30,8 +30,20 @@ import { decrireEcarts, verifierSchema } from '@/lib/schema'
 // L'inventaire des autres objets tient, lui, en un seul appel.
 export const maxDuration = 120
 
-const DESTINATAIRE =
-  process.env.EMAIL_EXPLOITATION ?? process.env.EMAIL_FROM ?? 'bonjour@sikaloc.com'
+/**
+ * Destinataire des alertes.
+ *
+ * Pas de repli sur `EMAIL_FROM` : cette variable vaut `no-reply@sikaloc.com`,
+ * une adresse d'envoi qui n'accepte pas de courrier entrant. Le repli faisait
+ * donc rebondir toutes les alertes — trois l'ont été le 24 août 2026 sans que
+ * personne ne s'en aperçoive, parce que l'échec était silencieux des deux
+ * côtés.
+ *
+ * Une surveillance dont les alertes se perdent est pire qu'aucune surveillance :
+ * elle donne l'illusion d'être prévenu. Sans `EMAIL_EXPLOITATION`, la tâche
+ * refuse donc d'envoyer et le dit dans les journaux et dans sa réponse.
+ */
+const DESTINATAIRE = process.env.EMAIL_EXPLOITATION ?? null
 
 /**
  * Envoi direct, sans passer par les gabarits de `src/lib/emails.ts` : ceux-ci
@@ -41,6 +53,14 @@ const DESTINATAIRE =
 async function alerter(sujet: string, texte: string): Promise<boolean> {
   const cle = process.env.RESEND_API_KEY
   if (!cle) return false
+
+  if (!DESTINATAIRE) {
+    console.error(
+      '[cron/schema] EMAIL_EXPLOITATION absente : alerte NON envoyée. ' +
+        'Renseignez une adresse réellement relevée, sans quoi cette surveillance ne prévient personne.',
+    )
+    return false
+  }
 
   const reponse = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -121,6 +141,7 @@ export async function POST(request: NextRequest) {
         ? { inventaireIndisponible: rapport.inventaireIndisponible }
         : {}),
       alerteEnvoyee: envoye,
+      ...(DESTINATAIRE ? {} : { alerteImpossible: 'EMAIL_EXPLOITATION non renseignée' }),
     },
     { status: 500 },
   )
