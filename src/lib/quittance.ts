@@ -4,7 +4,6 @@ import { createHash } from 'node:crypto'
 import { createElement } from 'react'
 
 import { DocumentQuittance, type DonneesQuittance } from '@/lib/pdf/document-quittance'
-import { capacites } from '@/lib/plan'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 
 /** Durée de validité du lien de téléchargement transmis au locataire (§9.2). */

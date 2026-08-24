@@ -20,7 +20,10 @@ export function FenetreCorrection({
 }) {
   const [restant, setRestant] = useState<number | null>(null)
 
+  // Le temps restant dépend de l'horloge, qui diffère entre le serveur et le
+  // navigateur : le calculer au rendu ferait diverger l'hydratation.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRestant(tempsRestantCorrection(valideLe))
 
     const minuteur = setInterval(() => {

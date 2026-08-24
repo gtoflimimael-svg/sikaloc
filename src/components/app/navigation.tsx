@@ -146,7 +146,9 @@ export function EnTeteMobile({
   const chemin = usePathname()
   const [ouvert, setOuvert] = useState(false)
 
-  // Une navigation depuis le tiroir doit le refermer.
+  // Une navigation depuis le tiroir doit le refermer. Le faire pendant le
+  // rendu escamoterait l'animation de fermeture.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setOuvert(false), [chemin])
 
   // Un tiroir ouvert ne doit pas laisser la page défiler derrière lui.

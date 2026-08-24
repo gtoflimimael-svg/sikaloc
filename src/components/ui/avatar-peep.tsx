@@ -28,6 +28,9 @@ export function AvatarPeep({
       className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill ${className}`}
       style={{ width: taille, height: taille, backgroundColor: '#f4f4fb' }}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element -- `next/image`
+          optimiserait une vignette déjà minuscule, servie par notre propre
+          route, en ajoutant une requête et un cache pour rien. */}
       <img
         src={urlAvatar(id, avatar)}
         alt={nom ? `Avatar de ${nom}` : ''}

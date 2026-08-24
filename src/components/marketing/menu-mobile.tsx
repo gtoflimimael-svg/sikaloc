@@ -73,7 +73,9 @@ export function MenuMobile({ connecte }: { connecte: boolean }) {
   const declencheur = useRef<HTMLButtonElement>(null)
   const panneau = useRef<HTMLDivElement>(null)
 
-  // `createPortal` a besoin du `document` : il n'existe pas au rendu serveur.
+  // `createPortal` exige `document`, absent au rendu serveur : attendre le
+  // montage est la seule façon de savoir qu'il existe.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMonte(true), [])
 
   /**

@@ -89,7 +89,10 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
   // partir de cette nouvelle graine.
   const [grainePremierAvatar, setGrainePremierAvatar] = useState('sikaloc')
 
+  // `Math.random()` au rendu donnerait deux valeurs différentes côté serveur
+  // et côté client : c'est la correction de la divergence d'hydratation nº 418.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setGrainePremierAvatar(Math.random().toString(36).slice(2))
   }, [])
 

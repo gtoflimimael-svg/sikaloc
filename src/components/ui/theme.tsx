@@ -44,9 +44,12 @@ export function SelecteurTheme({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<Theme>('systeme')
   const [monte, setMonte] = useState(false)
 
-  // Le thème n'est connu qu'au client : tant qu'on n'est pas monté, on rend
-  // l'état neutre pour éviter une divergence d'hydratation.
+  // Le thème vit dans `localStorage`, illisible au rendu serveur : tant qu'on
+  // n'est pas monté, on rend l'état neutre. Le lire pendant le rendu ferait
+  // diverger serveur et client ; un rendu d'écart est le prix de l'absence de
+  // clignotement.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(lire())
     setMonte(true)
   }, [])
