@@ -13,6 +13,7 @@ import {
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye, MetriquesDashboard } from '@/lib/types/database'
+import { Didacticiel } from '@/components/app/didacticiel'
 
 export const metadata: Metadata = { title: 'Tableau de bord' }
 
@@ -55,20 +56,30 @@ export default async function PageTableauDeBord({
 
   return (
     <div className="space-y-2xl">
+      {/*
+        Le message d'accueil ne peut plus annoncer « votre premier bail est
+        enregistré » : l'onboarding n'en exige plus. Il invite désormais à la
+        première action réelle — créer un logement.
+      */}
       {bienvenue ? (
         <div className="card-sage">
           <p className="text-display-xs font-semibold text-ink-deep">
             Bienvenue sur Sikaloc, {bailleur.nom.split(' ')[0]} 👋
           </p>
           <p className="mt-sm text-body-md text-body">
-            Votre premier bail est enregistré. Il ne reste qu&apos;une étape pour
-            obtenir votre première quittance : saisir un paiement.
+            Votre tableau de bord est encore vide. Commencez par enregistrer un
+            logement : tout le reste s&apos;y rattache.
           </p>
-          <Link href="/app/paiements/nouveau" className="btn btn-primary mt-lg">
-            Enregistrer un paiement
-          </Link>
+          <div className="mt-lg flex flex-wrap items-center gap-lg">
+            <Link href="/app/logements/nouveau" className="btn btn-primary">
+              Ajouter un logement
+            </Link>
+            <Didacticiel ouvertAuDemarrage={bailleur.tutoriel_vu_le === null} />
+          </div>
         </div>
-      ) : null}
+      ) : (
+        <Didacticiel ouvertAuDemarrage={false} />
+      )}
 
       <div>
         <h1 className="text-display-md font-extrabold tracking-tight text-ink">

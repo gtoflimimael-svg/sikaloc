@@ -1,25 +1,16 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useState } from 'react'
 
 import { CaptureSignature } from '@/components/app/capture-signature'
-import { BoutonSoumettre } from '@/components/ui/boutons'
-import {
-  ChampCase,
-  ChampMontant,
-  ChampSelection,
-  ChampTexte,
-} from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
 import { ignorerOnboarding, terminerOnboarding } from '@/lib/actions/onboarding'
 import { televerserSignature } from '@/lib/actions/parametres'
-import { aujourdhuiISO } from '@/lib/format'
-import { TYPES_LOGEMENT } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
-type Etape = 1 | 2 | 3 | 4
+type Etape = 1 | 2
 
 const TITRES: Record<Etape, { titre: string; aide: string }> = {
   1: {
@@ -28,30 +19,26 @@ const TITRES: Record<Etape, { titre: string; aide: string }> = {
   },
   2: {
     titre: 'Votre signature',
-    aide: 'Elle sera apposée sur chaque quittance. Scannez-la maintenant, ou plus tard depuis vos paramètres.',
-  },
-  3: {
-    titre: 'Votre premier locataire',
-    aide: 'Le locataire n’a pas de compte à créer : il recevra ses quittances par WhatsApp.',
-  },
-  4: {
-    titre: 'Votre premier bail',
-    aide: 'Dernière étape. Sikaloc en déduit les échéances et détecte les retards tout seul.',
+    aide: 'Elle sera apposée sur chaque quittance. Enregistrez-la maintenant, ou plus tard depuis vos paramètres.',
   },
 }
 
 /**
- * Assistant en 4 étapes.
+ * Assistant d'accueil, en deux étapes.
  *
- * La signature est demandée ici plutôt qu'au formulaire d'inscription : à ce
- * moment-là, le compte n'existe pas encore et il n'y a donc aucun dossier de
- * stockage où déposer l'image. Elle reste dans le parcours de création de
- * compte, mais après la première ouverture de session.
+ * ─── Pourquoi deux et non quatre ────────────────────────────────────────────
  *
- * Les étapes 3 et 4 vivent dans un seul <form> : passer de l'une à l'autre
- * masque des champs sans démonter le formulaire, ce qui préserve la saisie si
- * le bailleur revient en arrière. L'étape 2 a son propre formulaire — deux
- * <form> ne peuvent pas s'imbriquer, et la signature s'enregistre séparément.
+ * Les étapes « premier locataire » et « premier bail » étaient obligatoires
+ * pour atteindre le tableau de bord. Quelqu'un qui découvre Sikaloc n'a pas
+ * forcément un locataire sous la main au moment où il s'inscrit ; l'obliger à
+ * en saisir un produisait soit un abandon, soit des données inventées dès la
+ * première minute.
+ *
+ * Le didacticiel du tableau de bord prend le relais : il montre où ajouter un
+ * logement, un locataire, un bail, quand le bailleur aura les informations.
+ *
+ * Les deux étapes restantes sont toutes deux facultatives — chacune porte son
+ * bouton pour passer outre.
  */
 export function AssistantOnboarding({
   nomBailleur,
@@ -67,48 +54,32 @@ export function AssistantOnboarding({
   signatureExistante: boolean
 }) {
   const [etape, setEtape] = useState<Etape>(1)
-  const [etat, action] = useActionState(terminerOnboarding, ETAT_INITIAL)
-
-  // Une erreur de validation renvoyée par le serveur concerne l'étape 3 ou 4 :
-  // on ramène le bailleur là où le champ fautif est visible.
-  const champsEtape3 = ['locataireNom', 'locataireTelephone', 'consentement']
-  const erreurEnEtape3 =
-    etat.erreursChamps &&
-    champsEtape3.some((champ) => etat.erreursChamps?.[champ] !== undefined)
-
-  const etapeVisible: Etape = erreurEnEtape3 ? 3 : etat.erreursChamps ? 4 : etape
 
   return (
-    <div>
-      <div className="mb-2xl">
-        <p className="text-body-sm font-semibold text-primary">
-          Étape {etapeVisible} sur 4
+    <div className="mx-auto max-w-[40rem]">
+      <header className="mb-2xl">
+        <p className="text-caption-uppercase uppercase text-primary">
+          Étape {etape} sur 2
         </p>
-        <h1 className="mt-xs text-display-md font-extrabold tracking-tight text-ink">
-          {TITRES[etapeVisible].titre}
+        <h1 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
+          {TITRES[etape].titre}
         </h1>
-        <p className="mt-sm text-body-md text-mute">{TITRES[etapeVisible].aide}</p>
+        <p className="mt-md text-body-md text-mute">{TITRES[etape].aide}</p>
 
-        <div className="mt-lg flex gap-sm" aria-hidden="true">
-          {[1, 2, 3, 4].map((numero) => (
+        <div className="mt-lg flex gap-xs" aria-hidden="true">
+          {([1, 2] as const).map((numero) => (
             <span
               key={numero}
-              className={`h-1 flex-1 rounded-pill transition-colors duration-300 ${
-                numero <= etapeVisible ? 'bg-primary' : 'bg-hairline'
+              className={`h-1 flex-1 rounded-pill ${
+                numero <= etape ? 'bg-primary' : 'bg-hairline'
               }`}
             />
           ))}
         </div>
-      </div>
-
-      {etat.erreur ? (
-        <div className="mb-lg">
-          <Alerte ton="erreur">{etat.erreur}</Alerte>
-        </div>
-      ) : null}
+      </header>
 
       {/* ── Étape 1 — récapitulatif ──────────────────────────────────── */}
-      {etapeVisible === 1 ? (
+      {etape === 1 ? (
         <div className="card card-lg anim-apparait">
           <dl className="space-y-lg">
             <Ligne terme="Nom" definition={nomBailleur} />
@@ -128,7 +99,7 @@ export function AssistantOnboarding({
             </button>
             <form action={ignorerOnboarding}>
               <button type="submit" className="btn btn-secondary">
-                Passer cette étape
+                Aller directement au tableau de bord
               </button>
             </form>
           </div>
@@ -136,145 +107,38 @@ export function AssistantOnboarding({
       ) : null}
 
       {/* ── Étape 2 — signature ──────────────────────────────────────── */}
-      {etapeVisible === 2 ? (
+      {etape === 2 ? (
         <EtapeSignature
           dejaEnregistree={signatureExistante}
-          onSuivant={() => setEtape(3)}
           onRetour={() => setEtape(1)}
         />
       ) : null}
-
-      {/* ── Étapes 3 et 4 — un seul formulaire ───────────────────────── */}
-      <form action={action} className={etapeVisible <= 2 ? 'hidden' : undefined}>
-        <div className={etapeVisible === 3 ? 'card card-lg space-y-lg anim-apparait' : 'hidden'}>
-          <ChampTexte
-            nom="locataireNom"
-            libelle="Nom du locataire"
-            placeholder="Awa Kponou"
-            requis
-            erreur={etat.erreursChamps?.locataireNom}
-          />
-          <ChampTexte
-            nom="locataireTelephone"
-            libelle="Téléphone du locataire"
-            type="tel"
-            inputMode="tel"
-            placeholder="+229 97 00 00 00"
-            aide="C’est à ce numéro que partiront les quittances sur WhatsApp."
-            requis
-            erreur={etat.erreursChamps?.locataireTelephone}
-          />
-          <ChampCase
-            nom="consentement"
-            libelle="J’ai informé ce locataire de la collecte de ses données"
-            description="Obligatoire : le locataire doit savoir que son nom et son numéro sont enregistrés dans Sikaloc."
-            erreur={etat.erreursChamps?.consentement}
-          />
-
-          <div className="flex flex-wrap gap-md pt-sm">
-            <button type="button" onClick={() => setEtape(4)} className="btn btn-primary">
-              Continuer
-            </button>
-            <button type="button" onClick={() => setEtape(2)} className="btn btn-secondary">
-              Retour
-            </button>
-          </div>
-        </div>
-
-        <div className={etapeVisible === 4 ? 'card card-lg space-y-lg anim-apparait' : 'hidden'}>
-          <ChampTexte
-            nom="logementAdresse"
-            libelle="Adresse du logement"
-            placeholder="Lot 42, Quartier Fidjrossè"
-            requis
-            erreur={etat.erreursChamps?.logementAdresse}
-          />
-
-          <div className="grid gap-lg sm:grid-cols-2">
-            <ChampTexte
-              nom="logementVille"
-              libelle="Ville"
-              placeholder="Cotonou"
-              requis
-              erreur={etat.erreursChamps?.logementVille}
-            />
-            <ChampSelection
-              nom="logementType"
-              libelle="Type de bien"
-              valeurDefaut="Appartement"
-              options={TYPES_LOGEMENT.map((t) => ({ valeur: t, libelle: t }))}
-              erreur={etat.erreursChamps?.logementType}
-            />
-          </div>
-
-          <ChampMontant
-            nom="loyerMensuel"
-            libelle="Loyer mensuel"
-            placeholder="60000"
-            requis
-            erreur={etat.erreursChamps?.loyerMensuel}
-          />
-
-          <div className="grid gap-lg sm:grid-cols-2">
-            <ChampTexte
-              nom="jourEcheance"
-              libelle="Jour d'échéance"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={31}
-              valeurDefaut={5}
-              aide="Le jour du mois où le loyer est dû."
-              requis
-              erreur={etat.erreursChamps?.jourEcheance}
-            />
-            <ChampTexte
-              nom="dateDebut"
-              libelle="Date de début du bail"
-              type="date"
-              valeurDefaut={aujourdhuiISO()}
-              requis
-              erreur={etat.erreursChamps?.dateDebut}
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-md pt-sm">
-            <BoutonSoumettre libelleEnCours="Création…">
-              Terminer et voir mon tableau de bord
-            </BoutonSoumettre>
-            <button type="button" onClick={() => setEtape(3)} className="btn btn-secondary">
-              Retour
-            </button>
-          </div>
-        </div>
-      </form>
     </div>
   )
 }
 
 function EtapeSignature({
   dejaEnregistree,
-  onSuivant,
   onRetour,
 }: {
   dejaEnregistree: boolean
-  onSuivant: () => void
   onRetour: () => void
 }) {
   const [etat, action] = useActionState(televerserSignature, ETAT_INITIAL)
 
-  // L'enregistrement réussi enchaîne : le bailleur n'a pas à confirmer deux
-  // fois la même chose.
-  useEffect(() => {
-    if (etat.succes) onSuivant()
-  }, [etat.succes, onSuivant])
+  // Déduit plutôt que mémorisé dans un état : une signature est enregistrée si
+  // elle l'était déjà, ou si l'action vient de réussir. Un `useState` synchronisé
+  // par un effet dirait la même chose avec un rendu de retard.
+  //
+  // La sortie de l'assistant reste une action distincte : on ne redirige pas de
+  // force, le bailleur voit que c'est enregistré puis décide de continuer.
+  const enregistree = dejaEnregistree || Boolean(etat.succes)
 
   return (
     <div className="space-y-lg anim-apparait">
-      {dejaEnregistree ? (
+      {enregistree ? (
         <Alerte ton="succes">
-          Une signature est déjà enregistrée. Vous pouvez la remplacer ou passer à
-          la suite.
+          Votre signature est enregistrée. Elle apparaîtra sur chaque quittance.
         </Alerte>
       ) : null}
 
@@ -284,9 +148,11 @@ function EtapeSignature({
       </form>
 
       <div className="flex flex-wrap gap-md">
-        <button type="button" onClick={onSuivant} className="btn btn-tertiary">
-          {dejaEnregistree ? 'Continuer' : 'Je la mettrai plus tard'}
-        </button>
+        <form action={terminerOnboarding}>
+          <button type="submit" className="btn btn-primary">
+            {enregistree ? 'Voir mon tableau de bord' : 'Je la mettrai plus tard'}
+          </button>
+        </form>
         <button type="button" onClick={onRetour} className="btn btn-secondary">
           Retour
         </button>

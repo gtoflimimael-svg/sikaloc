@@ -78,6 +78,8 @@ export type Bailleur = {
   dernier_rappel_envoye: string | null
   /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
   avatar: string | null
+  /** Première fermeture du didacticiel d'accueil. NULL = jamais vu, il s'ouvre seul. */
+  tutoriel_vu_le: string | null
   created_at: string
 }
 
