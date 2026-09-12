@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
-import { Badge, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
 import { reactiverBail, resilierBail, supprimerBail } from '@/lib/actions/baux'
 import {
   formaterDate,
@@ -45,19 +45,28 @@ export default async function PageDetailBail({
 
   if (!bail) notFound()
 
-  const [{ data: paiements }, { data: impayes }] = await Promise.all([
-    supabase
-      .from('paiements')
-      .select('*, quittance:quittances(id, numero_document, type)')
-      .eq('bail_id', id)
-      .order('periode_debut', { ascending: false })
-      .limit(24),
-    supabase
-      .from('v_impayes')
-      .select('*')
-      .eq('bail_id', id)
-      .order('periode_debut', { ascending: true }),
-  ])
+  const [{ data: paiements }, { data: impayes }, { count: aDeterminer }] =
+    await Promise.all([
+      supabase
+        .from('paiements')
+        .select('*, quittance:quittances(id, numero_document, type)')
+        .eq('bail_id', id)
+        .order('periode_debut', { ascending: false })
+        .limit(24),
+      supabase
+        .from('v_impayes')
+        .select('*')
+        .eq('bail_id', id)
+        .order('periode_debut', { ascending: true }),
+      // Les échéances antérieures à l'enregistrement sur lesquelles personne ne
+      // s'est prononcé. Elles ne sont réclamées à personne — mais le bailleur
+      // doit savoir qu'on l'attend, sinon elles resteraient en suspens.
+      supabase
+        .from('v_echeances')
+        .select('periode_debut', { count: 'exact', head: true })
+        .eq('bail_id', id)
+        .eq('etat', 'À déterminer'),
+    ])
 
   const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
   const locataire = Array.isArray(bail.locataire) ? bail.locataire[0] : bail.locataire
@@ -66,6 +75,28 @@ export default async function PageDetailBail({
 
   return (
     <div className="space-y-2xl">
+      {/*
+        Le bail a commencé avant son enregistrement, et personne ne s'est encore
+        prononcé sur les mois d'avant. Ils ne figurent nulle part dans les
+        impayés — c'est voulu — mais ils ne doivent pas rester invisibles pour
+        autant : sans cette invite, le bailleur ne saurait jamais qu'il reste
+        quelque chose à dire.
+      */}
+      {(aDeterminer ?? 0) > 0 ? (
+        <Alerte ton="info">
+          Ce bail a commencé avant son enregistrement dans Sikaloc.{' '}
+          <strong>
+            {aDeterminer} mois {(aDeterminer ?? 0) > 1 ? 'restent' : 'reste'} à
+            renseigner
+          </strong>{' '}
+          : tant que ce n&apos;est pas fait, ils ne sont comptés ni comme réglés,
+          ni comme en retard.{' '}
+          <Link href={`/app/baux/${id}/historique`} className="font-semibold underline">
+            Renseigner l&apos;historique
+          </Link>
+        </Alerte>
+      ) : null}
+
       <div>
         <Link href="/app/baux" className="text-body-sm text-mute hover:text-ink">
           ← Tous les baux
@@ -211,7 +242,15 @@ export default async function PageDetailBail({
                       <td className="font-semibold">
                         {formaterPeriode(paiement.periode_debut)}
                       </td>
-                      <td>{formaterDateCourte(paiement.date_paiement)}</td>
+                      <td>
+                        {paiement.historique ? (
+                          // Pas de date : c'est la vérité, elle n'est pas connue.
+                          // Le dire vaut mieux que d'afficher une date inventée.
+                          <span className="text-mute">Avant Sikaloc</span>
+                        ) : (
+                          formaterDateCourte(paiement.date_paiement)
+                        )}
+                      </td>
                       <td className="hidden sm:table-cell">{paiement.mode_paiement}</td>
                       <td>
                         {paiement.statut === 'Validé' ? (

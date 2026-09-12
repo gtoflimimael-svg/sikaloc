@@ -27,7 +27,12 @@ export default async function PageHistoriquePaiements({
     .select(
       '*, bail:baux(id, locataire:locataires(nom), logement:logements(adresse)), quittance:quittances(id, numero_document, type)',
     )
-    .order('date_paiement', { ascending: false })
+    // `nullsFirst: false` : un paiement historique n'a pas de date, et
+    // Postgres place les NULL en tête d'un tri décroissant. Sans cela, les
+    // loyers d'avant Sikaloc ouvriraient la liste des paiements récents. On
+    // retombe sur la période pour les départager entre eux.
+    .order('date_paiement', { ascending: false, nullsFirst: false })
+    .order('periode_debut', { ascending: false })
     .limit(200)
 
   if (bailFiltre) requete = requete.eq('bail_id', bailFiltre)
@@ -162,7 +167,14 @@ export default async function PageHistoriquePaiements({
                       <td className="font-semibold">{locataire?.nom ?? '—'}</td>
                       <td>{formaterPeriode(paiement.periode_debut)}</td>
                       <td className="hidden sm:table-cell">
-                        {formaterDateCourte(paiement.date_paiement)}
+                        {paiement.historique ? (
+                          // La date n'est pas connue, et l'inventer serait
+                          // affirmer un encaissement qui n'a pas eu lieu ce
+                          // jour-là. On dit ce qu'on sait : c'était avant.
+                          <span className="text-mute">Avant Sikaloc</span>
+                        ) : (
+                          formaterDateCourte(paiement.date_paiement)
+                        )}
                       </td>
                       <td className="hidden lg:table-cell">{paiement.mode_paiement}</td>
                       <td>
@@ -173,6 +185,16 @@ export default async function PageHistoriquePaiements({
                         ) : (
                           <Badge ton="warning">Brouillon</Badge>
                         )}
+                        {/*
+                          Dire d'où vient ce paiement évite de laisser croire
+                          que Sikaloc était en service au moment de
+                          l'encaissement — et donc qu'il en a été témoin.
+                        */}
+                        {paiement.historique ? (
+                          <span className="mt-xxs block text-caption text-mute">
+                            Paiement historique
+                          </span>
+                        ) : null}
                       </td>
                       <td className="text-right font-semibold tabular">
                         {formaterFCFA(paiement.montant)}
@@ -185,6 +207,17 @@ export default async function PageHistoriquePaiements({
                           >
                             {quittance.type}
                           </Link>
+                        ) : paiement.historique ? (
+                          /*
+                            Surtout pas « À confirmer » : ce lien mène à
+                            l'écran qui émet une quittance, et une quittance de
+                            janvier portant la date d'aujourd'hui serait une
+                            pièce qui n'a jamais existé. Ce paiement n'attend
+                            rien de personne — on le dit, sans proposer d'agir.
+                          */
+                          <span className="text-caption text-mute">
+                            Aucune quittance
+                          </span>
                         ) : (
                           <Link
                             href={`/app/paiements/${paiement.id}/confirmer`}

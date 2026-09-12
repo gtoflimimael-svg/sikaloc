@@ -40,7 +40,10 @@ export default async function PageTableauDeBord({
         'id, montant, date_paiement, periode_debut, statut, mode_paiement, bail:baux(locataire:locataires(nom))',
       )
       .eq('statut', 'Validé')
-      .order('date_paiement', { ascending: false })
+      // Voir la liste des paiements : les NULL des paiements historiques
+      // remonteraient en tête d'un tri décroissant.
+      .order('date_paiement', { ascending: false, nullsFirst: false })
+      .order('periode_debut', { ascending: false })
       .limit(5),
   ])
 
