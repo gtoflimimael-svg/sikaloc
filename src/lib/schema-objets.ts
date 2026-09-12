@@ -22,8 +22,8 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
-    "nom": "bailleurs_canal_verification_coherent",
-    "migration": "20260913000100_verification_coordonnees.sql"
+    "nom": "bailleurs_canal_verification_valide",
+    "migration": "20260913000200_canal_verification_administratif.sql"
   },
   {
     "categorie": "contrainte",

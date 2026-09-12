@@ -98,8 +98,16 @@ export type Bailleur = {
   created_at: string
 }
 
-/** Canal de réception d'un code de vérification téléphonique. */
-export type CanalTelephoneStocke = 'SMS' | 'WHATSAPP'
+/**
+ * Canal de réception d'un code de vérification téléphonique, tel qu'il est
+ * enregistré.
+ *
+ * `ADMIN` n'est PAS un canal proposable : c'est une attestation manuelle posée
+ * en base, sans qu'aucun code n'ait circulé. Ce que l'utilisateur peut choisir
+ * est décrit par `CanalTelephone` (src/lib/verification/regles.ts), qui ne
+ * connaît que SMS et WHATSAPP.
+ */
+export type CanalTelephoneStocke = 'SMS' | 'WHATSAPP' | 'ADMIN'
 
 /** Contexte d'un code : les deux vérifications ne partagent jamais un code. */
 export type TypeCodeVerification = 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION'
