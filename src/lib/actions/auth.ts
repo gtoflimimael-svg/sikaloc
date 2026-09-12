@@ -15,6 +15,7 @@ import {
   schemaNouveauMotDePasse,
   type EtatFormulaire,
 } from '@/lib/validation'
+import { poserTemoinVerification } from '@/lib/verification/temoin'
 
 async function urlDeBase(): Promise<string> {
   const enTetes = await headers()
@@ -57,7 +58,11 @@ export async function inscrire(
     email,
     password: motDePasse,
     options: {
-      emailRedirectTo: `${await urlDeBase()}/auth/callback`,
+      // Le gabarit d'email n'envoie plus de lien de confirmation mais un code
+      // à six chiffres (voir `supabase/templates/confirmation.html`). Cette
+      // adresse de retour n'est conservée que pour le bouton « Saisir mon
+      // code » du message, qui ouvre l'écran de saisie sans rien valider.
+      emailRedirectTo: `${await urlDeBase()}/verification`,
       // Données de profil uniquement : le trigger `creer_profil_bailleur` les
       // recopie dans public.bailleurs. Aucune n'entre dans une décision
       // d'autorisation — `plan` reste 'Gratuit' par défaut côté base.
@@ -79,16 +84,24 @@ export async function inscrire(
     return { erreur: `La création du compte a échoué : ${error.message}` }
   }
 
-  // Confirmation d'email activée : aucune session n'est ouverte à ce stade.
-  if (!data.session) {
-    return {
-      succes:
-        'Compte créé. Vérifiez votre boîte mail et cliquez sur le lien de confirmation pour continuer.',
-    }
-  }
+  // ── Vers la vérification, pas vers l'application ────────────────────────
+  //
+  // Un compte fraîchement créé n'est vérifié sur rien : ni l'adresse email, ni
+  // le numéro. Il n'a donc pas à atteindre `/app/onboarding`, et `session.ts`
+  // l'en empêcherait de toute façon.
+  //
+  // Le témoin porte l'adresse jusqu'à l'écran de saisie : GoTrue n'ouvre pas
+  // de session avant la validation du code, il n'y a donc rien d'autre pour
+  // savoir à qui le code a été envoyé.
+  await poserTemoinVerification(email)
 
   revalidatePath('/', 'layout')
-  redirect('/app/onboarding')
+
+  // `data.session` est renseignée si la confirmation d'email est désactivée sur
+  // le projet. Le parcours reste le même : la vérification du téléphone n'est
+  // pas faite, et c'est `/verification` qui la conduit.
+  void data
+  redirect('/verification')
 }
 
 // ─── Connexion ──────────────────────────────────────────────────────────────
@@ -122,6 +135,19 @@ export async function connecter(
   const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse })
 
   if (error) {
+    // Email non confirmé : GoTrue refuse la connexion, et ce n'est pas un
+    // mauvais mot de passe. Dire « identifiants incorrects » enverrait le
+    // bailleur vérifier un mot de passe qui est bon, sans lui donner le moindre
+    // moyen de s'en sortir. On l'emmène là où il peut finir sa vérification.
+    //
+    // Ce n'est pas une fuite d'information : le compte a déjà été annoncé comme
+    // existant au moment de l'inscription, à celui-là même qui vient de fournir
+    // le bon mot de passe.
+    if (/email not confirmed|not confirmed/i.test(error.message)) {
+      await poserTemoinVerification(email)
+      redirect('/verification')
+    }
+
     await enregistrerTentative(email, false, await adresseIp())
     return { erreur: 'Email ou mot de passe incorrect.' }
   }

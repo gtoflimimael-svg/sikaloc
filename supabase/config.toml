@@ -261,9 +261,21 @@ secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1m0s"
 # Number of characters used in the email OTP.
-otp_length = 8
+#
+# Six, et non huit. Depuis Sikaloc 8.2, ce n'est plus un repli mais LE
+# mécanisme de vérification : le gabarit `confirmation.html` envoie
+# `{{ .Token }}` et l'écran `/verification` le fait saisir. Six chiffres, c'est
+# ce qu'on retient le temps de passer d'une application à l'autre, et c'est la
+# même longueur que le code téléphone (`LONGUEUR_CODE`, src/lib/verification/
+# regles.ts) — un utilisateur n'a pas à deviner combien de cases remplir selon
+# l'étape.
+otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+#
+# Dix minutes, aligné sur `VALIDITE_MINUTES`. Une heure, c'était la durée d'un
+# lien de confirmation qu'on cliquait en rentrant du travail ; un code qu'on
+# recopie dans la minute n'a pas besoin de survivre si longtemps.
+otp_expiry = 600
 
 # SMTP de production — Resend, dont le domaine sikaloc.com est déjà vérifié
 # pour l'envoi (même compte que `src/lib/emails.ts`). Sans ceci, le plan
