@@ -215,9 +215,86 @@ async function compter(table, id) {
     await visite.isVisible().catch(() => false),
   )
 
+  // ── 6 ter. Accompagnement DANS le formulaire ───────────────────────────
+  //
+  // La visite doit expliquer les champs sans jamais gêner la saisie. Les deux
+  // moitiés de cette phrase se vérifient.
+
+  const surFormulaire = await page.evaluate(() => {
+    const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
+    if (!couche) return { ok: false, raison: 'visite absente du formulaire' }
+    const texte = couche.innerText
+    return {
+      ok: /Adresse/.test(texte) && /Ville/.test(texte) && /Type de bien/.test(texte),
+      raison: texte.replace(/\n+/g, ' | ').slice(0, 90),
+    }
+  })
+  noter('Elle énumère les champs à renseigner', surFormulaire.ok, surFormulaire.raison)
+
+  const aideInitiale = await page.evaluate(
+    () => document.querySelector('[data-visite="aide-champ"]')?.textContent || '',
+  )
+  noter(
+    'Elle explique le premier champ',
+    /retrouver le bien/i.test(aideInitiale),
+    aideInitiale.slice(0, 64),
+  )
+
+  // Le liseré doit entourer le champ courant, sans assombrir le formulaire.
+  const eclairageChamp = await page.evaluate(() => {
+    const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
+    const voile = [...couche.querySelectorAll('div')].find((d) =>
+      /box-shadow/.test(d.getAttribute('style') || ''),
+    )
+    const champ = document.querySelector('input[name="adresse"]')
+    const liseres = [...couche.querySelectorAll('div[style*="outline"]')]
+    if (!champ || liseres.length === 0) return { ok: false, raison: 'aucun liseré' }
+    const l = liseres[0].getBoundingClientRect()
+    const c = champ.getBoundingClientRect()
+    return {
+      ok: !voile && l.top <= c.top && l.bottom >= c.bottom && l.left <= c.left,
+      raison: voile ? 'un voile assombrit le formulaire' : 'liseré posé, sans voile',
+    }
+  })
+  noter('Elle éclaire le champ sans assombrir le formulaire', eclairageChamp.ok, eclairageChamp.raison)
+
+  // L'explication suit le champ qui reçoit le focus.
+  await page.focus('select[name="type"]')
+  await page.waitForTimeout(500)
+  const aideType = await page.evaluate(
+    () => document.querySelector('[data-visite="aide-champ"]')?.textContent || '',
+  )
+  noter(
+    'L’explication suit le champ sélectionné',
+    /chaque quittance/i.test(aideType),
+    aideType.slice(0, 64),
+  )
+
+  // Rien de la visite ne doit recouvrir un champ ni le bouton d'envoi.
+  const riennEstCouvert = await page.evaluate(() => {
+    const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
+    const cibles = ['input[name="adresse"]', 'input[name="ville"]', 'select[name="type"]', 'button[type="submit"]']
+    for (const sel of cibles) {
+      const el = document.querySelector(sel)
+      if (!el) continue
+      const r = el.getBoundingClientRect()
+      const dessus = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      if (dessus && couche.contains(dessus)) return { ok: false, raison: `${sel} est recouvert` }
+    }
+    return { ok: true, raison: 'champs et bouton d’envoi tous atteignables' }
+  })
+  noter('Rien du formulaire n’est recouvert', riennEstCouvert.ok, riennEstCouvert.raison)
+
   await page.fill('input[name="adresse"]', 'Lot 42, Carré 118')
   await page.fill('input[name="ville"]', 'Cotonou')
   await page.selectOption('select[name="type"]', 'Maison')
+  await page.waitForTimeout(600)
+  const coches = await page.evaluate(() => {
+    const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
+    return couche ? couche.querySelectorAll('svg').length : 0
+  })
+  noter('Les champs remplis sont cochés', coches >= 3, `${coches} marque(s) dans la bulle`)
+
   await page.locator('button[type="submit"]').first().click()
   await page.waitForURL(/\/app\/logements(\?|$)/, { timeout: 20000 })
   await page.waitForTimeout(1200)

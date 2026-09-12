@@ -61,6 +61,17 @@ export interface Etape {
    */
   routesAction?: string[]
   /**
+   * Les champs à expliquer, une fois sur le formulaire.
+   *
+   * `nom` est l'attribut `name` de l'`<input>` ou du `<select>` : c'est le seul
+   * identifiant stable entre le formulaire et la visite. Un champ renommé fait
+   * disparaître son accompagnement, jamais planter la page.
+   *
+   * Volontairement incomplets : on n'explique que ce qui n'est pas évident.
+   * Commenter « Ville » à côté d'un champ intitulé « Ville » est du bruit.
+   */
+  champs?: { nom: string; libelle: string; aide: string }[]
+  /**
    * L'étape est-elle accomplie ?
    *
    * Lue dans les compteurs réels. Une étape déjà accomplie avant que la visite
@@ -72,6 +83,11 @@ export interface Etape {
 export const ETAPES: Etape[] = [
   {
     cle: 'logement',
+    champs: [
+      { nom: 'adresse', libelle: 'Adresse', aide: 'Ce qui permet de retrouver le bien : lot, carré, rue, ou le repère du quartier.' },
+      { nom: 'ville', libelle: 'Ville', aide: 'Cotonou, Porto-Novo, Parakou…' },
+      { nom: 'type', libelle: 'Type de bien', aide: 'Il apparaîtra sur chaque quittance émise pour ce logement.' },
+    ],
     routesAction: ['/app/logements/nouveau'],
     jalon: 'Logement',
     titre: 'Commencez par un logement',
@@ -83,6 +99,12 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'locataire',
+    champs: [
+      { nom: 'nom', libelle: 'Nom du locataire', aide: 'Tel qu’il doit figurer sur ses quittances.' },
+      { nom: 'telephone', libelle: 'Téléphone', aide: 'C’est par là que vous lui enverrez ses documents sur WhatsApp.' },
+      { nom: 'email', libelle: 'Email', aide: 'Facultatif. Utile seulement pour lui envoyer ses quittances par mail.' },
+      { nom: 'consentement', libelle: 'Consentement', aide: 'Vous attestez l’avoir informé que vous enregistrez ses données. Obligatoire.' },
+    ],
     routesAction: ['/app/locataires/nouveau'],
     jalon: 'Locataire',
     titre: 'Ajoutez votre locataire',
@@ -94,6 +116,13 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'bail',
+    champs: [
+      { nom: 'logementId', libelle: 'Logement', aide: 'Seuls les logements sans bail en cours sont proposés.' },
+      { nom: 'locataireId', libelle: 'Locataire', aide: 'Celui que vous venez d’enregistrer.' },
+      { nom: 'loyerMensuel', libelle: 'Loyer mensuel', aide: 'En FCFA. C’est le montant attendu chaque mois.' },
+      { nom: 'jourEcheance', libelle: 'Jour d’échéance', aide: 'Le jour du mois où le loyer est dû. Le 31 devient le dernier jour des mois plus courts.' },
+      { nom: 'toleranceJours', libelle: 'Tolérance', aide: 'Les jours que vous accordez après l’échéance avant qu’un retard soit signalé.' },
+    ],
     routesAction: ['/app/baux/nouveau'],
     jalon: 'Bail',
     titre: 'Reliez les deux par un bail',
@@ -105,6 +134,12 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'paiement',
+    champs: [
+      { nom: 'bailId', libelle: 'Bail concerné', aide: 'Le montant se pré-remplit avec le loyer de ce bail.' },
+      { nom: 'montant', libelle: 'Montant reçu', aide: 'S’il est inférieur au loyer, le document émis sera un reçu et non une quittance.' },
+      { nom: 'periodeDebut', libelle: 'Mois de loyer', aide: 'Le mois que ce versement règle — pas la date où vous l’avez reçu.' },
+      { nom: 'modePaiement', libelle: 'Mode de règlement', aide: 'En espèces au-delà de 100 000 FCFA, une mention de droit de timbre s’ajoute au document.' },
+    ],
     routesAction: ['/app/paiements/nouveau', '/app/paiements/'],
     jalon: 'Paiement',
     titre: 'Enregistrez un loyer reçu',

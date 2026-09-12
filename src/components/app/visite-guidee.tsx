@@ -7,7 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom'
 
 import { quitterVisite, terminerVisite } from '@/lib/actions/visite'
-import { ETAPES, ETAPE_FINALE, type AvancementVisite } from '@/lib/visite/etapes'
+import { ETAPES, ETAPE_FINALE, type AvancementVisite, type Etape } from '@/lib/visite/etapes'
 
 /**
  * Visite guidée interactive.
@@ -83,7 +83,10 @@ export function VisiteGuidee({
   const [reduit, setReduit] = useState(false)
   const [monte, setMonte] = useState(false)
   const [position, setPosition] = useState<Position>({ halo: null, bulle: null })
+  const [lisere, setLisere] = useState<Position['halo']>(null)
   const [felicite, setFelicite] = useState(false)
+  const [champCourant, setChampCourant] = useState<string | null>(null)
+  const [remplis, setRemplis] = useState<string[]>([])
   const bulle = useRef<HTMLDivElement>(null)
   const indexPrecedent = useRef(avancement.index)
   const chemin = usePathname()
@@ -154,6 +157,96 @@ export function VisiteGuidee({
     }
     indexPrecedent.current = avancement.index
   }, [avancement.index])
+
+  /**
+   * Accompagnement dans le formulaire.
+   *
+   * On désigne le champ sur lequel l'utilisateur travaille — celui qui a le
+   * focus, sinon le premier encore vide — et on coche ceux qui sont faits.
+   *
+   * Aucun voile sombre ici, contrairement au reste de la visite : assombrir un
+   * formulaire qu'on est en train de lire ne l'éclaire pas, ça le gêne. Un
+   * simple liseré sur le champ courant suffit.
+   */
+  useEffect(() => {
+    if (!ouvert || !monte || !surPlace || !etape?.champs) return
+
+    const relever = () => {
+      const formulaire = document.querySelector('form')
+      if (!formulaire) return
+
+      const valeur = (nom: string) => {
+        const champ = formulaire.elements.namedItem(nom) as HTMLInputElement | null
+        if (!champ) return null
+        return champ.type === 'checkbox' ? (champ.checked ? 'oui' : '') : champ.value.trim()
+      }
+
+      const faits = etape.champs!.filter((c) => valeur(c.nom)).map((c) => c.nom)
+      setRemplis(faits)
+
+      // Le champ qui a le focus prime : c'est celui que l'utilisateur regarde.
+      const actif = document.activeElement as HTMLElement | null
+      const nomActif = actif?.getAttribute('name')
+      const suivi =
+        nomActif && etape.champs!.some((c) => c.nom === nomActif)
+          ? nomActif
+          : (etape.champs!.find((c) => !faits.includes(c.nom))?.nom ?? null)
+
+      setChampCourant(suivi)
+    }
+
+    relever()
+    document.addEventListener('focusin', relever)
+    document.addEventListener('input', relever)
+    document.addEventListener('change', relever)
+
+    return () => {
+      document.removeEventListener('focusin', relever)
+      document.removeEventListener('input', relever)
+      document.removeEventListener('change', relever)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ouvert, monte, surPlace, etape?.cle, chemin])
+
+  /**
+   * Liseré sur le champ courant.
+   *
+   * Séparé du halo principal : il ne porte pas d'assombrissement, et il suit un
+   * champ de formulaire plutôt qu'une entrée de menu.
+   */
+  useLayoutEffect(() => {
+    // Rien à mesurer : le rendu se garde lui-même sur `champCourant`, inutile
+    // d'effacer un état que personne ne lira.
+    if (!ouvert || !monte || !surPlace || !champCourant) return
+
+    const placer = () => {
+      const formulaire = document.querySelector('form')
+      const champ = formulaire?.elements.namedItem(champCourant) as HTMLElement | null
+      if (!champ || champ.offsetParent === null) {
+        setLisere(null)
+        return
+      }
+
+      // Le libellé et l'aide vivent au-dessus et en dessous du champ : on cadre
+      // le bloc entier plutôt que la seule boîte de saisie.
+      const bloc = champ.closest('div') ?? champ
+      const zone = bloc.getBoundingClientRect()
+      setLisere({
+        haut: zone.top - 6,
+        gauche: zone.left - 6,
+        largeur: zone.width + 12,
+        hauteur: zone.height + 12,
+      })
+    }
+
+    placer()
+    window.addEventListener('resize', placer)
+    window.addEventListener('scroll', placer, true)
+    return () => {
+      window.removeEventListener('resize', placer)
+      window.removeEventListener('scroll', placer, true)
+    }
+  }, [ouvert, monte, surPlace, champCourant, chemin])
 
   /**
    * Place le halo sur la cible et la bulle à côté.
@@ -290,6 +383,26 @@ export function VisiteGuidee({
         <div aria-hidden="true" className="absolute inset-0 bg-surface-dark/45" />
       )}
 
+      {/*
+        Liseré du champ en cours de saisie. Pas d'ombre portée, donc pas
+        d'assombrissement : le formulaire reste parfaitement lisible, et rien
+        n'intercepte le curseur.
+      */}
+      {surPlace && champCourant && lisere ? (
+        <div
+          aria-hidden="true"
+          className="absolute rounded-md transition-all duration-200"
+          style={{
+            top: lisere.haut,
+            left: lisere.gauche,
+            width: lisere.largeur,
+            height: lisere.hauteur,
+            outline: '2px solid var(--color-primary)',
+            outlineOffset: '0px',
+          }}
+        />
+      ) : null}
+
       <div
         ref={bulle}
         // `pointer-events-auto` : la bulle est le seul élément interactif de la
@@ -359,12 +472,22 @@ export function VisiteGuidee({
               <h2 className="mt-md text-title-lg font-bold text-ink">
                 {termine ? ETAPE_FINALE.titre : etape?.titre}
               </h2>
-              <p className="mt-sm text-body-sm leading-relaxed text-body">
-                {termine ? ETAPE_FINALE.message : etape?.message}
-              </p>
+              {surPlace && etape?.champs ? null : (
+                <p className="mt-sm text-body-sm leading-relaxed text-body">
+                  {termine ? ETAPE_FINALE.message : etape?.message}
+                </p>
+              )}
             </div>
 
-            <ListeJalons jalons={avancement.jalons} />
+            {surPlace && etape?.champs ? (
+              <ListeChamps
+                champs={etape.champs}
+                courant={champCourant}
+                remplis={remplis}
+              />
+            ) : (
+              <ListeJalons jalons={avancement.jalons} />
+            )}
 
             <div className="mt-lg flex flex-wrap items-center gap-sm">
               {termine ? (
@@ -404,6 +527,74 @@ export function VisiteGuidee({
       </div>
     </div>,
     document.body,
+  )
+}
+
+/**
+ * Accompagnement du formulaire, champ par champ.
+ *
+ * Il remplace la liste des jalons le temps du remplissage : à cet instant, ce
+ * qui importe n'est pas de savoir qu'il reste trois étapes, c'est de savoir
+ * quoi écrire dans la case qu'on a sous les yeux.
+ *
+ * Rien n'est bloquant : les champs peuvent être remplis dans n'importe quel
+ * ordre, et un champ facultatif laissé vide n'empêche jamais d'avancer.
+ */
+function ListeChamps({
+  champs,
+  courant,
+  remplis,
+}: {
+  champs: NonNullable<Etape['champs']>
+  courant: string | null
+  remplis: string[]
+}) {
+  const aide = champs.find((c) => c.nom === courant)?.aide
+
+  return (
+    <div className="mt-lg rounded-md bg-canvas-soft p-md">
+      <ul className="space-y-xxs">
+        {champs.map((champ) => {
+          const fait = remplis.includes(champ.nom)
+          const actif = champ.nom === courant
+
+          return (
+            <li
+              key={champ.nom}
+              className={`flex items-center gap-xs text-caption ${
+                fait ? 'text-positive-deep' : actif ? 'font-semibold text-ink' : 'text-mute-soft'
+              }`}
+            >
+              {fait ? (
+                <Check size={13} strokeWidth={2.5} aria-hidden="true" className="shrink-0" />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className={`size-2 shrink-0 rounded-pill ${
+                    actif ? 'bg-primary ring-2 ring-primary-pale' : 'bg-hairline'
+                  }`}
+                />
+              )}
+              {champ.libelle}
+            </li>
+          )
+        })}
+      </ul>
+
+      {/*
+        `aria-live` : le lecteur d'écran suit le champ sans qu'on lui vole le
+        focus. `data-visite` reprend la convention des repères de la visite —
+        c'est par lui que le banc désigne cette aide, plutôt que par un
+        sélecteur qui attraperait la première zone live venue.
+      */}
+      <p
+        data-visite="aide-champ"
+        className="mt-sm text-caption leading-relaxed text-body"
+        aria-live="polite"
+      >
+        {aide ?? 'Tout est renseigné — vous pouvez enregistrer.'}
+      </p>
+    </div>
   )
 }
 
