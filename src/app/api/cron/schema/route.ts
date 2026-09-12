@@ -146,3 +146,16 @@ export async function POST(request: NextRequest) {
     { status: 500 },
   )
 }
+
+/**
+ * Vercel Cron appelle ses routes en GET.
+ *
+ * Cet export manquait depuis la mise en place de la tâche : `vercel.json` la
+ * planifiait à 02:45, et elle répondait 405 chaque nuit. La surveillance écrite
+ * pour détecter les pannes silencieuses était elle-même silencieusement
+ * inactive — les trois autres routes de `api/cron/` portaient bien ce délégué,
+ * celle-ci seule l'avait perdu.
+ */
+export async function GET(request: NextRequest) {
+  return POST(request)
+}
