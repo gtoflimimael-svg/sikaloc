@@ -66,6 +66,25 @@ export async function creerBail(
 
   revalidatePath('/app/baux')
   revalidatePath('/app')
+
+  // ── Le bail a-t-il commencé avant d'être enregistré ? ────────────────────
+  //
+  // La question n'est pas « la date de début est-elle passée ? » mais « des
+  // échéances étaient-elles déjà échues, au sens de la règle de ce bail, quand
+  // Sikaloc l'a appris ? ». C'est `v_echeances` qui le sait — la même vue qui
+  // décide des impayés. La recalculer ici produirait un second jeu de règles.
+  //
+  // Sans cette étape, ces mois resteraient « À déterminer » indéfiniment : ils
+  // ne seraient réclamés à personne, ce qui est correct, mais le bailleur ne
+  // saurait pas qu'on l'attend.
+  const { count: aDeterminer } = await supabase
+    .from('v_echeances')
+    .select('periode_debut', { count: 'exact', head: true })
+    .eq('bail_id', data.id)
+    .eq('etat', 'À déterminer')
+
+  if ((aDeterminer ?? 0) > 0) redirect(`/app/baux/${data.id}/historique`)
+
   redirect(`/app/baux/${data.id}`)
 }
 
