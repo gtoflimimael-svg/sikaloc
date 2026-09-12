@@ -68,11 +68,20 @@ on conflict (provider, provider_id) do nothing;
 -- Plan Standard pour la démonstration : c'est lui qui débloque les quittances
 -- conformes (mention du droit de timbre) et les relances WhatsApp. Repasser
 -- `plan` à 'Gratuit' permet de vérifier les limites du plan gratuit.
+-- `telephone_verifie_le` : depuis Sikaloc 8.2, l'accès à /app exige les DEUX
+-- vérifications. Ce compte de démonstration doit donc les avoir toutes les
+-- deux, sinon la capture d'écrans et le parcours de bout en bout s'arrêtent sur
+-- l'écran de vérification.
+--
+-- C'est une donnée de démonstration, pas un vrai bailleur : la règle qui
+-- interdit de présumer vérifié un numéro existant vise les comptes réels.
 update public.bailleurs
    set adresse             = 'Lot 118, Quartier Haie Vive, Cotonou',
        onboarding_termine  = true,
        plan                = 'Standard',
-       date_fin_abonnement = (current_date + interval '1 month')::date
+       date_fin_abonnement = (current_date + interval '1 month')::date,
+       telephone_verifie_le = now(),
+       telephone_canal_verification = 'SMS'
  where id = '11111111-1111-4111-8111-111111111111';
 
 -- ─── Locataires ─────────────────────────────────────────────────────────────

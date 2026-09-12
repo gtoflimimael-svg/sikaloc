@@ -59,7 +59,33 @@ async function creerCompteNeuf() {
     process.exit(1)
   }
 
+  // `/app` exige les deux vérifications : sans celle-ci, le banc n'irait pas
+  // plus loin que l'écran de vérification.
+  await verifierTelephoneFixture(utilisateur.id)
+
   return { id: utilisateur.id, email }
+}
+
+/**
+ * Marque le téléphone de la fixture comme vérifié.
+ *
+ * Depuis Sikaloc 8.2, `/app` exige les DEUX vérifications. Un compte créé par
+ * l'API d'administration a son email confirmé mais son téléphone non : sans
+ * cette ligne, le banc n'atteint plus que /verification.
+ *
+ * C'est une fixture, jamais un compte réel : le cahier des charges interdit de
+ * présumer vérifié le numéro d'un vrai bailleur, pas celui d'un compte jetable
+ * créé par le banc lui-même.
+ */
+async function verifierTelephoneFixture(id) {
+  await fetch(`${SUPABASE}/rest/v1/bailleurs?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...entetes, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      telephone_verifie_le: new Date().toISOString(),
+      telephone_canal_verification: 'SMS',
+    }),
+  })
 }
 
 /** Ouvre une session navigateur sans mot de passe, via un jeton à usage unique. */
@@ -405,6 +431,11 @@ async function compter(table, id) {
     return (await visite.innerText().catch(() => '')).replace(/\n+/g, ' | ')
   }
 
+  page.on('pageerror', (e) => console.log('    [erreur page]', String(e).slice(0, 300)))
+  page.on('console', (m) => {
+    if (m.type() === 'error') console.log('    [console]', m.text().slice(0, 300))
+  })
+
   // ── Locataire ──
   await page.locator('[role="region"] a:has-text("Ajouter un locataire")').click()
   await page.waitForURL(/\/app\/locataires\/nouveau/, { timeout: 20000 })
@@ -442,17 +473,33 @@ async function compter(table, id) {
   await page.waitForURL(/\/app\/paiements\/[0-9a-f-]{36}\/confirmer/, { timeout: 20000 })
   noter('La saisie mène à l’écran de confirmation', true, page.url().replace(BASE, ''))
 
+  // Amené dans le champ de vision par Playwright, qui effectue un vrai
+  // défilement et l'attend. `scrollIntoView()` depuis `page.evaluate` ne
+  // suffisait pas : la mesure suivait trop vite, et le centre du bouton
+  // tombait 19 px sous la fenêtre — `elementFromPoint` rendait alors `null`,
+  // ce qui ne dit rien d'un recouvrement par la visite et faisait échouer le
+  // contrôle sur une page parfaitement utilisable (le clic juste après passe).
+  await page
+    .locator('button', { hasText: /Confirmer et générer/i })
+    .first()
+    .scrollIntoViewIfNeeded()
+
   const surConfirmation = await page.evaluate(() => {
     const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
     const bouton = [...document.querySelectorAll('button')].find((b) =>
       /Confirmer et générer/i.test(b.textContent || ''),
     )
     if (!bouton) return { ok: false, raison: 'bouton de confirmation absent' }
+
+    const tous = [...document.querySelectorAll('button')].filter((b) => /Confirmer et générer/i.test(b.textContent || ''))
+
     const r = bouton.getBoundingClientRect()
     const dessus = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
     return {
       ok: Boolean(dessus) && (!couche || !couche.contains(dessus)),
-      raison: dessus ? dessus.tagName : 'rien',
+      raison: dessus
+        ? `${dessus.tagName}${dessus === bouton ? ' (le bouton lui-même)' : ''}`
+        : `rien — ${tous.length} bouton(s), rect ${Math.round(r.top)},${Math.round(r.left)} ${Math.round(r.width)}x${Math.round(r.height)}, offsetParent ${bouton.offsetParent ? 'oui' : 'NON'}, fenêtre ${window.innerWidth}x${window.innerHeight}`,
     }
   })
   noter('La visite ne recouvre pas le bouton de confirmation', surConfirmation.ok, surConfirmation.raison)

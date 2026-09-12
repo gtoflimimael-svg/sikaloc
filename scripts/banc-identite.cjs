@@ -61,10 +61,18 @@ async function bailleur(id) {
     }),
   }).then((r) => r.json())
 
+  // `telephone_verifie_le` : depuis Sikaloc 8.2, `/app` exige les DEUX
+  // vérifications. Un compte créé par l'API d'administration a son email
+  // confirmé mais son téléphone non — sans cette ligne, le banc n'atteindrait
+  // plus que /verification. C'est une fixture jetable, jamais un compte réel.
   await fetch(`${SUPABASE}/rest/v1/bailleurs?id=eq.${compte.id}`, {
     method: 'PATCH',
     headers: { ...entetes, Prefer: 'return=minimal' },
-    body: JSON.stringify({ onboarding_termine: true }),
+    body: JSON.stringify({
+      onboarding_termine: true,
+      telephone_verifie_le: new Date().toISOString(),
+      telephone_canal_verification: 'SMS',
+    }),
   })
 
   const depart = await bailleur(compte.id)
