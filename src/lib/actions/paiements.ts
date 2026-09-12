@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { debutDeMois, finDeMois } from '@/lib/format'
-import { genererEtStocker } from '@/lib/quittance'
-import { bailleurAvecEcriture } from '@/lib/session'
+import { empreinte, genererEtStocker } from '@/lib/quittance'
+import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
+import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaPaiement, type EtatFormulaire } from '@/lib/validation'
 
@@ -240,4 +241,70 @@ export async function supprimerPaiement(id: string): Promise<EtatFormulaire> {
   revalidatePath('/app/paiements')
   revalidatePath('/app')
   redirect('/app/paiements')
+}
+
+/**
+ * Vérifie qu'un document n'a pas bougé depuis sa signature.
+ *
+ * On recalcule l'empreinte du fichier réellement archivé et on la compare à
+ * celle enregistrée au moment de l'apposition. C'est tout — et c'est déjà ce
+ * qui compte : le locataire détient une copie de ce fichier-là.
+ *
+ * Prudence délibérée sur les mots. Une empreinte qui diffère ne prouve pas une
+ * falsification : le fichier a pu être redéposé, ou l'apposition manquer. On
+ * dit donc ce qu'on constate — le contenu ne correspond plus — sans accuser
+ * personne, comme le demande le cahier des charges.
+ */
+export async function verifierIntegrite(quittanceId: string): Promise<EtatFormulaire> {
+  // Appelé pour la garde, pas pour sa valeur : il redirige vers la connexion
+  // si aucune session n'est ouverte.
+  await bailleurCourant()
+  const supabase = await creerClientServeur()
+
+  // Lecture par le client de session : la RLS interdit de viser le document
+  // d'un autre bailleur.
+  const { data: quittance } = await supabase
+    .from('quittances')
+    .select('pdf_chemin, hash_sha256')
+    .eq('id', quittanceId)
+    .maybeSingle()
+
+  if (!quittance?.pdf_chemin) {
+    return { erreur: 'Ce document n’a pas de fichier archivé : rien à vérifier.' }
+  }
+
+  const { data: apposition } = await supabase
+    .from('signatures_apposees')
+    .select('hash_document, retroactif')
+    .eq('quittance_id', quittanceId)
+    .maybeSingle()
+
+  const reference = apposition?.hash_document ?? quittance.hash_sha256
+  if (!reference) {
+    return { erreur: 'Aucune empreinte n’a été enregistrée pour ce document.' }
+  }
+
+  const admin = creerClientAdmin()
+  const { data: fichier } = await admin.storage
+    .from('quittances')
+    .download(quittance.pdf_chemin)
+
+  if (!fichier) {
+    return { erreur: 'Le fichier archivé est momentanément indisponible. Réessayez.' }
+  }
+
+  const actuelle = empreinte(Buffer.from(await fichier.arrayBuffer()))
+
+  if (actuelle === reference) {
+    return {
+      succes:
+        'Document intact. Il correspond exactement à la version enregistrée au moment de la signature.',
+    }
+  }
+
+  return {
+    erreur:
+      'Le contenu actuel ne correspond plus à la version enregistrée lors de la signature. ' +
+      'Conservez la copie remise à votre locataire et signalez-le nous.',
+  }
 }

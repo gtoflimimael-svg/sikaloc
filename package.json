@@ -27,6 +27,7 @@
     "banc:onboarding": "node scripts/banc-onboarding.cjs",
     "banc:visite": "tsx scripts/banc-visite.ts",
     "banc:photo": "tsx scripts/banc-photo.ts",
+    "banc:immuable": "node scripts/banc-signature-immuable.cjs",
     "banc:identite": "node scripts/banc-identite.cjs",
     "banc:mot-de-passe": "tsx scripts/banc-mot-de-passe.ts"
   },
