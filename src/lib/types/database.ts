@@ -82,6 +82,10 @@ export type Bailleur = {
   tutoriel_vu_le: string | null
   /** Sortie de la visite avant la fin. Renseignée = ne plus l'ouvrir d'elle-même. */
   visite_quittee_le: string | null
+  /** Chemin de la photo dans le bucket privé `photos`. Renseignée = prime sur l'avatar. */
+  photo_chemin: string | null
+  /** Début de la période où l'avatar tient lieu de photo. NULL = pas de période. */
+  avatar_temporaire_depuis: string | null
   created_at: string
 }
 

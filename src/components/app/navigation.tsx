@@ -17,7 +17,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { AvatarPeep } from '@/components/ui/avatar-peep'
+import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
@@ -137,6 +137,7 @@ export function EnTeteMobile({
   nomBailleur,
   idBailleur,
   avatarBailleur,
+  aPhotoBailleur,
   emailBailleur,
   plan,
 }: {
@@ -144,6 +145,8 @@ export function EnTeteMobile({
   nomBailleur: string
   idBailleur: string
   avatarBailleur: string | null
+  /** Le bailleur a-t-il une photo réelle ? Elle prime sur l'avatar. */
+  aPhotoBailleur: boolean
   emailBailleur: string
   plan: string
 }) {
@@ -205,9 +208,10 @@ export function EnTeteMobile({
             aria-label="Ouvrir le menu du compte"
             className="inline-flex items-center rounded-pill"
           >
-            <AvatarPeep
+            <PhotoProfil
               id={idBailleur}
               avatar={avatarBailleur}
+              aPhoto={aPhotoBailleur}
               nom={nomBailleur}
               taille={36}
             />
@@ -240,9 +244,10 @@ export function EnTeteMobile({
             {/* Bloc compte — l'équivalent mobile du menu en haut à droite. */}
             <div className="mb-lg rounded-lg border border-hairline bg-surface-soft p-md">
               <div className="flex items-center gap-sm">
-                <AvatarPeep
+                <PhotoProfil
                   id={idBailleur}
                   avatar={avatarBailleur}
+                  aPhoto={aPhotoBailleur}
                   nom={nomBailleur}
                   taille={40}
                 />

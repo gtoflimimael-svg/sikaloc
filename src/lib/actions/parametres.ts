@@ -251,3 +251,100 @@ export async function changerMotDePasse(
       'Mot de passe mis à jour. Vos autres sessions restent ouvertes : déconnectez-vous partout si vous soupçonnez un accès non autorisé.',
   }
 }
+
+// ─── Photo de profil ─────────────────────────────────────────────────────────
+
+const TAILLE_MAX_PHOTO = 3 * 1024 * 1024
+
+/**
+ * Enregistre la photo de profil.
+ *
+ * ─── Ce que le serveur reçoit, et ce qu'il ne reçoit pas ────────────────────
+ *
+ * Un fichier image, et rien d'autre. L'analyse du visage a eu lieu dans le
+ * navigateur : le serveur ne voit ni les positions des visages, ni une
+ * empreinte, ni un score. Il ne saurait pas dire ce que la photo représente.
+ *
+ * Il refait en revanche les contrôles qui le concernent — poids et format réel,
+ * lu sur les octets de tête — parce qu'une requête forgée ne passe pas par la
+ * page. Le contrôle du navigateur sert le confort ; celui-ci sert la sécurité.
+ *
+ * Déposer une photo clôt la période d'avatar temporaire : `avatar_temporaire_depuis`
+ * repasse à NULL, et le décompte cesse. L'avatar, lui, est conservé — il
+ * redeviendra la représentation du bailleur si la photo est retirée.
+ */
+export async function televerserPhoto(
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const bailleur = await bailleurCourant()
+  const fichier = donnees.get('photo')
+
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    return { erreur: 'Choisissez une photo.' }
+  }
+
+  if (fichier.size > TAILLE_MAX_PHOTO) {
+    return { erreur: 'La photo ne doit pas dépasser 3 Mo.' }
+  }
+
+  const format = await reconnaitreFormat(fichier)
+  if (!format) {
+    return { erreur: 'Format non reconnu. Utilisez une image JPEG, PNG ou WebP.' }
+  }
+
+  const description = DESCRIPTION_FORMAT[format]
+  const chemin = `${bailleur.id}/photo.${description.extension}`
+
+  const supabase = await creerClientServeur()
+
+  // L'extension peut changer d'un envoi à l'autre : l'ancien objet resterait
+  // sinon dans le coffre, orphelin et invisible.
+  if (bailleur.photo_chemin && bailleur.photo_chemin !== chemin) {
+    await supabase.storage.from('photos').remove([bailleur.photo_chemin])
+  }
+
+  const { error: erreurDepot } = await supabase.storage
+    .from('photos')
+    .upload(chemin, fichier, { upsert: true, contentType: description.type })
+
+  if (erreurDepot) {
+    return { erreur: `L’enregistrement a échoué : ${erreurDepot.message}` }
+  }
+
+  const { error } = await supabase
+    .from('bailleurs')
+    .update({ photo_chemin: chemin, avatar_temporaire_depuis: null })
+    .eq('id', bailleur.id)
+
+  if (error) return { erreur: `L’enregistrement a échoué : ${error.message}` }
+
+  revalidatePath('/app', 'layout')
+  return { succes: 'Votre photo de profil est enregistrée.' }
+}
+
+/**
+ * Retire la photo de profil.
+ *
+ * L'avatar reprend sa place — il n'a jamais été supprimé — et une nouvelle
+ * période temporaire s'ouvre. Repartir de zéro plutôt que de reprendre le
+ * décompte là où il s'était arrêté : quelqu'un qui retire sa photo a une raison
+ * de le faire, et lui répondre « il vous reste zéro jour » serait absurde.
+ */
+export async function supprimerPhoto(): Promise<EtatFormulaire> {
+  const bailleur = await bailleurCourant()
+  if (!bailleur.photo_chemin) return { succes: 'Aucune photo à retirer.' }
+
+  const supabase = await creerClientServeur()
+  await supabase.storage.from('photos').remove([bailleur.photo_chemin])
+
+  const { error } = await supabase
+    .from('bailleurs')
+    .update({ photo_chemin: null, avatar_temporaire_depuis: new Date().toISOString() })
+    .eq('id', bailleur.id)
+
+  if (error) return { erreur: `La suppression a échoué : ${error.message}` }
+
+  revalidatePath('/app', 'layout')
+  return { succes: 'Votre photo a été retirée. Votre avatar vous représente à nouveau.' }
+}

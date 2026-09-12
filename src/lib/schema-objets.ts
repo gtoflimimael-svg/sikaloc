@@ -22,6 +22,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "bailleurs_photo_chemin_scope",
+    "migration": "20260912000300_photo_profil.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "bailleurs_signature_chemin_scope",
     "migration": "20260820000200_signature_chemin_contraint.sql"
   },
@@ -272,6 +277,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur dépose sa photo",
+    "migration": "20260912000300_photo_profil.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur dépose sa signature",
     "migration": "20260817000500_storage.sql"
   },
@@ -279,6 +289,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur enregistre ses paiements",
     "migration": "20260817000300_rls.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur lit sa photo",
+    "migration": "20260912000300_photo_profil.sql"
   },
   {
     "categorie": "politique",
@@ -347,8 +362,18 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur remplace sa photo",
+    "migration": "20260912000300_photo_profil.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur remplace sa signature",
     "migration": "20260817000500_storage.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur retire sa photo",
+    "migration": "20260912000300_photo_profil.sql"
   },
   {
     "categorie": "politique",
