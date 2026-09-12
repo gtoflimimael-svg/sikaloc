@@ -47,6 +47,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "paiements_date_connue_sauf_historique",
+    "migration": "20260913000300_echeances_et_historique.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "quittances_numero_unique_par_bailleur",
     "migration": "20260817000700_documents_v2_1.sql"
   },
@@ -462,8 +467,13 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "vue",
+    "nom": "v_echeances",
+    "migration": "20260913000300_echeances_et_historique.sql"
+  },
+  {
+    "categorie": "vue",
     "nom": "v_impayes",
-    "migration": "20260817000400_vues_metier.sql"
+    "migration": "20260913000300_echeances_et_historique.sql"
   },
   {
     "categorie": "vue",

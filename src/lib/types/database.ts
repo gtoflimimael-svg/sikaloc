@@ -178,6 +178,19 @@ export type Bail = {
   tolerance_jours: number
   depot_garantie: number | null
   statut: StatutBail
+  /**
+   * Moment où le bailleur s'est prononcé sur les échéances antérieures à
+   * l'enregistrement. NULL = pas encore : ces échéances sont « À déterminer »,
+   * jamais « Impayé ».
+   */
+  historique_declare_le: string | null
+  /** Qui a déclaré l'historique — une déclaration de règlement est une affirmation financière. */
+  historique_declare_par: string | null
+  /**
+   * Enregistrement dans Sikaloc, à ne jamais confondre avec `date_debut`. Un
+   * bail peut avoir commencé des mois plus tôt ; cette date ne prouve rien sur
+   * ce qui a été payé avant elle.
+   */
   created_at: string
 }
 
@@ -185,7 +198,11 @@ export type Paiement = {
   id: string
   bailleur_id: string
   bail_id: string
-  date_paiement: string
+  /**
+   * Jour de l'encaissement. NULL uniquement pour un paiement historique dont
+   * la date réelle n'est pas connue — jamais une date inventée.
+   */
+  date_paiement: string | null
   montant: number
   periode_debut: string
   periode_fin: string
@@ -194,6 +211,12 @@ export type Paiement = {
   est_partiel: boolean
   statut: StatutPaiement
   valide_le: string | null
+  /**
+   * Loyer déclaré comme réglé AVANT l'usage de Sikaloc. Le montant est réel,
+   * mais Sikaloc n'a pas assisté à l'encaissement : aucune quittance n'est
+   * émise pour ces paiements.
+   */
+  historique: boolean
   created_at: string
 }
 
@@ -283,6 +306,43 @@ export type TentativeConnexion = {
   reussie: boolean
   ip: string | null
   tentee_le: string
+}
+
+/**
+ * L'état d'une échéance de loyer.
+ *
+ * `À déterminer` est la nuance qui manquait : une échéance antérieure à
+ * l'enregistrement du bail, sur laquelle le bailleur ne s'est pas encore
+ * prononcé. Elle n'est pas réglée, et elle n'est pas impayée non plus — on
+ * n'en sait rien, et affirmer le contraire relancerait un locataire à tort.
+ */
+export type EtatEcheance = 'Réglé' | 'Impayé' | 'À venir' | 'À déterminer'
+
+/**
+ * Une ligne par (bail actif, mois). Source unique du calcul : `v_impayes` en
+ * est une simple sélection.
+ */
+export type Echeance = {
+  bail_id: string
+  bailleur_id: string
+  locataire_id: string
+  logement_id: string
+  periode_debut: string
+  periode_fin: string
+  date_echeance: string
+  loyer_mensuel: number
+  tolerance_jours: number
+  montant_paye: number
+  montant_du: number
+  jours_de_retard: number
+  /** L'échéance était déjà échue quand le bail a été enregistré dans Sikaloc. */
+  anterieure: boolean
+  historique_declare: boolean
+  etat: EtatEcheance
+  locataire_nom: string
+  locataire_telephone: string
+  logement_adresse: string
+  logement_ville: string
 }
 
 export type Impaye = {
@@ -402,6 +462,7 @@ export interface Database {
       v_impayes: Vue<Impaye>
       v_metriques_dashboard: Vue<MetriquesDashboard>
       v_progression_visite: Vue<ProgressionVisite>
+      v_echeances: Vue<Echeance>
     }
     Functions: {
       creer_premier_bail: {

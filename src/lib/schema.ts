@@ -46,6 +46,7 @@ const TABLES: Record<string, string> = {
   // leurs colonnes, alors qu'elle en déclarait déjà les objets.
   signatures_apposees: 'SignatureApposee',
   codes_verification: 'CodeVerification',
+  v_echeances: 'Echeance',
 }
 
 export interface EcartSchema {
