@@ -70,7 +70,13 @@ interface PaiementComplet {
  */
 export async function rassemblerDonnees(
   paiementId: string,
-  options: { apercu?: boolean; numeroDocument?: string; dateGeneration?: string } = {},
+  options: {
+    apercu?: boolean
+    numeroDocument?: string
+    dateGeneration?: string
+    /** Copie figée de la signature, quand le document en a déjà une. */
+    cheminSignature?: string | null
+  } = {},
 ): Promise<DonneesQuittance | null> {
   const admin = creerClientAdmin()
 
@@ -110,8 +116,13 @@ export async function rassemblerDonnees(
 
   // Les deux signatures sont indépendantes : les charger en parallèle évite de
   // doubler la latence de deux allers-retours Storage successifs.
+  //
+  // `options.cheminSignature` impose la COPIE FIGÉE prise à l'apposition. Sans
+  // lui, on lirait `bailleur.signature_chemin` — le chemin du moment — et une
+  // refabrication rendrait l'ancienne quittance avec la signature actuelle.
+  // C'est exactement ce que le dispositif d'immuabilité existe pour empêcher.
   const [signatureBailleur, signatureLocataire] = await Promise.all([
-    chargerSignature(bailleur.signature_chemin),
+    chargerSignature(options.cheminSignature ?? bailleur.signature_chemin),
     chargerSignature(locataire.signature_chemin ?? null),
   ])
 
@@ -209,8 +220,48 @@ export async function genererEtStocker(paiementId: string): Promise<QuittanceGen
   let quittanceId: string
   let numeroDocument: string
   let dateGeneration: string
-
   if (existante) {
+    /*
+     * Un document déjà signé ne se refabrique pas.
+     *
+     * La fabrication lit la signature du profil : sans ce garde, un bailleur
+     * qui change de signature puis relance l'émission obtiendrait, sous le même
+     * numéro, un document portant une autre main — et le fichier archivé serait
+     * écrasé, avec son empreinte.
+     *
+     * La fenêtre de correction de 5 minutes reste ouverte : pendant ce délai le
+     * paiement n'est pas figé, et le déclencheur en base autorise le retrait de
+     * l'apposition. C'est la MÊME règle que `proteger_paiement_fige`, pas une
+     * seconde.
+     */
+    const { data: apposition } = await admin
+      .from('signatures_apposees')
+      .select('chemin_snapshot')
+      .eq('quittance_id', existante.id)
+      .maybeSingle()
+
+    if (apposition) {
+      const { error: erreurRetrait } = await admin
+        .from('signatures_apposees')
+        .delete()
+        .eq('quittance_id', existante.id)
+
+      if (erreurRetrait) {
+        throw new Error(
+          'Ce document est signé : il ne peut plus être refabriqué. ' +
+            'Corrigez le paiement dans les cinq minutes suivant sa validation, ' +
+            'ou enregistrez un nouveau paiement.',
+        )
+      }
+
+      // Le retrait a été autorisé : la copie figée de l'ancienne apposition
+      // n'a plus lieu d'être, une nouvelle sera prise ci-dessous. On la retire
+      // du coffre pour ne pas y laisser d'orphelin.
+      if (apposition.chemin_snapshot) {
+        await admin.storage.from('signatures').remove([apposition.chemin_snapshot])
+      }
+    }
+
     // Régénération : le numéro identifie le document et ne bouge pas ; la date
     // est rafraîchie car le contenu a pu changer pendant la fenêtre de
     // correction.
@@ -252,6 +303,17 @@ export async function genererEtStocker(paiementId: string): Promise<QuittanceGen
     dateGeneration = data.date_generation
   }
 
+  /*
+   * Le rendu utilise la signature COURANTE — et c'est correct.
+   *
+   * On n'arrive ici que dans deux cas : première émission, ou correction dans
+   * les cinq minutes. Dans les deux, la signature du moment est bien celle que
+   * le bailleur appose. La copie figée est prise juste après, sur ce qui vient
+   * d'être rendu, et c'est ELLE qui protégera le document ensuite.
+   *
+   * `cheminSignature` reste disponible pour un rendu qui devrait reproduire une
+   * apposition passée — la vérification d'intégrité, par exemple.
+   */
   const donnees = await rassemblerDonnees(paiementId, { numeroDocument, dateGeneration })
 
   if (!donnees) {
@@ -271,12 +333,93 @@ export async function genererEtStocker(paiementId: string): Promise<QuittanceGen
 
   // L'empreinte porte sur le fichier réellement déposé : c'est celui-là que le
   // locataire téléchargera, et c'est donc lui qu'il faut pouvoir vérifier.
+  const hashDocument = empreinte(pdf)
+
   await admin
     .from('quittances')
-    .update({ pdf_chemin: chemin, hash_sha256: empreinte(pdf) })
+    .update({ pdf_chemin: chemin, hash_sha256: hashDocument })
     .eq('id', quittanceId)
 
+  await apposerSignature({
+    quittanceId,
+    bailleurId: paiement.bailleur_id,
+    nomSignataire: donnees.bailleurNom,
+    hashDocument,
+  })
+
   return { id: quittanceId, numeroDocument, type }
+}
+
+/**
+ * Fige la signature sur le document qui vient d'être émis.
+ *
+ * ─── Pourquoi une copie, et pas une référence ───────────────────────────────
+ *
+ * Pointer vers `bailleurs.signature_chemin` ferait suivre l'ancienne quittance
+ * à chaque changement de signature. On copie donc le fichier sous
+ * `<bailleur_id>/apposees/<quittance_id>.<ext>` : ni le remplacement ni la
+ * suppression de la signature courante n'atteignent ce préfixe.
+ *
+ * ─── Pourquoi l'échec n'annule pas l'émission ───────────────────────────────
+ *
+ * Le document est déjà déposé et son empreinte enregistrée : la pièce existe,
+ * et le PDF porte la signature incrustée. Faire échouer l'émission pour un
+ * défaut de traçabilité priverait le bailleur de sa quittance sans rien
+ * protéger. L'anomalie est journalisée, sans jamais rien exposer du contenu.
+ */
+async function apposerSignature(entree: {
+  quittanceId: string
+  bailleurId: string
+  nomSignataire: string
+  hashDocument: string
+}): Promise<void> {
+  const admin = creerClientAdmin()
+
+  const { data: bailleur } = await admin
+    .from('bailleurs')
+    .select('signature_chemin')
+    .eq('id', entree.bailleurId)
+    .maybeSingle()
+
+  let cheminSnapshot: string | null = null
+  let hashSignature: string | null = null
+
+  const source = bailleur?.signature_chemin ?? null
+
+  if (source) {
+    const { data: fichier } = await admin.storage.from('signatures').download(source)
+
+    if (fichier) {
+      const octets = Buffer.from(await fichier.arrayBuffer())
+      hashSignature = empreinte(octets)
+
+      const extension = source.split('.').pop() ?? 'png'
+      const cible = `${entree.bailleurId}/apposees/${entree.quittanceId}.${extension}`
+
+      const { error } = await admin.storage
+        .from('signatures')
+        .upload(cible, octets, { contentType: fichier.type || 'image/png', upsert: true })
+
+      if (!error) cheminSnapshot = cible
+    }
+  }
+
+  const { error } = await admin.from('signatures_apposees').insert({
+    quittance_id: entree.quittanceId,
+    bailleur_id: entree.bailleurId,
+    nom_signataire: entree.nomSignataire,
+    chemin_snapshot: cheminSnapshot,
+    hash_document: entree.hashDocument,
+    hash_signature: hashSignature,
+  })
+
+  if (error) {
+    // Ni le mot de passe, ni l'empreinte, ni le chemin : seulement le document
+    // concerné, pour pouvoir régulariser.
+    console.error(
+      `[quittance] apposition non enregistrée pour ${entree.quittanceId} : ${error.message}`,
+    )
+  }
 }
 
 /**

@@ -265,6 +265,25 @@ export type MetriquesDashboard = {
 }
 
 /**
+ * Une signature apposée sur un document, figée.
+ *
+ * Elle n'est jamais modifiée : les déclencheurs `signatures_apposees_immuable_*`
+ * refusent UPDATE et DELETE tant que le document existe et que son paiement est
+ * figé. Voir la migration 20260912000500.
+ */
+export type SignatureApposee = {
+  id: string
+  quittance_id: string
+  bailleur_id: string
+  nom_signataire: string
+  chemin_snapshot: string | null
+  hash_document: string | null
+  hash_signature: string | null
+  appose_le: string
+  retroactif: boolean
+}
+
+/**
  * Avancement du bailleur dans la visite guidée.
  *
  * Dérivé de ses données réelles par `v_progression_visite`, donc jamais à
@@ -319,6 +338,7 @@ export interface Database {
       quittances: Ligne<Quittance>
       abonnements_transactions: Ligne<AbonnementTransaction>
       recompenses_parrainage: Ligne<RecompenseParrainage>
+      signatures_apposees: Ligne<SignatureApposee>
       tentatives_connexion: Ligne<TentativeConnexion>
       emails_a_envoyer: Ligne<EmailAEnvoyer>
       journal_purges: Ligne<JournalPurge>

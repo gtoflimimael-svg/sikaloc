@@ -67,6 +67,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "declencheur",
+    "nom": "signatures_apposees_immuable_delete",
+    "migration": "20260912000500_signatures_apposees.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "signatures_apposees_immuable_update",
+    "migration": "20260912000500_signatures_apposees.sql"
+  },
+  {
+    "categorie": "declencheur",
     "nom": "toucher_abonnements_transactions",
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
@@ -113,7 +123,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "gerer_nouvel_utilisateur",
-    "migration": "20260819000100_avatars.sql"
+    "migration": "20260912000400_photo_periode_inscription.sql"
   },
   {
     "categorie": "fonction",
@@ -139,6 +149,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "reactiver_abonnement",
     "migration": "20260817000800_cycle_de_grace.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "refuser_modification_signature",
+    "migration": "20260912000500_signatures_apposees.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "refuser_suppression_signature",
+    "migration": "20260912000500_signatures_apposees.sql"
   },
   {
     "categorie": "fonction",
@@ -252,6 +272,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "signatures_apposees_bailleur_idx",
+    "migration": "20260912000500_signatures_apposees.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "tentatives_connexion_email_idx",
     "migration": "20260817000100_schema_initial.sql"
   },
@@ -329,6 +354,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur lit ses quittances stockées",
     "migration": "20260817000500_storage.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur lit ses signatures apposées",
+    "migration": "20260912000500_signatures_apposees.sql"
   },
   {
     "categorie": "politique",

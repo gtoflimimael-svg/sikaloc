@@ -157,6 +157,16 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
 }
 
 /** Régénère le document d'un paiement déjà validé. */
+/**
+ * Refabrique le document d'un paiement.
+ *
+ * Refusée dès que le document est signé et son paiement figé : la fabrication
+ * lit la signature du profil, et un bailleur ayant changé de signature
+ * obtiendrait, sous le même numéro, un document portant une autre main.
+ *
+ * Le garde qui compte est en base — déclencheurs `signatures_apposees_immuable_*`.
+ * Ce qui suit ne fait que traduire leur refus en une phrase lisible.
+ */
 export async function regenererQuittance(paiementId: string): Promise<EtatFormulaire> {
   try {
     const quittance = await genererEtStocker(paiementId)

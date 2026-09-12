@@ -135,6 +135,16 @@ export function FormulaireSignature({ signatureExistante }: { signatureExistante
         <CaptureSignature />
       </form>
 
+      {/*
+        Dit explicitement ce que la modification NE fait pas. Sans cette phrase,
+        un bailleur peut craindre de toucher à ses anciennes quittances — ou pire,
+        croire qu'il peut les corriger en changeant de signature.
+      */}
+      <p className="text-caption leading-relaxed text-mute">
+        Modifier votre signature ne change rien aux documents déjà émis : chacun
+        conserve la signature qui y a été apposée.
+      </p>
+
       {signatureExistante ? (
         <BoutonAction
           action={supprimerSignature}
