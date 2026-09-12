@@ -79,6 +79,7 @@ export function VisiteGuidee({
   ouvertAuDemarrage: boolean
 }) {
   const [ouvert, setOuvert] = useState(ouvertAuDemarrage)
+  const [demarrageConnu, setDemarrageConnu] = useState(ouvertAuDemarrage)
   const [reduit, setReduit] = useState(false)
   const [monte, setMonte] = useState(false)
   const [position, setPosition] = useState<Position>({ halo: null, bulle: null })
@@ -91,8 +92,41 @@ export function VisiteGuidee({
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMonte(true), [])
 
+  /**
+   * Rouvrir quand le serveur le redemande.
+   *
+   * `useState(ouvertAuDemarrage)` ne lit sa valeur initiale qu'au montage. Après
+   * « Reprendre la visite guidée », `reprendreVisite()` efface les deux dates et
+   * revalide le layout : la prop repasse à `true`, mais le composant n'est pas
+   * remonté et son état local restait à `false` — la visite ne se rouvrait pas.
+   * Le banc l'a pris.
+   *
+   * Ajustement d'état pendant le rendu, et non dans un effet : c'est le motif
+   * que React recommande pour une valeur dérivée d'une prop, et il évite le
+   * rendu supplémentaire qu'un `useEffect` provoquerait.
+   */
+  if (ouvertAuDemarrage !== demarrageConnu) {
+    setDemarrageConnu(ouvertAuDemarrage)
+    if (ouvertAuDemarrage) {
+      setOuvert(true)
+      setReduit(false)
+    }
+  }
+
   const termine = avancement.complet
   const etape = termine ? null : ETAPES[avancement.index]
+
+  /**
+   * Sommes-nous déjà sur la page où l'action se fait ?
+   *
+   * Alors désigner l'entrée de menu qui a mené ici n'apprend plus rien — et la
+   * bulle posée à côté d'elle recouvre le formulaire. Le banc l'a prise en
+   * flagrant délit sur le bouton « Créer le logement », qui devenait
+   * inaccessible : exactement ce qu'une visite ne doit jamais faire.
+   *
+   * Sur ces routes, on lâche le halo et on s'écarte dans un coin.
+   */
+  const surPlace = Boolean(etape?.routesAction?.some((r) => chemin.startsWith(r)))
 
   /**
    * Retour immédiat quand une étape vient d'être franchie.
@@ -119,6 +153,12 @@ export function VisiteGuidee({
    */
   useLayoutEffect(() => {
     if (!ouvert || !monte || reduit) return
+
+    // Sur la page de l'action : aucune mesure, aucune mise en vue forcée. La
+    // visite accompagne, elle ne pilote plus. Le rendu ignore `position` dans
+    // ce cas — inutile de l'effacer, et un `setState` dans un effet n'aurait
+    // servi qu'à provoquer un second rendu.
+    if (surPlace) return
 
     const placer = () => {
       const cible = cibleVisible(etape?.cible)
@@ -189,7 +229,7 @@ export function VisiteGuidee({
       window.removeEventListener('scroll', placer, true)
       clearTimeout(rattrapage)
     }
-  }, [ouvert, monte, reduit, etape?.cible, chemin, avancement.index])
+  }, [ouvert, monte, reduit, surPlace, etape?.cible, chemin, avancement.index])
 
   const quitter = useCallback(() => {
     setOuvert(false)
@@ -203,7 +243,10 @@ export function VisiteGuidee({
 
   if (!monte || !ouvert) return null
 
-  const centree = position.halo === null
+  // Sur place : coin bas-gauche sur grand écran — au-dessus de la barre
+  // latérale, qui ne porte que des liens — et bande basse sur mobile, où elle
+  // est masquée. Jamais au centre : c'est là que vivent les formulaires.
+  const centree = !surPlace && position.halo === null
   const ancreeEnBas = position.halo !== null && position.bulle === null
 
   return createPortal(
@@ -219,7 +262,7 @@ export function VisiteGuidee({
         un seul élément, aucun masque SVG, et le trou reste net quelle que soit
         la forme de la cible.
       */}
-      {position.halo ? (
+      {!surPlace && position.halo ? (
         <div
           aria-hidden="true"
           className="absolute rounded-lg transition-all duration-200"
@@ -233,7 +276,7 @@ export function VisiteGuidee({
             outlineOffset: '-1px',
           }}
         />
-      ) : (
+      ) : surPlace ? null : (
         <div aria-hidden="true" className="absolute inset-0 bg-surface-dark/45" />
       )}
 
@@ -242,14 +285,16 @@ export function VisiteGuidee({
         // `pointer-events-auto` : la bulle est le seul élément interactif de la
         // couche. Tout le reste des clics traverse vers l'application.
         className={`pointer-events-auto anim-monte w-[min(23rem,calc(100vw-1.5rem))] rounded-xl bg-canvas p-lg shadow-xl ${
-          centree
-            ? 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
-            : ancreeEnBas
-              ? 'absolute bottom-lg left-1/2 -translate-x-1/2'
-              : 'absolute'
+          surPlace
+            ? 'absolute bottom-lg left-1/2 -translate-x-1/2 lg:left-lg lg:translate-x-0'
+            : centree
+              ? 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
+              : ancreeEnBas
+                ? 'absolute bottom-lg left-1/2 -translate-x-1/2'
+                : 'absolute'
         }`}
         style={
-          centree || ancreeEnBas
+          surPlace || centree || ancreeEnBas
             ? undefined
             : { top: position.bulle?.haut ?? 0, left: position.bulle?.gauche ?? 0 }
         }
@@ -319,7 +364,7 @@ export function VisiteGuidee({
                 </button>
               ) : (
                 <>
-                  {etape?.lien ? (
+                  {etape?.lien && !surPlace ? (
                     <Link
                       href={etape.lien.href}
                       className="btn btn-primary btn-sm"

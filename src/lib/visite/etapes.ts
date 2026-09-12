@@ -52,6 +52,15 @@ export interface Etape {
   /** Raccourci proposé dans la bulle, quand l'endroit à atteindre est ailleurs. */
   lien?: { libelle: string; href: string }
   /**
+   * Préfixes de route où l'action se fait réellement.
+   *
+   * Y être change tout : désigner l'entrée de menu qui a mené ici n'apprend
+   * plus rien, et la bulle posée à côté d'elle vient recouvrir le formulaire —
+   * le banc l'a prise en flagrant délit sur le bouton « Créer le logement ».
+   * Sur ces routes, la visite s'écarte dans un coin et rend la main.
+   */
+  routesAction?: string[]
+  /**
    * L'étape est-elle accomplie ?
    *
    * Lue dans les compteurs réels. Une étape déjà accomplie avant que la visite
@@ -63,6 +72,7 @@ export interface Etape {
 export const ETAPES: Etape[] = [
   {
     cle: 'logement',
+    routesAction: ['/app/logements/nouveau'],
     jalon: 'Logement',
     titre: 'Commencez par un logement',
     message:
@@ -73,6 +83,7 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'locataire',
+    routesAction: ['/app/locataires/nouveau'],
     jalon: 'Locataire',
     titre: 'Ajoutez votre locataire',
     message:
@@ -83,6 +94,7 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'bail',
+    routesAction: ['/app/baux/nouveau'],
     jalon: 'Bail',
     titre: 'Reliez les deux par un bail',
     message:
@@ -93,6 +105,7 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'paiement',
+    routesAction: ['/app/paiements/nouveau', '/app/paiements/'],
     jalon: 'Paiement',
     titre: 'Enregistrez un loyer reçu',
     message:
@@ -103,6 +116,7 @@ export const ETAPES: Etape[] = [
   },
   {
     cle: 'quittance',
+    routesAction: ['/app/quittances/'],
     jalon: 'Quittance',
     titre: 'Votre quittance est prête',
     message:

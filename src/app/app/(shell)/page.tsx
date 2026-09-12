@@ -11,6 +11,7 @@ import {
   formaterPeriode,
 } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
+import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye, MetriquesDashboard } from '@/lib/types/database'
 import { ReprendreVisite } from '@/components/app/reprendre-visite'
@@ -47,10 +48,26 @@ export default async function PageTableauDeBord({
   const impayes = (impayesReponse.data ?? []) as Impaye[]
   const paiements = paiementsReponse.data ?? []
 
-  // La visite est close quand elle a été menée à son terme ou quittée : dans
-  // les deux cas elle ne s'ouvre plus d'elle-même, et seul le point de reprise
-  // subsiste. Voir `ouvertureAutomatique` dans @/lib/visite/etapes.
-  const visiteClose = Boolean(bailleur.tutoriel_vu_le || bailleur.visite_quittee_le)
+  // Le point de reprise s'affiche dès que la visite ne s'ouvre pas d'elle-même.
+  //
+  // Se fonder sur les seules dates ne suffisait pas : un bailleur qui a tout
+  // accompli sans jamais suivre la visite n'a ni `tutoriel_vu_le` ni
+  // `visite_quittee_le`, mais son parcours est complet — il ne voyait donc
+  // aucun moyen de la lancer. C'est le cas du compte de démonstration.
+  const { data: progressionVisite } = await supabase
+    .from('v_progression_visite')
+    .select('*')
+    .eq('bailleur_id', bailleur.id)
+    .maybeSingle()
+
+  const parcoursVisite = progressionVisite
+    ? avancement(progressionVisite, {
+        tutoriel_vu_le: bailleur.tutoriel_vu_le,
+        visite_quittee_le: bailleur.visite_quittee_le,
+      })
+    : null
+
+  const visiteClose = parcoursVisite ? !ouvertureAutomatique(parcoursVisite) : false
 
   const tauxRecouvrement =
     metriques && Number(metriques.loyers_attendus_mois) > 0
