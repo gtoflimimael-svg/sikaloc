@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { LONGUEUR_MAXIMALE, messageRefus } from '@/lib/mot-de-passe'
+import { MESSAGES_TELEPHONE, validerTelephone } from '@/lib/telephone'
 import { evaluerMotDePasse } from '@/lib/mot-de-passe-evaluation'
 
 /**
@@ -18,12 +19,33 @@ const texteObligatoire = (champ: string, min = 2, max = 200) =>
     .min(min, `${champ} doit contenir au moins ${min} caractères.`)
     .max(max, `${champ} ne peut pas dépasser ${max} caractères.`)
 
+/**
+ * Le numéro est validé ET normalisé ici : ce qui sort du schéma est la forme
+ * canonique `+2290190459821`, jamais ce que le formulaire a envoyé.
+ *
+ * `tolererAncien` est laissé à faux : dix chiffres sont exigés à la saisie.
+ *
+ * La tolérance aurait été dangereuse ici. Elle aurait accepté huit chiffres en
+ * les préfixant de « 01 » — la conversion de la réforme béninoise de 2024 —
+ * donc en *décidant* du numéro à la place de celui qui le saisit. Cette
+ * conversion a sa place dans la reprise de données existantes, jamais sur une
+ * frappe : quelqu'un qui tape huit chiffres aujourd'hui s'est trompé, et mérite
+ * qu'on le lui dise plutôt qu'on complète son numéro pour lui.
+ *
+ * La migration 20260912000600 a converti les numéros déjà enregistrés : plus
+ * aucun formulaire ne se rouvre sur huit chiffres.
+ */
 const telephone = z
   .string()
   .trim()
-  .min(8, 'Le numéro de téléphone doit contenir au moins 8 chiffres.')
-  .max(20, 'Le numéro de téléphone est trop long.')
-  .regex(/^[\d\s+()-]+$/, 'Le numéro ne doit contenir que des chiffres.')
+  .transform((v, ctx) => {
+    const verdict = validerTelephone(v, { obligatoire: true })
+    if (!verdict.valide) {
+      ctx.addIssue({ code: 'custom', message: MESSAGES_TELEPHONE[verdict.motif!] })
+      return z.NEVER
+    }
+    return verdict.canonique!
+  })
 
 /**
  * La mesure vient de `@/lib/mot-de-passe-evaluation` : la jauge affichée pendant

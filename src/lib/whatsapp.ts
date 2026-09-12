@@ -1,3 +1,4 @@
+import { INDICATIF, normaliserTelephone } from '@/lib/telephone'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 
 /**
@@ -13,20 +14,23 @@ import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
  * `wa.me` n'accepte ni espaces, ni tirets, ni indicatif préfixé de zéros. Un
  * numéro local à 8 ou 10 chiffres est préfixé de l'indicatif Bénin (229).
  */
-export function normaliserNumero(telephone: string, indicatifDefaut = '229'): string {
-  let chiffres = telephone.replace(/[^\d+]/g, '')
+export function normaliserNumero(telephone: string, indicatifDefaut = INDICATIF): string {
+  // Délègue au module partagé. L'implémentation précédente retirait les zéros
+  // de tête — correct pour un numéro à 8 chiffres, faux depuis la réforme
+  // béninoise de 2024 : « 0190459821 » devenait « 229190459821 », un numéro
+  // qui n'existe pas, et le lien WhatsApp ne menait nulle part.
+  const canonique = normaliserTelephone(telephone)
+  if (canonique) return canonique.slice(1)
 
+  // Numéro d'un autre pays, ou trop abîmé pour être compris : on retire la
+  // présentation, comme avant, sans plus prétendre le réparer.
+  const chiffres = telephone.replace(/[^0-9+]/g, '')
   if (chiffres.startsWith('+')) return chiffres.slice(1)
   if (chiffres.startsWith('00')) return chiffres.slice(2)
-
-  // Numéro national écrit avec un zéro de tête.
-  chiffres = chiffres.replace(/^0+/, '')
-
-  // Déjà préfixé de l'indicatif : on ne le double pas.
   if (chiffres.startsWith(indicatifDefaut)) return chiffres
-
-  return `${indicatifDefaut}${chiffres}`
+  return indicatifDefaut + chiffres.replace(/^0+/, '')
 }
+
 
 function lienWaMe(telephone: string, message: string): string {
   return `https://wa.me/${normaliserNumero(telephone)}?text=${encodeURIComponent(message)}`

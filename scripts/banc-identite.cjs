@@ -57,7 +57,7 @@ async function bailleur(id) {
       email,
       password: 'Jonquille7Mn!',
       email_confirm: true,
-      user_metadata: { nom: 'Awa Sossou', telephone: '97000009' },
+      user_metadata: { nom: 'Awa Sossou', telephone: '+2290197000009' },
     }),
   }).then((r) => r.json())
 

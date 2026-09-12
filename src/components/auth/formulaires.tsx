@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from 'react'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
+import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
 import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
@@ -143,13 +144,9 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
           erreur={etat.erreursChamps?.nom}
         />
 
-        <ChampTexte
+        <ChampTelephone
           nom="telephone"
           libelle="Téléphone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+229 97 00 00 00"
           aide="Utilisé sur vos quittances et pour vous joindre."
           requis
           erreur={etat.erreursChamps?.telephone}

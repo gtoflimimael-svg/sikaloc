@@ -49,7 +49,7 @@ async function creerCompteNeuf() {
     body: JSON.stringify({
       email,
       email_confirm: true,
-      user_metadata: { nom: 'Banc Onboarding', telephone: '+229 90 00 00 00', nb_logements: '3' },
+      user_metadata: { nom: 'Banc Onboarding', telephone: '+2290190000000', nb_logements: '3' },
     }),
   })
 
@@ -409,7 +409,7 @@ async function compter(table, id) {
   await page.locator('[role="region"] a:has-text("Ajouter un locataire")').click()
   await page.waitForURL(/\/app\/locataires\/nouveau/, { timeout: 20000 })
   await page.fill('input[name="nom"]', 'Awa Hounkpatin')
-  await page.fill('input[name="telephone"]', '97000001')
+  await page.fill('#telephone', '0197000001')
   await page.check('input[name="consentement"]')
   await page.locator('button[type="submit"]').first().click()
   await page.waitForURL(/\/app\/locataires(\?|$)/, { timeout: 20000 })

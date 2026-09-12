@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from 'react'
 
 import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import { BoutonSoumettre } from '@/components/ui/boutons'
+import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampCase, ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -64,12 +65,9 @@ export function FormulaireLocataire({
         erreur={etat.erreursChamps?.nom}
       />
 
-      <ChampTexte
+      <ChampTelephone
         nom="telephone"
         libelle="Téléphone"
-        type="tel"
-        inputMode="tel"
-        placeholder="+229 97 00 00 00"
         aide="Utilisé pour l’envoi des quittances et les relances WhatsApp."
         valeurDefaut={locataire?.telephone}
         requis

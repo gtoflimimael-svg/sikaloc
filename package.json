@@ -29,7 +29,8 @@
     "banc:photo": "tsx scripts/banc-photo.ts",
     "banc:immuable": "node scripts/banc-signature-immuable.cjs",
     "banc:identite": "node scripts/banc-identite.cjs",
-    "banc:mot-de-passe": "tsx scripts/banc-mot-de-passe.ts"
+    "banc:mot-de-passe": "tsx scripts/banc-mot-de-passe.ts",
+    "banc:telephone": "tsx scripts/banc-telephone.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

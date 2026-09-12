@@ -7,6 +7,7 @@ import { CaptureSignature } from '@/components/app/capture-signature'
 import { BoutonAction } from '@/components/ui/action-confirmee'
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
+import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
 import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
@@ -88,11 +89,9 @@ export function FormulaireProfil({ bailleur }: { bailleur: Bailleur }) {
         erreur={etat.erreursChamps?.nom}
       />
 
-      <ChampTexte
+      <ChampTelephone
         nom="telephone"
         libelle="Téléphone"
-        type="tel"
-        inputMode="tel"
         valeurDefaut={bailleur.telephone}
         requis
         erreur={etat.erreursChamps?.telephone}

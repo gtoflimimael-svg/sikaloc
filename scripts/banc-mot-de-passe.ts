@@ -21,7 +21,7 @@ import { schemaChangementMotDePasse, schemaInscription } from '../src/lib/valida
 const IDENTITE = {
   nom: 'Moussa Adjovi',
   email: 'moussa.adjovi@exemple.bj',
-  telephone: '97000000',
+  telephone: '+2290197000000',
 }
 
 interface Cas {

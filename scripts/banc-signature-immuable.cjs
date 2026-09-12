@@ -52,7 +52,7 @@ const empreinte = (b) => createHash('sha256').update(b).digest('hex')
     email,
     password: 'Jonquille7Mn!',
     email_confirm: true,
-    user_metadata: { nom: 'Paul Aholou', telephone: '97000011' },
+    user_metadata: { nom: 'Paul Aholou', telephone: '+2290197000011' },
   })
   const bailleurId = compte.user.id
 
@@ -67,7 +67,7 @@ const empreinte = (b) => createHash('sha256').update(b).digest('hex')
     .insert({
       bailleur_id: bailleurId,
       nom: 'Awa Kponou',
-      telephone: '97000012',
+      telephone: '+2290197000012',
       consentement_donnees: true,
       date_consentement: new Date().toISOString().slice(0, 10),
     })

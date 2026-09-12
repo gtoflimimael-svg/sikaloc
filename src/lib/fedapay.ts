@@ -3,6 +3,7 @@ import 'server-only'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
 import { PRIX_STANDARD_FCFA } from '@/lib/plan'
+import { chiffresNationaux } from '@/lib/telephone'
 
 /**
  * Intégration FedaPay (Mobile Money) — remplace CinetPay depuis la v2.1.
@@ -114,10 +115,13 @@ function decouperNom(nomComplet: string): { prenom: string; nom: string } {
 /**
  * Numéro au format attendu par FedaPay : chiffres seuls, sans indicatif.
  * Le pays est transmis séparément.
+ *
+ * Délègue à `chiffresNationaux` pour ne pas entretenir une deuxième règle de
+ * découpage : le guichet de paiement est le dernier endroit où l'on veut
+ * découvrir qu'un numéro était écrit autrement que prévu.
  */
 function numeroLocal(telephone: string): string {
-  const chiffres = telephone.replace(/\D/g, '')
-  return chiffres.startsWith('229') ? chiffres.slice(3) : chiffres
+  return chiffresNationaux(telephone) ?? telephone.replace(/\D/g, '')
 }
 
 /**
