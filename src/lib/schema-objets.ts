@@ -102,6 +102,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "canoniser_telephone",
+    "migration": "20260912000600_telephones_canoniques.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "creer_premier_bail",
     "migration": "20260817000600_onboarding_rpc.sql"
   },
@@ -159,6 +164,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "refuser_suppression_signature",
     "migration": "20260912000500_signatures_apposees.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "telephone_canonique",
+    "migration": "20260912000600_telephones_canoniques.sql"
   },
   {
     "categorie": "fonction",

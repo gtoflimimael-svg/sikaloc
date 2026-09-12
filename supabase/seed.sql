@@ -42,7 +42,7 @@ values (
   crypt('demo1234', gen_salt('bf')),
   now(),
   '{"provider":"email","providers":["email"]}'::jsonb,
-  '{"nom":"Koffi Adjovi","telephone":"+229 97 12 34 56","nb_logements":"3"}'::jsonb,
+  '{"nom":"Koffi Adjovi","telephone":"+2290197123456","nb_logements":"3"}'::jsonb,
   now() - interval '3 months',
   now(),
   '', '', '', '', '', '', '', ''
@@ -81,11 +81,11 @@ insert into public.locataires (
   id, bailleur_id, nom, telephone, email, consentement_donnees, date_consentement
 )
 values
-  ('22222222-2222-4222-8222-222222222221', '11111111-1111-4111-8111-111111111111', 'Awa Kponou', '+229 96 55 44 33',
+  ('22222222-2222-4222-8222-222222222221', '11111111-1111-4111-8111-111111111111', 'Awa Kponou', '+2290196554433',
    'awa.kponou@exemple.bj', true, current_date - 90),
-  ('22222222-2222-4222-8222-222222222222', '11111111-1111-4111-8111-111111111111', 'Pascal Dossou', '+229 95 11 22 33',
+  ('22222222-2222-4222-8222-222222222222', '11111111-1111-4111-8111-111111111111', 'Pascal Dossou', '+2290195112233',
    null, true, current_date - 60),
-  ('22222222-2222-4222-8222-222222222223', '11111111-1111-4111-8111-111111111111', 'Fatou Bio', '+229 94 88 77 66',
+  ('22222222-2222-4222-8222-222222222223', '11111111-1111-4111-8111-111111111111', 'Fatou Bio', '+2290194887766',
    'fatou.bio@exemple.bj', true, current_date - 45)
 on conflict (id) do nothing;
 
