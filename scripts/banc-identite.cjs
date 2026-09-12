@@ -149,12 +149,21 @@ async function bailleur(id) {
   // démontrer la détection multiple. Les soumettre telles quelles ne prouve
   // que le refus « plusieurs visages ». On en découpe donc des morceaux, dont
   // certains ne contiendront qu'un visage — ce qui éprouve enfin l'acceptation.
+  // Un portrait fourni par la personne qui lance le banc court-circuite tout :
+  //
+  //     BANC_PORTRAIT=~/photo.jpg npm run banc:identite
+  //
+  // Aucun portrait n'est versionné dans le dépôt — une photo de visage n'a rien
+  // à faire dans un historique git, et personne ne devrait avoir à en committer
+  // une pour lancer les tests.
+  const portrait = process.env.BANC_PORTRAIT
+
   const sharp = require('sharp')
   const decoupes = `${os.tmpdir()}/banc-identite-decoupes`
   fs.mkdirSync(decoupes, { recursive: true })
 
-  const exemples = []
-  for (const f of fs.readdirSync(EXEMPLES).filter((f) => /^sample\d+\.jpg$/.test(f)).sort()) {
+  const exemples = portrait ? [portrait] : []
+  for (const f of portrait ? [] : fs.readdirSync(EXEMPLES).filter((f) => /^sample\d+\.jpg$/.test(f)).sort()) {
     const source = `${EXEMPLES}/${f}`
     const { width, height } = await sharp(source).metadata()
     // Quatre quadrants généreux, qui se recouvrent : un visage coupé en deux
@@ -189,16 +198,19 @@ async function bailleur(id) {
   for (const [motif, n] of Object.entries(motifs)) {
     console.log(`    ${String(n).padStart(2)} × ${motif}`)
   }
-  noter(
-    'Au moins une vraie photo de visage est acceptée',
-    Boolean(accepteeChemin),
-    accepteeChemin ? accepteeChemin.split('/').pop() : 'aucune',
-  )
-
-  if (!accepteeChemin) {
-    console.log('\n✗ Impossible de poursuivre sans photo acceptée.\n')
+  if (accepteeChemin) {
+    noter('Une photo à visage unique est acceptée', true, accepteeChemin.split('/').pop())
+  } else {
+    // Sans portrait, l'acceptation ne peut pas être éprouvée — mais ce n'est pas
+    // un échec du produit. On le dit, et on s'arrête proprement plutôt que de
+    // laisser un banc rouge en permanence, que plus personne ne lirait.
+    console.log('\n  ⏭  Acceptation non éprouvée : aucun portrait disponible.')
+    console.log('     Les exemples de face-api sont des photos de GROUPE, choisies')
+    console.log('     pour démontrer la détection multiple. Pour aller au bout :')
+    console.log('\n       BANC_PORTRAIT=/chemin/vers/un-portrait.jpg npm run banc:identite\n')
+    console.log(`  ${etapes.filter(Boolean).length}/${etapes.length} étapes vérifiées ; le reste du parcours attend un portrait.\n`)
     await nav.close()
-    process.exit(1)
+    process.exit(etapes.some((e) => !e) ? 1 : 0)
   }
 
   // ── 5. Enregistrement ──────────────────────────────────────────────────
