@@ -42,6 +42,10 @@ const TABLES: Record<string, string> = {
   journal_purges: 'JournalPurge',
   compteurs_documents: 'CompteurDocuments',
   inscriptions_guide: 'InscriptionGuide',
+  // Oubliées de cette liste à leur création : la surveillance ne voyait pas
+  // leurs colonnes, alors qu'elle en déclarait déjà les objets.
+  signatures_apposees: 'SignatureApposee',
+  codes_verification: 'CodeVerification',
 }
 
 export interface EcartSchema {

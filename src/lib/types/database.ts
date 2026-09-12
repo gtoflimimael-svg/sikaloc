@@ -86,7 +86,51 @@ export type Bailleur = {
   photo_chemin: string | null
   /** Début de la période où l'avatar tient lieu de photo. NULL = pas de période. */
   avatar_temporaire_depuis: string | null
+  /**
+   * Validation d'un code OTP envoyé au numéro. NULL = jamais vérifié.
+   *
+   * L'email n'a pas son équivalent ici : GoTrue tient cet état dans
+   * `auth.users.email_confirmed_at` et l'expose dans la session.
+   */
+  telephone_verifie_le: string | null
+  /** Canal du code validé : 'SMS' ou 'WHATSAPP'. NULL tant que non vérifié. */
+  telephone_canal_verification: CanalTelephoneStocke | null
   created_at: string
+}
+
+/** Canal de réception d'un code de vérification téléphonique. */
+export type CanalTelephoneStocke = 'SMS' | 'WHATSAPP'
+
+/** Contexte d'un code : les deux vérifications ne partagent jamais un code. */
+export type TypeCodeVerification = 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION'
+
+/** Canal d'acheminement d'un code, email compris. */
+export type CanalCodeVerification = 'EMAIL' | 'SMS' | 'WHATSAPP'
+
+/**
+ * Un code OTP en attente, ou consommé.
+ *
+ * Jamais lisible depuis un navigateur : la table a RLS actif et aucune
+ * politique, aucun grant à `authenticated`. Seul le code serveur muni de
+ * `service_role` y accède.
+ */
+export type CodeVerification = {
+  id: string
+  bailleur_id: string
+  type: TypeCodeVerification
+  canal: CanalCodeVerification
+  /** Adresse ou numéro visé, tel qu'il l'a été au moment de la demande. */
+  destination: string
+  /** HMAC-SHA256(code, OTP_SECRET). Jamais le code lui-même. */
+  empreinte: string
+  expire_le: string
+  tentatives: number
+  /** Consommé par une validation réussie. NULL = encore utilisable. */
+  utilise_le: string | null
+  /** Périmé par un renvoi. NULL = pas remplacé. */
+  invalide_le: string | null
+  ip: string | null
+  cree_le: string
 }
 
 export type Locataire = {
@@ -344,6 +388,7 @@ export interface Database {
       journal_purges: Ligne<JournalPurge>
       compteurs_documents: Ligne<CompteurDocuments>
       inscriptions_guide: Ligne<InscriptionGuide>
+      codes_verification: Ligne<CodeVerification>
     }
     Views: {
       v_impayes: Vue<Impaye>

@@ -22,6 +22,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "bailleurs_canal_verification_coherent",
+    "migration": "20260913000100_verification_coordonnees.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "bailleurs_photo_chemin_scope",
     "migration": "20260912000300_photo_profil.sql"
   },
@@ -147,6 +152,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "purger_codes_verification",
+    "migration": "20260913000100_verification_coordonnees.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "purger_donnees_personnelles",
     "migration": "20260817000800_cycle_de_grace.sql"
   },
@@ -229,6 +239,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "emails_a_envoyer_unicite_palier",
     "migration": "20260817000800_cycle_de_grace.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "idx_codes_verification_recherche",
+    "migration": "20260913000100_verification_coordonnees.sql"
   },
   {
     "categorie": "index",
