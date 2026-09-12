@@ -232,6 +232,48 @@ async function compter(table, id) {
   )
   noter('La progression est passée à 1/5', /1\/5/.test(apresLogement))
 
+  // ── 6 bis. Actions inattendues, parcours EN COURS ──────────────────────
+  //
+  // C'est ici que l'exigence a un sens : la visite est ouverte, il reste
+  // quatre étapes. Une fois le parcours terminé, il n'y a plus rien à guider
+  // et disparaître après un rechargement n'est pas un défaut.
+
+  await page.mouse.click(5, 5)
+  await page.waitForTimeout(600)
+  noter('Un clic à côté ne la ferme pas', await visite.isVisible().catch(() => false))
+
+  await page.goto(`${BASE}/app/logements`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(1300)
+  noter('Une navigation manuelle ne la casse pas', await visite.isVisible().catch(() => false))
+
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(1400)
+  noter(
+    'Un rafraîchissement en plein parcours la conserve',
+    await visite.isVisible().catch(() => false),
+  )
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.waitForTimeout(900)
+  noter(
+    'Elle reste affichée sur un écran de 390 px',
+    await visite.isVisible().catch(() => false),
+  )
+  const surMobile = await page.evaluate(() => {
+    const tous = [...document.querySelectorAll('[data-visite="nav-locataires"]')]
+    return { total: tous.length, visibles: tous.filter((n) => n.offsetParent !== null).length }
+  })
+  noter(
+    'Aucune cible fantôme n’est retenue sur écran étroit',
+    surMobile.visibles <= 1,
+    `${surMobile.visibles} visible(s) sur ${surMobile.total} dans le DOM`,
+  )
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.waitForTimeout(500)
+
+  await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(1200)
+
   // ── 7. Quitter est persistant ──────────────────────────────────────────
   await page.locator('[role="region"] button:has-text("Quitter")').click()
   await page.waitForTimeout(1200)
@@ -269,24 +311,117 @@ async function compter(table, id) {
   )
   noter('La progression acquise est conservée', /1\/5/.test(reprise))
 
-  // ── 9. Mobile : la cible est celle du tiroir, pas l'aside masqué ────────
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.waitForTimeout(800)
-  const surMobile = await page.evaluate(() => {
-    const tous = [...document.querySelectorAll('[data-visite="nav-locataires"]')]
-    const visibles = tous.filter((n) => n.offsetParent !== null)
-    return { total: tous.length, visibles: visibles.length }
+  // ── 9. Le parcours en ENTIER, jusqu'à la quittance ─────────────────────
+  //
+  // Les quatre étapes restantes reposent sur le même mécanisme que la
+  // première, mais « reposer sur le même mécanisme » n'est pas une preuve.
+  // On les déroule donc pour de vrai.
+
+  /** Lit l'étape affichée dans la bulle, après l'avoir laissée se replacer. */
+  const etapeAffichee = async () => {
+    await page.waitForTimeout(1400)
+    return (await visite.innerText().catch(() => '')).replace(/\n+/g, ' | ')
+  }
+
+  // ── Locataire ──
+  await page.locator('[role="region"] a:has-text("Ajouter un locataire")').click()
+  await page.waitForURL(/\/app\/locataires\/nouveau/, { timeout: 20000 })
+  await page.fill('input[name="nom"]', 'Awa Hounkpatin')
+  await page.fill('input[name="telephone"]', '97000001')
+  await page.check('input[name="consentement"]')
+  await page.locator('button[type="submit"]').first().click()
+  await page.waitForURL(/\/app\/locataires(\?|$)/, { timeout: 20000 })
+  noter('Le locataire est créé', (await compter('locataires', compte.id)) === 1)
+  const apresLocataire = await etapeAffichee()
+  noter('L’étape passe au bail', /Reliez les deux par un bail/i.test(apresLocataire))
+  noter('La progression est à 2/5', /2\/5/.test(apresLocataire))
+
+  // ── Bail ──
+  await page.locator('[role="region"] a:has-text("Créer le bail")').click()
+  await page.waitForURL(/\/app\/baux\/nouveau/, { timeout: 20000 })
+  noter(
+    'Le formulaire de bail est bien rendu (aucun diagnostic bloquant)',
+    (await page.locator('select[name="logementId"]').count()) === 1,
+  )
+  await page.selectOption('select[name="logementId"]', { index: 1 })
+  await page.selectOption('select[name="locataireId"]', { index: 1 })
+  await page.fill('input[name="loyerMensuel"]', '75000')
+  await page.locator('button[type="submit"]').first().click()
+  await page.waitForURL(/\/app\/baux\/[0-9a-f-]{36}/, { timeout: 20000 })
+  noter('Le bail est créé', (await compter('baux', compte.id)) === 1, page.url().replace(BASE, ''))
+  const apresBail = await etapeAffichee()
+  noter('L’étape passe au paiement', /Enregistrez un loyer reçu/i.test(apresBail))
+  noter('La progression est à 3/5', /3\/5/.test(apresBail))
+
+  // ── Paiement : saisie puis confirmation ──
+  await page.locator('[role="region"] a:has-text("Enregistrer un paiement")').click()
+  await page.waitForURL(/\/app\/paiements\/nouveau/, { timeout: 20000 })
+  await page.locator('button[type="submit"]').first().click()
+  await page.waitForURL(/\/app\/paiements\/[0-9a-f-]{36}\/confirmer/, { timeout: 20000 })
+  noter('La saisie mène à l’écran de confirmation', true, page.url().replace(BASE, ''))
+
+  const surConfirmation = await page.evaluate(() => {
+    const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
+    const bouton = [...document.querySelectorAll('button')].find((b) =>
+      /Confirmer et générer/i.test(b.textContent || ''),
+    )
+    if (!bouton) return { ok: false, raison: 'bouton de confirmation absent' }
+    const r = bouton.getBoundingClientRect()
+    const dessus = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    return {
+      ok: Boolean(dessus) && (!couche || !couche.contains(dessus)),
+      raison: dessus ? dessus.tagName : 'rien',
+    }
   })
+  noter('La visite ne recouvre pas le bouton de confirmation', surConfirmation.ok, surConfirmation.raison)
+
+  await page.locator('button:has-text("Confirmer et générer")').first().click()
+  await page.waitForURL(/\/app\/quittances\/[0-9a-f-]{36}/, { timeout: 30000 })
+  noter('La confirmation mène à la quittance', true, page.url().replace(BASE, ''))
+  noter('Le paiement est validé', (await compter('paiements', compte.id)) === 1)
+
+  // ── Écran final ──
+  const fin = await etapeAffichee()
+  noter('La visite annonce la fin du parcours', /Vous avez fait le tour/i.test(fin), fin.slice(0, 70))
+  noter('Les cinq jalons sont accomplis', /5\/5/.test(fin))
   noter(
-    'Aucune cible fantôme n’est retenue sur écran étroit',
-    surMobile.visibles === 0 || surMobile.visibles === 1,
-    `${surMobile.visibles} visible(s) sur ${surMobile.total} dans le DOM`,
+    'Un bouton conclut le parcours',
+    (await page.locator('[role="region"] button:has-text("Terminer la visite")').count()) === 1,
+  )
+
+  await page.locator('[role="region"] button:has-text("Terminer la visite")').click()
+  await page.waitForTimeout(1600)
+  noter('La visite se ferme', !(await visite.isVisible().catch(() => false)))
+
+  const apresFin = await bailleur(compte.id)
+  noter(
+    'Elle est enregistrée comme terminée',
+    Boolean(apresFin?.tutoriel_vu_le),
+    `tutoriel_vu_le = ${apresFin?.tutoriel_vu_le}`,
   )
   noter(
-    'La visite reste affichée sur mobile',
-    await visite.isVisible().catch(() => false),
+    'La trace d’abandon est effacée',
+    apresFin?.visite_quittee_le === null,
+    `visite_quittee_le = ${apresFin?.visite_quittee_le}`,
   )
-  await page.setViewportSize({ width: 1280, height: 900 })
+
+  // ── 10. Terminée, elle ne revient plus ─────────────────────────────────
+  await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(1400)
+  noter('Elle ne redémarre pas à la visite suivante', !(await visite.isVisible().catch(() => false)))
+  noter(
+    'Mais elle reste rejouable',
+    await page.locator('button:has-text("Revoir la visite guidée")').isVisible().catch(() => false),
+  )
+
+  // ── 11. Actions inattendues ────────────────────────────────────────────
+  await page.locator('button:has-text("Revoir la visite guidée")').click()
+  await page.waitForTimeout(1600)
+  noter('Le rejeu rouvre la visite', await visite.isVisible().catch(() => false))
+  noter(
+    'Tout étant accompli, elle s’ouvre sur l’écran final',
+    /Vous avez fait le tour/i.test(await visite.innerText().catch(() => '')),
+  )
 
   const echecs = etapes.filter((e) => !e).length
   console.log(

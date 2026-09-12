@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown, PartyPopper, X } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -78,8 +78,8 @@ export function VisiteGuidee({
   avancement: AvancementVisite
   ouvertAuDemarrage: boolean
 }) {
-  const [ouvert, setOuvert] = useState(ouvertAuDemarrage)
-  const [demarrageConnu, setDemarrageConnu] = useState(ouvertAuDemarrage)
+  const [ouvert, setOuvert] = useState(false)
+  const [demarrageConnu, setDemarrageConnu] = useState(false)
   const [reduit, setReduit] = useState(false)
   const [monte, setMonte] = useState(false)
   const [position, setPosition] = useState<Position>({ halo: null, bulle: null })
@@ -87,6 +87,16 @@ export function VisiteGuidee({
   const bulle = useRef<HTMLDivElement>(null)
   const indexPrecedent = useRef(avancement.index)
   const chemin = usePathname()
+
+  /**
+   * Demande explicite de rejouer, posée par `reprendreVisite()`.
+   *
+   * Elle passe outre l'ouverture automatique, qui refuse — à raison — d'ouvrir
+   * un parcours déjà complet. Ne pas s'imposer et refuser une demande sont deux
+   * choses différentes.
+   */
+  const rejeuDemande = useSearchParams().get('visite') === '1'
+  const doitOuvrir = ouvertAuDemarrage || rejeuDemande
 
   // `createPortal` exige `document`, absent au rendu serveur.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -105,9 +115,9 @@ export function VisiteGuidee({
    * que React recommande pour une valeur dérivée d'une prop, et il évite le
    * rendu supplémentaire qu'un `useEffect` provoquerait.
    */
-  if (ouvertAuDemarrage !== demarrageConnu) {
-    setDemarrageConnu(ouvertAuDemarrage)
-    if (ouvertAuDemarrage) {
+  if (doitOuvrir !== demarrageConnu) {
+    setDemarrageConnu(doitOuvrir)
+    if (doitOuvrir) {
       setOuvert(true)
       setReduit(false)
     }

@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -60,6 +61,14 @@ export async function quitterVisite(): Promise<void> {
  *
  * Efface les deux dates : on repart d'une visite ouverte, à l'étape que les
  * données du bailleur désignent — pas forcément la première.
+ *
+ * Puis redirige avec `?visite=1`. Effacer les dates ne suffisait pas : un
+ * bailleur ayant déjà tout accompli a un parcours complet, et l'ouverture
+ * automatique refuse — à raison — d'ouvrir un parcours complet. Sans ce
+ * paramètre, « Revoir la visite guidée » ne rouvrait rien. Le banc l'a pris.
+ *
+ * La demande explicite se distingue ainsi de l'ouverture d'office : la première
+ * passe outre, la seconde reste discrète.
  */
 export async function reprendreVisite(): Promise<void> {
   const bailleur = await bailleurCourant()
@@ -71,4 +80,5 @@ export async function reprendreVisite(): Promise<void> {
     .eq('id', bailleur.id)
 
   revalidatePath('/app', 'layout')
+  redirect('/app?visite=1')
 }
