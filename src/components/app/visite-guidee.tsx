@@ -77,6 +77,41 @@ function cibleVisible(cle: string | undefined): HTMLElement | null {
   return null
 }
 
+/**
+ * Le contrôle visible qui porte un nom de champ donné.
+ *
+ * ─── Pourquoi ce n'est pas un `namedItem` direct ────────────────────────────
+ *
+ * `HTMLFormControlsCollection.namedItem` cherche par `name` ET par `id`, et
+ * rend une `RadioNodeList` — pas un élément — dès que deux contrôles répondent
+ * au même nom.
+ *
+ * C'est exactement le cas de `ChampTelephone` : la saisie visible porte
+ * `id="telephone"`, le champ caché qui transporte la forme canonique porte
+ * `name="telephone"`. Les deux répondent, une liste est rendue, et le
+ * `.closest()` appliqué dessus levait « champ.closest is not a function » —
+ * ce qui faisait tomber la PAGE ENTIÈRE sur « This page couldn't load »,
+ * pendant la visite guidée, à l'étape du locataire. Trouvé par
+ * `npm run banc:onboarding`, invisible à la relecture.
+ *
+ * On retient donc le premier contrôle réellement à l'écran. Le champ caché est
+ * écarté par `offsetParent === null`, comme n'importe quelle cible masquée —
+ * même critère que `cibleVisible` juste au-dessus.
+ */
+function champVisible(formulaire: HTMLFormElement | null, nom: string): HTMLElement | null {
+  const trouve = formulaire?.elements.namedItem(nom)
+  if (!trouve) return null
+
+  // TypeScript ne sait pas restreindre `Element | RadioNodeList` : le test
+  // d'instance le fait à l'exécution, la conversion le dit au compilateur.
+  const candidats: HTMLElement[] =
+    trouve instanceof HTMLElement
+      ? [trouve]
+      : Array.from(trouve as unknown as ArrayLike<HTMLElement>)
+
+  return candidats.find((c) => c instanceof HTMLElement && c.offsetParent !== null) ?? null
+}
+
 export function VisiteGuidee({
   avancement,
   ouvertAuDemarrage,
@@ -227,8 +262,8 @@ export function VisiteGuidee({
 
     const placer = () => {
       const formulaire = document.querySelector('form')
-      const champ = formulaire?.elements.namedItem(champCourant) as HTMLElement | null
-      if (!champ || champ.offsetParent === null) {
+      const champ = champVisible(formulaire, champCourant)
+      if (!champ) {
         setLisere(null)
         return
       }
