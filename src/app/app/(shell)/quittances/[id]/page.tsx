@@ -19,6 +19,7 @@ import { urlSignee } from '@/lib/quittance'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { lienEnvoiQuittance } from '@/lib/whatsapp'
+import { formaterTelephone } from '@/lib/telephone'
 
 export const metadata: Metadata = { title: 'Quittance' }
 
@@ -191,7 +192,7 @@ export default async function PageQuittance({
             <div className="rounded-lg bg-canvas p-lg">
               <p className="text-caption uppercase tracking-wide text-mute">Bailleur</p>
               <p className="mt-xs text-body-md font-semibold text-ink">{bailleur.nom}</p>
-              <p className="text-body-sm text-body">Tél. {bailleur.telephone}</p>
+              <p className="text-body-sm text-body">Tél. {formaterTelephone(bailleur.telephone)}</p>
               {bailleur.adresse ? (
                 <p className="text-body-sm text-body">{bailleur.adresse}</p>
               ) : null}
@@ -200,7 +201,7 @@ export default async function PageQuittance({
             <div className="rounded-lg bg-canvas p-lg">
               <p className="text-caption uppercase tracking-wide text-mute">Locataire</p>
               <p className="mt-xs text-body-md font-semibold text-ink">{locataire.nom}</p>
-              <p className="text-body-sm text-body">Tél. {locataire.telephone}</p>
+              <p className="text-body-sm text-body">Tél. {formaterTelephone(locataire.telephone)}</p>
             </div>
           </div>
 

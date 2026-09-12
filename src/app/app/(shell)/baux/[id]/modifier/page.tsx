@@ -6,6 +6,7 @@ import { EnTetePage } from '@/components/ui/retours'
 import { modifierBail } from '@/lib/actions/baux'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { formaterTelephone } from '@/lib/telephone'
 
 export const metadata: Metadata = { title: 'Modifier le bail' }
 
@@ -47,7 +48,7 @@ export default async function PageModifierBail({
         }))}
         locataires={(locataires ?? []).map((l) => ({
           valeur: l.id,
-          libelle: `${l.nom} — ${l.telephone}`,
+          libelle: `${l.nom} — ${formaterTelephone(l.telephone)}`,
         }))}
       />
     </div>

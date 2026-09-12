@@ -7,6 +7,7 @@ import { creerBail } from '@/lib/actions/baux'
 import { capacites } from '@/lib/plan'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { formaterTelephone } from '@/lib/telephone'
 
 export const metadata: Metadata = { title: 'Nouveau bail' }
 
@@ -61,7 +62,7 @@ export default async function PageNouveauBail() {
           }))}
           locataires={(locataires ?? []).map((l) => ({
             valeur: l.id,
-            libelle: `${l.nom} — ${l.telephone}`,
+            libelle: `${l.nom} — ${formaterTelephone(l.telephone)}`,
           }))}
         />
       )}

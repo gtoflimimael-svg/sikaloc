@@ -24,6 +24,7 @@ import {
   TRANSFORM_ICONE,
 } from '@/lib/marque'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
+import { formaterTelephone } from '@/lib/telephone'
 
 /**
  * Quittance de loyer / Reçu — template Bénin.
@@ -447,7 +448,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           <View style={styles.colonne}>
             <Text style={styles.etiquetteBloc}>Bailleur</Text>
             <Text style={styles.nomPartie}>{donnees.bailleurNom}</Text>
-            <Text style={styles.lignePartie}>Tél. {donnees.bailleurTelephone}</Text>
+            <Text style={styles.lignePartie}>Tél. {formaterTelephone(donnees.bailleurTelephone)}</Text>
             {donnees.bailleurAdresse ? (
               <Text style={styles.lignePartie}>{donnees.bailleurAdresse}</Text>
             ) : null}
@@ -456,7 +457,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           <View style={styles.colonne}>
             <Text style={styles.etiquetteBloc}>Locataire</Text>
             <Text style={styles.nomPartie}>{donnees.locataireNom}</Text>
-            <Text style={styles.lignePartie}>Tél. {donnees.locataireTelephone}</Text>
+            <Text style={styles.lignePartie}>Tél. {formaterTelephone(donnees.locataireTelephone)}</Text>
           </View>
         </View>
 

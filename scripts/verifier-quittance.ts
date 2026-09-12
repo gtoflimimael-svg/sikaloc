@@ -83,11 +83,11 @@ const exemple: DonneesQuittance = {
   pays: 'Bénin',
 
   bailleurNom: 'Koffi Adjovi',
-  bailleurTelephone: '+229 97 12 34 56',
+  bailleurTelephone: '+2290197123456',
   bailleurAdresse: 'Lot 118, Quartier Haie Vive, Cotonou',
 
   locataireNom: 'Awa Kponou',
-  locataireTelephone: '+229 96 55 44 33',
+  locataireTelephone: '+2290196554433',
 
   logementAdresse: 'Lot 42, Quartier Fidjrossè',
   logementVille: 'Cotonou',

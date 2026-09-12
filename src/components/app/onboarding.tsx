@@ -7,6 +7,7 @@ import { Alerte } from '@/components/ui/retours'
 import { ignorerOnboarding, terminerOnboarding } from '@/lib/actions/onboarding'
 import { televerserSignature } from '@/lib/actions/parametres'
 import type { EtatFormulaire } from '@/lib/validation'
+import { formaterTelephone } from '@/lib/telephone'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
@@ -83,7 +84,7 @@ export function AssistantOnboarding({
         <div className="card card-lg anim-apparait">
           <dl className="space-y-lg">
             <Ligne terme="Nom" definition={nomBailleur} />
-            <Ligne terme="Téléphone" definition={telephoneBailleur} />
+            <Ligne terme="Téléphone" definition={formaterTelephone(telephoneBailleur)} />
             <Ligne terme="Email" definition={emailBailleur} />
             <Ligne
               terme="Logements gérés"

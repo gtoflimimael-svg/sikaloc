@@ -16,6 +16,7 @@ import {
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye } from '@/lib/types/database'
+import { formaterTelephone } from '@/lib/telephone'
 
 export const metadata: Metadata = { title: 'Détail du bail' }
 
@@ -121,7 +122,10 @@ export default async function PageDetailBail({
           valeur={bail.date_fin ? formaterDate(bail.date_fin) : 'Durée indéterminée'}
         />
         <Fiche libelle="Type de bien" valeur={logement?.type ?? '—'} />
-        <Fiche libelle="Téléphone locataire" valeur={locataire?.telephone ?? '—'} />
+        <Fiche
+          libelle="Téléphone locataire"
+          valeur={locataire ? formaterTelephone(locataire.telephone) : '—'}
+        />
       </section>
 
       {/* ── Impayés du bail ────────────────────────────────────────────── */}

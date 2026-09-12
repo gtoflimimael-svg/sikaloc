@@ -33,11 +33,11 @@ export async function GET() {
     pays: 'Bénin',
 
     bailleurNom: 'Awa Hounkpatin',
-    bailleurTelephone: '+229 97 00 00 00',
+    bailleurTelephone: '+2290197000000',
     bailleurAdresse: 'Lot 128, Cadjèhoun, Cotonou',
 
     locataireNom: 'Koffi Adjovi',
-    locataireTelephone: '+229 96 00 00 00',
+    locataireTelephone: '+2290196000000',
 
     logementAdresse: 'Appartement B2, rue 12.045, Fidjrossè',
     logementVille: 'Cotonou',

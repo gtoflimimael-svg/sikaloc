@@ -8,6 +8,7 @@ import { Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { supprimerLocataire } from '@/lib/actions/locataires'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { bailleurOnboarde } from '@/lib/session'
+import { formaterTelephone } from '@/lib/telephone'
 
 export const metadata: Metadata = { title: 'Locataires' }
 
@@ -63,7 +64,7 @@ export default async function PageLocataires() {
                         {locataire.nom}
                       </p>
                       <p className="truncate text-body-sm text-mute">
-                        {locataire.telephone}
+                        {formaterTelephone(locataire.telephone)}
                         {locataire.email ? ` · ${locataire.email}` : ''}
                       </p>
                       <div className="mt-sm">
