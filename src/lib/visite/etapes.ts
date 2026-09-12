@@ -165,10 +165,38 @@ export const ETAPES: Etape[] = [
 /** Écran de fin. Hors du tableau ci-dessus : il n'attend aucune action. */
 export const ETAPE_FINALE = {
   cle: 'fin',
-  titre: 'Vous avez fait le tour',
+  titre: 'Félicitations !',
   message:
-    'Vous venez d’enregistrer un loyer et d’en produire la quittance. C’est l’essentiel de Sikaloc — le reste se découvre en s’en servant.',
+    'Vous venez d’enregistrer un loyer et d’en produire la quittance. C’est l’essentiel de Sikaloc.',
 } as const
+
+/**
+ * Ce qu'il reste à découvrir, une fois le parcours bouclé.
+ *
+ * Trois pistes, pas dix : une liste qu'on ne lit pas ne sert à rien. Chacune
+ * décrit ce que la fonctionnalité FAIT, jamais ce qu'elle garantirait — c'est
+ * la règle rédactionnelle du projet, et elle vaut aussi ici.
+ */
+export const A_EXPLORER = [
+  {
+    cle: 'impayes',
+    libelle: 'Les impayés',
+    texte: 'Passé l’échéance et la tolérance du bail, un loyer bascule ici tout seul.',
+    href: '/app/impayes',
+  },
+  {
+    cle: 'signature',
+    libelle: 'Votre signature',
+    texte: 'Enregistrée une fois, elle est apposée sur chaque quittance.',
+    href: '/app/parametres/signature',
+  },
+  {
+    cle: 'donnees',
+    libelle: 'Vos données',
+    texte: 'Baux, paiements et quittances, exportables en une archive à tout moment.',
+    href: '/app/parametres/donnees',
+  },
+] as const
 
 export type EtatVisite = 'non_commencee' | 'en_cours' | 'terminee' | 'quittee'
 

@@ -7,7 +7,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom'
 
 import { quitterVisite, terminerVisite } from '@/lib/actions/visite'
-import { ETAPES, ETAPE_FINALE, type AvancementVisite, type Etape } from '@/lib/visite/etapes'
+import {
+  A_EXPLORER,
+  ETAPES,
+  ETAPE_FINALE,
+  type AvancementVisite,
+  type Etape,
+} from '@/lib/visite/etapes'
 
 /**
  * Visite guidée interactive.
@@ -470,7 +476,14 @@ export function VisiteGuidee({
               ) : null}
 
               <h2 className="mt-md text-title-lg font-bold text-ink">
-                {termine ? ETAPE_FINALE.titre : etape?.titre}
+                {termine ? (
+                  <>
+                    <span aria-hidden="true">🎉 </span>
+                    {ETAPE_FINALE.titre}
+                  </>
+                ) : (
+                  etape?.titre
+                )}
               </h2>
               {surPlace && etape?.champs ? null : (
                 <p className="mt-sm text-body-sm leading-relaxed text-body">
@@ -478,6 +491,8 @@ export function VisiteGuidee({
                 </p>
               )}
             </div>
+
+            {termine ? <AExplorer /> : null}
 
             {surPlace && etape?.champs ? (
               <ListeChamps
@@ -527,6 +542,32 @@ export function VisiteGuidee({
       </div>
     </div>,
     document.body,
+  )
+}
+
+/**
+ * Ce qu'il reste à découvrir, affiché au terme du parcours.
+ *
+ * Des liens, pas des promesses : chaque ligne dit ce que l'écran fait, et y
+ * mène. La visite se ferme au clic — on n'accompagne plus quelqu'un qui a fini.
+ */
+function AExplorer() {
+  return (
+    <div className="mt-lg space-y-xs">
+      <p className="text-caption font-semibold text-body-strong">À découvrir ensuite</p>
+      {A_EXPLORER.map((piste) => (
+        <Link
+          key={piste.cle}
+          href={piste.href}
+          className="block rounded-md bg-canvas-soft p-sm transition-colors hover:bg-surface-card"
+        >
+          <span className="block text-caption font-semibold text-ink">{piste.libelle} →</span>
+          <span className="mt-xxs block text-caption leading-relaxed text-mute">
+            {piste.texte}
+          </span>
+        </Link>
+      ))}
+    </div>
   )
 }
 
@@ -629,18 +670,18 @@ function ListeJalons({ jalons }: { jalons: AvancementVisite['jalons'] }) {
                   : 'text-mute-soft'
             }`}
           >
-            <span
-              aria-hidden="true"
-              className={`size-2 shrink-0 rounded-pill ${
-                jalon.accompli
-                  ? 'bg-positive'
-                  : jalon.courant
-                    ? 'bg-primary ring-2 ring-primary-pale'
-                    : 'bg-hairline'
-              }`}
-            />
+            {/*
+              L'emoji est décoratif : il double une information déjà portée par
+              la couleur et par le texte alternatif qui suit. Un lecteur d'écran
+              qui l'annoncerait dirait « cercle vert », ce qui n'apprend rien.
+            */}
+            <span aria-hidden="true" className="shrink-0 leading-none">
+              {jalon.accompli ? '🟢' : jalon.courant ? '🟡' : '⚪'}
+            </span>
             {jalon.libelle}
-            {jalon.accompli ? <span className="sr-only"> — accompli</span> : null}
+            <span className="sr-only">
+              {jalon.accompli ? ' — accompli' : jalon.courant ? ' — en cours' : ' — à faire'}
+            </span>
           </li>
         ))}
       </ul>

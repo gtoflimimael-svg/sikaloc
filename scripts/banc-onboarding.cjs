@@ -174,6 +174,11 @@ async function compter(table, id) {
   )
   noter('Elle affiche la progression', /Votre première location/i.test(ouverture))
   noter('Aucun jalon n’est encore accompli', /0\/5/.test(ouverture))
+  noter(
+    'Les jalons montrent leur état par pastille',
+    /🟡/.test(ouverture) && /⚪/.test(ouverture),
+    'jaune pour l’étape courante, blanc pour les suivantes',
+  )
 
   // ── 5. Elle n'est PAS modale : l'application reste utilisable ───────────
   //
@@ -459,8 +464,16 @@ async function compter(table, id) {
 
   // ── Écran final ──
   const fin = await etapeAffichee()
-  noter('La visite annonce la fin du parcours', /Vous avez fait le tour/i.test(fin), fin.slice(0, 70))
+  noter('La visite annonce la fin du parcours', /Félicitations/i.test(fin), fin.slice(0, 70))
   noter('Les cinq jalons sont accomplis', /5\/5/.test(fin))
+  noter('Les jalons portent des pastilles vertes', /🟢/.test(fin))
+  noter('L’écran de fin propose quoi découvrir ensuite', /À découvrir ensuite/i.test(fin))
+  noter(
+    'Il renvoie vers les impayés, la signature et l’export',
+    (await page.locator('[role="region"] a[href="/app/impayes"]').count()) === 1 &&
+      (await page.locator('[role="region"] a[href="/app/parametres/signature"]').count()) === 1 &&
+      (await page.locator('[role="region"] a[href="/app/parametres/donnees"]').count()) === 1,
+  )
   noter(
     'Un bouton conclut le parcours',
     (await page.locator('[role="region"] button:has-text("Terminer la visite")').count()) === 1,
@@ -497,7 +510,7 @@ async function compter(table, id) {
   noter('Le rejeu rouvre la visite', await visite.isVisible().catch(() => false))
   noter(
     'Tout étant accompli, elle s’ouvre sur l’écran final',
-    /Vous avez fait le tour/i.test(await visite.innerText().catch(() => '')),
+    /Félicitations/i.test(await visite.innerText().catch(() => '')),
   )
 
   const echecs = etapes.filter((e) => !e).length
