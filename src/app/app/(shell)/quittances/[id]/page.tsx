@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation'
 import { FenetreCorrection } from '@/components/app/fenetre-correction'
 import { BoutonAction } from '@/components/ui/action-confirmee'
 import { Alerte, Badge } from '@/components/ui/retours'
+import { BlocSigne } from '@/components/app/bloc-signe'
 import { regenererQuittance } from '@/lib/actions/paiements'
+import { estCorrigeable } from '@/lib/paiement-utils'
 import {
   formaterDate,
   formaterFCFA,
@@ -40,6 +42,14 @@ export default async function PageQuittance({
   ])
 
   if (!quittance) notFound()
+
+  // L'apposition est lue à part : elle n'appartient pas au document mais à son
+  // histoire, et son absence ne doit pas empêcher la page de s'afficher.
+  const { data: apposition } = await supabase
+    .from('signatures_apposees')
+    .select('nom_signataire, appose_le, retroactif, chemin_snapshot')
+    .eq('quittance_id', id)
+    .maybeSingle()
 
   const paiement = Array.isArray(quittance.paiement)
     ? quittance.paiement[0]
@@ -115,6 +125,17 @@ export default async function PageQuittance({
           >
             Envoyer au locataire sur WhatsApp
           </a>
+        ) : apposition && !estCorrigeable(paiement.valide_le, paiement.statut) ? (
+          /*
+            Document signé et paiement figé : la fabrication est refusée en base,
+            proposer le bouton ne mènerait qu'à un message d'erreur. On explique
+            plutôt pourquoi il n'y est pas.
+          */
+          <p className="text-body-sm text-mute">
+            Le fichier de ce document est momentanément indisponible. Il ne peut
+            pas être refabriqué : la signature apposée ne serait plus celle
+            d’origine.
+          </p>
         ) : (
           <BoutonAction
             action={regenererQuittance.bind(null, paiement.id)}
@@ -256,6 +277,16 @@ export default async function PageQuittance({
           nécessite ni compte ni mot de passe. Période concernée :{' '}
           {formaterPeriode(paiement.periode_debut)}.
         </p>
+
+        {apposition ? (
+          <BlocSigne
+            quittanceId={id}
+            nomSignataire={apposition.nom_signataire}
+            apposeLe={apposition.appose_le}
+            retroactif={apposition.retroactif}
+            aCopieFigee={Boolean(apposition.chemin_snapshot)}
+          />
+        ) : null}
 
         {quittance.hash_sha256 ? (
           <div className="rounded-lg border border-hairline bg-canvas p-lg">
