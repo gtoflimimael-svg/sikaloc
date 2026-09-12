@@ -24,6 +24,7 @@
     "capturer:demo": "node scripts/capturer-demo.cjs",
     "banc:guide": "node scripts/banc-guide.cjs",
     "banc:onboarding": "node scripts/banc-onboarding.cjs",
+    "banc:visite": "tsx scripts/banc-visite.ts",
     "banc:mot-de-passe": "tsx scripts/banc-mot-de-passe.ts"
   },
   "dependencies": {

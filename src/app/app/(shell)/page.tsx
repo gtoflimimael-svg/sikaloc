@@ -13,7 +13,7 @@ import {
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye, MetriquesDashboard } from '@/lib/types/database'
-import { Didacticiel } from '@/components/app/didacticiel'
+import { ReprendreVisite } from '@/components/app/reprendre-visite'
 
 export const metadata: Metadata = { title: 'Tableau de bord' }
 
@@ -47,6 +47,11 @@ export default async function PageTableauDeBord({
   const impayes = (impayesReponse.data ?? []) as Impaye[]
   const paiements = paiementsReponse.data ?? []
 
+  // La visite est close quand elle a été menée à son terme ou quittée : dans
+  // les deux cas elle ne s'ouvre plus d'elle-même, et seul le point de reprise
+  // subsiste. Voir `ouvertureAutomatique` dans @/lib/visite/etapes.
+  const visiteClose = Boolean(bailleur.tutoriel_vu_le || bailleur.visite_quittee_le)
+
   const tauxRecouvrement =
     metriques && Number(metriques.loyers_attendus_mois) > 0
       ? Math.round(
@@ -74,12 +79,22 @@ export default async function PageTableauDeBord({
             <Link href="/app/logements/nouveau" className="btn btn-primary">
               Ajouter un logement
             </Link>
-            <Didacticiel ouvertAuDemarrage={bailleur.tutoriel_vu_le === null} />
+            {visiteClose ? <ReprendreVisite terminee={Boolean(bailleur.tutoriel_vu_le)} /> : null}
           </div>
         </div>
-      ) : (
-        <Didacticiel ouvertAuDemarrage={false} />
-      )}
+      ) : null}
+
+      {/*
+        La visite elle-même est montée dans le shell, pas ici : elle doit
+        survivre aux navigations. Ne reste sur cette page que le point de
+        reprise, et seulement quand elle est close — sinon elle est déjà à
+        l'écran et « reprendre » n'aurait aucun sens.
+      */}
+      {visiteClose && !bienvenue ? (
+        <div className="flex justify-end">
+          <ReprendreVisite terminee={Boolean(bailleur.tutoriel_vu_le)} />
+        </div>
+      ) : null}
 
       <div>
         <h1 className="text-display-md font-extrabold tracking-tight text-ink">
@@ -100,7 +115,7 @@ export default async function PageTableauDeBord({
         police ne ferait que repousser la casse au prochain bailleur au parc
         plus important.
       */}
-      <section className="grid gap-lg sm:grid-cols-2">
+      <section data-visite="metriques" className="grid gap-lg sm:grid-cols-2">
         <CarteMetrique
           label="Taux d'occupation"
           valeur={`${Number(metriques?.taux_occupation ?? 0).toLocaleString('fr-FR')} %`}

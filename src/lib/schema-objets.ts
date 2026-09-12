@@ -389,5 +389,10 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "vue",
     "nom": "v_metriques_dashboard",
     "migration": "20260817000400_vues_metier.sql"
+  },
+  {
+    "categorie": "vue",
+    "nom": "v_progression_visite",
+    "migration": "20260912000100_visite_guidee.sql"
   }
 ]

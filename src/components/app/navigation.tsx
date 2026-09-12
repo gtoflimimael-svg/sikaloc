@@ -82,6 +82,10 @@ function LiensNavigation({
             prefetch
             onClick={onNavigation}
             aria-current={actif ? 'page' : undefined}
+            // Repère de la visite guidée. Il désigne un élément RÉEL de
+            // l'interface : c'est ce qui distingue une visite d'une boîte de
+            // dialogue posée au milieu de l'écran.
+            data-visite={`nav-${lien.icone}`}
             className={`sidebar-row ${actif ? 'sidebar-row-active' : ''}`}
           >
             <Icone nom={lien.icone} />
@@ -188,6 +192,7 @@ export function EnTeteMobile({
           <Link
             href="/app/paiements/nouveau"
             aria-label="Enregistrer un paiement"
+            data-visite="bouton-paiement"
             className="btn btn-primary size-9 rounded-pill p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-md"
           >
             <Plus size={17} strokeWidth={2.2} aria-hidden="true" />

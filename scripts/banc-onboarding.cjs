@@ -4,13 +4,16 @@
  *   supabase start · env pointant sur la pile locale · npm run build && npm run start
  *   npm run banc:onboarding
  *
- * Vérifie le lot 1 de l'évolution Bailleur / Locataire : l'assistant ne compte
- * plus que deux étapes, il n'exige plus de créer un locataire ni un bail, et le
- * didacticiel prend le relais sur le tableau de bord.
+ * Vérifie deux choses : l'assistant d'accueil ne compte que deux étapes et
+ * n'exige aucune donnée métier, puis la visite guidée interactive prend le
+ * relais sur le tableau de bord.
  *
- * Le point qui compte : **on doit pouvoir atteindre le tableau de bord sans
- * saisir la moindre donnée métier**. C'était impossible avant, et c'est tout
- * l'objet de ce lot.
+ * Les invariants qui comptent, dans l'ordre :
+ *   1. la visite n'est PAS modale — la cible éclairée reste cliquable, et rien
+ *      dans Sikaloc ne devient inaccessible ;
+ *   2. une étape ne se franchit que par l'action réelle, jamais par un bouton ;
+ *   3. la progression est dérivée des données, donc elle survit à la navigation,
+ *      au rafraîchissement et à une sortie suivie d'une reprise.
  *
  * La session s'ouvre par l'API d'administration locale, jamais en saisissant un
  * mot de passe.
@@ -158,53 +161,132 @@ async function compter(table, id) {
   const apresOnboarding = await bailleur(compte.id)
   noter('L’onboarding est marqué terminé', apresOnboarding?.onboarding_termine === true)
 
-  // ── 4. Le didacticiel s'ouvre de lui-même ────────────────────────────────
-  await page.waitForTimeout(900)
-  const dialogue = page.locator('[role="dialog"][aria-modal="true"]')
-  noter('Le didacticiel s’ouvre à la première visite', await dialogue.isVisible().catch(() => false))
-  noter(
-    'Il commence à la première étape',
-    /1 sur 7/i.test(await dialogue.innerText().catch(() => '')),
-  )
-
-  // ── 5. Il se parcourt puis se ferme ──────────────────────────────────────
-  for (let i = 0; i < 6; i++) {
-    await page.locator('[role="dialog"] button:has-text("Suivant")').click()
-  }
-  noter(
-    'La dernière étape propose de conclure',
-    await page.locator('[role="dialog"] button:has-text("J’ai compris")').isVisible().catch(() => false),
-  )
-
-  await page.locator('[role="dialog"] button:has-text("J’ai compris")').click()
+  // ── 4. La visite guidée s'ouvre d'elle-même ─────────────────────────────
   await page.waitForTimeout(1200)
-  noter('Il se ferme', !(await dialogue.isVisible().catch(() => false)))
+  const visite = page.locator('[role="region"][aria-label="Visite guidée"]')
+  noter('La visite s’ouvre à la première arrivée', await visite.isVisible().catch(() => false))
 
-  const apresTutoriel = await bailleur(compte.id)
+  const ouverture = await visite.innerText().catch(() => '')
   noter(
-    'La date de lecture est enregistrée',
-    Boolean(apresTutoriel?.tutoriel_vu_le),
-    `tutoriel_vu_le = ${apresTutoriel?.tutoriel_vu_le}`,
+    'Elle commence par le logement',
+    /Commencez par un logement/i.test(ouverture),
+    ouverture.split('\n')[1] || '',
+  )
+  noter('Elle affiche la progression', /Votre première location/i.test(ouverture))
+  noter('Aucun jalon n’est encore accompli', /0\/5/.test(ouverture))
+
+  // ── 5. Elle n'est PAS modale : l'application reste utilisable ───────────
+  //
+  // C'est l'invariant central. L'ancien didacticiel posait un `fixed inset-0`
+  // qui avalait tous les clics ; un parcours qui attend une vraie action ne
+  // peut pas se le permettre.
+  const traverse = await page.evaluate(() => {
+    const couche = document.querySelector('[role="region"][aria-label="Visite guidée"]')
+    if (!couche) return { ok: false, raison: 'couche absente' }
+    if (getComputedStyle(couche).pointerEvents !== 'none') {
+      return { ok: false, raison: 'la couche capte les clics' }
+    }
+
+    // Au centre du halo, l'élément sous le curseur doit être la cible réelle,
+    // pas la couche de la visite.
+    const halo = couche.querySelector('div[style*="box-shadow"]')
+    if (!halo) return { ok: true, raison: 'étape centrée, pas de halo' }
+
+    const r = halo.getBoundingClientRect()
+    const dessous = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    return {
+      ok: Boolean(dessous) && !couche.contains(dessous),
+      raison: dessous ? dessous.tagName + '.' + String(dessous.className).slice(0, 30) : 'rien',
+    }
+  })
+  noter('La cible éclairée reste cliquable', traverse.ok, traverse.raison)
+
+  // ── 6. L'étape avance sur l'ACTION, pas sur un bouton ──────────────────
+  noter(
+    'Aucun bouton « Suivant » ne permet de sauter l’étape',
+    (await page.locator('[role="region"][aria-label="Visite guidée"] button:has-text("Suivant")').count()) === 0,
   )
 
-  // ── 6. Il ne se rouvre plus, mais reste rejouable ────────────────────────
+  await page.locator('[role="region"] a:has-text("Ajouter un logement")').click()
+  await page.waitForURL(/\/app\/logements\/nouveau/, { timeout: 20000 })
+  noter('Le raccourci mène au bon formulaire', true, page.url().replace(BASE, ''))
+  noter(
+    'La visite survit à la navigation',
+    await visite.isVisible().catch(() => false),
+  )
+
+  await page.fill('input[name="adresse"]', 'Lot 42, Carré 118')
+  await page.fill('input[name="ville"]', 'Cotonou')
+  await page.selectOption('select[name="type"]', 'Maison')
+  await page.locator('button[type="submit"]').first().click()
+  await page.waitForURL(/\/app\/logements(\?|$)/, { timeout: 20000 })
+  await page.waitForTimeout(1200)
+
+  noter('Le logement est bien créé', (await compter('logements', compte.id)) === 1)
+
+  const apresLogement = await visite.innerText().catch(() => '')
+  noter(
+    'L’étape a avancé d’elle-même vers le locataire',
+    /Ajoutez votre locataire/i.test(apresLogement),
+    apresLogement.split('\n')[1] || '',
+  )
+  noter('La progression est passée à 1/5', /1\/5/.test(apresLogement))
+
+  // ── 7. Quitter est persistant ──────────────────────────────────────────
+  await page.locator('[role="region"] button:has-text("Quitter")').click()
+  await page.waitForTimeout(1200)
+  noter('Quitter ferme la visite', !(await visite.isVisible().catch(() => false)))
+
+  const apresQuitter = await bailleur(compte.id)
+  noter(
+    'La sortie est enregistrée en base',
+    Boolean(apresQuitter?.visite_quittee_le),
+    `visite_quittee_le = ${apresQuitter?.visite_quittee_le}`,
+  )
+  noter(
+    'Elle n’est PAS comptée comme terminée',
+    apresQuitter?.tutoriel_vu_le === null,
+  )
+
   await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(900)
-  noter('Il ne se rouvre pas à la visite suivante', !(await dialogue.isVisible().catch(() => false)))
+  await page.waitForTimeout(1200)
+  noter(
+    'Elle ne se rouvre pas d’elle-même après un rafraîchissement',
+    !(await visite.isVisible().catch(() => false)),
+  )
 
-  const rejouer = page.locator('button:has-text("Revoir la visite guidée")')
-  noter('Il reste rejouable', await rejouer.isVisible().catch(() => false))
+  // ── 8. Reprendre repart à la bonne étape ───────────────────────────────
+  const reprendre = page.locator('button:has-text("Reprendre la visite guidée")')
+  noter('Le point de reprise est proposé', await reprendre.isVisible().catch(() => false))
 
-  if (await rejouer.isVisible().catch(() => false)) {
-    await rejouer.click()
-    await page.waitForTimeout(600)
-    noter('Le rejeu fonctionne', await dialogue.isVisible().catch(() => false))
-  }
+  await reprendre.click()
+  await page.waitForTimeout(1500)
+  const reprise = await visite.innerText().catch(() => '')
+  noter(
+    'Elle reprend au locataire, pas au début',
+    /Ajoutez votre locataire/i.test(reprise),
+    reprise.split('\n')[1] || '',
+  )
+  noter('La progression acquise est conservée', /1\/5/.test(reprise))
 
-  // ── 7. Échap ferme ───────────────────────────────────────────────────────
-  await page.keyboard.press('Escape')
-  await page.waitForTimeout(600)
-  noter('Échap ferme le didacticiel', !(await dialogue.isVisible().catch(() => false)))
+  // ── 9. Mobile : la cible est celle du tiroir, pas l'aside masqué ────────
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.waitForTimeout(800)
+  const surMobile = await page.evaluate(() => {
+    const tous = [...document.querySelectorAll('[data-visite="nav-locataires"]')]
+    const visibles = tous.filter((n) => n.offsetParent !== null)
+    return { total: tous.length, visibles: visibles.length }
+  })
+  noter(
+    'Aucune cible fantôme n’est retenue sur écran étroit',
+    surMobile.visibles === 0 || surMobile.visibles === 1,
+    `${surMobile.visibles} visible(s) sur ${surMobile.total} dans le DOM`,
+  )
+  noter(
+    'La visite reste affichée sur mobile',
+    await visite.isVisible().catch(() => false),
+  )
+  await page.setViewportSize({ width: 1280, height: 900 })
 
   const echecs = etapes.filter((e) => !e).length
   console.log(

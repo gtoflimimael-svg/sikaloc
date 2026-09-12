@@ -78,8 +78,10 @@ export type Bailleur = {
   dernier_rappel_envoye: string | null
   /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
   avatar: string | null
-  /** Première fermeture du didacticiel d'accueil. NULL = jamais vu, il s'ouvre seul. */
+  /** Fin de la visite guidée, menée à son terme. NULL = jamais terminée. */
   tutoriel_vu_le: string | null
+  /** Sortie de la visite avant la fin. Renseignée = ne plus l'ouvrir d'elle-même. */
+  visite_quittee_le: string | null
   created_at: string
 }
 
@@ -258,6 +260,21 @@ export type MetriquesDashboard = {
   montant_impaye_total: number
 }
 
+/**
+ * Avancement du bailleur dans la visite guidée.
+ *
+ * Dérivé de ses données réelles par `v_progression_visite`, donc jamais à
+ * synchroniser : il n'existe aucun second état à tenir cohérent.
+ */
+export type ProgressionVisite = {
+  bailleur_id: string
+  nb_logements: number
+  nb_locataires: number
+  nb_baux: number
+  nb_paiements: number
+  nb_quittances: number
+}
+
 /** Bail enrichi des entités liées — forme renvoyée par les embeds PostgREST. */
 export type BailDetaille = Bail & {
   logement: Pick<Logement, 'id' | 'adresse' | 'ville' | 'type' | 'pays'>
@@ -307,6 +324,7 @@ export interface Database {
     Views: {
       v_impayes: Vue<Impaye>
       v_metriques_dashboard: Vue<MetriquesDashboard>
+      v_progression_visite: Vue<ProgressionVisite>
     }
     Functions: {
       creer_premier_bail: {

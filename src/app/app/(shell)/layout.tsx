@@ -3,9 +3,11 @@ import Link from 'next/link'
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
 import { MenuCompte } from '@/components/app/menu-compte'
 import { BarreLaterale, EnTeteMobile } from '@/components/app/navigation'
+import { VisiteGuidee } from '@/components/app/visite-guidee'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { abonnementActif } from '@/lib/plan'
 import { bailleurCourant } from '@/lib/session'
+import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
 export default async function LayoutApplication({
@@ -29,6 +31,25 @@ export default async function LayoutApplication({
   ])
 
   const impayes = count ?? 0
+
+  // La progression n'est lue que tant que la visite peut encore servir. Pour un
+  // bailleur qui l'a terminée — le cas de tous les jours — ce layout, qui
+  // enveloppe CHAQUE page, ne paie aucune requête supplémentaire.
+  const visiteClose = Boolean(bailleur.tutoriel_vu_le)
+  const { data: progression } = visiteClose
+    ? { data: null }
+    : await supabase
+        .from('v_progression_visite')
+        .select('*')
+        .eq('bailleur_id', bailleur.id)
+        .maybeSingle()
+
+  const parcours = progression
+    ? avancement(progression, {
+        tutoriel_vu_le: bailleur.tutoriel_vu_le,
+        visite_quittee_le: bailleur.visite_quittee_le,
+      })
+    : null
   const plan = abonnementActif(bailleur) ? 'Standard' : 'Gratuit'
 
   return (
@@ -48,7 +69,14 @@ export default async function LayoutApplication({
         <BandeauAbonnement bailleur={bailleur} />
 
         <header className="hidden h-16 shrink-0 items-center justify-end gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
-          <Link href="/app/paiements/nouveau" className="btn btn-primary btn-sm">
+          <Link
+            href="/app/paiements/nouveau"
+            // Repère de la visite guidée. Le bouton équivalent de l'en-tête
+            // mobile porte le même : `cibleVisible` retient celui qui est
+            // réellement à l'écran, quel que soit l'ordre du DOM.
+            data-visite="bouton-paiement"
+            className="btn btn-primary btn-sm"
+          >
             Enregistrer un paiement
           </Link>
           <MenuCompte
@@ -66,6 +94,19 @@ export default async function LayoutApplication({
           </div>
         </main>
       </div>
+
+      {/*
+        Montée dans le shell, et non dans une page : `TransitionPage` porte une
+        `key={chemin}` qui démonte son sous-arbre à chaque navigation. Une visite
+        qui accompagne l'utilisateur d'un formulaire à l'autre ne peut pas vivre
+        là-dedans.
+      */}
+      {parcours ? (
+        <VisiteGuidee
+          avancement={parcours}
+          ouvertAuDemarrage={ouvertureAutomatique(parcours)}
+        />
+      ) : null}
     </div>
   )
 }
