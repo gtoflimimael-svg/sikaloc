@@ -4,15 +4,20 @@ import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
+import { etatVerification } from '@/lib/verification/etat'
 
 /**
- * Profil du bailleur connecté.
+ * Identité du bailleur connecté, SANS contrôle de vérification.
+ *
+ * Réservé aux écrans de vérification eux-mêmes, qui doivent pouvoir lire le
+ * profil d'un compte précisément pas encore vérifié. Partout ailleurs, c'est
+ * `bailleurCourant()` qu'il faut appeler.
  *
  * Redirige vers la connexion si la session est absente ou si le profil n'a pas
  * pu être lu — un utilisateur authentifié sans ligne dans `bailleurs` est un
  * état incohérent qu'on ne laisse pas entrer dans l'application.
  */
-export async function bailleurCourant(): Promise<Bailleur> {
+export async function bailleurNonVerifie(): Promise<Bailleur> {
   const supabase = await creerClientServeur()
 
   const {
@@ -30,6 +35,36 @@ export async function bailleurCourant(): Promise<Bailleur> {
   if (!bailleur) redirect('/connexion')
 
   return bailleur as Bailleur
+}
+
+/**
+ * Profil du bailleur connecté, dont les deux coordonnées sont vérifiées.
+ *
+ * ─── Pourquoi le contrôle est ICI ───────────────────────────────────────────
+ *
+ * Parce que c'est le seul endroit par lequel tout passe. Les six modules
+ * d'actions serveur et les trois mises en page de l'application appellent
+ * cette fonction ; aucun n'a besoin d'être modifié pour hériter de la règle.
+ *
+ * L'alternative — poser le contrôle dans `bailleurOnboarde()` ou dans chaque
+ * action — reproduirait exactement la dette du cycle de grâce, appliqué à
+ * 4 actions serveur sur 18. Une règle de sécurité qu'il faut se souvenir
+ * d'appeler n'est pas une règle, c'est une intention.
+ *
+ * ─── Ce que le navigateur n'y change rien ───────────────────────────────────
+ *
+ * Masquer un écran n'empêche personne de rejouer la requête. Ce contrôle-ci
+ * s'exécute sur le serveur, avant toute lecture et toute écriture métier : un
+ * compte dont seul l'email est vérifié n'atteint aucune donnée, quelle que soit
+ * la façon dont la requête a été fabriquée.
+ */
+export async function bailleurCourant(): Promise<Bailleur> {
+  const bailleur = await bailleurNonVerifie()
+
+  const etat = await etatVerification(bailleur)
+  if (!etat.pleinementVerifie) redirect('/verification')
+
+  return bailleur
 }
 
 /**
