@@ -1,141 +1,186 @@
 /**
- * Robustesse d'un mot de passe — critères partagés client et serveur.
+ * Robustesse d'un mot de passe — vocabulaire partagé client et serveur.
  *
- * Le même module sert la jauge affichée pendant la frappe et la validation
- * Zod : un indicateur qui dirait « fort » à propos d'un mot de passe que le
- * serveur refuse serait pire que pas d'indicateur du tout.
+ * ─── Ce que ce module contient, et ce qu'il ne contient pas ─────────────────
  *
- * Volontairement sans dépendance : zxcvbn pèse 400 Ko une fois chargé, ce qui
- * n'a pas de sens sur une page d'inscription consultée depuis un mobile
- * béninois. On mesure quatre exigences et deux bonus, ce qui suffit à écarter
- * « azerty123 » sans prétendre à une entropie exacte.
+ * Il ne contient **aucune** dépendance : ni zxcvbn, ni dictionnaire. C'est
+ * délibéré. `champ-mot-de-passe.tsx` l'importe en valeur, donc tout ce qui
+ * entre ici part dans le bundle de chaque page portant un champ mot de passe —
+ * y compris `/connexion`, qui n'affiche aucune jauge.
+ *
+ * La mesure elle-même vit dans `@/lib/mot-de-passe-evaluation` : le serveur
+ * l'importe normalement, le navigateur va la chercher à la demande.
+ *
+ * ─── Pourquoi la logique précédente a été retirée ───────────────────────────
+ *
+ * Elle comptait des classes de caractères — une majuscule, un chiffre, un
+ * caractère spécial — et déclarait « Correct » tout ce qui cochait les cases.
+ * Trois défauts mesurés le 12/09/2026 :
+ *
+ *   1. `Aaaaaaa1A`, `Trottoir9`, `Benin20266` étaient annoncés « Correct » et
+ *      acceptés. Ils cochent les quatre cases et ne résistent à rien.
+ *   2. `correct cheval batterie agrafe` — trente caractères, le type de mot de
+ *      passe le plus solide qui soit — était classé « Faible » et **refusé**,
+ *      faute de majuscule et de chiffre.
+ *   3. `Ab1!cdefgh` était refusé et `Ab1!xyzwqr` accepté. Même forme, verdicts
+ *      opposés : l'ancien détecteur cherchait quatre lettres consécutives de
+ *      l'alphabet **n'importe où** dans la chaîne, si bien que tout mot de passe
+ *      contenant « cdef », « mnop » ou « stuv » était rejeté.
+ *
+ * Compter des classes de caractères mesure la forme, pas la difficulté à
+ * deviner. zxcvbn mesure la seconde, ce qui est la seule qui compte.
  */
 
+/** Plancher de longueur. En deçà, aucun score ne rachète un mot de passe. */
 export const LONGUEUR_MINIMALE = 8
-export const LONGUEUR_CONFORTABLE = 12
-
-export interface Critere {
-  cle: string
-  libelle: string
-  /** Un critère obligatoire bloque l'enregistrement ; les autres nourrissent la jauge. */
-  obligatoire: boolean
-  satisfait: (valeur: string) => boolean
-}
 
 /**
- * Les grands classiques, en clair ou à peine déguisés. La liste est courte à
- * dessein : elle attrape les mots de passe qu'un attaquant essaie en premier,
- * pas ceux qu'un dictionnaire complet trouverait.
+ * Limite de bcrypt, utilisé par GoTrue : au-delà, la fin du mot de passe serait
+ * silencieusement ignorée — deux mots de passe différant après le 72ᵉ caractère
+ * ouvriraient le même compte.
  */
-const COURANTS = [
-  'password', 'motdepasse', 'azerty', 'qwerty', 'sikaloc', 'benin', 'cotonou',
-  'admin', 'bailleur', 'loyer', 'bonjour', 'welcome', 'iloveyou', 'soleil',
-]
+export const LONGUEUR_MAXIMALE = 72
 
-const SEQUENCES = [
-  '0123456789', 'abcdefghijklmnopqrstuvwxyz', 'azertyuiop', 'qwertyuiop',
-]
-
-export const CRITERES: Critere[] = [
-  {
-    cle: 'longueur',
-    libelle: `${LONGUEUR_MINIMALE} caractères minimum`,
-    obligatoire: true,
-    satisfait: (v) => v.length >= LONGUEUR_MINIMALE,
-  },
-  {
-    cle: 'minuscule',
-    libelle: 'Une lettre minuscule',
-    obligatoire: true,
-    satisfait: (v) => /[a-zà-öø-ÿ]/.test(v),
-  },
-  {
-    cle: 'majuscule',
-    libelle: 'Une lettre majuscule',
-    obligatoire: true,
-    satisfait: (v) => /[A-ZÀ-ÖØ-Þ]/.test(v),
-  },
-  {
-    cle: 'chiffre',
-    libelle: 'Un chiffre',
-    obligatoire: true,
-    satisfait: (v) => /\d/.test(v),
-  },
-  {
-    cle: 'special',
-    libelle: 'Un caractère spécial (!, ?, @, #…)',
-    obligatoire: false,
-    satisfait: (v) => /[^\p{L}\p{N}]/u.test(v),
-  },
-  {
-    cle: 'longueurConfortable',
-    libelle: `${LONGUEUR_CONFORTABLE} caractères ou plus`,
-    obligatoire: false,
-    satisfait: (v) => v.length >= LONGUEUR_CONFORTABLE,
-  },
-]
-
-/** Un mot de passe trop deviné : présent tel quel dans la liste ou en séquence. */
-export function estPrevisible(valeur: string): boolean {
-  const nu = valeur.toLowerCase().replace(/[^a-z0-9]/g, '')
-  if (nu.length === 0) return false
-
-  // On ne rejette que si le mot courant PORTE le mot de passe : « Sikaloc2026! »
-  // est prévisible, « MonSikalocPersonnel8! » ne l'est pas.
-  if (COURANTS.some((mot) => nu.startsWith(mot) && nu.length <= mot.length + 4)) {
-    return true
-  }
-
-  if (/^(.)\1+$/.test(nu)) return true
-
-  return SEQUENCES.some((suite) => {
-    for (let i = 0; i + 4 <= suite.length; i++) {
-      if (nu.includes(suite.slice(i, i + 4))) return true
-    }
-    return false
-  })
-}
+/**
+ * Score zxcvbn minimal accepté par le serveur.
+ *
+ * 2 écarte tout ce qu'un attaquant essaie en premier — mots du dictionnaire,
+ * prénoms, dates, suites de clavier, variations en l33t — sans exiger d'un
+ * bailleur qu'il compose une chaîne illisible. Monter à 3 est une décision
+ * produit, pas technique : il suffit de changer cette valeur, jauge et
+ * validation suivent ensemble.
+ */
+export const SCORE_MINIMAL: NiveauMotDePasse = 2
 
 export type NiveauMotDePasse = 0 | 1 | 2 | 3 | 4
 
+/**
+ * Termes que Sikaloc doit toujours considérer comme devinables.
+ *
+ * Ils sont passés à zxcvbn en entrées contextuelles, au même titre que le nom
+ * du bailleur : un mot de passe bâti dessus est le premier qu'on essaie contre
+ * ce produit précisément. Cette liste reprend celle de l'implémentation
+ * précédente — c'est la seule partie qui méritait d'être gardée.
+ */
+export const TERMES_SIKALOC = [
+  'sikaloc',
+  'sika',
+  'benin',
+  'bénin',
+  'cotonou',
+  'porto-novo',
+  'bailleur',
+  'locataire',
+  'loyer',
+  'quittance',
+]
+
+/** Les cinq paliers de zxcvbn, nommés pour un bailleur. */
+export const LIBELLES: Record<NiveauMotDePasse, string> = {
+  0: 'Très faible',
+  1: 'Faible',
+  2: 'Moyen',
+  3: 'Fort',
+  4: 'Très fort',
+}
+
 export interface ForceMotDePasse {
+  /** Le score zxcvbn, repris tel quel : la jauge ne réinterprète rien. */
   niveau: NiveauMotDePasse
   libelle: string
-  /** Critères obligatoires non satisfaits, dans l'ordre d'affichage. */
-  manquants: string[]
-  previsible: boolean
-  /** Vrai si le serveur acceptera ce mot de passe. */
+  /** Ce qui cloche, en une phrase. Traduit par `@zxcvbn-ts/language-fr`. */
+  avertissement: string | null
+  /** Comment faire mieux. Au plus deux, pour rester lisible. */
+  conseils: string[]
+  tropCourt: boolean
+  tropLong: boolean
+  /**
+   * Vrai si le serveur acceptera ce mot de passe.
+   *
+   * Jauge et validation lisent le même champ : il ne peut pas y avoir de mot de
+   * passe annoncé « Fort » puis refusé à l'envoi.
+   */
   acceptable: boolean
 }
 
-const LIBELLES: Record<NiveauMotDePasse, string> = {
-  0: 'Très faible',
-  1: 'Faible',
-  2: 'Correct',
-  3: 'Solide',
-  4: 'Excellent',
-}
-
-export function evaluer(valeur: string): ForceMotDePasse {
-  const manquants = CRITERES.filter((c) => c.obligatoire && !c.satisfait(valeur)).map(
-    (c) => c.cle,
-  )
-  const previsible = estPrevisible(valeur)
-  const satisfaits = CRITERES.filter((c) => c.satisfait(valeur)).length
-
-  let niveau: NiveauMotDePasse
-  if (valeur.length === 0) niveau = 0
-  else if (manquants.length > 0) niveau = satisfaits >= 3 ? 1 : 0
-  else if (previsible) niveau = 1
-  else if (satisfaits === CRITERES.length && valeur.length >= 14) niveau = 4
-  else if (satisfaits >= 5) niveau = 3
-  else niveau = 2
+/**
+ * Assemble le verdict à partir d'un score zxcvbn brut.
+ *
+ * Séparée de la mesure pour que le serveur et le navigateur habillent le même
+ * résultat de la même façon, sans que ce module ait à connaître zxcvbn.
+ */
+export function interpreter(
+  valeur: string,
+  score: NiveauMotDePasse,
+  avertissement: string | null,
+  conseils: string[],
+): ForceMotDePasse {
+  const tropCourt = valeur.length > 0 && valeur.length < LONGUEUR_MINIMALE
+  const tropLong = valeur.length > LONGUEUR_MAXIMALE
 
   return {
-    niveau,
-    libelle: LIBELLES[niveau],
-    manquants,
-    previsible,
-    acceptable: manquants.length === 0 && !previsible,
+    niveau: score,
+    libelle: LIBELLES[score],
+    avertissement,
+    // Deux conseils suffisent : une liste de cinq ne se lit pas, elle décourage.
+    conseils: conseils.slice(0, 2),
+    tropCourt,
+    tropLong,
+    acceptable:
+      valeur.length >= LONGUEUR_MINIMALE &&
+      valeur.length <= LONGUEUR_MAXIMALE &&
+      score >= SCORE_MINIMAL,
   }
+}
+
+/**
+ * Message rendu par le serveur quand il refuse.
+ *
+ * Il dit ce qui bloque plutôt que d'énumérer des règles de composition — il n'y
+ * en a plus. Un bailleur à qui l'on répond « il manque une majuscule » ajoute
+ * une majuscule à la fin ; à qui l'on répond « ce mot de passe se devine », il
+ * en change.
+ */
+export function messageRefus(force: ForceMotDePasse): string {
+  if (force.tropCourt) {
+    return `Le mot de passe doit contenir au moins ${LONGUEUR_MINIMALE} caractères.`
+  }
+
+  if (force.tropLong) {
+    return `Le mot de passe ne peut pas dépasser ${LONGUEUR_MAXIMALE} caractères.`
+  }
+
+  const conseil = force.conseils[0]
+  const constat =
+    force.avertissement ?? 'Ce mot de passe est trop facile à deviner.'
+
+  return conseil ? `${constat} ${conseil}` : constat
+}
+
+/**
+ * Entrées contextuelles à pénaliser, nettoyées.
+ *
+ * zxcvbn traite ces valeurs comme des mots de dictionnaire : « Sikaloc2026 »
+ * ou un mot de passe bâti sur le nom du bailleur tombent à un score très bas.
+ *
+ * L'email est découpé sur `@` : c'est la partie locale qui se retrouve dans les
+ * mots de passe, pas le domaine. Rien de tout cela n'est transmis nulle part —
+ * la mesure est locale, côté navigateur comme côté serveur.
+ */
+export function contexteUtilisateur(valeurs: (string | null | undefined)[]): string[] {
+  const morceaux = new Set<string>(TERMES_SIKALOC)
+
+  for (const valeur of valeurs) {
+    const propre = valeur?.trim()
+    if (!propre) continue
+
+    morceaux.add(propre)
+
+    // « moussa.k@exemple.bj » donne aussi « moussa.k », « moussa » et « k ».
+    for (const part of propre.split(/[@\s._-]+/)) {
+      if (part.length >= 3) morceaux.add(part)
+    }
+  }
+
+  return [...morceaux]
 }

@@ -8,6 +8,7 @@ import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import {
   erreursChamps,
+  refusMotDePasseContextuel,
   schemaConnexion,
   schemaEmailSeul,
   schemaInscription,
@@ -192,6 +193,14 @@ export async function definirNouveauMotDePasse(
         'Ce lien de réinitialisation a expiré. Demandez-en un nouveau depuis la page de connexion.',
     }
   }
+
+  // Le formulaire de réinitialisation ne porte que deux champs : c'est ici, une
+  // fois la session du lien ouverte, qu'on sait à qui appartient le compte.
+  const refus = refusMotDePasseContextuel(analyse.data.motDePasse, [
+    user.email,
+    typeof user.user_metadata?.nom === 'string' ? user.user_metadata.nom : null,
+  ])
+  if (refus) return { erreursChamps: { motDePasse: refus } }
 
   const { error } = await supabase.auth.updateUser({ password: analyse.data.motDePasse })
 

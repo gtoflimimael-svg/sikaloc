@@ -22,7 +22,7 @@ export default async function PageProfil() {
             l'inscription, pour que la page ne s'ouvre pas sur un jeu. */}
         <FormulaireProfil bailleur={bailleur} />
         <FormulaireAvatar bailleur={bailleur} />
-        <FormulaireMotDePasse />
+        <FormulaireMotDePasse email={bailleur.email} />
       </div>
     </div>
   )

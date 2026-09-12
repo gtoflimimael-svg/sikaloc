@@ -215,11 +215,31 @@ function Bascule({
  * par email : c'est le seul chemin qui ne suppose pas qu'une session ouverte
  * appartient forcément au titulaire du compte.
  */
-export function FormulaireMotDePasse() {
+export function FormulaireMotDePasse({ email }: { email?: string }) {
   const [etat, action] = useActionState(changerMotDePasse, ETAT_INITIAL)
 
   return (
     <form action={action} className="card card-lg space-y-lg">
+      {/*
+        Identifiant caché, recommandé par les éditeurs de navigateurs sur tout
+        formulaire de changement de mot de passe : sans lui, le gestionnaire voit
+        un mot de passe neuf sans savoir à quel compte le rattacher, et propose
+        d'enregistrer un second identifiant au lieu de mettre à jour l'existant.
+
+        `readOnly` plutôt que `disabled` : un champ désactivé n'est ni soumis ni
+        lu par les gestionnaires.
+      */}
+      {email ? (
+        <input
+          type="email"
+          name="identifiant"
+          autoComplete="username"
+          value={email}
+          readOnly
+          hidden
+        />
+      ) : null}
+
       <div>
         <h2 className="text-title-lg font-semibold text-ink">Mot de passe</h2>
         <p className="mt-xxs text-body-sm text-mute">
@@ -249,6 +269,7 @@ export function FormulaireMotDePasse() {
       <ChampMotDePasse
         nom="motDePasse"
         libelle="Nouveau mot de passe"
+        autoComplete="new-password"
         jauge
         requis
         erreur={etat.erreursChamps?.motDePasse}
@@ -257,6 +278,7 @@ export function FormulaireMotDePasse() {
       <ChampMotDePasse
         nom="confirmation"
         libelle="Confirmez le nouveau mot de passe"
+        autoComplete="new-password"
         requis
         erreur={etat.erreursChamps?.confirmation}
       />

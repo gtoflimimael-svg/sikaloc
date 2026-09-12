@@ -31,7 +31,7 @@ export function FormulaireConnexion({ suite }: { suite?: string }) {
         nom="email"
         libelle="Adresse email"
         type="email"
-        autoComplete="email"
+        autoComplete="username"
         placeholder="vous@exemple.bj"
         requis
         erreur={etat.erreursChamps?.email}
@@ -159,17 +159,24 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
           nom="email"
           libelle="Adresse email"
           type="email"
-          autoComplete="email"
+          autoComplete="username"
           placeholder="vous@exemple.bj"
           requis
           erreur={etat.erreursChamps?.email}
         />
 
+        {/* `new-password` : c'est cette valeur qui fait proposer au navigateur
+            un mot de passe fort, puis l'enregistrement du compte. `contexteDepuis`
+            passe le nom, l'email et le téléphone déjà saisis à la mesure de
+            robustesse — « MoussaAdjovi1! » n'est un bon mot de passe pour
+            personne d'autre que Moussa Adjovi. */}
         <ChampMotDePasse
           nom="motDePasse"
           libelle="Mot de passe"
+          autoComplete="new-password"
           jauge
           requis
+          contexteDepuis={['nom', 'email', 'telephone']}
           erreur={etat.erreursChamps?.motDePasse}
         />
 
@@ -261,7 +268,7 @@ export function FormulaireMotDePasseOublie() {
         nom="email"
         libelle="Adresse email"
         type="email"
-        autoComplete="email"
+        autoComplete="username"
         placeholder="vous@exemple.bj"
         requis
         erreur={etat.erreursChamps?.email}
@@ -274,16 +281,37 @@ export function FormulaireMotDePasseOublie() {
   )
 }
 
-export function FormulaireNouveauMotDePasse() {
+export function FormulaireNouveauMotDePasse({ email }: { email?: string }) {
   const [etat, action] = useActionState(definirNouveauMotDePasse, ETAT_INITIAL)
 
   return (
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
+      {/*
+        Champ d'identifiant caché, recommandé par les éditeurs de navigateurs sur
+        tout formulaire de changement de mot de passe : sans lui, le gestionnaire
+        voit un mot de passe neuf sans savoir à quel compte le rattacher, et
+        propose d'en créer un second au lieu de mettre à jour l'existant.
+
+        `readOnly` plutôt que `disabled` : un champ désactivé n'est pas soumis et
+        n'est pas lu par les gestionnaires.
+      */}
+      {email ? (
+        <input
+          type="email"
+          name="identifiant"
+          autoComplete="username"
+          value={email}
+          readOnly
+          hidden
+        />
+      ) : null}
+
       <ChampMotDePasse
         nom="motDePasse"
         libelle="Nouveau mot de passe"
+        autoComplete="new-password"
         jauge
         requis
         erreur={etat.erreursChamps?.motDePasse}
@@ -292,6 +320,7 @@ export function FormulaireNouveauMotDePasse() {
       <ChampMotDePasse
         nom="confirmation"
         libelle="Confirmez le mot de passe"
+        autoComplete="new-password"
         requis
         erreur={etat.erreursChamps?.confirmation}
       />

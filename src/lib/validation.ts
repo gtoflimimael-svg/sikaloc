@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-import { CRITERES, estPrevisible, LONGUEUR_MINIMALE } from '@/lib/mot-de-passe'
+import { LONGUEUR_MAXIMALE, messageRefus } from '@/lib/mot-de-passe'
+import { evaluerMotDePasse } from '@/lib/mot-de-passe-evaluation'
 
 /**
  * Schémas de validation partagés.
@@ -25,38 +26,60 @@ const telephone = z
   .regex(/^[\d\s+()-]+$/, 'Le numéro ne doit contenir que des chiffres.')
 
 /**
- * Les exigences viennent de `@/lib/mot-de-passe` : la jauge affichée pendant la
- * frappe et ce schéma appliquent littéralement la même liste, il ne peut donc
- * pas y avoir de mot de passe annoncé « solide » puis refusé à l'envoi.
+ * La mesure vient de `@/lib/mot-de-passe-evaluation` : la jauge affichée pendant
+ * la frappe et ce schéma appellent la même fonction, il ne peut donc pas y avoir
+ * de mot de passe annoncé « Fort » puis refusé à l'envoi.
  *
- * 72 octets est la limite de bcrypt, utilisé par GoTrue : au-delà, la fin du
+ * Ce contrôle-ci est le seul qui compte. Celui du navigateur sert le confort de
+ * saisie et rien d'autre : il tourne sur la machine de l'utilisateur, donc sous
+ * son contrôle. Une requête forgée qui contournerait la page passe ici.
+ *
+ * 72 caractères est la limite de bcrypt, utilisé par GoTrue : au-delà, la fin du
  * mot de passe serait silencieusement ignorée.
  */
 const motDePasse = z
   .string()
-  .max(72, 'Le mot de passe ne peut pas dépasser 72 caractères.')
+  .max(LONGUEUR_MAXIMALE, `Le mot de passe ne peut pas dépasser ${LONGUEUR_MAXIMALE} caractères.`)
   .superRefine((valeur, contexte) => {
-    for (const critere of CRITERES) {
-      if (critere.obligatoire && !critere.satisfait(valeur)) {
-        contexte.addIssue({
-          code: 'custom',
-          message:
-            critere.cle === 'longueur'
-              ? `Le mot de passe doit contenir au moins ${LONGUEUR_MINIMALE} caractères.`
-              : `Il manque ${critere.libelle.toLowerCase()}.`,
-        })
-        return
-      }
-    }
+    const force = evaluerMotDePasse(valeur)
+    if (force.acceptable) return
 
-    if (estPrevisible(valeur)) {
-      contexte.addIssue({
-        code: 'custom',
-        message:
-          'Ce mot de passe est trop courant ou trop régulier. Choisissez-en un moins devinable.',
-      })
-    }
+    contexte.addIssue({ code: 'custom', message: messageRefus(force) })
   })
+
+/**
+ * Reprise du contrôle en tenant compte de ce que le compte révèle.
+ *
+ * « MoussaAdjovi1! » est un bon mot de passe pour n'importe qui — sauf pour
+ * Moussa Adjovi. Les indices sont des valeurs déjà connues du compte : nom,
+ * email, téléphone. Rien n'en sort : la mesure est locale.
+ *
+ * Rend le message de refus, ou `null` si le mot de passe convient.
+ */
+export function refusMotDePasseContextuel(
+  valeur: string,
+  indices: (string | null | undefined)[],
+): string | null {
+  const force = evaluerMotDePasse(valeur, indices.filter(Boolean) as string[])
+  return force.acceptable ? null : messageRefus(force)
+}
+
+/**
+ * Le même contrôle, branché sur Zod.
+ *
+ * `superRefine` d'un champ ne voit pas ses voisins : il faut repasser au niveau
+ * de l'objet pour lire le nom et l'email saisis dans le même formulaire. Zod
+ * n'exécute ce contrôle que si le champ a déjà passé le précédent — pas de
+ * double message.
+ */
+function refuserMotDePasseContextuel<T extends { motDePasse: string }>(
+  valeurs: T,
+  contexte: z.RefinementCtx,
+  indices: (string | undefined)[],
+) {
+  const message = refusMotDePasseContextuel(valeurs.motDePasse, indices)
+  if (message) contexte.addIssue({ code: 'custom', message, path: ['motDePasse'] })
+}
 
 const dateISO = z
   .string()
@@ -82,15 +105,23 @@ export const avatarOptionnel = z
   .optional()
   .or(z.literal(''))
 
-export const schemaInscription = z.object({
-  nom: texteObligatoire('Le nom', 2, 120),
-  email: z.email('Adresse email invalide.').trim().toLowerCase(),
-  telephone,
-  motDePasse,
-  codeParrain: z.string().trim().max(20).optional().or(z.literal('')),
-  nbLogements: z.coerce.number().int().min(0).max(1000).optional(),
-  avatar: avatarOptionnel,
-})
+export const schemaInscription = z
+  .object({
+    nom: texteObligatoire('Le nom', 2, 120),
+    email: z.email('Adresse email invalide.').trim().toLowerCase(),
+    telephone,
+    motDePasse,
+    codeParrain: z.string().trim().max(20).optional().or(z.literal('')),
+    nbLogements: z.coerce.number().int().min(0).max(1000).optional(),
+    avatar: avatarOptionnel,
+  })
+  .superRefine((valeurs, contexte) =>
+    refuserMotDePasseContextuel(valeurs, contexte, [
+      valeurs.nom,
+      valeurs.email,
+      valeurs.telephone,
+    ]),
+  )
 
 export const schemaConnexion = z.object({
   email: z.email('Adresse email invalide.').trim().toLowerCase(),

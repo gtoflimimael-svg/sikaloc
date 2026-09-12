@@ -9,6 +9,7 @@ import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
 import {
   avatarOptionnel,
   erreursChamps,
+  refusMotDePasseContextuel,
   schemaChangementMotDePasse,
   schemaPreferences,
   schemaProfil,
@@ -204,6 +205,15 @@ export async function changerMotDePasse(
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
   const bailleur = await bailleurCourant()
+
+  // Le formulaire ne porte ni le nom ni l'email : le contrôle contextuel ne
+  // peut se faire qu'ici, une fois le compte connu.
+  const refus = refusMotDePasseContextuel(analyse.data.motDePasse, [
+    bailleur.nom,
+    bailleur.email,
+    bailleur.telephone,
+  ])
+  if (refus) return { erreursChamps: { motDePasse: refus } }
 
   const blocage = await verifierBlocage(bailleur.email)
   if (blocage.bloque) {
