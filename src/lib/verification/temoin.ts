@@ -47,3 +47,47 @@ export async function retirerTemoinVerification(): Promise<void> {
   const boite = await cookies()
   boite.delete(TEMOIN_EMAIL)
 }
+
+/**
+ * Le témoin qui porte le jeton d'invitation pendant la vérification d'email.
+ *
+ * ─── Pourquoi il existe ─────────────────────────────────────────────────────
+ *
+ * Un locataire qui crée son compte depuis une invitation n'a pas de session
+ * avant d'avoir saisi son code : GoTrue n'en ouvre qu'à ce moment. Or le
+ * rattachement exige une session — c'est `auth.uid()` qui désigne le compte à
+ * rattacher. Le jeton doit donc survivre à cette étape.
+ *
+ * ─── Pourquoi pas dans l'URL ────────────────────────────────────────────────
+ *
+ * Un jeton d'invitation ouvre l'accès aux documents de loyer d'une personne.
+ * Dans l'URL, il finirait dans l'historique du navigateur, dans les journaux
+ * du serveur et dans l'en-tête `Referer` envoyé à tout tiers. Le même
+ * raisonnement que pour l'adresse, avec un enjeu plus lourd.
+ *
+ * Une heure : le temps de relever ses mails et de recopier six chiffres. Au-delà,
+ * le lien de l'invitation reste disponible dans la boîte.
+ */
+const TEMOIN_INVITATION = 'sikaloc_invitation'
+const DUREE_INVITATION = 60 * 60
+
+export async function poserTemoinInvitation(jeton: string): Promise<void> {
+  const boite = await cookies()
+  boite.set(TEMOIN_INVITATION, jeton, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: DUREE_INVITATION,
+  })
+}
+
+export async function lireTemoinInvitation(): Promise<string | null> {
+  const boite = await cookies()
+  return boite.get(TEMOIN_INVITATION)?.value ?? null
+}
+
+export async function retirerTemoinInvitation(): Promise<void> {
+  const boite = await cookies()
+  boite.delete(TEMOIN_INVITATION)
+}

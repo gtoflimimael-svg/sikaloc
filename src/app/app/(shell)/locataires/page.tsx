@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { BoutonInvitation } from '@/components/app/bouton-invitation'
 import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
@@ -25,11 +26,22 @@ export default async function PageLocataires() {
 
   const liste = locataires ?? []
 
+  // Les invitations encore en attente, pour distinguer « inviter » de
+  // « renvoyer ». Une requête pour toute la liste plutôt qu'une par ligne.
+  const { data: invitations } = await supabase
+    .from('invitations_locataire')
+    .select('locataire_id')
+    .is('utilisee_le', null)
+    .is('annulee_le', null)
+    .gt('expire_le', new Date().toISOString())
+
+  const enAttente = new Set((invitations ?? []).map((i) => i.locataire_id))
+
   return (
     <div>
       <EnTetePage
         titre="Locataires"
-        description="Les personnes à qui vous louez. Elles n’ont aucun compte à créer."
+        description="Les personnes à qui vous louez. Invitez-les sur Sikaloc_Me pour qu’elles suivent leurs loyers et leurs quittances."
         action={
           <Link href="/app/locataires/nouveau" className="btn btn-primary">
             Nouveau locataire
@@ -80,6 +92,13 @@ export default async function PageLocataires() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-sm">
+                    <BoutonInvitation
+                      locataireId={locataire.id}
+                      nom={locataire.nom}
+                      email={locataire.email}
+                      rattache={Boolean(locataire.compte_id)}
+                      invitationEnAttente={enAttente.has(locataire.id)}
+                    />
                     <Link
                       href={`/app/locataires/${locataire.id}/modifier`}
                       className="btn btn-tertiary btn-sm"

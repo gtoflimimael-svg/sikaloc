@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+import { finaliserInvitationEnAttente } from '@/lib/actions/rejoindre'
 import { bailleurNonVerifie } from '@/lib/session'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -110,7 +111,20 @@ export async function verifierCodeEmail(
   // L'adresse est confirmée et la session ouverte : le témoin n'a plus d'objet.
   await retirerTemoinVerification()
 
+  // ─── Le rattachement différé ──────────────────────────────────────────
+  //
+  // Un locataire venu d'une invitation n'avait pas de session au moment de
+  // créer son compte : le rattachement ne pouvait pas se faire. C'est
+  // maintenant — et ici, pas au rendu de la page, parce qu'un composant
+  // serveur ne peut pas retirer un témoin.
+  const rattache = await finaliserInvitationEnAttente()
+
   revalidatePath('/', 'layout')
+
+  if (rattache) {
+    return { succes: 'Adresse email vérifiée. Votre logement vous attend.' }
+  }
+
   return { succes: 'Adresse email vérifiée.' }
 }
 

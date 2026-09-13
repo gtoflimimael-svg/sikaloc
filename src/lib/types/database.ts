@@ -355,6 +355,30 @@ export type Echeance = {
   logement_ville: string
 }
 
+/**
+ * Une invitation à rejoindre Sikaloc_Me.
+ *
+ * Le jeton n'y figure pas — seulement son empreinte. Un jeton d'invitation
+ * ouvre l'accès aux documents de loyer d'une personne : en clair dans la
+ * table, il serait utilisable tel quel par quiconque lirait une sauvegarde.
+ */
+export type InvitationLocataire = {
+  id: string
+  locataire_id: string
+  bailleur_id: string
+  /** L'adresse au moment de l'envoi, figée : corriger la fiche ensuite ne la réécrit pas. */
+  email: string
+  /** HMAC-SHA256(jeton, OTP_SECRET). */
+  empreinte: string
+  expire_le: string
+  /** Consommée par un rattachement. Usage unique. */
+  utilisee_le: string | null
+  /** Révoquée par le bailleur, ou périmée par un nouvel envoi. */
+  annulee_le: string | null
+  cree_le: string
+  cree_par: string | null
+}
+
 export type Impaye = {
   bail_id: string
   bailleur_id: string
@@ -467,6 +491,7 @@ export interface Database {
       compteurs_documents: Ligne<CompteurDocuments>
       inscriptions_guide: Ligne<InscriptionGuide>
       codes_verification: Ligne<CodeVerification>
+      invitations_locataire: Ligne<InvitationLocataire>
     }
     Views: {
       v_impayes: Vue<Impaye>
@@ -503,6 +528,15 @@ export interface Database {
       mes_roles: {
         Args: Record<string, never>
         Returns: { est_bailleur: boolean; est_locataire: boolean }[]
+      }
+      /**
+       * Consomme une invitation et rattache le compte appelant à sa ligne
+       * locataire. Atomique : les trois écritures réussissent ou échouent
+       * ensemble.
+       */
+      accepter_invitation: {
+        Args: { p_empreinte: string }
+        Returns: { locataire_id: string | null; bailleur_id: string | null; motif: string }[]
       }
       /** Purge J+90, volet base — réservé au service_role. */
       executer_purge_j90: {

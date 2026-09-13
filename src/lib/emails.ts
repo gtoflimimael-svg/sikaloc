@@ -14,7 +14,12 @@ import { PRIX_STANDARD_FCFA } from '@/lib/plan'
 
 const RESEND_API = 'https://api.resend.com/emails'
 
-export type ModeleEmail = 'grace_j0' | 'grace_j3' | 'grace_j30' | 'purge_j90'
+export type ModeleEmail =
+  | 'grace_j0'
+  | 'grace_j3'
+  | 'grace_j30'
+  | 'purge_j90'
+  | 'invitation_locataire'
 
 export interface VariablesEmail {
   nom?: string
@@ -62,6 +67,35 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
   const action = { libelle: 'Régler mon abonnement', url: urlAbonnement() }
 
   switch (modele) {
+    // ─── Invitation d'un locataire à Sikaloc_Me ───────────────────────
+    //
+    // Le ton n'est pas celui des rappels d'impayé : c'est le premier message
+    // que Sikaloc adresse à cette personne, et elle n'a rien demandé. Il dit
+    // qui invite, pourquoi, et ce que le lien ouvre — avant de le proposer.
+    //
+    // Le nom du bailleur est en tête : c'est lui qui rend le message légitime.
+    // Un email d'un service inconnu se supprime ; un email de son propriétaire
+    // se lit.
+    case 'invitation_locataire': {
+      const bailleurNom = String(variables.bailleur_nom ?? 'Votre bailleur')
+      const logement = String(variables.logement ?? '').trim()
+
+      return {
+        ton: 'info',
+        sujet: `${bailleurNom} vous invite sur Sikaloc`,
+        titre: `${prenom}, votre espace locataire est prêt`,
+        corps: [
+          `${bailleurNom} utilise Sikaloc pour la gestion de ${logement || 'votre logement'}, et vous ouvre un accès.`,
+          'Vous y retrouverez votre bail, vos loyers, vos paiements et vos quittances — les mêmes documents que votre bailleur, pas des copies.',
+          `Ce lien vous est personnel et expire dans ${String(variables.validite_jours ?? 7)} jours.`,
+        ],
+        action: {
+          libelle: 'Accéder à mon espace',
+          url: String(variables.lien ?? urlBase()),
+        },
+      }
+    }
+
     case 'grace_j0':
       return {
         ton: 'info',

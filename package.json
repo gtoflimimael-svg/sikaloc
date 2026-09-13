@@ -33,7 +33,8 @@
     "banc:telephone": "tsx scripts/banc-telephone.ts",
     "banc:verification": "tsx scripts/banc-verification.ts",
     "banc:echeances": "node scripts/banc-echeances.cjs",
-    "banc:roles": "node scripts/banc-roles.cjs"
+    "banc:roles": "node scripts/banc-roles.cjs",
+    "banc:invitations": "node scripts/banc-invitations.cjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
