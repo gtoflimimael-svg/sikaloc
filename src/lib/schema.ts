@@ -47,6 +47,7 @@ const TABLES: Record<string, string> = {
   signatures_apposees: 'SignatureApposee',
   codes_verification: 'CodeVerification',
   v_echeances: 'Echeance',
+  invitations_locataire: 'InvitationLocataire',
 }
 
 export interface EcartSchema {

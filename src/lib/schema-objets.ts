@@ -67,6 +67,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "declencheur",
+    "nom": "canoniser_telephone",
+    "migration": "20260912000600_telephones_canoniques.sql"
+  },
+  {
+    "categorie": "declencheur",
     "nom": "creer_profil_bailleur",
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
@@ -104,6 +109,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "declencheur",
     "nom": "verifier_coherence_paiement",
     "migration": "20260817000200_fonctions_et_triggers.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "accepter_invitation",
+    "migration": "20260913000500_invitations_locataire.sql"
   },
   {
     "categorie": "fonction",
@@ -174,6 +184,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "purger_donnees_personnelles",
     "migration": "20260817000800_cycle_de_grace.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "purger_invitations",
+    "migration": "20260913000500_invitations_locataire.sql"
   },
   {
     "categorie": "fonction",
@@ -262,6 +277,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "idx_invitations_locataire",
+    "migration": "20260913000500_invitations_locataire.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "idx_locataires_compte",
     "migration": "20260913000400_roles_et_compte_locataire.sql"
   },
@@ -327,6 +347,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur annule ses invitations",
+    "migration": "20260913000600_droits_invitations.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur corrige ses paiements",
     "migration": "20260817000300_rls.sql"
   },
@@ -362,6 +387,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur invite ses propres locataires",
+    "migration": "20260913000600_droits_invitations.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur lit sa photo",
     "migration": "20260912000300_photo_profil.sql"
   },
@@ -374,6 +404,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur lit ses baux",
     "migration": "20260817000300_rls.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur lit ses invitations",
+    "migration": "20260913000500_invitations_locataire.sql"
   },
   {
     "categorie": "politique",

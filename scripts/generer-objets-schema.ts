@@ -103,11 +103,35 @@ export function extraire(): ObjetDeclare[] {
       .filter((ligne) => !ligne.trimStart().startsWith('--'))
       .join('\n')
 
+    // ─── L'ordre DANS le fichier compte aussi ────────────────────────────
+    //
+    // Traiter toutes les créations puis toutes les suppressions faisait
+    // disparaître de la surveillance tout objet écrit selon l'idiome
+    // d'idempotence le plus courant :
+    //
+    //     drop policy if exists "X" on t;
+    //     create policy "X" on t ...;
+    //
+    // La création était enregistrée, la suppression l'effaçait aussitôt, et
+    // l'objet existait en base sans que plus rien ne le surveille. Le
+    // compteur baissait sans que rien ne le signale — c'est arrivé deux fois,
+    // sur une contrainte puis sur trois politiques d'invitation.
+    //
+    // On rejoue donc les instructions dans leur ordre d'écriture. « Supprimer
+    // puis recréer » revient alors à « déclarer », et « créer puis
+    // supprimer » — le cas réel de `quittances_numero_document_key` — reste
+    // une suppression.
+    const evenements: { position: number; cle: string; objet: ObjetDeclare | null }[] = []
+
     for (const { categorie, expression } of MOTIFS) {
       for (const trouve of instructions.matchAll(expression)) {
         const valeur = trouve[1] ?? trouve[2]
         if (valeur) {
-          declares.set(`${categorie}:${valeur}`, { categorie, nom: valeur, migration: fichier })
+          evenements.push({
+            position: trouve.index ?? 0,
+            cle: `${categorie}:${valeur}`,
+            objet: { categorie, nom: valeur, migration: fichier },
+          })
         }
       }
     }
@@ -115,8 +139,21 @@ export function extraire(): ObjetDeclare[] {
     for (const { categorie, expression } of SUPPRESSIONS) {
       for (const trouve of instructions.matchAll(expression)) {
         const valeur = trouve[1] ?? trouve[2]
-        if (valeur) declares.delete(`${categorie}:${valeur}`)
+        if (valeur) {
+          evenements.push({
+            position: trouve.index ?? 0,
+            cle: `${categorie}:${valeur}`,
+            objet: null,
+          })
+        }
       }
+    }
+
+    evenements.sort((a, b) => a.position - b.position)
+
+    for (const { cle, objet } of evenements) {
+      if (objet) declares.set(cle, objet)
+      else declares.delete(cle)
     }
   }
 
