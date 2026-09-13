@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
@@ -10,6 +11,18 @@ import { abonnementActif } from '@/lib/plan'
 import { bailleurCourant } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { ESPACE_PRO } from '@/lib/roles'
+
+/**
+ * Le titre des onglets de l'espace bailleur.
+ *
+ * Le gabarit de la racine dit « … · Sikaloc ». Ici il dit « … · Sikaloc_Pro » :
+ * sur un navigateur qui porte les deux espaces ouverts côte à côte, c'est
+ * l'onglet qui les distingue.
+ */
+export const metadata: Metadata = {
+  title: { template: `%s · ${ESPACE_PRO.nom}`, default: ESPACE_PRO.nom },
+}
 
 export default async function LayoutApplication({
   children,

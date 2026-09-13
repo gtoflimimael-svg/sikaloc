@@ -3,10 +3,27 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import type { Database } from '@/lib/types/database'
 
-/** Préfixes réservés aux bailleurs authentifiés. */
-const PREFIXES_PROTEGES = ['/app']
+/** Préfixes réservés aux comptes authentifiés — les deux espaces. */
+const PREFIXES_PROTEGES = ['/app', '/me']
 
-/** Écrans d'authentification : un bailleur déjà connecté n'y a rien à faire. */
+/**
+ * Les exceptions publiques à l'intérieur d'un espace protégé.
+ *
+ * `/me/rejoindre` explique comment obtenir un accès locataire : elle s'adresse
+ * précisément à quelqu'un qui n'a pas encore de compte. La protéger la rendait
+ * inatteignable pour son seul public, et renvoyait vers une connexion
+ * impossible — le locataire n'a pas d'identifiants à ce stade.
+ */
+const EXCEPTIONS_PUBLIQUES = ['/me/rejoindre']
+
+/**
+ * Écrans d'authentification : une session ouverte n'y a rien à faire.
+ *
+ * `/entrer` n'en fait PAS partie, et c'est essentiel : c'est la page de choix,
+ * elle s'adresse justement à quelqu'un de connecté qui porte les deux rôles.
+ * L'y refuser produirait une boucle entre elle et l'espace vers lequel on le
+ * renverrait.
+ */
 const PAGES_AUTH = ['/connexion', '/inscription']
 
 /**
@@ -47,7 +64,11 @@ export default async function proxy(request: NextRequest) {
 
   const chemin = request.nextUrl.pathname
 
-  if (!user && PREFIXES_PROTEGES.some((p) => chemin.startsWith(p))) {
+  const publique = EXCEPTIONS_PUBLIQUES.some(
+    (p) => chemin === p || chemin.startsWith(`${p}/`),
+  )
+
+  if (!user && !publique && PREFIXES_PROTEGES.some((p) => chemin.startsWith(p))) {
     const url = request.nextUrl.clone()
     url.pathname = '/connexion'
     url.searchParams.set('suite', chemin)
@@ -55,8 +76,11 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (user && PAGES_AUTH.includes(chemin)) {
+    // Vers la page de choix, et non plus vers `/app` : un locataire connecté
+    // renvoyé vers l'espace du bailleur rebondirait aussitôt. `/entrer`
+    // aiguille chacun vers le sien, ou pose la question à qui porte les deux.
     const url = request.nextUrl.clone()
-    url.pathname = '/app'
+    url.pathname = '/entrer'
     url.search = ''
     return NextResponse.redirect(url)
   }

@@ -32,7 +32,8 @@
     "banc:mot-de-passe": "tsx scripts/banc-mot-de-passe.ts",
     "banc:telephone": "tsx scripts/banc-telephone.ts",
     "banc:verification": "tsx scripts/banc-verification.ts",
-    "banc:echeances": "node scripts/banc-echeances.cjs"
+    "banc:echeances": "node scripts/banc-echeances.cjs",
+    "banc:roles": "node scripts/banc-roles.cjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

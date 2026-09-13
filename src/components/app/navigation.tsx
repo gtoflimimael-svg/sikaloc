@@ -21,6 +21,7 @@ import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
+import { ESPACE_PRO } from '@/lib/roles'
 
 export interface LienNav {
   href: string
@@ -116,7 +117,11 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
 
         <div className="mt-auto space-y-md px-md pb-sm">
           <SelecteurTheme compact />
-          <p className="text-caption text-mute-soft">Sikaloc · MVP Bénin</p>
+          {/*
+            L'espace se nomme ici, discrètement mais sans ambiguïté : c'est le
+            repère qui dit au bailleur dans lequel des deux il se trouve.
+          */}
+          <p className="text-caption text-mute-soft">{ESPACE_PRO.nom} · Bénin</p>
         </div>
       </div>
     </aside>

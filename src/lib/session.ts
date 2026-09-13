@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
+import { AUCUN_ROLE, destinationApresConnexion, type Roles } from '@/lib/roles'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -32,9 +33,45 @@ export async function bailleurNonVerifie(): Promise<Bailleur> {
     .eq('id', user.id)
     .single()
 
-  if (!bailleur) redirect('/connexion')
+  if (!bailleur) {
+    // ─── Connecté, mais pas bailleur ────────────────────────────────────
+    //
+    // Renvoyer vers `/connexion` serait une boucle : `proxy.ts` en éloigne
+    // toute session ouverte et la ramène vers `/app`, qui repasse ici. Un
+    // locataire se retrouverait à rebondir entre les deux écrans sans jamais
+    // comprendre pourquoi.
+    //
+    // On l'aiguille donc vers l'espace qui est le sien, ou vers la page de
+    // choix quand on ne sait pas trancher.
+    redirect(destinationApresConnexion(await rolesDuCompte()))
+  }
 
   return bailleur as Bailleur
+}
+
+/**
+ * Les rôles du compte connecté.
+ *
+ * Passe par la fonction `mes_roles()` plutôt que par deux requêtes : un
+ * locataire ne peut pas lire sa propre ligne `locataires`, dont les politiques
+ * ne rendent que celles du bailleur propriétaire. Il ne saurait donc jamais
+ * qu'il est locataire.
+ *
+ * Rend `AUCUN_ROLE` plutôt que de lever : cette fonction sert à décider où
+ * envoyer quelqu'un, et une erreur de lecture ne doit pas produire un écran
+ * blanc là où une page de choix ferait l'affaire.
+ */
+export async function rolesDuCompte(): Promise<Roles> {
+  const supabase = await creerClientServeur()
+
+  const { data, error } = await supabase.rpc('mes_roles')
+  if (error || !data || data.length === 0) return AUCUN_ROLE
+
+  const ligne = Array.isArray(data) ? data[0] : data
+  return {
+    estBailleur: ligne.est_bailleur === true,
+    estLocataire: ligne.est_locataire === true,
+  }
 }
 
 /**

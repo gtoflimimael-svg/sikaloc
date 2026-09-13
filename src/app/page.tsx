@@ -373,12 +373,23 @@ export default async function PageAccueil() {
               <SelecteurTheme compact />
             </div>
             {utilisateur ? (
-              <Link href="/app" className="btn btn-primary btn-sm">
+              // `/entrer` plutôt que `/app` : il aiguille selon les rôles et ne
+              // pose la question qu'à qui possède les deux. Un bailleur ne voit
+              // donc aucune étape de plus.
+              <Link href="/entrer" className="btn btn-primary btn-sm">
                 Mon tableau de bord
               </Link>
             ) : (
               <>
-                <Link href="/connexion" className="btn btn-secondary btn-sm max-lg:hidden">
+                {/*
+                  « Se connecter » mène au choix d'espace : c'est le seul point
+                  du site où quelqu'un qui revient peut être aussi bien bailleur
+                  que locataire. Les appels à l'action plus bas, eux, restent
+                  dirigés vers l'inscription bailleur — cette page vend
+                  Sikaloc_Pro, et un sélecteur y ajouterait une étape à un
+                  parcours qui convertit.
+                */}
+                <Link href="/entrer" className="btn btn-secondary btn-sm max-lg:hidden">
                   Se connecter
                 </Link>
                 <Link href="/inscription" className="btn btn-primary btn-sm">
