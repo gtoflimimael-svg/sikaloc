@@ -9,6 +9,8 @@ import {
   FormulaireReprise,
 } from '@/components/verification/formulaires'
 import { ProgressionVerification } from '@/components/verification/progression'
+import { destinationApresConnexion } from '@/lib/roles'
+import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import type { Bailleur } from '@/lib/types/database'
@@ -103,8 +105,14 @@ export default async function PageVerification() {
     telephoneVerifie: Boolean(profil?.telephone_verifie_le),
   }
 
+  // Aucun canal ne peut acheminer un code : l'exigence du téléphone est
+  // suspendue, sinon ce compte serait enfermé dehors sans recours. Elle se
+  // rétablit d'elle-même dès qu'un fournisseur est branché.
+  const canaux = canauxDisponibles()
+  const telephoneExigible = canaux.length > 0
+
   // ── Tout est fait ────────────────────────────────────────────────────────
-  if (comptePleinementVerifie(etat)) {
+  if (comptePleinementVerifie(etat, { telephoneExigible })) {
     return (
       <CarteAuth titre="Compte vérifié">
         <div className="space-y-xl">
@@ -116,13 +124,23 @@ export default async function PageVerification() {
               className="mt-xxs shrink-0 text-positive-deep"
             />
             <p className="text-body-sm text-positive-deep">
-              Votre adresse email et votre numéro de téléphone sont confirmés.
+              {etat.telephoneVerifie
+                ? 'Votre adresse email et votre numéro de téléphone sont confirmés.'
+                : 'Votre adresse email est confirmée. La vérification du numéro sera demandée dès qu’elle sera disponible.'}
             </p>
           </div>
 
           <ProgressionVerification etat={etat} courante={null} />
 
-          <Link href="/app" className="btn btn-primary w-full">
+          {/*
+            La destination dépend des rôles : un locataire venu d'une
+            invitation n'a rien à faire dans l'espace du bailleur, et l'y
+            envoyer le ferait rebondir aussitôt.
+          */}
+          <Link
+            href={destinationApresConnexion(await rolesDuCompte())}
+            className="btn btn-primary w-full"
+          >
             Accéder à Sikaloc
           </Link>
         </div>
@@ -132,7 +150,6 @@ export default async function PageVerification() {
 
   // ── Reste le téléphone ───────────────────────────────────────────────────
   const attente = await attenteAvantRenvoi(user.id)
-  const canaux = canauxDisponibles()
   const manquants = Object.fromEntries(
     (['SMS', 'WHATSAPP'] as const)
       .filter((c) => !canaux.includes(c))

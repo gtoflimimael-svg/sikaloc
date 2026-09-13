@@ -106,6 +106,47 @@ verifier(
   false,
 )
 
+// ═══ 1bis. L'exigence suspendue ══════════════════════════════════════════════
+//
+// Tant qu'aucun canal ne peut acheminer un code, exiger la vérification du
+// téléphone enfermerait dehors chaque compte créé — sans qu'aucun geste de
+// l'utilisateur n'y change quoi que ce soit. Une exigence qu'on ne peut pas
+// satisfaire n'est pas une exigence, c'est une porte murée.
+//
+// Elle se rétablit d'elle-même dès qu'un canal existe : c'est la disponibilité
+// qui décide, pas un interrupteur qu'on oublierait de remettre.
+titre('1bis. Sans canal, l’exigence du téléphone est suspendue')
+
+verifier(
+  'email seul suffit quand aucun canal n’existe',
+  comptePleinementVerifie(
+    { emailVerifie: true, telephoneVerifie: false },
+    { telephoneExigible: false },
+  ),
+  true,
+)
+verifier(
+  'mais l’email reste indispensable',
+  comptePleinementVerifie(
+    { emailVerifie: false, telephoneVerifie: true },
+    { telephoneExigible: false },
+  ),
+  false,
+)
+verifier(
+  'et l’exigence revient dès qu’un canal existe',
+  comptePleinementVerifie(
+    { emailVerifie: true, telephoneVerifie: false },
+    { telephoneExigible: true },
+  ),
+  false,
+)
+verifier(
+  'le défaut reste l’exigence des deux',
+  comptePleinementVerifie({ emailVerifie: true, telephoneVerifie: false }),
+  false,
+)
+
 // ═══ 2. L'ordre du parcours ══════════════════════════════════════════════════
 titre('2. Le parcours — email d’abord, téléphone ensuite')
 

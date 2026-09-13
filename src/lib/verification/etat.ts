@@ -2,6 +2,7 @@ import 'server-only'
 
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
+import { canauxDisponibles } from '@/lib/verification/canaux'
 import {
   comptePleinementVerifie,
   etapeCourante,
@@ -30,6 +31,8 @@ import {
  */
 
 export interface EtatComplet extends EtatVerification {
+  /** Un canal peut-il réellement acheminer un code ? Sinon l'exigence est suspendue. */
+  telephoneExigible: boolean
   email: string
   telephone: string
   pleinementVerifie: boolean
@@ -59,13 +62,18 @@ export async function etatVerification(bailleur: Bailleur): Promise<EtatComplet>
     telephoneVerifie: Boolean(bailleur.telephone_verifie_le),
   }
 
+  // Aucun canal pour acheminer un code au téléphone : l'exigence est suspendue
+  // le temps qu'un fournisseur existe. Voir `comptePleinementVerifie`.
+  const telephoneExigible = canauxDisponibles().length > 0
+
   return {
     ...etat,
+    telephoneExigible,
     // L'adresse de la session prime : c'est celle que GoTrue a confirmée.
     // `bailleurs.email` n'en est qu'une copie, posée à l'inscription.
     email: user?.email ?? bailleur.email,
     telephone: bailleur.telephone,
-    pleinementVerifie: comptePleinementVerifie(etat),
+    pleinementVerifie: comptePleinementVerifie(etat, { telephoneExigible }),
     etape: etapeCourante(etat),
     restantes: etapesRestantes(etat),
     canal: bailleur.telephone_canal_verification,

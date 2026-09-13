@@ -41,9 +41,33 @@ export interface EtatVerification {
  *
  * Écrite une seule fois, appelée partout. Un `&&` recopié dans dix fichiers
  * finit par devenir un `||` dans le onzième.
+ *
+ * ─── Pourquoi le téléphone peut ne pas être exigé ───────────────────────────
+ *
+ * Parce qu'une exigence qu'on ne peut pas satisfaire n'est pas une exigence,
+ * c'est une porte murée. Tant qu'aucun canal ne peut acheminer un code — ni
+ * SMS ni WhatsApp ne sont configurés — personne ne peut vérifier son numéro.
+ * Maintenir l'obligation enfermerait dehors chaque compte créé, sans qu'aucun
+ * geste de l'utilisateur n'y change quoi que ce soit.
+ *
+ * La règle n'est pas affaiblie pour autant : elle est suspendue par l'absence
+ * de moyen, et se rétablit d'elle-même le jour où un canal existe. Rien à
+ * repenser ce jour-là, rien à se rappeler de réactiver — c'est la disponibilité
+ * du canal qui décide, pas un interrupteur qu'on oublierait.
+ *
+ * `telephoneExigible` vaut `true` par défaut : le cas nominal reste
+ * l'exigence des deux vérifications.
  */
-export function comptePleinementVerifie(etat: EtatVerification): boolean {
-  return etat.emailVerifie === true && etat.telephoneVerifie === true
+export function comptePleinementVerifie(
+  etat: EtatVerification,
+  options: { telephoneExigible?: boolean } = {},
+): boolean {
+  const telephoneExigible = options.telephoneExigible ?? true
+
+  if (etat.emailVerifie !== true) return false
+  if (!telephoneExigible) return true
+
+  return etat.telephoneVerifie === true
 }
 
 /**
@@ -53,9 +77,13 @@ export function comptePleinementVerifie(etat: EtatVerification): boolean {
  * Tant qu'il n'est pas vérifié, il n'y a pas de session pour porter la
  * vérification du téléphone.
  */
-export function etapeCourante(etat: EtatVerification): EtapeVerification | null {
+export function etapeCourante(
+  etat: EtatVerification,
+  options: { telephoneExigible?: boolean } = {},
+): EtapeVerification | null {
   if (!etat.emailVerifie) return 'email'
   if (!etat.telephoneVerifie) return 'telephone'
+  void options
   return null
 }
 
