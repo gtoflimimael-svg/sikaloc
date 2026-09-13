@@ -42,6 +42,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "locataires_compte_coherent",
+    "migration": "20260913000400_roles_et_compte_locataire.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "locataires_signature_chemin_scope",
     "migration": "20260820000200_signature_chemin_contraint.sql"
   },
@@ -138,12 +143,17 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "gerer_nouvel_utilisateur",
-    "migration": "20260912000400_photo_periode_inscription.sql"
+    "migration": "20260913000400_roles_et_compte_locataire.sql"
   },
   {
     "categorie": "fonction",
     "nom": "inventaire_schema",
     "migration": "20260824000200_inventaire_schema_auth.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "mes_roles",
+    "migration": "20260913000400_roles_et_compte_locataire.sql"
   },
   {
     "categorie": "fonction",
@@ -249,6 +259,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "idx_codes_verification_recherche",
     "migration": "20260913000100_verification_coordonnees.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "idx_locataires_compte",
+    "migration": "20260913000400_roles_et_compte_locataire.sql"
   },
   {
     "categorie": "index",

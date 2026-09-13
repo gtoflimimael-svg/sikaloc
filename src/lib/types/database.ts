@@ -153,6 +153,16 @@ export type Locataire = {
   avatar: string | null
   /** Chemin dans le bucket `signatures`. NULL = aucune signature recueillie. */
   signature_chemin: string | null
+  /**
+   * Compte Sikaloc_Me associé. NULL = ce locataire n'a pas de compte, ce qui
+   * reste le cas courant.
+   *
+   * Non unique à dessein : une même personne peut louer chez deux bailleurs,
+   * donc apparaître dans deux lignes pointant vers le même compte.
+   */
+  compte_id: string | null
+  /** Moment de l'association. Rattacher une personne à un bail engage. */
+  compte_lie_le: string | null
   created_at: string
 }
 
@@ -482,6 +492,17 @@ export interface Database {
       executer_cycle_grace: {
         Args: Record<string, never>
         Returns: { bailleur: string; ancien: string; nouveau: string }[]
+      }
+      /**
+       * Les rôles de l'appelant.
+       *
+       * `SECURITY DEFINER` par nécessité : un locataire ne verrait jamais sa
+       * propre ligne `locataires`, dont les politiques ne rendent que celles
+       * du bailleur propriétaire. Ne rend que deux booléens le concernant.
+       */
+      mes_roles: {
+        Args: Record<string, never>
+        Returns: { est_bailleur: boolean; est_locataire: boolean }[]
       }
       /** Purge J+90, volet base — réservé au service_role. */
       executer_purge_j90: {
