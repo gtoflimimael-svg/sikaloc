@@ -197,7 +197,7 @@ export async function genererEtStocker(paiementId: string): Promise<QuittanceGen
 
   const { data: paiement } = await admin
     .from('paiements')
-    .select('bailleur_id, bail_id, est_partiel')
+    .select('bailleur_id, est_partiel')
     .eq('id', paiementId)
     .single()
 
@@ -285,7 +285,6 @@ export async function genererEtStocker(paiementId: string): Promise<QuittanceGen
       .insert({
         bailleur_id: paiement.bailleur_id,
         paiement_id: paiementId,
-        bail_id: paiement.bail_id,
         // Laissé vide à dessein : le trigger pose AAAA-NNNN de façon atomique.
         numero_document: null,
         type,

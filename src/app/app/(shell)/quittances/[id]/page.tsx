@@ -31,12 +31,28 @@ export default async function PageQuittance({
   const { id } = await params
   const supabase = await creerClientServeur()
 
+  /*
+   * Le bail est lu À TRAVERS le paiement, et jamais directement.
+   *
+   * `quittances` ne porte plus de colonne `bail_id` : elle n'était écrite qu'à
+   * l'insertion du document, et devenait fausse dès qu'une correction déplaçait
+   * le paiement vers un autre bail pendant la fenêtre de cinq minutes — l'usage
+   * même pour lequel cette fenêtre existe.
+   *
+   * Cette page embarquait le bail par cette colonne. Après une correction, elle
+   * affichait donc le locataire de l'ancien bail à côté du PDF du nouveau, et
+   * composait le lien « Envoyer au locataire sur WhatsApp » avec SON numéro et
+   * l'URL signée du document d'un autre.
+   *
+   * `ma_quittance()` joignait déjà par le paiement ; les deux côtés empruntent
+   * désormais le même chemin. Voir la migration 20260913000800.
+   */
   const [bailleur, { data: quittance }] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('quittances')
       .select(
-        '*, paiement:paiements(*), bail:baux(loyer_mensuel, logement:logements(adresse, ville, pays, type), locataire:locataires(nom, telephone))',
+        '*, paiement:paiements(*, bail:baux(loyer_mensuel, logement:logements(adresse, ville, pays, type), locataire:locataires(nom, telephone)))',
       )
       .eq('id', id)
       .maybeSingle(),
@@ -55,7 +71,7 @@ export default async function PageQuittance({
   const paiement = Array.isArray(quittance.paiement)
     ? quittance.paiement[0]
     : quittance.paiement
-  const bail = Array.isArray(quittance.bail) ? quittance.bail[0] : quittance.bail
+  const bail = Array.isArray(paiement?.bail) ? paiement?.bail[0] : paiement?.bail
   const logement = Array.isArray(bail?.logement) ? bail?.logement[0] : bail?.logement
   const locataire = Array.isArray(bail?.locataire) ? bail?.locataire[0] : bail?.locataire
 

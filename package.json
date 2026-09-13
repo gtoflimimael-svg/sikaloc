@@ -34,7 +34,8 @@
     "banc:verification": "tsx scripts/banc-verification.ts",
     "banc:echeances": "node scripts/banc-echeances.cjs",
     "banc:roles": "node scripts/banc-roles.cjs",
-    "banc:invitations": "node scripts/banc-invitations.cjs"
+    "banc:invitations": "node scripts/banc-invitations.cjs",
+    "banc:correction": "tsx scripts/banc-quittance-correction.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

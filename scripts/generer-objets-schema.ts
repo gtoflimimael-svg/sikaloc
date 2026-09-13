@@ -73,8 +73,16 @@ const SUPPRESSIONS: { categorie: string; expression: RegExp }[] = [
     expression: new RegExp(String.raw`drop\s+policy\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
   },
   {
+    // `create index` ne prend jamais de schéma — l'index naît dans celui de sa
+    // table — mais `drop index` en accepte un, et le style du projet qualifie
+    // tout. Sans ce préfixe optionnel, `drop index if exists public.x` faisait
+    // enregistrer la suppression d'un objet nommé « public », et l'index
+    // supprimé restait attendu par le contrôle de schéma pour toujours.
     categorie: 'index',
-    expression: new RegExp(String.raw`drop\s+index\s+(?:if\s+exists\s+)?${nom}`, 'gi'),
+    expression: new RegExp(
+      String.raw`drop\s+index\s+(?:if\s+exists\s+)?(?:[a-zA-Z_]\w*\.)?${nom}`,
+      'gi',
+    ),
   },
   {
     categorie: 'declencheur',

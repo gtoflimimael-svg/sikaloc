@@ -322,11 +322,6 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
-    "nom": "quittances_bail_id_idx",
-    "migration": "20260817000100_schema_initial.sql"
-  },
-  {
-    "categorie": "index",
     "nom": "quittances_bailleur_id_idx",
     "migration": "20260817000100_schema_initial.sql"
   },

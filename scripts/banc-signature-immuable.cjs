@@ -120,7 +120,6 @@ const empreinte = (b) => createHash('sha256').update(b).digest('hex')
     .insert({
       bailleur_id: bailleurId,
       paiement_id: paiement.id,
-      bail_id: bail.id,
       numero_document: null,
       type: 'Quittance',
     })
@@ -246,7 +245,6 @@ const empreinte = (b) => createHash('sha256').update(b).digest('hex')
     .insert({
       bailleur_id: bailleurId,
       paiement_id: paiement2.id,
-      bail_id: bail.id,
       numero_document: null,
       type: 'Quittance',
     })

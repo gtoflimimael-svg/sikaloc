@@ -234,7 +234,6 @@ export type Quittance = {
   id: string
   bailleur_id: string
   paiement_id: string
-  bail_id: string
   numero_document: string | null
   hash_sha256: string | null
   type: TypeDocument
