@@ -163,6 +163,14 @@ export type Locataire = {
   compte_id: string | null
   /** Moment de l'association. Rattacher une personne à un bail engage. */
   compte_lie_le: string | null
+  /**
+   * Ce locataire accepte-t-il les emails de Sikaloc — quittance, relance ?
+   *
+   * Vrai par défaut. Respecté par les envois déclenchés par le bailleur comme
+   * par les envois automatiques : une personne qui demande qu'on s'arrête n'a
+   * pas à le redemander à chaque canal.
+   */
+  notif_email: boolean
   created_at: string
 }
 
@@ -669,6 +677,19 @@ export interface Database {
       ma_quittance: {
         Args: { p_quittance_id: string }
         Returns: QuittanceLocataire[]
+      }
+      /** Les préférences de notification du locataire appelant. */
+      mes_preferences: {
+        Args: Record<string, never>
+        Returns: { notif_email: boolean }[]
+      }
+      /**
+       * Le seul chemin d'écriture de Sikaloc_Me : un booléen, sur ses propres
+       * fiches. Aucune donnée métier n'est atteignable par là.
+       */
+      definir_mes_notifications: {
+        Args: { p_actif: boolean }
+        Returns: undefined
       }
       /** Purge J+90, volet base — réservé au service_role. */
       executer_purge_j90: {

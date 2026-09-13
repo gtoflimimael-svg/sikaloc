@@ -165,17 +165,28 @@ export function FormulairePreferences({ bailleur }: { bailleur: Bailleur }) {
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
       {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 
+      {/*
+        Les deux libellés ont été réécrits : ils décrivaient des envois qui
+        n'existaient pas.
+
+        « Échéances à venir, loyers en retard » annonçait des rappels que
+        Sikaloc n'a jamais envoyés à un bailleur. Et la bascule WhatsApp
+        n'était lue nulle part — elle enregistrait une valeur sans effet.
+
+        Un réglage qui ne règle rien est pire qu'un réglage absent : on le
+        change, on croit avoir agi, et rien ne se passe.
+      */}
       <Bascule
         nom="notifEmail"
-        libelle="Recevoir les rappels par email"
-        description="Échéances à venir, loyers en retard, expiration de l’abonnement."
+        libelle="Recevoir les emails non essentiels"
+        description="Les nouvelles de votre compte, comme un locataire qui rejoint son espace. Les avis d’impayé d’abonnement et d’avant-suppression partent toujours : ils annoncent la perte de vos données."
         parDefaut={bailleur.notif_email}
       />
 
       <Bascule
         nom="notifWhatsApp"
-        libelle="Proposer les relances WhatsApp"
-        description="Affiche le bouton de relance sur chaque impayé. L’envoi reste manuel."
+        libelle="Proposer les boutons WhatsApp"
+        description="Affiche « Relancer par WhatsApp » sur chaque impayé et « Envoyer au locataire » sur chaque quittance. L’envoi reste manuel, depuis votre téléphone. Les boutons email ne sont pas concernés."
         parDefaut={bailleur.notif_whatsapp}
       />
 

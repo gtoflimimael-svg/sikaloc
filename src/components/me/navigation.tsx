@@ -1,6 +1,14 @@
 'use client'
 
-import { ArrowLeftRight, Banknote, CalendarDays, House, LogOut, ScrollText } from 'lucide-react'
+import {
+  ArrowLeftRight,
+  Banknote,
+  CalendarDays,
+  House,
+  LogOut,
+  ScrollText,
+  SlidersHorizontal,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -15,9 +23,9 @@ import { ESPACE_ME } from '@/lib/roles'
  * ─── Pourquoi elle ne ressemble pas à celle de Sikaloc_Pro ──────────────────
  *
  * Pas de barre latérale, pas de tiroir. Sikaloc_Pro en a besoin : sept
- * rubriques, un compteur d'impayés, une action principale. Ici il y a quatre
- * écrans et rien à saisir — une barre d'onglets suffit, et elle tient sur la
- * largeur d'un téléphone sans rien replier.
+ * rubriques, un compteur d'impayés, une action principale. Ici il y a cinq
+ * écrans dont un seul porte un réglage — une barre d'onglets suffit, et elle
+ * défile sur la largeur d'un téléphone sans rien replier.
  *
  * C'est le public qui commande : un bailleur gère depuis un bureau autant que
  * depuis son téléphone, un locataire consulte presque toujours depuis son
@@ -25,9 +33,9 @@ import { ESPACE_ME } from '@/lib/roles'
  *
  * ─── Un seul repère de navigation, jamais deux ──────────────────────────────
  *
- * Les onglets défilent horizontalement plutôt que de passer dans un menu :
- * quatre libellés courts entrent dans 360 px, et un menu caché ferait
- * disparaître la moitié de l'espace derrière un geste à découvrir.
+ * Les onglets défilent horizontalement plutôt que de passer dans un menu : un
+ * menu caché ferait disparaître la moitié de l'espace derrière un geste à
+ * découvrir, alors que le défilement se voit.
  */
 
 const ONGLETS = [
@@ -35,6 +43,7 @@ const ONGLETS = [
   { href: `${ESPACE_ME.racine}/loyers`, libelle: 'Mes loyers', Icone: CalendarDays },
   { href: `${ESPACE_ME.racine}/paiements`, libelle: 'Mes paiements', Icone: Banknote },
   { href: `${ESPACE_ME.racine}/bail`, libelle: 'Mon bail', Icone: ScrollText },
+  { href: `${ESPACE_ME.racine}/preferences`, libelle: 'Préférences', Icone: SlidersHorizontal },
 ]
 
 /** `/me` ne doit s'activer que sur lui-même, pas sur `/me/loyers`. */

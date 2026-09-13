@@ -119,21 +119,33 @@ export function BoutonAction({
   pleineLargeur?: boolean
 }) {
   const [erreur, setErreur] = useState<string | null>(null)
+  /*
+   * La réussite s'affiche aussi, et pas seulement l'échec.
+   *
+   * Un bouton qui envoie un email à quelqu'un ne peut pas se contenter de ne
+   * rien dire quand tout va bien : le bailleur n'a aucun autre moyen de savoir
+   * si le message est parti, et il cliquerait une seconde fois.
+   */
+  const [succes, setSucces] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
 
   return (
     <div className={pleineLargeur ? 'w-full space-y-md' : 'space-y-md'}>
       {erreur ? <Alerte ton="erreur">{erreur}</Alerte> : null}
+      {succes ? <Alerte ton="succes">{succes}</Alerte> : null}
 
       <button
         type="button"
         disabled={enCours}
         onClick={() => {
           setErreur(null)
+          setSucces(null)
           demarrer(async () => {
             const resultat = await action()
             if (resultat && 'erreur' in resultat && resultat.erreur) {
               setErreur(resultat.erreur)
+            } else if (resultat && 'succes' in resultat && resultat.succes) {
+              setSucces(resultat.succes)
             }
           })
         }}

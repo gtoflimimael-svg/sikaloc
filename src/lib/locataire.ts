@@ -62,6 +62,19 @@ export const mesPaiements = cache(async (): Promise<PaiementLocataire[]> => {
 })
 
 /**
+ * Les préférences de notification de l'appelant.
+ *
+ * Rend « oui » par défaut si la lecture échoue : cet écran sert à consulter et
+ * à modifier un réglage, pas à décider d'un envoi. Le contrôle qui compte est
+ * en base, dans les actions d'envoi, et il lit la colonne elle-même.
+ */
+export const mesPreferences = cache(async (): Promise<{ notifEmail: boolean }> => {
+  const supabase = await creerClientServeur()
+  const { data } = await supabase.rpc('mes_preferences')
+  return { notifEmail: data?.[0]?.notif_email !== false }
+})
+
+/**
  * Une quittance de l'appelant — ou `null` si elle ne le concerne pas.
  *
  * Rend le chemin du fichier : réservé au serveur qui le sert. Ne jamais passer

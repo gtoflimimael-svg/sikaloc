@@ -6,6 +6,7 @@ import { FenetreCorrection } from '@/components/app/fenetre-correction'
 import { BoutonAction } from '@/components/ui/action-confirmee'
 import { Alerte, Badge } from '@/components/ui/retours'
 import { BlocSigne } from '@/components/app/bloc-signe'
+import { envoyerQuittanceParEmail } from '@/lib/actions/notifications'
 import { regenererQuittance } from '@/lib/actions/paiements'
 import { estCorrigeable } from '@/lib/paiement-utils'
 import {
@@ -82,7 +83,8 @@ export default async function PageQuittance({
     ? await urlSignee(quittance.pdf_chemin)
     : null
 
-  const lienWhatsApp = lienTelechargement
+  // Masqué si le bailleur a décoché les boutons WhatsApp dans ses réglages.
+  const lienWhatsApp = bailleur.notif_whatsapp !== false && lienTelechargement
     ? lienEnvoiQuittance({
         locataireNom: locataire.nom,
         locataireTelephone: locataire.telephone,
@@ -132,6 +134,23 @@ export default async function PageQuittance({
         >
           Télécharger le PDF
         </a>
+
+        {/*
+          L'email, à côté de WhatsApp et non à sa place.
+
+          Les deux ne font pas la même chose : WhatsApp ouvre une application
+          sur le téléphone du bailleur, qui envoie lui-même — Sikaloc n'achemine
+          rien. L'email part de Sikaloc, et son résultat s'affiche.
+
+          Le locataire qui a un espace y voit déjà sa quittance sans qu'on la
+          lui annonce ; ce message est une courtoisie, pas le canal de remise.
+        */}
+        <BoutonAction
+          action={envoyerQuittanceParEmail.bind(null, quittance.id)}
+          libelle="Envoyer par email"
+          libelleEnCours="Envoi…"
+          variante="secondary"
+        />
 
         {lienWhatsApp ? (
           <a

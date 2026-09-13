@@ -20,6 +20,18 @@ export type ModeleEmail =
   | 'grace_j30'
   | 'purge_j90'
   | 'invitation_locataire'
+  // ─── Les trois messages de l'écosystème ──────────────────────────────
+  //
+  // Les deux premiers s'adressent au LOCATAIRE et ne partent jamais d'eux-
+  // mêmes : c'est le bailleur qui appuie, depuis sa quittance ou depuis son
+  // écran d'impayés. Sikaloc n'écrit pas à un locataire dans le dos de son
+  // bailleur — la relation est la sienne.
+  | 'quittance_disponible'
+  | 'relance_impaye'
+  // Celui-ci va au BAILLEUR, et part tout seul : c'est la réponse à un geste
+  // qu'il a fait — inviter quelqu'un — et il n'a aucun autre moyen de savoir
+  // que son invitation a abouti.
+  | 'locataire_a_rejoint'
 
 export interface VariablesEmail {
   nom?: string
@@ -92,6 +104,87 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
         action: {
           libelle: 'Accéder à mon espace',
           url: String(variables.lien ?? urlBase()),
+        },
+      }
+    }
+
+    // ─── Au locataire : sa quittance ──────────────────────────────────
+    //
+    // Le document lui-même n'est PAS joint. Un PDF en pièce jointe se perd
+    // dans une boîte, se transfère sans contrôle, et surtout n'est plus celui
+    // du coffre si le bailleur corrige le paiement dans les cinq minutes. Le
+    // lien mène au document réel, celui dont l'empreinte fait foi.
+    case 'quittance_disponible': {
+      const bailleurNom = String(variables.bailleur_nom ?? 'Votre bailleur')
+      const periode = String(variables.periode ?? '')
+
+      return {
+        ton: 'info',
+        sujet: `Votre quittance de ${periode}`,
+        titre: `${prenom}, votre quittance est disponible`,
+        corps: [
+          `${bailleurNom} a enregistré votre règlement de ${periode}${
+            variables.montant ? ` — ${String(variables.montant)}` : ''
+          }.`,
+          'La quittance correspondante est disponible dans votre espace Sikaloc_Me, avec l’ensemble de vos documents.',
+        ],
+        action: {
+          libelle: 'Voir ma quittance',
+          url: `${urlBase()}/me/paiements`,
+        },
+      }
+    }
+
+    // ─── Au locataire : un loyer en retard ────────────────────────────
+    //
+    // Le message le plus délicat du produit. Il réclame de l'argent à
+    // quelqu'un, au nom de quelqu'un d'autre, et il peut se tromper : le
+    // loyer a pu être réglé en espèces sans que le bailleur l'ait saisi.
+    //
+    // Il dit donc ce que Sikaloc SAIT — aucun règlement enregistré — et jamais
+    // ce qu'il suppose. Et il laisse une porte : « si vous avez déjà réglé ».
+    // Un rappel qui n'envisage pas son propre tort est une accusation.
+    case 'relance_impaye': {
+      const bailleurNom = String(variables.bailleur_nom ?? 'Votre bailleur')
+      const periode = String(variables.periode ?? '')
+
+      return {
+        ton: 'attention',
+        sujet: `Loyer de ${periode} — rappel de ${bailleurNom}`,
+        titre: `${prenom}, le loyer de ${periode} n’est pas enregistré`,
+        corps: [
+          `${bailleurNom} n’a pas enregistré de règlement pour ${periode}${
+            variables.montant ? `, soit ${String(variables.montant)}` : ''
+          }.`,
+          'Si vous avez déjà réglé ce loyer, signalez-le à votre bailleur : lui seul peut l’enregistrer, et ce rappel s’arrêtera.',
+          'Le détail de vos loyers, mois par mois, est dans votre espace.',
+        ],
+        action: {
+          libelle: 'Voir mes loyers',
+          url: `${urlBase()}/me/loyers`,
+        },
+      }
+    }
+
+    // ─── Au bailleur : son invitation a abouti ────────────────────────
+    //
+    // Sans ce message, une invitation part et plus rien n'en revient. Le
+    // bailleur ne saurait pas si son locataire a ouvert le lien, et
+    // renverrait — ou n'oserait plus.
+    case 'locataire_a_rejoint': {
+      const locataireNom = String(variables.locataire_nom ?? 'Votre locataire')
+
+      return {
+        ton: 'info',
+        sujet: `${locataireNom} a rejoint Sikaloc`,
+        titre: `${prenom}, ${locataireNom} a rejoint son espace`,
+        corps: [
+          `${locataireNom} a accepté votre invitation et accède désormais à son logement, ses loyers et ses quittances.`,
+          'Vos deux espaces partagent les mêmes documents : ce que vous enregistrez apparaît chez votre locataire, sans copie ni synchronisation.',
+        ],
+        action: {
+          libelle: 'Voir mes locataires',
+          url: `${urlBase()}/app/locataires`,
         },
       }
     }

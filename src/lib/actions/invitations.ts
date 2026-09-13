@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
+import { prevenirBailleurDuRattachement } from '@/lib/actions/notifications'
 import { envoyerEmail } from '@/lib/emails'
 import {
   creerJeton,
@@ -221,6 +222,19 @@ export async function accepterInvitation(jeton: string): Promise<ResultatAccepta
 
   if (motif !== 'ok') {
     return { ok: false, motif, message: MESSAGES_INVITATION[motif] }
+  }
+
+  /*
+   * Le bailleur apprend que son invitation a abouti.
+   *
+   * Attendu plutôt que lancé en arrière-plan : une promesse non attendue dans
+   * une fonction serverless se fait interrompre à la fin de la requête, et le
+   * message ne partirait qu'une fois sur deux. La fonction avale ses propres
+   * erreurs — le rattachement a réussi, c'est ce qui compte pour la personne
+   * qui est devant l'écran.
+   */
+  if (ligne?.bailleur_id && ligne?.locataire_id) {
+    await prevenirBailleurDuRattachement(ligne.bailleur_id, ligne.locataire_id)
   }
 
   revalidatePath('/', 'layout')

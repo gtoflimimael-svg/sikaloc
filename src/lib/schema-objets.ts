@@ -137,6 +137,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "definir_mes_notifications",
+    "migration": "20260913000900_notifications_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "executer_cycle_grace",
     "migration": "20260818000100_rpc_cycle_grace.sql"
   },
@@ -184,6 +189,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "mes_paiements",
     "migration": "20260913000700_acces_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "mes_preferences",
+    "migration": "20260913000900_notifications_locataire.sql"
   },
   {
     "categorie": "fonction",

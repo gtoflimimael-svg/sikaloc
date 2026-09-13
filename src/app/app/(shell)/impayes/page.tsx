@@ -8,6 +8,8 @@ import { capacites } from '@/lib/plan'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye } from '@/lib/types/database'
+import { BoutonAction } from '@/components/ui/action-confirmee'
+import { relancerParEmail } from '@/lib/actions/notifications'
 import { lienRelanceImpaye } from '@/lib/whatsapp'
 
 export const metadata: Metadata = { title: 'Impayés' }
@@ -29,6 +31,10 @@ export default async function PageImpayes() {
   const impayes = (data ?? []) as Impaye[]
   const total = impayes.reduce((somme, i) => somme + Number(i.montant_du), 0)
   const relancesAutorisees = capacites(bailleur).relancesWhatsApp
+  // La préférence du bailleur, enfin lue. Elle n'a jamais gouverné que
+  // l'affichage des boutons WhatsApp — pas les boutons email, qui sont un
+  // canal distinct et qui restent quel que soit ce réglage.
+  const whatsappPropose = bailleur.notif_whatsapp !== false
 
   return (
     <div>
@@ -127,14 +133,42 @@ export default async function PageImpayes() {
 
                   <div className="mt-lg flex flex-wrap gap-sm border-t border-hairline-soft pt-lg">
                     {relancesAutorisees ? (
-                      <a
-                        href={lien}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-primary btn-sm"
-                      >
-                        Relancer par WhatsApp
-                      </a>
+                      <>
+                        {whatsappPropose ? (
+                          <a
+                            href={lien}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-primary btn-sm"
+                          >
+                            Relancer par WhatsApp
+                          </a>
+                        ) : null}
+                        {/*
+                          Les deux canaux, et le bailleur choisit.
+
+                          WhatsApp ouvre une application sur SON téléphone : le
+                          message part de lui, immédiatement lu, mais Sikaloc
+                          n'en garde rien. L'email part de Sikaloc — plus lent à
+                          être lu, mais il laisse une trace datée, et il joint
+                          un locataire dont on n'a pas le numéro sur WhatsApp.
+
+                          Le montant qui part n'est pas celui affiché ici : il
+                          est relu en base au moment du clic. Entre l'affichage
+                          et le geste, le loyer a pu être réglé.
+                        */}
+                        <BoutonAction
+                          action={relancerParEmail.bind(
+                            null,
+                            impaye.bail_id,
+                            impaye.periode_debut,
+                          )}
+                          libelle="Relancer par email"
+                          libelleEnCours="Envoi…"
+                          variante="tertiary"
+                          compact
+                        />
+                      </>
                     ) : (
                       <Link
                         href="/app/parametres/abonnement"
