@@ -147,6 +147,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "fiches_du_compte",
+    "migration": "20260913000700_acces_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "generer_code_parrainage",
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
@@ -159,6 +164,26 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "inventaire_schema",
     "migration": "20260824000200_inventaire_schema_auth.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "ma_quittance",
+    "migration": "20260913000700_acces_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "mes_baux",
+    "migration": "20260913000700_acces_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "mes_echeances",
+    "migration": "20260913000700_acces_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "mes_paiements",
+    "migration": "20260913000700_acces_locataire.sql"
   },
   {
     "categorie": "fonction",

@@ -378,6 +378,106 @@ export type InvitationLocataire = {
   cree_par: string | null
 }
 
+/* ═══ Sikaloc_Me — ce qu'un locataire lit ═══════════════════════════════════
+ *
+ * Ces quatre types ne décrivent aucune table : ce sont les retours des
+ * fonctions de la migration 20260913000700, qui énumèrent colonne par colonne
+ * ce qu'un locataire a le droit de voir.
+ *
+ * Ils sont volontairement PLUS ÉTROITS que `Bail`, `Paiement` et `Quittance`.
+ * Si une colonne manque ici par rapport à la table, ce n'est pas un oubli :
+ * c'est la réponse à « le locataire n'a pas à la connaître ».
+ */
+
+/** Un bail vu depuis Sikaloc_Me, avec son logement et de quoi joindre le bailleur. */
+export type BailLocataire = {
+  bail_id: string
+  statut: StatutBail
+  loyer_mensuel: number
+  depot_garantie: number | null
+  date_debut: string
+  date_fin: string | null
+  jour_echeance: number
+  tolerance_jours: number
+  locataire_nom: string
+  logement_adresse: string
+  logement_ville: string
+  logement_pays: string
+  logement_type: TypeLogement
+  bailleur_nom: string
+  /**
+   * Le téléphone, et pas l'email : `bailleurs.email` est l'adresse de
+   * connexion du compte Sikaloc du bailleur. Elle ne figure sur aucune
+   * quittance et n'a rien à faire dans l'espace de son locataire.
+   */
+  bailleur_telephone: string
+}
+
+/**
+ * Une échéance vue depuis Sikaloc_Me.
+ *
+ * Même `etat` que côté bailleur — c'est `v_echeances` qui le calcule, et elle
+ * seule. Sans `anterieure` ni `historique_declare` : ces deux-là racontent
+ * depuis quand le bailleur utilise Sikaloc, ce qui ne regarde pas son
+ * locataire.
+ */
+export type EcheanceLocataire = {
+  bail_id: string
+  periode_debut: string
+  periode_fin: string
+  date_echeance: string
+  loyer_mensuel: number
+  montant_paye: number
+  montant_du: number
+  jours_de_retard: number
+  etat: EtatEcheance
+}
+
+/** Un versement validé, et la quittance émise pour lui s'il y en a une. */
+export type PaiementLocataire = {
+  paiement_id: string
+  bail_id: string
+  /** NULL pour un loyer déclaré réglé avant Sikaloc : la date réelle est inconnue. */
+  date_paiement: string | null
+  montant: number
+  periode_debut: string
+  periode_fin: string
+  mode_paiement: ModePaiement
+  type_paiement: TypePaiement
+  est_partiel: boolean
+  historique: boolean
+  quittance_id: string | null
+  quittance_numero: string | null
+  quittance_type: TypeDocument | null
+  /**
+   * Le fichier est-il encore dans le coffre ?
+   *
+   * La purge J+90 met `pdf_chemin` à NULL et fait effacer l'objet, mais laisse
+   * la ligne et son numéro. Sans ce drapeau, l'écran proposerait de télécharger
+   * un document détruit.
+   */
+  quittance_telechargeable: boolean
+}
+
+/**
+ * La preuve qu'une quittance appartient à l'appelant.
+ *
+ * Sans le chemin du fichier, délibérément : cette fonction est appelable
+ * depuis un navigateur, et `quittances.pdf_chemin` commence par l'identifiant
+ * de compte du bailleur. La route qui sert le PDF relit le chemin elle-même,
+ * en administration, une fois l'appartenance établie.
+ */
+export type QuittanceLocataire = {
+  quittance_id: string
+  paiement_id: string
+  numero_document: string | null
+  type: TypeDocument
+  date_generation: string
+  hash_sha256: string | null
+  /** Une signature a été apposée : le document ne se refabrique pas. */
+  signee: boolean
+}
+
 export type Impaye = {
   bail_id: string
   bailleur_id: string
@@ -536,6 +636,39 @@ export interface Database {
       accepter_invitation: {
         Args: { p_empreinte: string }
         Returns: { locataire_id: string | null; bailleur_id: string | null; motif: string }[]
+      }
+      /* ─── Sikaloc_Me ──────────────────────────────────────────────────
+       *
+       * La surface d'accès du locataire (migration 20260913000700). Cinq
+       * fonctions `SECURITY DEFINER` en lecture seule, parce que les
+       * dix-neuf politiques des tables métier disent toutes
+       * `auth.uid() = bailleur_id` — un locataire n'y lit rien, pas même sa
+       * propre fiche.
+       *
+       * Aucune ne prend d'identifiant de locataire en argument : chacune
+       * déduit l'appelant de sa session. Un paramètre se falsifie, une
+       * session non.
+       */
+
+      /** Les baux du locataire appelant, actifs et résiliés. */
+      mes_baux: {
+        Args: Record<string, never>
+        Returns: BailLocataire[]
+      }
+      /** Ses échéances, dans l'état calculé par `v_echeances`. Aucun recalcul. */
+      mes_echeances: {
+        Args: Record<string, never>
+        Returns: EcheanceLocataire[]
+      }
+      /** Ses versements validés — les brouillons du bailleur sont exclus. */
+      mes_paiements: {
+        Args: Record<string, never>
+        Returns: PaiementLocataire[]
+      }
+      /** Une de ses quittances, avec le chemin du fichier — usage serveur. */
+      ma_quittance: {
+        Args: { p_quittance_id: string }
+        Returns: QuittanceLocataire[]
       }
       /** Purge J+90, volet base — réservé au service_role. */
       executer_purge_j90: {

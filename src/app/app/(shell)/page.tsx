@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+
+import { ESPACE_PRO } from '@/lib/roles'
 import Link from 'next/link'
 
 import { Illustration } from '@/components/ui/illustration'
@@ -16,7 +18,14 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye, MetriquesDashboard } from '@/lib/types/database'
 import { ReprendreVisite } from '@/components/app/reprendre-visite'
 
-export const metadata: Metadata = { title: 'Tableau de bord' }
+/*
+ * Titre écrit en entier : un `title.template` de layout ne s'applique pas à la
+ * page du MÊME segment, seulement à ses enfants. Et `absolute` pour court-circuiter le gabarit de la
+ * racine, qui sinon ajouterait un second « · Sikaloc ». Sans cela, l'écran d'accueil
+ * du bailleur — le seul qu'il garde ouvert toute la journée — serait le seul
+ * de l'espace à ne pas dire « Sikaloc_Pro ». Même correction que sur /me.
+ */
+export const metadata: Metadata = { title: { absolute: `Tableau de bord · ${ESPACE_PRO.nom}` } }
 
 export default async function PageTableauDeBord({
   searchParams,

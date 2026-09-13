@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
-import { AUCUN_ROLE, destinationApresConnexion, type Roles } from '@/lib/roles'
+import { AUCUN_ROLE, destinationApresConnexion, ESPACE_PRO, type Roles } from '@/lib/roles'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -72,6 +72,48 @@ export async function rolesDuCompte(): Promise<Roles> {
     estBailleur: ligne.est_bailleur === true,
     estLocataire: ligne.est_locataire === true,
   }
+}
+
+/**
+ * Le compte locataire connecté — le garde de Sikaloc_Me.
+ *
+ * ─── Ce qu'il vérifie, et ce qu'il ne vérifie pas ───────────────────────────
+ *
+ * Il vérifie qu'il y a une session et que ce compte porte bien le rôle
+ * locataire. Il ne vérifie PAS l'email : GoTrue n'ouvre de session qu'une fois
+ * l'adresse confirmée, donc toute session ouverte l'est déjà. Ajouter un
+ * contrôle ici doublerait celui de l'authentification, et un jour l'un dirait
+ * l'inverse de l'autre.
+ *
+ * Rien sur le téléphone non plus : un locataire ne s'inscrit pas de lui-même,
+ * il est invité par son bailleur, qui connaît déjà son numéro.
+ *
+ * ─── Ce garde n'est pas la sécurité ─────────────────────────────────────────
+ *
+ * Il décide où envoyer quelqu'un, pas ce qu'il peut lire. L'isolation des
+ * données tient aux fonctions de la migration 20260913000700, qui déduisent
+ * l'appelant de sa session : même en atteignant ces pages autrement, on n'en
+ * tirerait que ses propres lignes. Une route cachée n'a jamais été une
+ * protection.
+ */
+export async function locataireCourant(): Promise<{ compteId: string; email: string }> {
+  const supabase = await creerClientServeur()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/connexion')
+
+  const roles = await rolesDuCompte()
+
+  if (!roles.estLocataire) {
+    // Un bailleur égaré : on le renvoie chez lui. Quelqu'un sans aucun rôle —
+    // un compte créé depuis une invitation dont le rattachement a échoué —
+    // atterrit sur l'explication, qui est la seule réponse utile.
+    redirect(roles.estBailleur ? ESPACE_PRO.racine : '/me/rejoindre')
+  }
+
+  return { compteId: user.id, email: user.email ?? '' }
 }
 
 /**
