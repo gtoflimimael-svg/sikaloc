@@ -3,24 +3,44 @@ import { Check, Circle } from 'lucide-react'
 import { etapesRestantes, type EtatVerification } from '@/lib/verification/regles'
 
 /**
- * Où en est la vérification — deux lignes, et le compte de ce qui reste.
+ * Où en est la vérification — et le compte de ce qui reste.
  *
  * L'indicateur reste affiché pendant tout le parcours, y compris à l'étape
  * téléphone : savoir qu'il ne reste qu'une chose à faire change la disposition
  * à la faire.
+ *
+ * ─── Le téléphone ne concerne pas tout le monde ─────────────────────────────
+ *
+ * Un locataire arrive par une invitation : son bailleur détient déjà son
+ * numéro, et Sikaloc ne le lui redemandera jamais. Lui afficher « Téléphone
+ * pas encore vérifié · 1 étape restante » lui annonce une étape qui ne
+ * viendra pas — et laisse croire que son compte est incomplet alors qu'il est
+ * prêt.
+ *
+ * Trouvé en parcourant l'inscription d'un locataire de bout en bout dans un
+ * navigateur : depuis le code, l'écran paraissait juste.
  */
 export function ProgressionVerification({
   etat,
   courante,
+  telephoneConcerne = true,
 }: {
   etat: EtatVerification
   courante?: 'email' | 'telephone' | null
+  /** Faux pour un compte locataire : l'étape téléphone n'existe pas pour lui. */
+  telephoneConcerne?: boolean
 }) {
-  const restantes = etapesRestantes(etat)
+  const restantes = telephoneConcerne
+    ? etapesRestantes(etat)
+    : etat.emailVerifie
+      ? 0
+      : 1
 
   const lignes = [
     { cle: 'email' as const, libelle: 'Email', fait: etat.emailVerifie },
-    { cle: 'telephone' as const, libelle: 'Téléphone', fait: etat.telephoneVerifie },
+    ...(telephoneConcerne
+      ? [{ cle: 'telephone' as const, libelle: 'Téléphone', fait: etat.telephoneVerifie }]
+      : []),
   ]
 
   return (

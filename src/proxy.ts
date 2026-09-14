@@ -1,20 +1,18 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { cheminPublic } from '@/lib/roles'
 import type { Database } from '@/lib/types/database'
 
 /** Préfixes réservés aux comptes authentifiés — les deux espaces. */
 const PREFIXES_PROTEGES = ['/app', '/me']
 
-/**
- * Les exceptions publiques à l'intérieur d'un espace protégé.
- *
- * `/me/rejoindre` explique comment obtenir un accès locataire : elle s'adresse
- * précisément à quelqu'un qui n'a pas encore de compte. La protéger la rendait
- * inatteignable pour son seul public, et renvoyait vers une connexion
- * impossible — le locataire n'a pas d'identifiants à ce stade.
+/*
+ * Les exceptions publiques vivent dans `roles.ts`, avec les autres règles de
+ * chemin — et surtout avec un banc qui les exerce. Écrites ici, elles
+ * n'étaient testables que par un navigateur, ce qui est exactement la raison
+ * pour laquelle l'oubli de `/me/invitation` a survécu à deux étapes.
  */
-const EXCEPTIONS_PUBLIQUES = ['/me/rejoindre']
 
 /**
  * Écrans d'authentification : une session ouverte n'y a rien à faire.
@@ -64,9 +62,7 @@ export default async function proxy(request: NextRequest) {
 
   const chemin = request.nextUrl.pathname
 
-  const publique = EXCEPTIONS_PUBLIQUES.some(
-    (p) => chemin === p || chemin.startsWith(`${p}/`),
-  )
+  const publique = cheminPublic(chemin)
 
   if (!user && !publique && PREFIXES_PROTEGES.some((p) => chemin.startsWith(p))) {
     const url = request.nextUrl.clone()

@@ -21,7 +21,7 @@ import {
   masquerEmail,
   masquerTelephone,
 } from '@/lib/verification/regles'
-import { lireTemoinVerification } from '@/lib/verification/temoin'
+import { lireTemoinInvitation, lireTemoinVerification } from '@/lib/verification/temoin'
 
 export const metadata: Metadata = { title: 'Vérification de votre compte' }
 
@@ -53,10 +53,26 @@ export default async function PageVerification() {
   if (!user) {
     const temoin = await lireTemoinVerification()
 
+    /*
+     * Sans session, la base ne dit pas encore de qui il s'agit — le compte
+     * existe, mais rien ne permet de le lire tant que l'email n'est pas
+     * confirmé.
+     *
+     * Le témoin d'invitation, lui, répond : il n'est posé que par
+     * `rejoindreAvecInvitation`, c'est-à-dire par un locataire qui vient de
+     * créer son compte depuis un lien reçu de son bailleur. Sa présence suffit
+     * à savoir qu'aucune étape téléphone ne suivra.
+     */
+    const invitationEnAttente = Boolean(await lireTemoinInvitation())
+
     return (
       <CarteAuth
         titre="Vérifiez votre compte"
-        description="Deux étapes : votre adresse email, puis votre numéro de téléphone."
+        description={
+          invitationEnAttente
+            ? 'Une étape : confirmez votre adresse email.'
+            : 'Deux étapes : votre adresse email, puis votre numéro de téléphone.'
+        }
         bas={
           <>
             Déjà vérifié ?{' '}
@@ -70,6 +86,7 @@ export default async function PageVerification() {
           <ProgressionVerification
             etat={{ emailVerifie: false, telephoneVerifie: false }}
             courante="email"
+            telephoneConcerne={!invitationEnAttente}
           />
 
           {temoin ? (
@@ -105,11 +122,24 @@ export default async function PageVerification() {
     telephoneVerifie: Boolean(profil?.telephone_verifie_le),
   }
 
+  /*
+   * Ce compte a-t-il seulement une étape téléphone ?
+   *
+   * L'absence de ligne dans `bailleurs` désigne un compte locataire : il naît
+   * d'une invitation, et `prive.gerer_nouvel_utilisateur` lui refuse
+   * explicitement un profil bailleur. Son numéro, son bailleur le détient déjà
+   * et l'a saisi lui-même — Sikaloc ne le lui redemandera jamais.
+   *
+   * Sans cette distinction, l'écran annonçait à un locataire « Téléphone pas
+   * encore vérifié · 1 étape restante » pour une étape qui ne viendrait pas.
+   */
+  const compteLocataire = profil === null
+
   // Aucun canal ne peut acheminer un code : l'exigence du téléphone est
   // suspendue, sinon ce compte serait enfermé dehors sans recours. Elle se
   // rétablit d'elle-même dès qu'un fournisseur est branché.
   const canaux = canauxDisponibles()
-  const telephoneExigible = canaux.length > 0
+  const telephoneExigible = canaux.length > 0 && !compteLocataire
 
   // ── Tout est fait ────────────────────────────────────────────────────────
   if (comptePleinementVerifie(etat, { telephoneExigible })) {
@@ -124,13 +154,19 @@ export default async function PageVerification() {
               className="mt-xxs shrink-0 text-positive-deep"
             />
             <p className="text-body-sm text-positive-deep">
-              {etat.telephoneVerifie
-                ? 'Votre adresse email et votre numéro de téléphone sont confirmés.'
-                : 'Votre adresse email est confirmée. La vérification du numéro sera demandée dès qu’elle sera disponible.'}
+              {compteLocataire
+                ? 'Votre adresse email est confirmée. Votre compte est prêt.'
+                : etat.telephoneVerifie
+                  ? 'Votre adresse email et votre numéro de téléphone sont confirmés.'
+                  : 'Votre adresse email est confirmée. La vérification du numéro sera demandée dès qu’elle sera disponible.'}
             </p>
           </div>
 
-          <ProgressionVerification etat={etat} courante={null} />
+          <ProgressionVerification
+            etat={etat}
+            courante={null}
+            telephoneConcerne={!compteLocataire}
+          />
 
           {/*
             La destination dépend des rôles : un locataire venu d'une

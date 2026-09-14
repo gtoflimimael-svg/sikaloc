@@ -38,7 +38,8 @@
     "banc:locataire": "node scripts/banc-espace-locataire.cjs",
     "banc:correction": "tsx scripts/banc-quittance-correction.ts",
     "banc:notifications": "node scripts/banc-notifications.cjs",
-    "banc:modeles-email": "tsx scripts/banc-modeles-email.ts"
+    "banc:modeles-email": "tsx scripts/banc-modeles-email.ts",
+    "banc:chemins": "tsx scripts/banc-chemins.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

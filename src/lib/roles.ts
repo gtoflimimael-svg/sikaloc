@@ -103,3 +103,42 @@ export function espaceDuChemin(chemin: string): Espace | null {
 export function accesAutorise(roles: Roles, espaceVise: Espace): boolean {
   return espaceVise.role === 'bailleur' ? roles.estBailleur : roles.estLocataire
 }
+
+/**
+ * Les chemins publics situés À L'INTÉRIEUR d'un espace protégé.
+ *
+ * ─── Pourquoi cette liste existe ────────────────────────────────────────────
+ *
+ * `/me` est réservé aux comptes authentifiés. Mais deux de ses pages
+ * s'adressent précisément à quelqu'un qui n'a PAS de compte :
+ *
+ *     /me/rejoindre            explique comment obtenir un accès
+ *     /me/invitation/<jeton>   le lien reçu par email, et le formulaire
+ *                              de création de compte
+ *
+ * Les protéger les rend inatteignables pour leur seul public, et renvoie vers
+ * un écran de connexion sans identifiants.
+ *
+ * ─── L'oubli que cette règle a coûté ───────────────────────────────────────
+ *
+ * `/me/invitation` manquait. Un locataire qui cliquait le lien reçu de son
+ * bailleur atterrissait sur la connexion : le parcours d'invitation était coupé
+ * à son avant-dernier pas, pour ceux-là mêmes à qui il s'adresse.
+ *
+ * Invisible depuis le code — la page est écrite pour un visiteur anonyme et le
+ * dit — parce que le proxy l'arrêtait avant elle. Il a fallu ouvrir un vrai
+ * lien dans un navigateur sans session.
+ *
+ * ─── Pourquoi c'est sans danger ────────────────────────────────────────────
+ *
+ * Aucune de ces pages ne rend de donnée sans autorisation propre. Pour
+ * l'invitation, le jeton EST l'autorisation : la page recalcule son empreinte
+ * et refuse tout ce qui ne correspond pas. Une route publique n'est jamais une
+ * permission ; elle décide seulement qui a le droit de frapper à la porte.
+ */
+export const CHEMINS_PUBLICS: string[] = ['/me/rejoindre', '/me/invitation']
+
+/** Ce chemin échappe-t-il à la protection de son espace ? */
+export function cheminPublic(chemin: string): boolean {
+  return CHEMINS_PUBLICS.some((p) => chemin === p || chemin.startsWith(`${p}/`))
+}
