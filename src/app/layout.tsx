@@ -71,7 +71,11 @@ export const metadata: Metadata = {
     template: '%s · Sikaloc',
   },
   description:
-    'Suivez vos loyers au Bénin : impayés détectés automatiquement et quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp.',
+    // « envoyées au locataire sur WhatsApp » annonçait un acheminement que
+    // Sikaloc n'assure pas : il pré-remplit un message que le bailleur envoie
+    // lui-même. La description dit désormais ce que le produit fait, et nomme
+    // l'espace locataire, qui existe depuis.
+    'Suivez vos loyers au Bénin : impayés détectés automatiquement et quittances PDF numérotées, horodatées et signées. Vos locataires retrouvent leurs documents dans leur propre espace.',
   applicationName: 'Sikaloc',
   authors: [{ name: 'Sikaloc' }],
   keywords: ['gestion locative', 'quittance de loyer', 'Bénin', 'bailleur', 'loyer'],

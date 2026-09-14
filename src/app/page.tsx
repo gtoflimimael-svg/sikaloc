@@ -97,7 +97,7 @@ const etapes = [
     numero: '3',
     titre: 'Gardez la preuve',
     texte:
-      'Le PDF est généré, numéroté et horodaté, avec son empreinte d’intégrité : si le document reçu est contesté, la moindre modification se voit. Un bouton l’envoie au locataire sur WhatsApp.',
+      'Le PDF est généré, numéroté et horodaté, avec son empreinte d’intégrité : si le document reçu est contesté, la moindre modification se voit. Un bouton l’envoie au locataire, par email ou depuis votre WhatsApp.',
   },
 ]
 
@@ -139,11 +139,20 @@ const fonctionnalites = [
     texte:
       'Taux d’occupation, taux de recouvrement, impayés, chiffre d’affaires du mois. Mis à jour à chaque paiement. Vous savez où vous en êtes, sans surprise.',
   },
+  /*
+   * Ce bloc affirmait « Pas de compte, pas de mot de passe ». C'était vrai
+   * jusqu'à l'ouverture de Sikaloc_Me : la page niait un espace que le produit
+   * offre désormais, et un locataire qui venait de recevoir une invitation y
+   * lisait le contraire de ce qu'il avait sous les yeux.
+   *
+   * La promesse utile n'était pas « pas de compte », c'était « rien à
+   * installer, rien à payer ». Celle-là tient toujours, et elle tient mieux.
+   */
   {
     Icone: Send,
-    titre: 'Rien à installer pour le locataire',
+    titre: 'Votre locataire n’a rien à installer',
     texte:
-      'Il reçoit sa quittance sur WhatsApp, par un lien de téléchargement sécurisé valable 30 jours. Pas de compte, pas de mot de passe. La preuve est entre ses mains.',
+      'Il reçoit sa quittance par un lien de téléchargement sécurisé — aucune application, aucun frais. S’il le souhaite, vous lui ouvrez un accès à Sikaloc_Me, où il retrouve ses loyers et ses quittances. C’est vous qui invitez.',
   },
   {
     Icone: Database,
@@ -163,7 +172,11 @@ const fonctionnalites = [
 const preuves = [
   'Mentions attendues au Bénin, droit de timbre compris',
   'Numérotation continue et horodatage',
-  'Envoi au locataire sur WhatsApp',
+  // « Envoi sur WhatsApp » disait un canal, pas une capacité — et Sikaloc
+  // n'achemine pas sur WhatsApp : il pré-remplit un message que le bailleur
+  // envoie lui-même. La preuve porte désormais sur ce qui est vrai des deux
+  // côtés du lien : le locataire reçoit, quel que soit le chemin.
+  'Remise au locataire, par email ou par WhatsApp',
 ]
 
 /**
@@ -275,14 +288,63 @@ const preuvesSerieux = [
   },
 ]
 
+/**
+ * Ce que l'espace locataire donne, en trois points.
+ *
+ * Aucun n'est un argument de vente : le locataire n'achète rien. Ce sont trois
+ * réponses à « qu'est-ce que ça change pour moi ? », et chacune décrit un
+ * mécanisme réel.
+ *
+ * Le troisième est le moins spectaculaire et le plus important. « À
+ * déterminer » est l'état qui empêche Sikaloc de réclamer un loyer dont il ne
+ * sait rien — c'est la seule chose de cette page qui protège le locataire
+ * contre le produit lui-même, et elle mérite d'être dite en face.
+ */
+const avantagesLocataire = [
+  {
+    Icone: FileCheck,
+    titre: 'Vos quittances, quand vous en avez besoin',
+    texte:
+      'Téléchargeables à tout moment, avec leur numéro et leur empreinte. Celle de l’an dernier est encore là le jour où on vous la demande.',
+  },
+  {
+    Icone: ChartColumn,
+    titre: 'Vos loyers, mois par mois',
+    texte:
+      'Réglé, à venir, en retard : le même calcul que celui de votre bailleur, au même instant. Pas une copie qu’il faudrait synchroniser.',
+  },
+  {
+    Icone: Scale,
+    titre: 'Rien ne vous est réclamé à tort',
+    texte:
+      'Les mois qui précèdent l’arrivée de votre bailleur sur Sikaloc s’affichent « à déterminer », jamais « impayé ». Sikaloc n’en sait rien, et ne le prétend pas.',
+  },
+]
+
 const questions = [
   {
     q: 'Mes quittances sont-elles valables au Bénin ?',
     r: 'Le modèle reprend les mentions attendues : identité des parties, adresse du logement, période, montant en lettres et en chiffres, décharge, mention du droit de timbre à la charge du locataire, horodatage et signature du bailleur. Sikaloc ne fournit pas de conseil juridique : faites valider le modèle par votre conseil avant un usage contentieux.',
   },
   {
+    /*
+     * Répondait « Non » tout court. C'était exact avant Sikaloc_Me, et faux
+     * depuis : un locataire invité, arrivé ici pour comprendre ce qu'il venait
+     * de recevoir, lisait que son compte n'existait pas.
+     *
+     * La réponse garde le « non » — il reste vrai, et c'est ce qui rassure un
+     * bailleur qui ne veut rien imposer — puis dit la suite.
+     */
     q: 'Le locataire doit-il créer un compte ?',
-    r: 'Non. Il reçoit sa quittance par WhatsApp, via un lien de téléchargement sécurisé valable 30 jours.',
+    r: 'Non, jamais. Il reçoit sa quittance par un lien de téléchargement sécurisé, sans rien installer. Mais vous pouvez lui ouvrir un accès à Sikaloc_Me s’il le souhaite : il y retrouve son bail, ses loyers et toutes ses quittances. C’est gratuit pour lui, et c’est vous qui l’invitez — il ne peut pas s’inscrire de lui-même.',
+  },
+  {
+    q: 'J’ai reçu une invitation Sikaloc de mon propriétaire. C’est quoi ?',
+    r: 'C’est l’accès à votre espace locataire. Vous y consultez votre bail, vos loyers mois par mois et vos quittances, à télécharger quand vous en avez besoin. Ce sont les mêmes documents que votre bailleur, pas des copies. Vous ne payez rien, et vous pouvez couper les emails à tout moment.',
+  },
+  {
+    q: 'Je suis locataire, puis-je m’inscrire seul ?',
+    r: 'Non, et c’est délibéré : c’est l’invitation qui relie votre compte à votre bail. Sans elle, Sikaloc devrait deviner de quel logement il s’agit — avec le risque de vous donner accès aux quittances de quelqu’un d’autre. Demandez l’invitation à votre bailleur ; elle part depuis votre fiche, en un clic.',
   },
   {
     /*
@@ -426,9 +488,42 @@ export default async function PageAccueil() {
         <div className="relative mx-auto max-w-[1200px]">
           <div className="grid items-center gap-4xl lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <span className="badge badge-neutral mb-lg">
-                Conçu pour les bailleurs au Bénin
-              </span>
+              {/*
+                Le badge dit à qui la page s'adresse ; le lien dit à l'autre
+                où aller. Les deux sur la même ligne, tout en haut.
+
+                Mesuré avant d'être écrit : posée sous l'appel à l'action, cette
+                porte tombait à 921 px sur un écran de 812 — un locataire qui a
+                reçu une invitation, tapé « sikaloc.com » et lu un titre sur les
+                juges referme bien avant. La barre de navigation, elle, n'a que
+                39 px libres à 375 px : elle ne pouvait pas l'accueillir.
+
+                Elle ancre dans la page plutôt que de sortir vers
+                `/me/rejoindre` : on a le droit de savoir de quoi il s'agit
+                avant de cliquer.
+
+                Tout est contraint par une seule mesure : à 375 px, le bouton
+                « Protéger mes revenus » finit à 775 px pour un écran de 812. Il
+                reste donc 37 px au-dessus du pli, et une ligne supplémentaire
+                en coûte 55. Le badge et la porte doivent tenir SUR LA MÊME
+                LIGNE, ou le bouton passe dessous.
+
+                D'où deux économies : « Locataire ? » plutôt que « Je suis
+                locataire », et « Pour les bailleurs » plutôt que « Conçu pour
+                les bailleurs » — « conçu » n'ajoutait rien au sens et coûtait
+                la place qui manquait.
+              */}
+              <div className="mb-lg flex flex-wrap items-center gap-sm">
+                <span className="badge badge-neutral">
+                  Pour les bailleurs au Bénin
+                </span>
+                <Link
+                  href="#locataire"
+                  className="lien-anime text-body-sm font-medium text-mute hover:text-ink"
+                >
+                  Locataire&nbsp;?
+                </Link>
+              </div>
 
               {/*
                 Pas d'`anim-monte` sur le H1 : il est l'élément LCP de la page,
@@ -452,8 +547,8 @@ export default async function PageAccueil() {
 
               <p className="anim-monte mt-xl max-w-[36rem] text-body-lg text-body">
                 Sikaloc génère vos quittances : numérotées, horodatées, montant
-                en lettres, décharge et signature. Vos locataires les reçoivent
-                sur WhatsApp, et vous gardez la preuve de chaque loyer encaissé.
+                en lettres, décharge et signature. Vous les remettez à vos
+                locataires, et vous gardez la preuve de chaque loyer encaissé.
               </p>
 
               {/* Empilée sous 640 px : en une seule ligne à séparateurs « · »,
@@ -500,6 +595,7 @@ export default async function PageAccueil() {
                 Gratuit jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements · Sans carte
                 bancaire · Mobile Money accepté
               </p>
+
             </div>
 
             {/*
@@ -952,6 +1048,83 @@ export default async function PageAccueil() {
                 <p className="mt-md max-w-[40rem] text-body-md text-body">{item.r}</p>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Locataires ─────────────────────────────────────────────────── */}
+      {/*
+        Pourquoi cette section existe, et pourquoi ICI.
+
+        Depuis l'ouverture de Sikaloc_Me, un locataire invité reçoit un lien
+        vers ce domaine. Certains tapent « sikaloc.com » plutôt que de cliquer,
+        et tombaient sur une page qui ne leur parlait pas — pire, qui affirmait
+        en FAQ qu'ils n'avaient pas de compte.
+
+        Placée après la FAQ, avant le guide : elle n'interrompt pas le parcours
+        du bailleur, qui est celui qui paie et que le reste de la page convertit.
+        Le locataire, lui, ne la cherche pas en faisant défiler — il y arrive par
+        l'ancre posée dans le hero, dès le premier écran.
+
+        Filet en haut et fond hérité, pas un `bg-canvas` de plus : même raison
+        que pour « Pourquoi nous croire » plus haut — l'alternance des fonds se
+        compte d'un bout à l'autre de la page, et une section de plus la
+        casserait.
+      */}
+      <section id="locataire" className="border-t border-hairline px-xl py-5xl">
+        <div className="mx-auto max-w-[56rem]">
+          <p className="text-caption-uppercase uppercase text-primary">Locataires</p>
+          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
+            Votre bailleur utilise Sikaloc ?
+          </h2>
+          <p className="mt-lg max-w-[42rem] text-body-lg text-body">
+            Alors vous pouvez avoir votre propre espace. Vous y retrouvez les
+            mêmes documents que lui — pas des copies. Il ne vous coûtera jamais
+            rien.
+          </p>
+
+          <div className="mt-2xl grid gap-xl sm:grid-cols-3">
+            {avantagesLocataire.map(({ Icone, titre, texte }) => (
+              <div key={titre}>
+                <Icone
+                  size={22}
+                  strokeWidth={1.9}
+                  aria-hidden="true"
+                  className="text-primary"
+                />
+                <p className="mt-md text-body-md font-semibold text-ink">{titre}</p>
+                <p className="mt-xs text-body-sm text-body">{texte}</p>
+              </div>
+            ))}
+          </div>
+
+          {/*
+            La contrainte est dite avant la porte, pas après.
+
+            Un locataire ne peut pas s'inscrire seul, et l'apprendre au bout
+            d'un formulaire serait une perte de temps doublée d'une vexation.
+            La raison est donnée avec la règle : sans invitation, Sikaloc
+            devrait deviner de quel bail il s'agit.
+          */}
+          <div className="mt-2xl rounded-xl border border-hairline bg-canvas p-xl">
+            <p className="text-body-md font-semibold text-ink">
+              C&apos;est votre bailleur qui ouvre l&apos;accès
+            </p>
+            <p className="mt-sm max-w-[44rem] text-body-sm text-body">
+              Vous ne pouvez pas créer ce compte vous-même, et c&apos;est
+              délibéré : l&apos;invitation est ce qui relie votre compte à votre
+              bail. Sans elle, Sikaloc devrait deviner de quel logement il
+              s&apos;agit — avec le risque de vous montrer les quittances de
+              quelqu&apos;un d&apos;autre.
+            </p>
+            <div className="mt-lg flex flex-wrap items-center gap-md">
+              <Link href="/me/rejoindre" className="btn btn-secondary">
+                Comment rejoindre Sikaloc_Me
+              </Link>
+              <Link href="/entrer" className="lien-anime text-body-sm font-medium text-ink">
+                J&apos;ai déjà un compte
+              </Link>
+            </div>
           </div>
         </div>
       </section>

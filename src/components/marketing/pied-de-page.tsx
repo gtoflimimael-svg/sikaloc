@@ -30,6 +30,9 @@ const colonnes = [
     titre: 'Aide',
     liens: [
       { libelle: 'Comment ça marche', href: '/#etapes' },
+      // Le pied de page est là où l'on cherche quand on ne sait pas où aller —
+      // et c'est souvent le cas d'un locataire arrivé ici sans rien demander.
+      { libelle: 'Je suis locataire', href: '/me/rejoindre' },
       { libelle: 'Le blog', href: '/blog' },
       { libelle: 'Questions fréquentes', href: '/#faq' },
       { libelle: 'Nous écrire', href: 'mailto:bonjour@sikaloc.com' },

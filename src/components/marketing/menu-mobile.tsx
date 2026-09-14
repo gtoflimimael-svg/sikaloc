@@ -51,6 +51,11 @@ const LIENS = [
   { href: '#fonctionnalites', libelle: 'Fonctionnalités' },
   { href: '#tarifs', libelle: 'Tarifs' },
   { href: '#faq', libelle: 'Questions fréquentes' },
+  // Le public de cette entrée est celui qui navigue au téléphone : un locataire
+  // qui a reçu une invitation de son bailleur. La barre de bureau ne la porte
+  // pas — elle est mesurée au pixel près et déborderait — mais le hero l'ancre
+  // dès le premier écran, sur toutes les tailles.
+  { href: '#locataire', libelle: 'Je suis locataire' },
 ]
 
 /**
