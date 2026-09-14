@@ -71,17 +71,15 @@ export function EnTeteMe({
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[900px] items-center justify-between gap-md px-lg">
-        <div className="flex min-w-0 items-center gap-sm">
-          <MarqueSikaloc href={ESPACE_ME.racine} taille="sm" />
-          {/*
-            Le nom de l'espace, pas seulement la marque. Sur un navigateur qui
-            porte les deux espaces ouverts côte à côte, c'est ce mot qui les
-            distingue.
-          */}
-          <span className="hidden truncate text-caption text-mute-soft sm:inline">
-            {ESPACE_ME.nom}
-          </span>
-        </div>
+        {/*
+          Le nom de l'espace est DANS la marque, pas à côté d'elle.
+
+          Il vivait ici, dans un `<span>` masqué en dessous de 640 px — donc
+          invisible sur la plupart des téléphones, et sur tous ceux du public de
+          Sikaloc_Me. Le repère qui distingue les deux espaces disparaissait
+          précisément là où il sert le plus.
+        */}
+        <MarqueSikaloc href={ESPACE_ME.racine} taille="sm" espace="Me" />
 
         <div className="flex shrink-0 items-center gap-xs">
           <SelecteurTheme compact />

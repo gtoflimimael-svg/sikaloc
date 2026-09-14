@@ -21,7 +21,6 @@ import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
-import { ESPACE_PRO } from '@/lib/roles'
 
 export interface LienNav {
   href: string
@@ -110,7 +109,7 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
     <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
       <div className="sticky top-0 flex h-screen flex-col p-lg">
         <div className="mb-xl px-md pt-sm">
-          <MarqueSikaloc href="/app" taille="sm" />
+          <MarqueSikaloc href="/app" taille="sm" espace="Pro" />
         </div>
 
         <LiensNavigation chemin={chemin} impayes={impayes} />
@@ -118,10 +117,11 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
         <div className="mt-auto space-y-md px-md pb-sm">
           <SelecteurTheme compact />
           {/*
-            L'espace se nomme ici, discrètement mais sans ambiguïté : c'est le
-            repère qui dit au bailleur dans lequel des deux il se trouve.
+            Le nom de l'espace ne se répète plus ici : il est désormais dans la
+            marque, en haut de cette même colonne. Le redire deux fois dans un
+            écran ne le rend pas plus lisible, seulement plus bruyant.
           */}
-          <p className="text-caption text-mute-soft">{ESPACE_PRO.nom} · Bénin</p>
+          <p className="text-caption text-mute-soft">Bénin</p>
         </div>
       </div>
     </aside>
@@ -194,7 +194,7 @@ export function EnTeteMobile({
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
 
-        <MarqueSikaloc href="/app" taille="sm" />
+        <MarqueSikaloc href="/app" taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
           <Link
@@ -235,7 +235,7 @@ export function EnTeteMobile({
 
           <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-lg">
             <div className="mb-lg flex items-center justify-between px-md pt-sm">
-              <MarqueSikaloc href="/app" taille="sm" />
+              <MarqueSikaloc href="/app" taille="sm" espace="Pro" />
               <button
                 type="button"
                 onClick={() => setOuvert(false)}
