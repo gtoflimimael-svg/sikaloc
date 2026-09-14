@@ -49,8 +49,8 @@ export async function creerLogement(
 
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
-  revalidatePath('/app/logements')
-  redirect('/app/logements')
+  revalidatePath('/pro/logements')
+  redirect('/pro/logements')
 }
 
 export async function modifierLogement(
@@ -74,8 +74,8 @@ export async function modifierLogement(
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
 
-  revalidatePath('/app/logements')
-  redirect('/app/logements')
+  revalidatePath('/pro/logements')
+  redirect('/pro/logements')
 }
 
 export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
@@ -92,6 +92,6 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
     return { erreur: `Suppression impossible : ${error.message}` }
   }
 
-  revalidatePath('/app/logements')
+  revalidatePath('/pro/logements')
   return { succes: 'Logement supprimé.' }
 }

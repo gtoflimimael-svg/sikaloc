@@ -61,7 +61,7 @@ async function bailleur(id) {
     }),
   }).then((r) => r.json())
 
-  // `telephone_verifie_le` : depuis Sikaloc 8.2, `/app` exige les DEUX
+  // `telephone_verifie_le` : depuis Sikaloc 8.2, `/pro` exige les DEUX
   // vérifications. Un compte créé par l'API d'administration a son email
   // confirmé mais son téléphone non — sans cette ligne, le banc n'atteindrait
   // plus que /verification. C'est une fixture jetable, jamais un compte réel.
@@ -110,7 +110,7 @@ async function bailleur(id) {
     jetons.map((c) => ({ name: c.name, value: c.value, domain: 'localhost', path: '/' })),
   )
 
-  await page.goto(`${BASE}/app/parametres/profil`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/parametres/profil`, { waitUntil: 'networkidle' })
 
   // ── 1. L'en-tête annonce l'absence de photo ────────────────────────────
   const enTete = await page.locator('main').innerText()

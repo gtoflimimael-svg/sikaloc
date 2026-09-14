@@ -1,17 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { cheminPublic } from '@/lib/roles'
+import { cheminProtege, cheminPublic } from '@/lib/roles'
 import type { Database } from '@/lib/types/database'
 
-/** Préfixes réservés aux comptes authentifiés — les deux espaces. */
-const PREFIXES_PROTEGES = ['/app', '/me']
-
 /*
- * Les exceptions publiques vivent dans `roles.ts`, avec les autres règles de
- * chemin — et surtout avec un banc qui les exerce. Écrites ici, elles
- * n'étaient testables que par un navigateur, ce qui est exactement la raison
- * pour laquelle l'oubli de `/me/invitation` a survécu à deux étapes.
+ * Les règles de chemin — ce qui est gardé, ce qui est public — vivent dans
+ * `roles.ts`, avec un banc qui les exerce. Écrites ici, elles n'étaient
+ * testables que par un navigateur : c'est exactement la raison pour laquelle
+ * l'oubli de `/me/invitation` a survécu à deux étapes.
  */
 
 /**
@@ -64,7 +61,7 @@ export default async function proxy(request: NextRequest) {
 
   const publique = cheminPublic(chemin)
 
-  if (!user && !publique && PREFIXES_PROTEGES.some((p) => chemin.startsWith(p))) {
+  if (!user && !publique && cheminProtege(chemin)) {
     const url = request.nextUrl.clone()
     url.pathname = '/connexion'
     url.searchParams.set('suite', chemin)
@@ -72,7 +69,7 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (user && PAGES_AUTH.includes(chemin)) {
-    // Vers la page de choix, et non plus vers `/app` : un locataire connecté
+    // Vers la page de choix, et non plus vers `/pro` : un locataire connecté
     // renvoyé vers l'espace du bailleur rebondirait aussitôt. `/entrer`
     // aiguille chacun vers le sien, ou pose la question à qui porte les deux.
     const url = request.nextUrl.clone()

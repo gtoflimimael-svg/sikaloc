@@ -87,7 +87,7 @@ export async function inscrire(
   // ── Vers la vérification, pas vers l'application ────────────────────────
   //
   // Un compte fraîchement créé n'est vérifié sur rien : ni l'adresse email, ni
-  // le numéro. Il n'a donc pas à atteindre `/app/onboarding`, et `session.ts`
+  // le numéro. Il n'a donc pas à atteindre `/pro/onboarding`, et `session.ts`
   // l'en empêcherait de toute façon.
   //
   // Le témoin porte l'adresse jusqu'à l'écran de saisie : GoTrue n'ouvre pas
@@ -120,7 +120,7 @@ export async function connecter(
   }
 
   const { email, motDePasse } = analyse.data
-  const suite = (donnees.get('suite') as string) || '/app'
+  const suite = (donnees.get('suite') as string) || '/pro'
 
   const blocage = await verifierBlocage(email)
   if (blocage.bloque) {
@@ -157,7 +157,7 @@ export async function connecter(
   revalidatePath('/', 'layout')
   // Une destination fournie par l'URL ne doit jamais pouvoir pointer ailleurs
   // que sur ce site : on n'accepte qu'un chemin relatif.
-  redirect(suite.startsWith('/') && !suite.startsWith('//') ? suite : '/app')
+  redirect(suite.startsWith('/') && !suite.startsWith('//') ? suite : '/pro')
 }
 
 // ─── Déconnexion ────────────────────────────────────────────────────────────
@@ -235,5 +235,5 @@ export async function definirNouveauMotDePasse(
   }
 
   revalidatePath('/', 'layout')
-  redirect('/app')
+  redirect('/pro')
 }

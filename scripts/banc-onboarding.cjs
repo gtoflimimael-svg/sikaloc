@@ -59,7 +59,7 @@ async function creerCompteNeuf() {
     process.exit(1)
   }
 
-  // `/app` exige les deux vérifications : sans celle-ci, le banc n'irait pas
+  // `/pro` exige les deux vérifications : sans celle-ci, le banc n'irait pas
   // plus loin que l'écran de vérification.
   await verifierTelephoneFixture(utilisateur.id)
 
@@ -69,7 +69,7 @@ async function creerCompteNeuf() {
 /**
  * Marque le téléphone de la fixture comme vérifié.
  *
- * Depuis Sikaloc 8.2, `/app` exige les DEUX vérifications. Un compte créé par
+ * Depuis Sikaloc 8.2, `/pro` exige les DEUX vérifications. Un compte créé par
  * l'API d'administration a son email confirmé mais son téléphone non : sans
  * cette ligne, le banc n'atteint plus que /verification.
  *
@@ -161,7 +161,7 @@ async function compter(table, id) {
   )
 
   // ── 2. L'assistant ne compte que deux étapes ─────────────────────────────
-  await page.goto(`${BASE}/app/onboarding`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/onboarding`, { waitUntil: 'networkidle' })
   const entete = await page.locator('text=/Étape \\d+ sur \\d+/i').first().innerText()
   // `text-caption-uppercase` rend « Étape 1 sur 2 » en capitales à l'écran.
   noter('L’assistant annonce deux étapes', /sur 2/i.test(entete), entete)
@@ -178,7 +178,7 @@ async function compter(table, id) {
   noter('L’étape 2 est la signature', true)
 
   await page.locator('button:has-text("Je la mettrai plus tard")').first().click()
-  await page.waitForURL(/\/app(\?|$)/, { timeout: 20000 })
+  await page.waitForURL(/\/pro(\?|$)/, { timeout: 20000 })
   noter('Le tableau de bord est atteint sans locataire ni bail', true, page.url().replace(BASE, ''))
 
   noter('Aucun locataire n’a été créé', (await compter('locataires', compte.id)) === 0)
@@ -239,7 +239,7 @@ async function compter(table, id) {
   )
 
   await page.locator('[role="region"] a:has-text("Ajouter un logement")').click()
-  await page.waitForURL(/\/app\/logements\/nouveau/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/logements\/nouveau/, { timeout: 20000 })
   noter('Le raccourci mène au bon formulaire', true, page.url().replace(BASE, ''))
   noter(
     'La visite survit à la navigation',
@@ -327,7 +327,7 @@ async function compter(table, id) {
   noter('Les champs remplis sont cochés', coches >= 3, `${coches} marque(s) dans la bulle`)
 
   await page.locator('button[type="submit"]').first().click()
-  await page.waitForURL(/\/app\/logements(\?|$)/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/logements(\?|$)/, { timeout: 20000 })
   await page.waitForTimeout(1200)
 
   noter('Le logement est bien créé', (await compter('logements', compte.id)) === 1)
@@ -350,7 +350,7 @@ async function compter(table, id) {
   await page.waitForTimeout(600)
   noter('Un clic à côté ne la ferme pas', await visite.isVisible().catch(() => false))
 
-  await page.goto(`${BASE}/app/logements`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/logements`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1300)
   noter('Une navigation manuelle ne la casse pas', await visite.isVisible().catch(() => false))
 
@@ -379,7 +379,7 @@ async function compter(table, id) {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.waitForTimeout(500)
 
-  await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1200)
 
   // ── 7. Quitter est persistant ──────────────────────────────────────────
@@ -398,7 +398,7 @@ async function compter(table, id) {
     apresQuitter?.tutoriel_vu_le === null,
   )
 
-  await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1200)
   noter(
     'Elle ne se rouvre pas d’elle-même après un rafraîchissement',
@@ -438,12 +438,12 @@ async function compter(table, id) {
 
   // ── Locataire ──
   await page.locator('[role="region"] a:has-text("Ajouter un locataire")').click()
-  await page.waitForURL(/\/app\/locataires\/nouveau/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/locataires\/nouveau/, { timeout: 20000 })
   await page.fill('input[name="nom"]', 'Awa Hounkpatin')
   await page.fill('#telephone', '0197000001')
   await page.check('input[name="consentement"]')
   await page.locator('button[type="submit"]').first().click()
-  await page.waitForURL(/\/app\/locataires(\?|$)/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/locataires(\?|$)/, { timeout: 20000 })
   noter('Le locataire est créé', (await compter('locataires', compte.id)) === 1)
   const apresLocataire = await etapeAffichee()
   noter('L’étape passe au bail', /Reliez les deux par un bail/i.test(apresLocataire))
@@ -451,7 +451,7 @@ async function compter(table, id) {
 
   // ── Bail ──
   await page.locator('[role="region"] a:has-text("Créer le bail")').click()
-  await page.waitForURL(/\/app\/baux\/nouveau/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/baux\/nouveau/, { timeout: 20000 })
   noter(
     'Le formulaire de bail est bien rendu (aucun diagnostic bloquant)',
     (await page.locator('select[name="logementId"]').count()) === 1,
@@ -460,7 +460,7 @@ async function compter(table, id) {
   await page.selectOption('select[name="locataireId"]', { index: 1 })
   await page.fill('input[name="loyerMensuel"]', '75000')
   await page.locator('button[type="submit"]').first().click()
-  await page.waitForURL(/\/app\/baux\/[0-9a-f-]{36}/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/baux\/[0-9a-f-]{36}/, { timeout: 20000 })
   noter('Le bail est créé', (await compter('baux', compte.id)) === 1, page.url().replace(BASE, ''))
   const apresBail = await etapeAffichee()
   noter('L’étape passe au paiement', /Enregistrez un loyer reçu/i.test(apresBail))
@@ -468,9 +468,9 @@ async function compter(table, id) {
 
   // ── Paiement : saisie puis confirmation ──
   await page.locator('[role="region"] a:has-text("Enregistrer un paiement")').click()
-  await page.waitForURL(/\/app\/paiements\/nouveau/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/paiements\/nouveau/, { timeout: 20000 })
   await page.locator('button[type="submit"]').first().click()
-  await page.waitForURL(/\/app\/paiements\/[0-9a-f-]{36}\/confirmer/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/paiements\/[0-9a-f-]{36}\/confirmer/, { timeout: 20000 })
   noter('La saisie mène à l’écran de confirmation', true, page.url().replace(BASE, ''))
 
   // Amené dans le champ de vision par Playwright, qui effectue un vrai
@@ -505,7 +505,7 @@ async function compter(table, id) {
   noter('La visite ne recouvre pas le bouton de confirmation', surConfirmation.ok, surConfirmation.raison)
 
   await page.locator('button:has-text("Confirmer et générer")').first().click()
-  await page.waitForURL(/\/app\/quittances\/[0-9a-f-]{36}/, { timeout: 30000 })
+  await page.waitForURL(/\/pro\/quittances\/[0-9a-f-]{36}/, { timeout: 30000 })
   noter('La confirmation mène à la quittance', true, page.url().replace(BASE, ''))
   noter('Le paiement est validé', (await compter('paiements', compte.id)) === 1)
 
@@ -517,9 +517,9 @@ async function compter(table, id) {
   noter('L’écran de fin propose quoi découvrir ensuite', /À découvrir ensuite/i.test(fin))
   noter(
     'Il renvoie vers les impayés, la signature et l’export',
-    (await page.locator('[role="region"] a[href="/app/impayes"]').count()) === 1 &&
-      (await page.locator('[role="region"] a[href="/app/parametres/signature"]').count()) === 1 &&
-      (await page.locator('[role="region"] a[href="/app/parametres/donnees"]').count()) === 1,
+    (await page.locator('[role="region"] a[href="/pro/impayes"]').count()) === 1 &&
+      (await page.locator('[role="region"] a[href="/pro/parametres/signature"]').count()) === 1 &&
+      (await page.locator('[role="region"] a[href="/pro/parametres/donnees"]').count()) === 1,
   )
   noter(
     'Un bouton conclut le parcours',
@@ -543,7 +543,7 @@ async function compter(table, id) {
   )
 
   // ── 10. Terminée, elle ne revient plus ─────────────────────────────────
-  await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1400)
   noter('Elle ne redémarre pas à la visite suivante', !(await visite.isVisible().catch(() => false)))
   noter(

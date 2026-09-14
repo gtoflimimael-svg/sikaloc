@@ -26,7 +26,7 @@ export function FormulaireConnexion({ suite }: { suite?: string }) {
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
-      <input type="hidden" name="suite" value={suite ?? '/app'} />
+      <input type="hidden" name="suite" value={suite ?? '/pro'} />
 
       <ChampTexte
         nom="email"

@@ -19,7 +19,7 @@ export function EnteteParametre({ cle }: { cle: CleParametre }) {
         <ol className="flex flex-wrap items-center gap-xxs text-body-sm">
           <li>
             <Link
-              href="/app/parametres"
+              href="/pro/parametres"
               className="inline-flex items-center gap-xxs rounded-md px-xs py-xxs -ml-xs text-mute transition-colors hover:bg-canvas hover:text-ink"
             >
               <ChevronLeft size={15} strokeWidth={2} aria-hidden="true" />

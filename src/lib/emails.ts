@@ -53,7 +53,7 @@ function urlBase(): string {
 }
 
 function urlAbonnement(): string {
-  return `${urlBase()}/app/parametres/abonnement`
+  return `${urlBase()}/pro/parametres/abonnement`
 }
 
 /**
@@ -61,7 +61,7 @@ function urlAbonnement(): string {
  * « exportables » sans jamais dire où — la promesse existait, le chemin non.
  */
 function urlExport(): string {
-  return `${urlBase()}/app/parametres/donnees`
+  return `${urlBase()}/pro/parametres/donnees`
 }
 
 /**
@@ -184,7 +184,7 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
         ],
         action: {
           libelle: 'Voir mes locataires',
-          url: `${urlBase()}/app/locataires`,
+          url: `${urlBase()}/pro/locataires`,
         },
       }
     }

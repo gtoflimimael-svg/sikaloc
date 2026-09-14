@@ -154,10 +154,10 @@ export async function declarerHistorique(
     return { erreur: `Enregistrement impossible : ${erreurMarque.message}` }
   }
 
-  revalidatePath('/app/impayes')
-  revalidatePath('/app/paiements')
-  revalidatePath(`/app/baux/${bailId}`)
-  revalidatePath('/app')
+  revalidatePath('/pro/impayes')
+  revalidatePath('/pro/paiements')
+  revalidatePath(`/pro/baux/${bailId}`)
+  revalidatePath('/pro')
 
-  redirect(`/app/baux/${bailId}`)
+  redirect(`/pro/baux/${bailId}`)
 }

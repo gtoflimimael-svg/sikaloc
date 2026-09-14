@@ -142,7 +142,7 @@ void (async () => {
 
   const rejoint = texteComplet('locataire_a_rejoint', variablesCompletes)
   noter('locataire_a_rejoint nomme le locataire', rejoint.includes('Awa Kponou'))
-  noter('locataire_a_rejoint mène à /app/locataires', rejoint.includes('/app/locataires'))
+  noter('locataire_a_rejoint mène à /pro/locataires', rejoint.includes('/pro/locataires'))
 
   // ═══ 4. Aucune quittance en pièce jointe, aucun lien signé dans le texte ═════
   //

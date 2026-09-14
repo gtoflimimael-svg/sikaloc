@@ -10,7 +10,7 @@ import { creerClientAdmin } from '@/lib/supabase/admin'
  * Deux chemins mènent ici, et c'est délibéré :
  *
  *   1. `/api/abonnement/fedapay` — la notification de l'opérateur ;
- *   2. le retour du bailleur sur `/app/parametres?retour=1`.
+ *   2. le retour du bailleur sur `/pro/parametres?retour=1`.
  *
  * Le premier peut ne jamais arriver : notification perdue, endpoint
  * momentanément en erreur, webhook désactivé. Le second dépend d'un bailleur

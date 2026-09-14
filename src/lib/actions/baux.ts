@@ -64,8 +64,8 @@ export async function creerBail(
 
   if (error) return { erreur: `Création impossible : ${messageErreur(error)}` }
 
-  revalidatePath('/app/baux')
-  revalidatePath('/app')
+  revalidatePath('/pro/baux')
+  revalidatePath('/pro')
 
   // ── Le bail a-t-il commencé avant d'être enregistré ? ────────────────────
   //
@@ -83,9 +83,9 @@ export async function creerBail(
     .eq('bail_id', data.id)
     .eq('etat', 'À déterminer')
 
-  if ((aDeterminer ?? 0) > 0) redirect(`/app/baux/${data.id}/historique`)
+  if ((aDeterminer ?? 0) > 0) redirect(`/pro/baux/${data.id}/historique`)
 
-  redirect(`/app/baux/${data.id}`)
+  redirect(`/pro/baux/${data.id}`)
 }
 
 export async function modifierBail(
@@ -114,9 +114,9 @@ export async function modifierBail(
 
   if (error) return { erreur: `Mise à jour impossible : ${messageErreur(error)}` }
 
-  revalidatePath('/app/baux')
-  revalidatePath(`/app/baux/${id}`)
-  redirect(`/app/baux/${id}`)
+  revalidatePath('/pro/baux')
+  revalidatePath(`/pro/baux/${id}`)
+  redirect(`/pro/baux/${id}`)
 }
 
 /**
@@ -144,9 +144,9 @@ export async function resilierBail(id: string): Promise<EtatFormulaire> {
 
   if (error) return { erreur: `Résiliation impossible : ${messageErreur(error)}` }
 
-  revalidatePath('/app/baux')
-  revalidatePath(`/app/baux/${id}`)
-  revalidatePath('/app')
+  revalidatePath('/pro/baux')
+  revalidatePath(`/pro/baux/${id}`)
+  revalidatePath('/pro')
   return { succes: 'Bail résilié. Le logement est de nouveau disponible.' }
 }
 
@@ -160,8 +160,8 @@ export async function reactiverBail(id: string): Promise<EtatFormulaire> {
 
   if (error) return { erreur: `Réactivation impossible : ${messageErreur(error)}` }
 
-  revalidatePath('/app/baux')
-  revalidatePath(`/app/baux/${id}`)
+  revalidatePath('/pro/baux')
+  revalidatePath(`/pro/baux/${id}`)
   return { succes: 'Bail réactivé.' }
 }
 
@@ -179,6 +179,6 @@ export async function supprimerBail(id: string): Promise<EtatFormulaire> {
     return { erreur: `Suppression impossible : ${messageErreur(error)}` }
   }
 
-  revalidatePath('/app/baux')
-  redirect('/app/baux')
+  revalidatePath('/pro/baux')
+  redirect('/pro/baux')
 }

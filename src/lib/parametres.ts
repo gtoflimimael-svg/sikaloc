@@ -1,7 +1,7 @@
 /**
  * Sections des paramètres.
  *
- * Une section = une route (`/app/parametres/<cle>`) plutôt qu'un onglet dans
+ * Une section = une route (`/pro/parametres/<cle>`) plutôt qu'un onglet dans
  * une page unique. Le gain n'est pas seulement visuel : chaque écran ne charge
  * que ses propres données. L'ancienne page lisait l'historique de facturation
  * et les filleuls même pour afficher l'onglet « Profil ».

@@ -32,11 +32,11 @@ if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(BASE)) {
 }
 
 const CAPTURES = [
-  { nom: 'tableau-de-bord', chemin: '/app', attendre: 'text=/Ce mois|Encaiss/i' },
-  { nom: 'saisie-paiement', chemin: '/app/paiements/nouveau', attendre: 'form' },
-  // `/app/quittances` n'a pas d'index : les quittances se téléchargent depuis
+  { nom: 'tableau-de-bord', chemin: '/pro', attendre: 'text=/Ce mois|Encaiss/i' },
+  { nom: 'saisie-paiement', chemin: '/pro/paiements/nouveau', attendre: 'form' },
+  // `/pro/quittances` n'a pas d'index : les quittances se téléchargent depuis
   // la liste des paiements. C'est donc elle qui montre le document au visiteur.
-  { nom: 'liste-paiements', chemin: '/app/paiements', attendre: 'text=/Paiement/i' },
+  { nom: 'liste-paiements', chemin: '/pro/paiements', attendre: 'text=/Paiement/i' },
 ]
 
 ;(async () => {
@@ -147,9 +147,9 @@ const CAPTURES = [
     })),
   )
 
-  await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
 
-  if (!/\/app(\/|$|\?)/.test(page.url())) {
+  if (!/\/pro(\/|$|\?)/.test(page.url())) {
     console.error(`Session non établie — page actuelle : ${page.url().slice(0, 90)}`)
     process.exit(1)
   }
@@ -166,7 +166,7 @@ const CAPTURES = [
    * saisie, confirmation, génération du PDF.
    */
   async function emettreUneQuittance() {
-    await page.goto(`${BASE}/app/paiements/nouveau`, { waitUntil: 'networkidle' })
+    await page.goto(`${BASE}/pro/paiements/nouveau`, { waitUntil: 'networkidle' })
 
     // Un bail dont les mois récents sont libres, pour éviter un doublon.
     const bail = page.locator('select').first()

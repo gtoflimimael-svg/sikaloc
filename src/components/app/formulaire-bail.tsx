@@ -42,10 +42,10 @@ export function FormulaireBail({
         </Alerte>
 
         <div className="flex flex-wrap gap-md">
-          <Link href="/app/logements" className="btn btn-secondary">
+          <Link href="/pro/logements" className="btn btn-secondary">
             Voir mes logements
           </Link>
-          <Link href="/app/locataires" className="btn btn-secondary">
+          <Link href="/pro/locataires" className="btn btn-secondary">
             Voir mes locataires
           </Link>
         </div>
@@ -143,7 +143,7 @@ export function FormulaireBail({
         <BoutonSoumettre libelleEnCours="Enregistrement…">
           {bail ? 'Enregistrer les modifications' : 'Créer le bail'}
         </BoutonSoumettre>
-        <Link href="/app/baux" className="btn btn-secondary">
+        <Link href="/pro/baux" className="btn btn-secondary">
           Annuler
         </Link>
       </div>

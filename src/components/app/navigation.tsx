@@ -40,13 +40,13 @@ const ICONES = {
 } as const
 
 export const LIENS_NAV: LienNav[] = [
-  { href: '/app', libelle: 'Tableau de bord', icone: 'tableau' },
-  { href: '/app/impayes', libelle: 'Impayés', icone: 'impayes' },
-  { href: '/app/paiements', libelle: 'Paiements', icone: 'paiements' },
-  { href: '/app/baux', libelle: 'Baux', icone: 'baux' },
-  { href: '/app/locataires', libelle: 'Locataires', icone: 'locataires' },
-  { href: '/app/logements', libelle: 'Logements', icone: 'logements' },
-  { href: '/app/parametres', libelle: 'Paramètres', icone: 'parametres' },
+  { href: '/pro', libelle: 'Tableau de bord', icone: 'tableau' },
+  { href: '/pro/impayes', libelle: 'Impayés', icone: 'impayes' },
+  { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements' },
+  { href: '/pro/baux', libelle: 'Baux', icone: 'baux' },
+  { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires' },
+  { href: '/pro/logements', libelle: 'Logements', icone: 'logements' },
+  { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres' },
 ]
 
 function Icone({ nom }: { nom: keyof typeof ICONES }) {
@@ -54,9 +54,9 @@ function Icone({ nom }: { nom: keyof typeof ICONES }) {
   return <Glyphe size={20} strokeWidth={1.8} aria-hidden="true" className="shrink-0" />
 }
 
-/** `/app` ne doit s'activer que sur lui-même, pas sur `/app/baux`. */
+/** `/pro` ne doit s'activer que sur lui-même, pas sur `/pro/baux`. */
 function estActif(href: string, chemin: string): boolean {
-  if (href === '/app') return chemin === '/app'
+  if (href === '/pro') return chemin === '/pro'
   return chemin === href || chemin.startsWith(`${href}/`)
 }
 
@@ -73,7 +73,7 @@ function LiensNavigation({
     <nav className="space-y-xxs">
       {LIENS_NAV.map((lien) => {
         const actif = estActif(lien.href, chemin)
-        const pastille = lien.href === '/app/impayes' ? impayes : 0
+        const pastille = lien.href === '/pro/impayes' ? impayes : 0
 
         return (
           <Link
@@ -109,7 +109,7 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
     <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
       <div className="sticky top-0 flex h-screen flex-col p-lg">
         <div className="mb-xl px-md pt-sm">
-          <MarqueSikaloc href="/app" taille="sm" espace="Pro" />
+          <MarqueSikaloc href="/pro" taille="sm" espace="Pro" />
         </div>
 
         <LiensNavigation chemin={chemin} impayes={impayes} />
@@ -194,11 +194,11 @@ export function EnTeteMobile({
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
 
-        <MarqueSikaloc href="/app" taille="sm" espace="Pro" />
+        <MarqueSikaloc href="/pro" taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
           <Link
-            href="/app/paiements/nouveau"
+            href="/pro/paiements/nouveau"
             aria-label="Enregistrer un paiement"
             data-visite="bouton-paiement"
             className="btn btn-primary size-9 rounded-pill p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-md"
@@ -235,7 +235,7 @@ export function EnTeteMobile({
 
           <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-lg">
             <div className="mb-lg flex items-center justify-between px-md pt-sm">
-              <MarqueSikaloc href="/app" taille="sm" espace="Pro" />
+              <MarqueSikaloc href="/pro" taille="sm" espace="Pro" />
               <button
                 type="button"
                 onClick={() => setOuvert(false)}
@@ -267,7 +267,7 @@ export function EnTeteMobile({
             </div>
 
             <Link
-              href="/app/paiements/nouveau"
+              href="/pro/paiements/nouveau"
               onClick={() => setOuvert(false)}
               className="btn btn-primary mb-lg w-full"
             >

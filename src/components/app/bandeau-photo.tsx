@@ -47,7 +47,7 @@ export function BandeauPhoto({ bailleur }: { bailleur: Bailleur }) {
     >
       <p className="text-caption">{message}</p>
       <Link
-        href="/app/parametres/profil"
+        href="/pro/parametres/profil"
         className="shrink-0 text-caption font-semibold underline hover:no-underline"
       >
         Ajouter ma photo

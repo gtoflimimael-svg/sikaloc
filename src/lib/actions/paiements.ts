@@ -108,7 +108,7 @@ export async function enregistrerPaiement(
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
   // Écran de récapitulatif avant validation (§6.1.7, étape 4).
-  redirect(`/app/paiements/${data.id}/confirmer`)
+  redirect(`/pro/paiements/${data.id}/confirmer`)
 }
 
 // ─── Étape 2 — confirmation, validation et émission du document ─────────────
@@ -150,11 +150,11 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
     }
   }
 
-  revalidatePath('/app')
-  revalidatePath('/app/paiements')
-  revalidatePath('/app/impayes')
+  revalidatePath('/pro')
+  revalidatePath('/pro/paiements')
+  revalidatePath('/pro/impayes')
 
-  redirect(`/app/quittances/${quittance.value.id}`)
+  redirect(`/pro/quittances/${quittance.value.id}`)
 }
 
 /** Régénère le document d'un paiement déjà validé. */
@@ -171,8 +171,8 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
 export async function regenererQuittance(paiementId: string): Promise<EtatFormulaire> {
   try {
     const quittance = await genererEtStocker(paiementId)
-    revalidatePath('/app/paiements')
-    redirect(`/app/quittances/${quittance.id}`)
+    revalidatePath('/pro/paiements')
+    redirect(`/pro/quittances/${quittance.id}`)
   } catch (erreur) {
     if (erreur instanceof Error && erreur.message === 'NEXT_REDIRECT') throw erreur
     return {
@@ -228,8 +228,8 @@ export async function corrigerPaiement(
     return { erreur: error.message.replace(/^.*?:\s*/, '') }
   }
 
-  revalidatePath('/app/paiements')
-  redirect(`/app/paiements/${id}/confirmer`)
+  revalidatePath('/pro/paiements')
+  redirect(`/pro/paiements/${id}/confirmer`)
 }
 
 export async function supprimerPaiement(id: string): Promise<EtatFormulaire> {
@@ -238,9 +238,9 @@ export async function supprimerPaiement(id: string): Promise<EtatFormulaire> {
 
   if (error) return { erreur: error.message.replace(/^.*?:\s*/, '') }
 
-  revalidatePath('/app/paiements')
-  revalidatePath('/app')
-  redirect('/app/paiements')
+  revalidatePath('/pro/paiements')
+  revalidatePath('/pro')
+  redirect('/pro/paiements')
 }
 
 /**

@@ -56,7 +56,7 @@ export function FenetreCorrection({
         Correction possible pendant encore {minutes}:{String(secondes).padStart(2, '0')}
       </p>
       <Link
-        href={`/app/paiements/${paiementId}/modifier`}
+        href={`/pro/paiements/${paiementId}/modifier`}
         className="text-body-sm font-semibold text-warning-deep underline"
       >
         Corriger ce paiement

@@ -66,9 +66,9 @@ const PROTEGES = [
   '/me/paiements',
   '/me/bail',
   '/me/preferences',
-  '/app',
-  '/app/impayes',
-  '/app/parametres/abonnement',
+  '/pro',
+  '/pro/impayes',
+  '/pro/parametres/abonnement',
 ]
 
 for (const chemin of PROTEGES) {
@@ -101,8 +101,8 @@ noter(
   espaceDuChemin('/me/invitation/abc')?.nom === ESPACE_ME.nom,
 )
 noter(
-  '/app/impayes appartient à Sikaloc_Pro',
-  espaceDuChemin('/app/impayes')?.nom === ESPACE_PRO.nom,
+  '/pro/impayes appartient à Sikaloc_Pro',
+  espaceDuChemin('/pro/impayes')?.nom === ESPACE_PRO.nom,
 )
 noter('/ n’appartient à aucun espace', espaceDuChemin('/') === null)
 

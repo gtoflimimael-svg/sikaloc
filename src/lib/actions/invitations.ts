@@ -134,8 +134,8 @@ export async function inviterLocataire(
     return { erreur: MESSAGES_ENVOI.envoi_echoue }
   }
 
-  revalidatePath('/app/locataires')
-  revalidatePath(`/app/locataires/${locataireId}/modifier`)
+  revalidatePath('/pro/locataires')
+  revalidatePath(`/pro/locataires/${locataireId}/modifier`)
 
   return { succes: `Invitation envoyée à ${email}.` }
 }
@@ -173,7 +173,7 @@ export async function annulerInvitation(
 
   if (error) return { erreur: `Annulation impossible : ${error.message}` }
 
-  revalidatePath('/app/locataires')
+  revalidatePath('/pro/locataires')
   return { succes: 'Invitation annulée.' }
 }
 

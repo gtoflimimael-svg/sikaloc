@@ -38,27 +38,27 @@ export function diagnostiquer(situation: SituationBail): Diagnostic | null {
   if (!manqueLocataire && !manqueLogement) return null
 
   const lienLocataire = {
-    href: '/app/locataires/nouveau',
+    href: '/pro/locataires/nouveau',
     libelle: 'Ajouter un locataire',
     variante: 'primary' as const,
   }
   const lienLogement = {
-    href: '/app/logements/nouveau',
+    href: '/pro/logements/nouveau',
     libelle: 'Ajouter un logement',
     variante: 'primary' as const,
   }
   const lienAbonnement = {
-    href: '/app/parametres/abonnement',
+    href: '/pro/parametres/abonnement',
     libelle: 'Passer au plan Standard',
     variante: 'primary' as const,
   }
   const lienBaux = {
-    href: '/app/baux',
+    href: '/pro/baux',
     libelle: 'Voir mes baux',
     variante: 'secondary' as const,
   }
   const lienLogements = {
-    href: '/app/logements',
+    href: '/pro/logements',
     libelle: 'Voir mes logements',
     variante: 'secondary' as const,
   }

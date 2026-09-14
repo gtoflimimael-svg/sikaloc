@@ -46,7 +46,7 @@ export async function modifierProfil(
 
   // Le nom du bailleur apparaît dans le shell et sur les quittances : c'est
   // tout l'espace applicatif qu'il faut réinvalider, pas seulement cet écran.
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
   return { succes: 'Informations mises à jour.' }
 }
 
@@ -71,7 +71,7 @@ export async function modifierAvatar(
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
 
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
   return { succes: 'Avatar mis à jour.' }
 }
 
@@ -99,7 +99,7 @@ export async function modifierPreferences(
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
 
-  revalidatePath('/app/parametres')
+  revalidatePath('/pro/parametres')
   return { succes: 'Préférences enregistrées.' }
 }
 
@@ -158,7 +158,7 @@ export async function televerserSignature(
 
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
-  revalidatePath('/app/parametres')
+  revalidatePath('/pro/parametres')
   return { succes: 'Signature enregistrée. Elle apparaîtra sur vos prochaines quittances.' }
 }
 
@@ -177,7 +177,7 @@ export async function supprimerSignature(): Promise<EtatFormulaire> {
 
   if (error) return { erreur: `Suppression impossible : ${error.message}` }
 
-  revalidatePath('/app/parametres')
+  revalidatePath('/pro/parametres')
   return { succes: 'Signature supprimée.' }
 }
 
@@ -319,7 +319,7 @@ export async function televerserPhoto(
 
   if (error) return { erreur: `L’enregistrement a échoué : ${error.message}` }
 
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
   return { succes: 'Votre photo de profil est enregistrée.' }
 }
 
@@ -345,6 +345,6 @@ export async function supprimerPhoto(): Promise<EtatFormulaire> {
 
   if (error) return { erreur: `La suppression a échoué : ${error.message}` }
 
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
   return { succes: 'Votre photo a été retirée. Votre avatar vous représente à nouveau.' }
 }

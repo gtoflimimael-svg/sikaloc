@@ -27,7 +27,7 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  */
 export async function terminerOnboarding(): Promise<void> {
   await marquerTermine()
-  redirect('/app?bienvenue=1')
+  redirect('/pro?bienvenue=1')
 }
 
 /**
@@ -38,7 +38,7 @@ export async function terminerOnboarding(): Promise<void> {
  */
 export async function ignorerOnboarding(): Promise<void> {
   await marquerTermine()
-  redirect('/app?bienvenue=1')
+  redirect('/pro?bienvenue=1')
 }
 
 async function marquerTermine(): Promise<void> {
@@ -50,7 +50,7 @@ async function marquerTermine(): Promise<void> {
     .update({ onboarding_termine: true })
     .eq('id', bailleur.id)
 
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
 }
 
 /**
@@ -71,5 +71,5 @@ export async function marquerTutorielVu(): Promise<void> {
     .update({ tutoriel_vu_le: new Date().toISOString() })
     .eq('id', bailleur.id)
 
-  revalidatePath('/app')
+  revalidatePath('/pro')
 }

@@ -46,7 +46,7 @@ export function FormulairePaiement({
         <Alerte ton="attention">
           Aucun bail actif. Créez un bail avant d’enregistrer un paiement.
         </Alerte>
-        <Link href="/app/baux/nouveau" className="btn btn-primary">
+        <Link href="/pro/baux/nouveau" className="btn btn-primary">
           Créer un bail
         </Link>
       </div>
@@ -132,7 +132,7 @@ export function FormulairePaiement({
 
       <div className="flex flex-wrap gap-md pt-sm">
         <BoutonSoumettre libelleEnCours="Enregistrement…">{libelleSoumission}</BoutonSoumettre>
-        <Link href="/app/paiements" className="btn btn-secondary">
+        <Link href="/pro/paiements" className="btn btn-secondary">
           Annuler
         </Link>
       </div>

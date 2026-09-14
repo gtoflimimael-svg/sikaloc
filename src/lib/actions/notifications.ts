@@ -201,7 +201,7 @@ export async function relancerParEmail(
     return { erreur: `L’envoi a échoué : ${envoi.message ?? 'raison inconnue'}` }
   }
 
-  revalidatePath('/app/impayes')
+  revalidatePath('/pro/impayes')
   return { succes: `Relance envoyée à ${destinataire!.email}.` }
 }
 

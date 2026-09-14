@@ -70,7 +70,7 @@ try {
   await page.fill('#email', 'demo@sikaloc.com')
   await page.fill('#motDePasse', 'demo1234')
   await page.click('button[type=submit]')
-  await page.waitForURL('**/app**', { timeout: 30000 })
+  await page.waitForURL('**/pro**', { timeout: 30000 })
   console.log(`    → ${page.url()}`)
 
   // ── 2. Tableau de bord ────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ try {
 
   // ── 3. Impayés ────────────────────────────────────────────────────────────
   etape(3, 'Écran des impayés')
-  await page.goto(`${BASE}/app/impayes`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/impayes`, { waitUntil: 'networkidle' })
   const nbImpayes = await page.locator('text=Impayé').count()
   console.log(`    ${nbImpayes} badges « Impayé » affichés`)
 
@@ -94,7 +94,7 @@ try {
 
   // ── 4. Saisie d'un paiement ───────────────────────────────────────────────
   etape(4, 'Saisie d’un paiement')
-  await page.goto(`${BASE}/app/paiements/nouveau`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/paiements/nouveau`, { waitUntil: 'networkidle' })
 
   // Bail de Pascal Dossou (35 000 FCFA), impayé sur plusieurs mois.
   const options = await page.$$eval('#bailId option', (o) =>

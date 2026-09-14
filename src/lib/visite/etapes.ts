@@ -14,9 +14,9 @@ import type { ProgressionVisite } from '@/lib/types/database'
  *
  * Trois pistes ont été écartées, chacune pour une raison mesurée :
  *
- *   • la route ne prouve rien. `/app/logements` est la destination du succès,
+ *   • la route ne prouve rien. `/pro/logements` est la destination du succès,
  *     mais aussi celle d'« Annuler », du lien de la barre latérale et du retour
- *     arrière. Et au plafond du plan Gratuit, `/app/logements/nouveau` répond
+ *     arrière. Et au plafond du plan Gratuit, `/pro/logements/nouveau` répond
  *     200 sans contenir le moindre formulaire.
  *
  *   • l'événement DOM ment. `bailleurAvecEcriture()` peut refuser l'écriture
@@ -88,13 +88,13 @@ export const ETAPES: Etape[] = [
       { nom: 'ville', libelle: 'Ville', aide: 'Cotonou, Porto-Novo, Parakou…' },
       { nom: 'type', libelle: 'Type de bien', aide: 'Il apparaîtra sur chaque quittance émise pour ce logement.' },
     ],
-    routesAction: ['/app/logements/nouveau'],
+    routesAction: ['/pro/logements/nouveau'],
     jalon: 'Logement',
     titre: 'Commencez par un logement',
     message:
       'Un logement, c’est l’adresse que vous louez. Tout part de là : un bail s’y rattache, puis les loyers. Le plan Gratuit en accepte deux.',
     cible: 'nav-logements',
-    lien: { libelle: 'Ajouter un logement', href: '/app/logements/nouveau' },
+    lien: { libelle: 'Ajouter un logement', href: '/pro/logements/nouveau' },
     accomplie: (p) => p.nb_logements > 0,
   },
   {
@@ -105,13 +105,13 @@ export const ETAPES: Etape[] = [
       { nom: 'email', libelle: 'Email', aide: 'Facultatif. Utile seulement pour lui envoyer ses quittances par mail.' },
       { nom: 'consentement', libelle: 'Consentement', aide: 'Vous attestez l’avoir informé que vous enregistrez ses données. Obligatoire.' },
     ],
-    routesAction: ['/app/locataires/nouveau'],
+    routesAction: ['/pro/locataires/nouveau'],
     jalon: 'Locataire',
     titre: 'Ajoutez votre locataire',
     message:
       'Son nom, son téléphone, et votre attestation de l’avoir informé de la collecte de ses données. L’email est facultatif — il sert à lui envoyer ses quittances.',
     cible: 'nav-locataires',
-    lien: { libelle: 'Ajouter un locataire', href: '/app/locataires/nouveau' },
+    lien: { libelle: 'Ajouter un locataire', href: '/pro/locataires/nouveau' },
     accomplie: (p) => p.nb_locataires > 0,
   },
   {
@@ -123,13 +123,13 @@ export const ETAPES: Etape[] = [
       { nom: 'jourEcheance', libelle: 'Jour d’échéance', aide: 'Le jour du mois où le loyer est dû. Le 31 devient le dernier jour des mois plus courts.' },
       { nom: 'toleranceJours', libelle: 'Tolérance', aide: 'Les jours que vous accordez après l’échéance avant qu’un retard soit signalé.' },
     ],
-    routesAction: ['/app/baux/nouveau'],
+    routesAction: ['/pro/baux/nouveau'],
     jalon: 'Bail',
     titre: 'Reliez les deux par un bail',
     message:
       'Le bail associe le logement au locataire : le loyer, le jour d’échéance, et le nombre de jours que vous tolérez avant qu’un retard soit signalé.',
     cible: 'nav-baux',
-    lien: { libelle: 'Créer le bail', href: '/app/baux/nouveau' },
+    lien: { libelle: 'Créer le bail', href: '/pro/baux/nouveau' },
     accomplie: (p) => p.nb_baux > 0,
   },
   {
@@ -140,24 +140,24 @@ export const ETAPES: Etape[] = [
       { nom: 'periodeDebut', libelle: 'Mois de loyer', aide: 'Le mois que ce versement règle — pas la date où vous l’avez reçu.' },
       { nom: 'modePaiement', libelle: 'Mode de règlement', aide: 'En espèces au-delà de 100 000 FCFA, une mention de droit de timbre s’ajoute au document.' },
     ],
-    routesAction: ['/app/paiements/nouveau', '/app/paiements/'],
+    routesAction: ['/pro/paiements/nouveau', '/pro/paiements/'],
     jalon: 'Paiement',
     titre: 'Enregistrez un loyer reçu',
     message:
       'Le montant, la date, le mode de règlement. Un récapitulatif vous est présenté avant validation — c’est lui qui déclenche le document.',
     cible: 'bouton-paiement',
-    lien: { libelle: 'Enregistrer un paiement', href: '/app/paiements/nouveau' },
+    lien: { libelle: 'Enregistrer un paiement', href: '/pro/paiements/nouveau' },
     accomplie: (p) => p.nb_paiements > 0,
   },
   {
     cle: 'quittance',
-    routesAction: ['/app/quittances/'],
+    routesAction: ['/pro/quittances/'],
     jalon: 'Quittance',
     titre: 'Votre quittance est prête',
     message:
       'Elle a été produite à la validation du paiement : numérotée, horodatée, signée. Ouvrez-la, téléchargez-la, ou envoyez-la à votre locataire sur WhatsApp.',
     cible: 'nav-paiements',
-    lien: { libelle: 'Voir mes paiements', href: '/app/paiements' },
+    lien: { libelle: 'Voir mes paiements', href: '/pro/paiements' },
     accomplie: (p) => p.nb_quittances > 0,
   },
 ]
@@ -182,19 +182,19 @@ export const A_EXPLORER = [
     cle: 'impayes',
     libelle: 'Les impayés',
     texte: 'Passé l’échéance et la tolérance du bail, un loyer bascule ici tout seul.',
-    href: '/app/impayes',
+    href: '/pro/impayes',
   },
   {
     cle: 'signature',
     libelle: 'Votre signature',
     texte: 'Enregistrée une fois, elle est apposée sur chaque quittance.',
-    href: '/app/parametres/signature',
+    href: '/pro/parametres/signature',
   },
   {
     cle: 'donnees',
     libelle: 'Vos données',
     texte: 'Baux, paiements et quittances, exportables en une archive à tout moment.',
-    href: '/app/parametres/donnees',
+    href: '/pro/parametres/donnees',
   },
 ] as const
 

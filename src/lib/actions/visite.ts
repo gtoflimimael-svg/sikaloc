@@ -12,7 +12,7 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  * Écritures faites avec le client porteur de la session — donc soumises à la
  * RLS — et non avec `service_role` : un bailleur n'écrit que sa propre ligne.
  *
- * Toutes revalident `/app` en layout, parce que la visite est montée dans le
+ * Toutes revalident `/pro` en layout, parce que la visite est montée dans le
  * shell et non dans une page : sans cela, l'état resterait celui du rendu
  * précédent jusqu'à la prochaine navigation complète.
  */
@@ -34,7 +34,7 @@ export async function terminerVisite(): Promise<void> {
     .update({ tutoriel_vu_le: new Date().toISOString(), visite_quittee_le: null })
     .eq('id', bailleur.id)
 
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
 }
 
 /**
@@ -53,7 +53,7 @@ export async function quitterVisite(): Promise<void> {
     .update({ visite_quittee_le: new Date().toISOString() })
     .eq('id', bailleur.id)
 
-  revalidatePath('/app', 'layout')
+  revalidatePath('/pro', 'layout')
 }
 
 /**
@@ -79,6 +79,6 @@ export async function reprendreVisite(): Promise<void> {
     .update({ tutoriel_vu_le: null, visite_quittee_le: null })
     .eq('id', bailleur.id)
 
-  revalidatePath('/app', 'layout')
-  redirect('/app?visite=1')
+  revalidatePath('/pro', 'layout')
+  redirect('/pro?visite=1')
 }

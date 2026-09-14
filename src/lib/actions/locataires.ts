@@ -45,8 +45,8 @@ export async function creerLocataire(
 
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
-  revalidatePath('/app/locataires')
-  redirect('/app/locataires')
+  revalidatePath('/pro/locataires')
+  redirect('/pro/locataires')
 }
 
 export async function modifierLocataire(
@@ -73,8 +73,8 @@ export async function modifierLocataire(
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
 
-  revalidatePath('/app/locataires')
-  redirect('/app/locataires')
+  revalidatePath('/pro/locataires')
+  redirect('/pro/locataires')
 }
 
 export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
@@ -92,7 +92,7 @@ export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
     return { erreur: `Suppression impossible : ${error.message}` }
   }
 
-  revalidatePath('/app/locataires')
+  revalidatePath('/pro/locataires')
   return { succes: 'Locataire supprimé.' }
 }
 
@@ -162,7 +162,7 @@ export async function televerserSignatureLocataire(
 
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
-  revalidatePath(`/app/locataires/${locataireId}/modifier`)
+  revalidatePath(`/pro/locataires/${locataireId}/modifier`)
   return { succes: 'Signature du locataire enregistrée. Elle apparaîtra sur ses prochaines quittances.' }
 }
 
@@ -188,6 +188,6 @@ export async function supprimerSignatureLocataire(locataireId: string): Promise<
 
   if (error) return { erreur: `Suppression impossible : ${error.message}` }
 
-  revalidatePath(`/app/locataires/${locataireId}/modifier`)
+  revalidatePath(`/pro/locataires/${locataireId}/modifier`)
   return { succes: 'Signature du locataire supprimée.' }
 }

@@ -66,7 +66,7 @@ export function FormulaireLogement({
         <BoutonSoumettre libelleEnCours="Enregistrement…">
           {logement ? 'Enregistrer les modifications' : 'Créer le logement'}
         </BoutonSoumettre>
-        <Link href="/app/logements" className="btn btn-secondary">
+        <Link href="/pro/logements" className="btn btn-secondary">
           Annuler
         </Link>
       </div>

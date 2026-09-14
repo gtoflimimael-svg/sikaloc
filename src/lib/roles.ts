@@ -40,7 +40,7 @@ export const ESPACE_PRO: Espace = {
   nom: 'Sikaloc_Pro',
   titre: 'Propriétaire ou bailleur',
   description: 'Gérez vos biens, vos locataires et vos loyers.',
-  racine: '/app',
+  racine: '/pro',
   actions: [
     'Logements, locataires et baux',
     'Paiements et quittances',
@@ -141,4 +141,33 @@ export const CHEMINS_PUBLICS: string[] = ['/me/rejoindre', '/me/invitation']
 /** Ce chemin échappe-t-il à la protection de son espace ? */
 export function cheminPublic(chemin: string): boolean {
   return CHEMINS_PUBLICS.some((p) => chemin === p || chemin.startsWith(`${p}/`))
+}
+
+/**
+ * Ce chemin appartient-il à un espace réservé aux comptes authentifiés ?
+ *
+ * ─── Pourquoi la comparaison est faite PAR SEGMENT ──────────────────────────
+ *
+ * Le proxy comparait par simple `startsWith`. Avec l'ancien préfixe `/app`,
+ * c'était sans conséquence : aucune route publique ne commençait par ces
+ * quatre lettres.
+ *
+ * `/pro` n'a pas cette chance. `startsWith('/pro')` capture `/profil`,
+ * `/professionnel`, `/probleme` — et les enverrait tous vers l'écran de
+ * connexion. Le jour où une de ces adresses existe, la panne serait invisible
+ * au développeur connecté, et totale pour le visiteur.
+ *
+ * On exige donc le séparateur, ou l'égalité exacte : `/pro` et `/pro/baux`
+ * sont gardés, `/profil` ne l'est pas.
+ *
+ * ─── Ce que cette fonction ne décide pas ────────────────────────────────────
+ *
+ * Elle dit quels chemins réclament une session, pas qui a le droit d'entrer.
+ * L'appartenance à un espace se vérifie ailleurs, sur le serveur, après la
+ * session — une route gardée n'est pas une autorisation.
+ */
+export function cheminProtege(chemin: string): boolean {
+  return ESPACES.some(
+    ({ racine }) => chemin === racine || chemin.startsWith(`${racine}/`),
+  )
 }

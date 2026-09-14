@@ -68,6 +68,54 @@ const nextConfig: NextConfig = {
     // `npm run generer:objets`, et embarquée comme un import ordinaire.
     '/api/cron/schema': ['./src/lib/types/database.ts'],
   },
+  /**
+   * Les anciennes adresses de Sikaloc_Pro.
+   *
+   * ─── Ce que ces trois lignes protègent ─────────────────────────────────
+   *
+   * Des bailleurs détiennent, dans des emails de relance d'abonnement déjà
+   * partis, des liens vers `/app/parametres/abonnement`. Sans cette
+   * redirection, cliquer « Régler mon abonnement » mène à une page
+   * introuvable — au moment précis où on leur demande de payer.
+   *
+   * S'y ajoutent les favoris, l'historique des navigateurs, et l'index de
+   * Google.
+   *
+   * ─── Pourquoi 308 et pas 301 ───────────────────────────────────────────
+   *
+   * `permanent: true` produit un 308, et c'est le bon choix pour deux raisons
+   * que la documentation de cette version explique :
+   *
+   *   • 301 et 302 laissent les navigateurs changer la méthode en GET. 307 et
+   *     308 la PRÉSERVENT. Or les Server Actions de Next sont des POST vers
+   *     l'URL de la page — un formulaire soumis depuis un onglet resté ouvert
+   *     sur `/app/...` serait silencieusement dégradé en GET, et la
+   *     soumission perdue sans message.
+   *   • Pour les moteurs, un 308 vaut un 301 : l'autorité est transférée et
+   *     l'adresse remplacée à l'index.
+   *
+   * ─── Les paramètres d'URL suivent ──────────────────────────────────────
+   *
+   * Next passe la chaîne de requête à la destination sans qu'on ait à le
+   * demander. `/app/paiements?bail=xxx` arrive donc sur
+   * `/pro/paiements?bail=xxx` — ce qui compte pour les liens internes du
+   * produit, qui transportent des identifiants.
+   *
+   * ─── Une seule règle suffit ────────────────────────────────────────────
+   *
+   * Le modificateur `*` signifie « zéro ou plus » : `/app/:chemin*` couvre
+   * `/app` lui-même ET tous ses descendants.
+   */
+  async redirects() {
+    return [
+      {
+        source: '/app/:chemin*',
+        destination: '/pro/:chemin*',
+        permanent: true,
+      },
+    ]
+  },
+
   async headers() {
     return [
       {

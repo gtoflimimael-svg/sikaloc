@@ -101,7 +101,7 @@ export function FormulaireLocataire({
         <BoutonSoumettre libelleEnCours="Enregistrement…">
           {modification ? 'Enregistrer les modifications' : 'Créer le locataire'}
         </BoutonSoumettre>
-        <Link href="/app/locataires" className="btn btn-secondary">
+        <Link href="/pro/locataires" className="btn btn-secondary">
           Annuler
         </Link>
       </div>

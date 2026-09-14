@@ -435,7 +435,7 @@ export default async function PageAccueil() {
               <SelecteurTheme compact />
             </div>
             {utilisateur ? (
-              // `/entrer` plutôt que `/app` : il aiguille selon les rôles et ne
+              // `/entrer` plutôt que `/pro` : il aiguille selon les rôles et ne
               // pose la question qu'à qui possède les deux. Un bailleur ne voit
               // donc aucune étape de plus.
               <Link href="/entrer" className="btn btn-primary btn-sm">
@@ -971,7 +971,7 @@ export default async function PageAccueil() {
 
                 Deux lignes ont disparu, toutes deux fausses.
                 « Historique complet et export » l'était doublement :
-                `/app/paiements` n'appelle jamais `capacites()`, l'historique est
+                `/pro/paiements` n'appelle jamais `capacites()`, l'historique est
                 donc déjà servi aux comptes gratuits — le tableau de bord leur
                 affiche même le lien « Historique complet » — et l'export
                 n'existe nulle part dans le code.

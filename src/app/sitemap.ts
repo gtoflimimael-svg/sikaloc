@@ -4,7 +4,7 @@ import { ARTICLES } from '@/lib/articles'
 /**
  * Plan du site.
  *
- * Ne liste que les pages publiques et indexables. Tout ce qui vit sous `/app`
+ * Ne liste que les pages publiques et indexables. Tout ce qui vit sous `/pro`
  * est derrière une session — l'y faire figurer inviterait Google à explorer des
  * URL qui répondront par une redirection vers la connexion. Les routes d'API
  * n'ont rien à y faire non plus.

@@ -37,7 +37,7 @@ export async function bailleurNonVerifie(): Promise<Bailleur> {
     // ─── Connecté, mais pas bailleur ────────────────────────────────────
     //
     // Renvoyer vers `/connexion` serait une boucle : `proxy.ts` en éloigne
-    // toute session ouverte et la ramène vers `/app`, qui repasse ici. Un
+    // toute session ouverte et la ramène vers `/pro`, qui repasse ici. Un
     // locataire se retrouverait à rebondir entre les deux écrans sans jamais
     // comprendre pourquoi.
     //
@@ -155,7 +155,7 @@ export async function bailleurCourant(): Promise<Bailleur> {
 export async function bailleurOnboarde(): Promise<Bailleur> {
   const bailleur = await bailleurCourant()
 
-  if (!bailleur.onboarding_termine) redirect('/app/onboarding')
+  if (!bailleur.onboarding_termine) redirect('/pro/onboarding')
 
   return bailleur
 }

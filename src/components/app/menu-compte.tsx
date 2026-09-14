@@ -73,14 +73,14 @@ export function MenuCompte({
           </div>
 
           <Link
-            href="/app/parametres"
+            href="/pro/parametres"
             role="menuitem"
             className="mt-sm block rounded-md px-md py-sm text-body-sm text-body hover:bg-canvas-soft"
           >
             Paramètres du compte
           </Link>
           <Link
-            href="/app/parametres/parrainage"
+            href="/pro/parametres/parrainage"
             role="menuitem"
             className="block rounded-md px-md py-sm text-body-sm text-body hover:bg-canvas-soft"
           >

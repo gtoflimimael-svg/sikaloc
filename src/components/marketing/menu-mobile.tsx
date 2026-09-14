@@ -284,7 +284,7 @@ export function MenuMobile({ connecte }: { connecte: boolean }) {
 
                 <div className="mt-auto space-y-lg pt-xl">
                   <Link
-                    href={connecte ? '/app' : '/connexion'}
+                    href={connecte ? '/pro' : '/connexion'}
                     onClick={() => fermer(false)}
                     className="btn btn-secondary w-full"
                   >
