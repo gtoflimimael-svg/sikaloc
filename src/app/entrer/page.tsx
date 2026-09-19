@@ -51,7 +51,7 @@ export default async function PageEntrer({
   // ferait rien de visible.
   if (user && choix !== '1') {
     const roles = await rolesDuCompte()
-    if (roles.estBailleur && !roles.estLocataire) redirect(ESPACE_PRO.racine)
+    if (roles.estBailleur && !roles.estLocataire) redirect(ESPACE_PRO.tableauDeBord)
     if (roles.estLocataire && !roles.estBailleur) redirect(ESPACE_ME.racine)
   }
 
@@ -78,7 +78,7 @@ export default async function PageEntrer({
           <CarteEspace
             espace={ESPACE_PRO}
             icone={<Building2 size={26} strokeWidth={1.75} aria-hidden="true" />}
-            destination={user ? ESPACE_PRO.racine : '/connexion'}
+            destination={user ? ESPACE_PRO.tableauDeBord : '/connexion'}
             secondaire={user ? null : { libelle: 'Créer un compte', href: '/inscription' }}
           />
 

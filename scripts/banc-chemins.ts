@@ -27,7 +27,15 @@
  * ajoutait `/me/lo` à la liste — passerait pour public.
  */
 
-import { cheminPublic, CHEMINS_PUBLICS, espaceDuChemin, ESPACE_ME, ESPACE_PRO } from '../src/lib/roles'
+import {
+  cheminProtege,
+  cheminPublic,
+  CHEMINS_PUBLICS,
+  CHEMINS_PUBLICS_EXACTS,
+  espaceDuChemin,
+  ESPACE_ME,
+  ESPACE_PRO,
+} from '../src/lib/roles'
 
 const etapes: boolean[] = []
 const noter = (nom: string, ok: boolean, detail?: string) => {
@@ -45,6 +53,9 @@ const PUBLICS = [
   '/me/rejoindre',
   '/me/invitation/abc123',
   '/me/invitation/8-54qFGeD8xM9IjBP7OXJsftZSGIgrF-DL0AXBt0N5I',
+  // La présentation de Sikaloc_Pro. Publique par ÉGALITÉ seulement : tout ce
+  // qui vit dessous reste l'application du bailleur.
+  '/pro',
 ]
 
 for (const chemin of PUBLICS) {
@@ -66,9 +77,13 @@ const PROTEGES = [
   '/me/paiements',
   '/me/bail',
   '/me/preferences',
-  '/pro',
+  '/pro/tableau-de-bord',
   '/pro/impayes',
+  '/pro/baux',
+  '/pro/locataires',
+  '/pro/paiements',
   '/pro/parametres/abonnement',
+  '/pro/onboarding',
 ]
 
 for (const chemin of PROTEGES) {
@@ -93,6 +108,42 @@ for (const chemin of VOISINS) {
   noter(`${chemin} n’est PAS public`, !cheminPublic(chemin))
 }
 
+// ═══ 3 bis. `/pro` s'ouvre seul, jamais sa descendance ═══════════════════════
+//
+// La faute qui guette ici est l'inverse de celle de `/me/invitation` : ouvrir
+// une racine d'espace par préfixe rendrait publique toute l'application du
+// bailleur — baux, locataires, paiements, quittances — en une seule ligne.
+//
+// D'où deux listes distinctes dans `roles.ts`, et cette section qui les sépare.
+titre('3 bis. L’ouverture de /pro ne déborde sur rien')
+
+noter('/pro figure dans la liste EXACTE', CHEMINS_PUBLICS_EXACTS.includes('/pro'))
+noter(
+  '/pro ne figure PAS dans la liste par préfixe',
+  !CHEMINS_PUBLICS.includes('/pro'),
+  'sinon toute l’application du bailleur deviendrait publique',
+)
+
+for (const chemin of [
+  '/pro/tableau-de-bord',
+  '/pro/baux',
+  '/pro/locataires',
+  '/pro/paiements',
+  '/pro/logements',
+  '/pro/impayes',
+  '/pro/quittances/abc',
+  '/pro/parametres',
+  '/pro/parametres/abonnement',
+  '/pro/onboarding',
+]) {
+  noter(`${chemin} n’est PAS public`, !cheminPublic(chemin))
+}
+
+// Et les voisins qui ressemblent à `/pro` sans en être.
+for (const chemin of ['/profil', '/professionnel', '/probleme', '/promotions']) {
+  noter(`${chemin} n’est ni public ni gardé par l’espace Pro`, !cheminProtege(chemin))
+}
+
 // ═══ 4. Les espaces se reconnaissent toujours ════════════════════════════════
 titre('4. Les chemins publics appartiennent bien à un espace')
 
@@ -112,8 +163,8 @@ titre('5. Public ne veut pas dire sans autorisation')
 
 noter(
   'tous les chemins publics vivent dans un espace protégé',
-  CHEMINS_PUBLICS.every((p) => espaceDuChemin(p) !== null),
-  'leur contenu reste gardé par leur propre règle — jeton, ou rien',
+  [...CHEMINS_PUBLICS, ...CHEMINS_PUBLICS_EXACTS].every((p) => espaceDuChemin(p) !== null),
+  'leur contenu reste gardé par leur propre règle — jeton, session, ou rien',
 )
 
 const reussis = etapes.filter(Boolean).length

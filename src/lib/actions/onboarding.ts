@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 
 import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { ESPACE_PRO } from '@/lib/roles'
 
 /**
  * Clôture de l'onboarding.
@@ -27,7 +28,7 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  */
 export async function terminerOnboarding(): Promise<void> {
   await marquerTermine()
-  redirect('/pro?bienvenue=1')
+  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
 }
 
 /**
@@ -38,7 +39,7 @@ export async function terminerOnboarding(): Promise<void> {
  */
 export async function ignorerOnboarding(): Promise<void> {
   await marquerTermine()
-  redirect('/pro?bienvenue=1')
+  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
 }
 
 async function marquerTermine(): Promise<void> {
@@ -71,5 +72,5 @@ export async function marquerTutorielVu(): Promise<void> {
     .update({ tutoriel_vu_le: new Date().toISOString() })
     .eq('id', bailleur.id)
 
-  revalidatePath('/pro')
+  revalidatePath(ESPACE_PRO.tableauDeBord)
 }

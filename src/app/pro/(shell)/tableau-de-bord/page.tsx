@@ -19,11 +19,16 @@ import type { Impaye, MetriquesDashboard } from '@/lib/types/database'
 import { ReprendreVisite } from '@/components/app/reprendre-visite'
 
 /*
- * Titre écrit en entier : un `title.template` de layout ne s'applique pas à la
- * page du MÊME segment, seulement à ses enfants. Et `absolute` pour court-circuiter le gabarit de la
- * racine, qui sinon ajouterait un second « · Sikaloc ». Sans cela, l'écran d'accueil
- * du bailleur — le seul qu'il garde ouvert toute la journée — serait le seul
- * de l'espace à ne pas dire « Sikaloc_Pro ». Même correction que sur /me.
+ * Titre écrit en entier.
+ *
+ * La raison d'origine a disparu avec le déplacement : tant que cette page était
+ * l'index de `(shell)`, le `title.template` de son layout ne s'y appliquait pas
+ * — un gabarit ne vaut que pour les segments ENFANTS. Depuis qu'elle vit sous
+ * `tableau-de-bord/`, elle est un enfant, et le gabarit l'atteindrait.
+ *
+ * `absolute` est conservé parce qu'il produit exactement le même titre et qu'il
+ * le garantit sans dépendre du layout. Ce qui compte n'a pas changé : l'écran
+ * que le bailleur laisse ouvert toute la journée doit dire « Sikaloc_Pro ».
  */
 export const metadata: Metadata = { title: { absolute: `Tableau de bord · ${ESPACE_PRO.nom}` } }
 

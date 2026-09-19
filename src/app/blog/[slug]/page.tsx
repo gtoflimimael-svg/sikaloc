@@ -22,7 +22,10 @@ export async function generateMetadata({
   if (!article) return {}
 
   return {
-    title: `${article.titre} — Sikaloc`,
+    // Sans le suffixe : le gabarit de la racine (`%s · Sikaloc`) l'ajoute
+    // déjà. Même correction que `/blog` (voir son commentaire) — c'était la
+    // même faute, sur chacun des cinq articles plutôt que sur un seul index.
+    title: article.titre,
     description: article.resume,
     alternates: { canonical: `/blog/${article.slug}` },
     openGraph: {

@@ -4,10 +4,15 @@ import { ARTICLES } from '@/lib/articles'
 /**
  * Plan du site.
  *
- * Ne liste que les pages publiques et indexables. Tout ce qui vit sous `/pro`
- * est derrière une session — l'y faire figurer inviterait Google à explorer des
- * URL qui répondront par une redirection vers la connexion. Les routes d'API
- * n'ont rien à y faire non plus.
+ * Ne liste que les pages publiques et indexables. `/pro` en fait partie depuis
+ * qu'il est devenu la présentation de Sikaloc_Pro ; tout ce qui vit SOUS
+ * `/pro/` reste derrière une session — l'y faire figurer inviterait Google à
+ * explorer des URL qui répondront par une redirection vers la connexion. Les
+ * routes d'API n'ont rien à y faire non plus.
+ *
+ * Absents à dessein : `/find`, qui n'existe pas encore ; `/me`, qui exige une
+ * session ; et les anciennes adresses `/app/...`, qui ne sont plus que des
+ * redirections.
  *
  * `/connexion` est volontairement absente : elle n'apporte rien en recherche et
  * dilue le budget d'exploration. `/inscription` y figure, elle : c'est une page
@@ -25,13 +30,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // annoncerait à Google une modification quotidienne du contenu légal, ce qui
   // est faux et finit par être ignoré.
   const derniereRevision = new Date('2026-08-23')
+  // Les deux pages dont le contenu a réellement changé à la séparation des
+  // espaces. Leur laisser la date d'août annoncerait à Google une page
+  // d'accueil inchangée, alors qu'elle a été entièrement réécrite.
+  const separationDesEspaces = new Date('2026-09-15')
 
   return [
     {
       url: `${BASE}/`,
-      lastModified: derniereRevision,
+      lastModified: separationDesEspaces,
       changeFrequency: 'weekly',
       priority: 1,
+    },
+    {
+      // La page de vente bailleur, qui vivait à `/` jusqu'à la séparation.
+      url: `${BASE}/pro`,
+      lastModified: separationDesEspaces,
+      changeFrequency: 'weekly',
+      priority: 0.9,
     },
     {
       url: `${BASE}/inscription`,

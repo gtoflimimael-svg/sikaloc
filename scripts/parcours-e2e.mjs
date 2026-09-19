@@ -70,7 +70,7 @@ try {
   await page.fill('#email', 'demo@sikaloc.com')
   await page.fill('#motDePasse', 'demo1234')
   await page.click('button[type=submit]')
-  await page.waitForURL('**/pro**', { timeout: 30000 })
+  await page.waitForURL('**/pro/tableau-de-bord**', { timeout: 30000 })
   console.log(`    → ${page.url()}`)
 
   // ── 2. Tableau de bord ────────────────────────────────────────────────────

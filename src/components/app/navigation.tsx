@@ -21,6 +21,7 @@ import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
+import { ESPACE_PRO } from '@/lib/roles'
 
 export interface LienNav {
   href: string
@@ -40,7 +41,7 @@ const ICONES = {
 } as const
 
 export const LIENS_NAV: LienNav[] = [
-  { href: '/pro', libelle: 'Tableau de bord', icone: 'tableau' },
+  { href: ESPACE_PRO.tableauDeBord, libelle: 'Tableau de bord', icone: 'tableau' },
   { href: '/pro/impayes', libelle: 'Impayés', icone: 'impayes' },
   { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements' },
   { href: '/pro/baux', libelle: 'Baux', icone: 'baux' },
@@ -54,9 +55,15 @@ function Icone({ nom }: { nom: keyof typeof ICONES }) {
   return <Glyphe size={20} strokeWidth={1.8} aria-hidden="true" className="shrink-0" />
 }
 
-/** `/pro` ne doit s'activer que sur lui-même, pas sur `/pro/baux`. */
+/*
+ * Le cas particulier de `/pro` a disparu avec le déplacement du tableau de
+ * bord.
+ *
+ * Il existait parce que `/pro` ÉTAIT le tableau de bord : sans lui, l'onglet
+ * serait resté allumé sur `/pro/baux` comme sur tout le reste de l'espace.
+ * `/pro/tableau-de-bord` est une feuille — la règle générale lui suffit.
+ */
 function estActif(href: string, chemin: string): boolean {
-  if (href === '/pro') return chemin === '/pro'
   return chemin === href || chemin.startsWith(`${href}/`)
 }
 
@@ -109,7 +116,7 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
     <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
       <div className="sticky top-0 flex h-screen flex-col p-lg">
         <div className="mb-xl px-md pt-sm">
-          <MarqueSikaloc href="/pro" taille="sm" espace="Pro" />
+          <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
         </div>
 
         <LiensNavigation chemin={chemin} impayes={impayes} />
@@ -194,7 +201,7 @@ export function EnTeteMobile({
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
 
-        <MarqueSikaloc href="/pro" taille="sm" espace="Pro" />
+        <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
           <Link
@@ -235,7 +242,7 @@ export function EnTeteMobile({
 
           <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-lg">
             <div className="mb-lg flex items-center justify-between px-md pt-sm">
-              <MarqueSikaloc href="/pro" taille="sm" espace="Pro" />
+              <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
               <button
                 type="button"
                 onClick={() => setOuvert(false)}

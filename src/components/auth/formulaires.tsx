@@ -16,6 +16,7 @@ import {
   inscrire,
 } from '@/lib/actions/auth'
 import type { EtatFormulaire } from '@/lib/validation'
+import { ESPACE_PRO } from '@/lib/roles'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
@@ -26,7 +27,7 @@ export function FormulaireConnexion({ suite }: { suite?: string }) {
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
-      <input type="hidden" name="suite" value={suite ?? '/pro'} />
+      <input type="hidden" name="suite" value={suite ?? ESPACE_PRO.tableauDeBord} />
 
       <ChampTexte
         nom="email"

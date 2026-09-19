@@ -8,6 +8,7 @@ import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Echeance } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
+import { ESPACE_PRO } from '@/lib/roles'
 
 /**
  * Déclaration des loyers réglés avant l'usage de Sikaloc.
@@ -157,7 +158,7 @@ export async function declarerHistorique(
   revalidatePath('/pro/impayes')
   revalidatePath('/pro/paiements')
   revalidatePath(`/pro/baux/${bailId}`)
-  revalidatePath('/pro')
+  revalidatePath(ESPACE_PRO.tableauDeBord)
 
   redirect(`/pro/baux/${bailId}`)
 }

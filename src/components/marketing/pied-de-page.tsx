@@ -7,10 +7,17 @@ const colonnes = [
   {
     titre: 'Produit',
     liens: [
-      { libelle: 'Fonctionnalités', href: '/#fonctionnalites' },
-      { libelle: 'Tarifs', href: '/#tarifs' },
+      // Fonctionnalités et tarifs sont ceux de Sikaloc_Pro, le seul espace qui
+      // en a : ils vivent sur `/pro`. Pointés vers `/`, ils menaient à une
+      // ancre disparue avec l'ancienne page d'accueil.
+      //
+      // `?presentation=1` : sans lui, `/pro` renvoie un bailleur vérifié vers
+      // son tableau de bord, et le fragment, que le serveur ne voit pas, se
+      // perd avec. Voir `src/app/pro/page.tsx`.
+      { libelle: 'Fonctionnalités', href: '/pro?presentation=1#fonctionnalites' },
+      { libelle: 'Tarifs', href: '/pro?presentation=1#tarifs' },
       { libelle: 'Créer un compte', href: '/inscription' },
-      { libelle: 'Se connecter', href: '/connexion' },
+      { libelle: 'Se connecter', href: '/entrer' },
     ],
   },
   {
@@ -29,12 +36,16 @@ const colonnes = [
   {
     titre: 'Aide',
     liens: [
-      { libelle: 'Comment ça marche', href: '/#etapes' },
+      // Le pied de page est commun à tout le site : « comment ça marche » y
+      // désigne l'écosystème, que la page d'accueil explique en `#parcours`.
+      { libelle: 'Comment ça marche', href: '/#parcours' },
       // Le pied de page est là où l'on cherche quand on ne sait pas où aller —
       // et c'est souvent le cas d'un locataire arrivé ici sans rien demander.
       { libelle: 'Je suis locataire', href: '/me/rejoindre' },
       { libelle: 'Le blog', href: '/blog' },
-      { libelle: 'Questions fréquentes', href: '/#faq' },
+      // La FAQ n'existe que sur `/pro`, où elle a été déplacée avec le reste
+      // du contenu bailleur — ses trois questions de locataire comprises.
+      { libelle: 'Questions fréquentes', href: '/pro?presentation=1#faq' },
       { libelle: 'Nous écrire', href: 'mailto:bonjour@sikaloc.com' },
     ],
   },
@@ -52,7 +63,7 @@ export function PiedDePage() {
                 établit que Sikaloc n'est pas partie au contrat de bail. */}
             <p className="mt-md max-w-[20rem] text-body-sm">
               Les quittances des bailleurs au Bénin. Numérotées, horodatées,
-              envoyées au locataire sur WhatsApp.
+              envoyées par le bailleur au locataire sur WhatsApp.
             </p>
           </div>
 

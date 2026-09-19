@@ -178,7 +178,7 @@ async function compter(table, id) {
   noter('L’étape 2 est la signature', true)
 
   await page.locator('button:has-text("Je la mettrai plus tard")').first().click()
-  await page.waitForURL(/\/pro(\?|$)/, { timeout: 20000 })
+  await page.waitForURL(/\/pro\/tableau-de-bord(\?|$)/, { timeout: 20000 })
   noter('Le tableau de bord est atteint sans locataire ni bail', true, page.url().replace(BASE, ''))
 
   noter('Aucun locataire n’a été créé', (await compter('locataires', compte.id)) === 0)
@@ -379,7 +379,7 @@ async function compter(table, id) {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.waitForTimeout(500)
 
-  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/tableau-de-bord`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1200)
 
   // ── 7. Quitter est persistant ──────────────────────────────────────────
@@ -398,7 +398,7 @@ async function compter(table, id) {
     apresQuitter?.tutoriel_vu_le === null,
   )
 
-  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/tableau-de-bord`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1200)
   noter(
     'Elle ne se rouvre pas d’elle-même après un rafraîchissement',
@@ -543,7 +543,7 @@ async function compter(table, id) {
   )
 
   // ── 10. Terminée, elle ne revient plus ─────────────────────────────────
-  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/tableau-de-bord`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1400)
   noter('Elle ne redémarre pas à la visite suivante', !(await visite.isVisible().catch(() => false)))
   noter(

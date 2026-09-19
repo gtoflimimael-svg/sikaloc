@@ -7,9 +7,10 @@ import { createPortal } from 'react-dom'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
+import { ESPACE_PRO } from '@/lib/roles'
 
 /**
- * Tiroir de navigation mobile de la page d'accueil.
+ * Tiroir de navigation mobile des pages publiques — `/` et `/pro`.
  *
  * Décalque volontaire de `EnTeteMobile` (`src/components/app/navigation.tsx`) :
  * même géométrie (`w-[86vw] max-w-[320px]`), même voile, même gestion d'Échap
@@ -25,7 +26,7 @@ import { SelecteurTheme } from '@/components/ui/theme'
  *
  * ─── Pourquoi un portail, et non un simple `fixed` ───────────────────────
  *
- * Le bouton vit dans `<header className="… backdrop-blur">` (`page.tsx:133`).
+ * Le bouton vit dans `<header className="… backdrop-blur">` (`EnTetePublic`).
  * Une valeur de `backdrop-filter` autre que `none` fait de l'élément le BLOC
  * CONTENEUR de ses descendants en `position: fixed` (CSS Filter Effects 2),
  * exactement comme `transform` ou `filter`. Rendu dans l'en-tête, le panneau
@@ -37,26 +38,23 @@ import { SelecteurTheme } from '@/components/ui/theme'
  * C'est la seule correction possible sans retirer le flou de l'en-tête.
  */
 
-/**
- * Les ancres réelles de la page — `#etapes`, et non le `#comment` du rapport,
- * qui ne correspond à aucune section.
+/*
+ * ─── Les liens ne sont plus écrits ici ─────────────────────────────────────
  *
- * Rangées dans l'ordre où les sections se présentent réellement à l'écran :
- * « Comment ça marche » vient avant « Fonctionnalités » dans le document. Un
- * menu qui annonce un autre ordre que celui du défilement fait passer les
- * ancres pour des pages séparées.
+ * Ce fichier portait une liste figée d'ancres relatives — `#etapes`,
+ * `#fonctionnalites`, `#tarifs`, `#faq`, `#locataire`. Elles étaient justes tant
+ * que le tiroir ne vivait que sur la page qui portait ces sections.
+ *
+ * Il en sert désormais deux. Sur `/`, qui ne porte que `#espaces` et
+ * `#parcours`, les cinq entrées menaient à des ancres absentes : un tiroir
+ * entier de liens morts, sur le premier écran que voit un visiteur au
+ * téléphone.
+ *
+ * La liste vient donc de la page qui rend le tiroir, via `EnTetePublic`. Chaque
+ * page ne déclare que des ancres qu'elle porte réellement — c'est la seule
+ * façon pour qu'un lien relatif reste vrai quel que soit l'endroit où le
+ * composant est monté.
  */
-const LIENS = [
-  { href: '#etapes', libelle: 'Comment ça marche' },
-  { href: '#fonctionnalites', libelle: 'Fonctionnalités' },
-  { href: '#tarifs', libelle: 'Tarifs' },
-  { href: '#faq', libelle: 'Questions fréquentes' },
-  // Le public de cette entrée est celui qui navigue au téléphone : un locataire
-  // qui a reçu une invitation de son bailleur. La barre de bureau ne la porte
-  // pas — elle est mesurée au pixel près et déborderait — mais le hero l'ancre
-  // dès le premier écran, sur toutes les tailles.
-  { href: '#locataire', libelle: 'Je suis locataire' },
-]
 
 /**
  * Volontairement plus large que `a, button` : le sélecteur de thème n'expose
@@ -72,7 +70,28 @@ const FOCUSABLES = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
-export function MenuMobile({ connecte }: { connecte: boolean }) {
+export function MenuMobile({
+  connecte,
+  liens,
+  destinationTableauDeBord = ESPACE_PRO.tableauDeBord,
+}: {
+  connecte: boolean
+  /** Les entrées du tiroir, fournies par la page — voir le commentaire plus haut. */
+  liens: { href: string; libelle: string }[]
+  /**
+   * Où mène « Mon tableau de bord » pour un connecté.
+   *
+   * Par défaut `ESPACE_PRO.tableauDeBord` : c'est la destination juste sur
+   * `/pro`, où quelqu'un qui ouvre le tiroir sait déjà qu'il est dans l'espace
+   * bailleur. Ce n'est PAS le bon défaut pour la page d'accueil globale, qui
+   * ignore le rôle du visiteur — voir `/entrer`, passé explicitement par
+   * `page.tsx`.
+   *
+   * Le défaut préserve `/pro` sans qu'il ait à passer quoi que ce soit :
+   * seule la page d'accueil a besoin de le renseigner.
+   */
+  destinationTableauDeBord?: string
+}) {
   const [ouvert, setOuvert] = useState(false)
   const [monte, setMonte] = useState(false)
   const declencheur = useRef<HTMLButtonElement>(null)
@@ -268,7 +287,7 @@ export function MenuMobile({ connecte }: { connecte: boolean }) {
 
                 <nav aria-label="Navigation principale">
                   <ul className="flex flex-col">
-                    {LIENS.map((lien) => (
+                    {liens.map((lien) => (
                       <li key={lien.href}>
                         <Link
                           href={lien.href}
@@ -284,7 +303,7 @@ export function MenuMobile({ connecte }: { connecte: boolean }) {
 
                 <div className="mt-auto space-y-lg pt-xl">
                   <Link
-                    href={connecte ? '/pro' : '/connexion'}
+                    href={connecte ? destinationTableauDeBord : '/entrer'}
                     onClick={() => fermer(false)}
                     className="btn btn-secondary w-full"
                   >

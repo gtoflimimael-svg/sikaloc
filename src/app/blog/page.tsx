@@ -6,7 +6,13 @@ import { MarqueSikaloc } from '@/components/ui/logo'
 import { ARTICLES } from '@/lib/articles'
 
 export const metadata: Metadata = {
-  title: 'Le blog — Sikaloc',
+  // Sans le suffixe : le gabarit de la racine (`%s · Sikaloc`) l'ajoute déjà.
+  // C'était la seule page du site à le porter deux fois — « Le blog — Sikaloc
+  // · Sikaloc » — parce qu'elle seule l'écrivait elle-même. Toutes les autres
+  // pages simples (`/connexion`, `/inscription`, `/legal/*`) s'en tiennent à
+  // un titre bref et laissent le gabarit faire son travail ; celle-ci s'aligne
+  // sur cette convention plutôt que d'en inventer une nouvelle.
+  title: 'Le blog',
   description:
     'Comment fonctionnent les quittances de loyer produites par Sikaloc : ce que le document contient, ce qu’il calcule, et comment il parvient à votre locataire.',
   alternates: { canonical: '/blog' },

@@ -36,13 +36,12 @@ export async function bailleurNonVerifie(): Promise<Bailleur> {
   if (!bailleur) {
     // ─── Connecté, mais pas bailleur ────────────────────────────────────
     //
-    // Renvoyer vers `/connexion` serait une boucle : `proxy.ts` en éloigne
-    // toute session ouverte et la ramène vers `/pro`, qui repasse ici. Un
-    // locataire se retrouverait à rebondir entre les deux écrans sans jamais
-    // comprendre pourquoi.
+    // Renvoyer vers `/connexion` ne servirait à rien : `proxy.ts` en éloigne
+    // toute session ouverte et la renvoie vers `/entrer`. Le locataire ne
+    // verrait jamais le formulaire, seulement un détour de plus.
     //
-    // On l'aiguille donc vers l'espace qui est le sien, ou vers la page de
-    // choix quand on ne sait pas trancher.
+    // On l'aiguille donc directement vers l'espace qui est le sien, ou vers la
+    // page de choix quand on ne sait pas trancher.
     redirect(destinationApresConnexion(await rolesDuCompte()))
   }
 
@@ -110,7 +109,7 @@ export async function locataireCourant(): Promise<{ compteId: string; email: str
     // Un bailleur égaré : on le renvoie chez lui. Quelqu'un sans aucun rôle —
     // un compte créé depuis une invitation dont le rattachement a échoué —
     // atterrit sur l'explication, qui est la seule réponse utile.
-    redirect(roles.estBailleur ? ESPACE_PRO.racine : '/me/rejoindre')
+    redirect(roles.estBailleur ? ESPACE_PRO.tableauDeBord : '/me/rejoindre')
   }
 
   return { compteId: user.id, email: user.email ?? '' }

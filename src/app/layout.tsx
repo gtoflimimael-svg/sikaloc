@@ -64,21 +64,38 @@ const inter = Inter({
  * canal de distribution principal du produit, et sans elles un lien partagé
  * dans une conversation s'affiche sans titre, sans description et sans image.
  */
+/**
+ * Ce que Sikaloc fait AUJOURD'HUI, pour tout le site.
+ *
+ * Rien sur Sikaloc_Find, qui n'existe pas encore : cette phrase s'affiche sous
+ * le lien de n'importe quelle page du site dans un résultat de recherche, bien
+ * loin de la carte qui précise « n'existe pas encore ».
+ */
+const DESCRIPTION_GLOBALE =
+  'Sikaloc accompagne la location au Bénin : les bailleurs suivent leurs loyers ' +
+  'et leurs quittances, les locataires retrouvent leurs documents dans leur ' +
+  'propre espace.'
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://sikaloc.com'),
+  /*
+   * Le titre et la description par défaut valent pour TOUT le site — ils
+   * s'appliquent à chaque page qui n'en déclare pas. Ils vendaient encore des
+   * quittances aux bailleurs : c'était le métier de l'ancienne page d'accueil,
+   * passé depuis à `/pro`, qui porte ses propres métadonnées.
+   *
+   * Ils décrivent désormais Sikaloc lui-même. Le vocabulaire précis du
+   * bailleur — quittances, impayés, logiciel — reste à `/pro`, pour que les
+   * deux pages ne se disputent pas les mêmes recherches.
+   */
   title: {
-    default: 'Quittances de loyer pour bailleurs au Bénin — Sikaloc',
+    default: 'Sikaloc — gestion locative et logements au Bénin',
     template: '%s · Sikaloc',
   },
-  description:
-    // « envoyées au locataire sur WhatsApp » annonçait un acheminement que
-    // Sikaloc n'assure pas : il pré-remplit un message que le bailleur envoie
-    // lui-même. La description dit désormais ce que le produit fait, et nomme
-    // l'espace locataire, qui existe depuis.
-    'Suivez vos loyers au Bénin : impayés détectés automatiquement et quittances PDF numérotées, horodatées et signées. Vos locataires retrouvent leurs documents dans leur propre espace.',
+  description: DESCRIPTION_GLOBALE,
   applicationName: 'Sikaloc',
   authors: [{ name: 'Sikaloc' }],
-  keywords: ['gestion locative', 'quittance de loyer', 'Bénin', 'bailleur', 'loyer'],
+  keywords: ['Sikaloc', 'gestion locative', 'location', 'logement', 'Bénin'],
 
   /*
    * Vérification de propriété auprès des moteurs.
@@ -96,20 +113,39 @@ export const metadata: Metadata = {
       ? { other: { 'msvalidate.01': process.env.VERIFICATION_BING } }
       : {}),
   },
+  /*
+   * ─── L'aperçu de partage, hérité par toutes les pages ───────────────────
+   *
+   * Une page qui ne déclare pas d'`openGraph` hérite de celui-ci EN ENTIER
+   * (règle de fusion superficielle de Next : un objet imbriqué se transmet ou
+   * se remplace d'un bloc). `/` n'en déclare pas — un lien « sikaloc.com »
+   * partagé sur WhatsApp affichait donc ce qui suit. `/pro` déclare le sien
+   * (voir `src/app/pro/page.tsx`) et n'hérite pas de celui-ci.
+   *
+   * Et ce qui suit était doublement faux :
+   *
+   *   • orienté bailleur, sur la page qui ne l'est plus ;
+   *   • « envoyées au locataire sur WhatsApp » — un acheminement que Sikaloc
+   *     n'assure pas, corrigé partout ailleurs le 13 septembre et resté ici,
+   *     dans le seul texte que personne ne relit parce qu'il ne s'affiche
+   *     jamais sur le site.
+   *
+   * `url: '/'` est retiré : hérité par chaque page, il déclarait `/pro` et
+   * `/blog` comme étant la page d'accueil. Sans lui, les plateformes prennent
+   * l'adresse réellement partagée, et la balise canonique de chaque page fait
+   * foi.
+   */
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
     siteName: 'Sikaloc',
-    url: '/',
-    title: 'Quittances de loyer pour bailleurs au Bénin — Sikaloc',
-    description:
-      'Quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp. Gratuit jusqu’à 2 logements.',
+    title: 'Sikaloc — gestion locative et logements au Bénin',
+    description: DESCRIPTION_GLOBALE,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Quittances de loyer pour bailleurs au Bénin — Sikaloc',
-    description:
-      'Quittances PDF numérotées, horodatées et signées, envoyées au locataire sur WhatsApp.',
+    title: 'Sikaloc — gestion locative et logements au Bénin',
+    description: DESCRIPTION_GLOBALE,
   },
 }
 

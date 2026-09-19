@@ -7,6 +7,7 @@ import { aujourdhuiISO } from '@/lib/format'
 import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaBail, type EtatFormulaire } from '@/lib/validation'
+import { ESPACE_PRO } from '@/lib/roles'
 
 function lireFormulaire(donnees: FormData) {
   return schemaBail.safeParse({
@@ -65,7 +66,7 @@ export async function creerBail(
   if (error) return { erreur: `Création impossible : ${messageErreur(error)}` }
 
   revalidatePath('/pro/baux')
-  revalidatePath('/pro')
+  revalidatePath(ESPACE_PRO.tableauDeBord)
 
   // ── Le bail a-t-il commencé avant d'être enregistré ? ────────────────────
   //
@@ -146,7 +147,7 @@ export async function resilierBail(id: string): Promise<EtatFormulaire> {
 
   revalidatePath('/pro/baux')
   revalidatePath(`/pro/baux/${id}`)
-  revalidatePath('/pro')
+  revalidatePath(ESPACE_PRO.tableauDeBord)
   return { succes: 'Bail résilié. Le logement est de nouveau disponible.' }
 }
 

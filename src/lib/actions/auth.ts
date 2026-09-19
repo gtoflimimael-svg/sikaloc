@@ -16,6 +16,7 @@ import {
   type EtatFormulaire,
 } from '@/lib/validation'
 import { poserTemoinVerification } from '@/lib/verification/temoin'
+import { ESPACE_PRO } from '@/lib/roles'
 
 async function urlDeBase(): Promise<string> {
   const enTetes = await headers()
@@ -120,7 +121,7 @@ export async function connecter(
   }
 
   const { email, motDePasse } = analyse.data
-  const suite = (donnees.get('suite') as string) || '/pro'
+  const suite = (donnees.get('suite') as string) || ESPACE_PRO.tableauDeBord
 
   const blocage = await verifierBlocage(email)
   if (blocage.bloque) {
@@ -157,7 +158,9 @@ export async function connecter(
   revalidatePath('/', 'layout')
   // Une destination fournie par l'URL ne doit jamais pouvoir pointer ailleurs
   // que sur ce site : on n'accepte qu'un chemin relatif.
-  redirect(suite.startsWith('/') && !suite.startsWith('//') ? suite : '/pro')
+  redirect(
+    suite.startsWith('/') && !suite.startsWith('//') ? suite : ESPACE_PRO.tableauDeBord,
+  )
 }
 
 // ─── Déconnexion ────────────────────────────────────────────────────────────
@@ -235,5 +238,5 @@ export async function definirNouveauMotDePasse(
   }
 
   revalidatePath('/', 'layout')
-  redirect('/pro')
+  redirect(ESPACE_PRO.tableauDeBord)
 }

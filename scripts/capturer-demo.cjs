@@ -32,7 +32,7 @@ if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(BASE)) {
 }
 
 const CAPTURES = [
-  { nom: 'tableau-de-bord', chemin: '/pro', attendre: 'text=/Ce mois|Encaiss/i' },
+  { nom: 'tableau-de-bord', chemin: '/pro/tableau-de-bord', attendre: 'text=/Ce mois|Encaiss/i' },
   { nom: 'saisie-paiement', chemin: '/pro/paiements/nouveau', attendre: 'form' },
   // `/pro/quittances` n'a pas d'index : les quittances se téléchargent depuis
   // la liste des paiements. C'est donc elle qui montre le document au visiteur.
@@ -147,7 +147,7 @@ const CAPTURES = [
     })),
   )
 
-  await page.goto(`${BASE}/pro`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro/tableau-de-bord`, { waitUntil: 'networkidle' })
 
   if (!/\/pro(\/|$|\?)/.test(page.url())) {
     console.error(`Session non établie — page actuelle : ${page.url().slice(0, 90)}`)

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { AssistantOnboarding } from '@/components/app/onboarding'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { bailleurCourant } from '@/lib/session'
+import { ESPACE_PRO } from '@/lib/roles'
 
 export const metadata: Metadata = { title: 'Bienvenue' }
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = { title: 'Bienvenue' }
 export default async function PageOnboarding() {
   const bailleur = await bailleurCourant()
 
-  if (bailleur.onboarding_termine) redirect('/pro')
+  if (bailleur.onboarding_termine) redirect(ESPACE_PRO.tableauDeBord)
 
   return (
     <div className="min-h-screen bg-canvas-soft">

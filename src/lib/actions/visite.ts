@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 
 import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { ESPACE_PRO } from '@/lib/roles'
 
 /**
  * Les trois sorties de la visite guidée.
@@ -80,5 +81,5 @@ export async function reprendreVisite(): Promise<void> {
     .eq('id', bailleur.id)
 
   revalidatePath('/pro', 'layout')
-  redirect('/pro?visite=1')
+  redirect(`${ESPACE_PRO.tableauDeBord}?visite=1`)
 }

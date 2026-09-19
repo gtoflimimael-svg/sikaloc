@@ -30,7 +30,22 @@ export interface Espace {
   nom: string
   titre: string
   description: string
+  /**
+   * Le segment qui délimite l'espace — ce qui sert à RECONNAÎTRE un chemin.
+   *
+   * Lu par `espaceDuChemin` et `cheminProtege`. Ce n'est pas une destination :
+   * `/pro` est devenu la page de présentation de Sikaloc_Pro, qui s'adresse à
+   * quelqu'un qui n'a pas de compte.
+   */
   racine: string
+  /**
+   * Où entre quelqu'un qui a le droit d'entrer — ce qui sert à ENVOYER.
+   *
+   * Les deux notions coïncidaient tant que `/pro` était le tableau de bord.
+   * Elles ont divergé, et les confondre renverrait un bailleur qui vient de se
+   * connecter sur une page de vente.
+   */
+  tableauDeBord: string
   /** Ce qu'on y fait, pour la page de choix. */
   actions: string[]
 }
@@ -41,6 +56,7 @@ export const ESPACE_PRO: Espace = {
   titre: 'Propriétaire ou bailleur',
   description: 'Gérez vos biens, vos locataires et vos loyers.',
   racine: '/pro',
+  tableauDeBord: '/pro/tableau-de-bord',
   actions: [
     'Logements, locataires et baux',
     'Paiements et quittances',
@@ -54,6 +70,9 @@ export const ESPACE_ME: Espace = {
   titre: 'Locataire',
   description: 'Retrouvez votre logement, vos loyers et vos quittances.',
   racine: '/me',
+  // Les deux coïncident encore ici : `/me` est le tableau de bord du
+  // locataire. Elles divergeront le jour où `/me` recevra sa présentation.
+  tableauDeBord: '/me',
   actions: [
     'Votre logement et votre bail',
     'Vos loyers et vos paiements',
@@ -83,8 +102,10 @@ export function espace(role: Role): Espace {
  * renvoyer vers une erreur.
  */
 export function destinationApresConnexion(roles: Roles): string {
-  if (roles.estBailleur && !roles.estLocataire) return ESPACE_PRO.racine
-  if (roles.estLocataire && !roles.estBailleur) return ESPACE_ME.racine
+  // `tableauDeBord` et non `racine` : `/pro` est une page de vente désormais,
+  // et y renvoyer quelqu'un qui vient de se connecter serait absurde.
+  if (roles.estBailleur && !roles.estLocataire) return ESPACE_PRO.tableauDeBord
+  if (roles.estLocataire && !roles.estBailleur) return ESPACE_ME.tableauDeBord
   return '/entrer'
 }
 
@@ -138,8 +159,28 @@ export function accesAutorise(roles: Roles, espaceVise: Espace): boolean {
  */
 export const CHEMINS_PUBLICS: string[] = ['/me/rejoindre', '/me/invitation']
 
+/**
+ * Les chemins publics dont SEUL le chemin exact l'est.
+ *
+ * ─── Pourquoi une seconde liste, et pas une entrée de plus ci-dessus ────────
+ *
+ * `CHEMINS_PUBLICS` ouvre un chemin ET tous ses descendants — c'est ce qu'il
+ * faut pour `/me/invitation/<jeton>`, dont le jeton est un segment enfant.
+ *
+ * `/pro` demande exactement l'inverse. La page de présentation s'adresse à
+ * quelqu'un qui n'a pas de compte ; tout ce qui vit dessous — `/pro/baux`,
+ * `/pro/paiements`, `/pro/tableau-de-bord` — reste l'application du bailleur.
+ * Ajouter `/pro` à la liste par préfixe ouvrirait l'espace entier, en une
+ * ligne, sans que rien ne le signale.
+ *
+ * D'où deux listes plutôt qu'un drapeau : la différence de comportement se lit
+ * dans le nom.
+ */
+export const CHEMINS_PUBLICS_EXACTS: string[] = ['/pro']
+
 /** Ce chemin échappe-t-il à la protection de son espace ? */
 export function cheminPublic(chemin: string): boolean {
+  if (CHEMINS_PUBLICS_EXACTS.includes(chemin)) return true
   return CHEMINS_PUBLICS.some((p) => chemin === p || chemin.startsWith(`${p}/`))
 }
 

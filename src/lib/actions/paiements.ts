@@ -9,6 +9,7 @@ import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaPaiement, type EtatFormulaire } from '@/lib/validation'
+import { ESPACE_PRO } from '@/lib/roles'
 
 function lireFormulaire(donnees: FormData) {
   return schemaPaiement.safeParse({
@@ -150,7 +151,7 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
     }
   }
 
-  revalidatePath('/pro')
+  revalidatePath(ESPACE_PRO.tableauDeBord)
   revalidatePath('/pro/paiements')
   revalidatePath('/pro/impayes')
 
@@ -239,7 +240,7 @@ export async function supprimerPaiement(id: string): Promise<EtatFormulaire> {
   if (error) return { erreur: error.message.replace(/^.*?:\s*/, '') }
 
   revalidatePath('/pro/paiements')
-  revalidatePath('/pro')
+  revalidatePath(ESPACE_PRO.tableauDeBord)
   redirect('/pro/paiements')
 }
 
