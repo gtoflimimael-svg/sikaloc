@@ -1,0 +1,7 @@
+# Exclusions de la carte du code (Graphify) : on garde l'application, pas ses outils annexes.
+
+# Outils de synchronisation du design (aperçus, shims, config de build).
+.design-sync/
+
+# Bancs d'essai : scripts de test, ils ne font pas partie de l'application.
+scripts/banc-*
