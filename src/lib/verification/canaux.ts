@@ -87,16 +87,30 @@ function trappeDeveloppement(): boolean {
   return process.env.NODE_ENV !== 'production' && process.env.OTP_CANAL_DEV === '1'
 }
 
-/** Le canal est-il réellement en état d'envoyer ? */
-export function canalDisponible(canal: CanalTelephone): boolean {
-  if (trappeDeveloppement()) return true
+export type EtatCanal = 'desactive' | 'indisponible' | 'configure' | 'operationnel'
 
-  switch (canal) {
-    case 'SMS':
-      return Boolean(process.env.SMS_FOURNISSEUR && process.env.SMS_JETON)
-    case 'WHATSAPP':
-      return Boolean(process.env.WHATSAPP_ID_TELEPHONE && process.env.WHATSAPP_JETON)
-  }
+/** Configuré ne signifie pas opérationnel : aucun transport fournisseur n'est implémenté. */
+export function etatCanal(canal: CanalTelephone): EtatCanal {
+  if (trappeDeveloppement()) return 'operationnel'
+  const cles = canal === 'SMS'
+    ? ['SMS_FOURNISSEUR', 'SMS_IDENTIFIANT', 'SMS_JETON', 'SMS_EXPEDITEUR']
+    : ['WHATSAPP_ID_TELEPHONE', 'WHATSAPP_JETON']
+  const presentes = cles.filter((cle) => Boolean(process.env[cle]))
+  if (presentes.length === 0) return 'desactive'
+  return presentes.length === cles.length ? 'configure' : 'indisponible'
+}
+
+export function canalDisponible(canal: CanalTelephone): boolean {
+  return etatCanal(canal) === 'operationnel'
+}
+
+/** Conserve l'exigence antérieure quand des identifiants étaient déclarés.
+ * L'indisponibilité d'un transport ne doit pas devenir un contournement.
+ */
+export function verificationTelephoneExigible(): boolean {
+  return trappeDeveloppement()
+    || Boolean(process.env.SMS_FOURNISSEUR && process.env.SMS_JETON)
+    || Boolean(process.env.WHATSAPP_ID_TELEPHONE && process.env.WHATSAPP_JETON)
 }
 
 /**

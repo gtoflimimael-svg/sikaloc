@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { empreinte, rassemblerDonnees, rendrePdf } from '@/lib/quittance'
+import { empreinte, obtenirDocumentAutorise, rassemblerDonnees, rendrePdf } from '@/lib/quittance'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -9,22 +9,8 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  *
  * ─── Deux demandeurs légitimes, deux chemins d'autorisation ─────────────────
  *
- *   le bailleur   les RLS de `quittances` répondent : un identifiant deviné
- *                 ne rend rien.
- *   le locataire  `ma_quittance()` répond : la fonction déduit l'appelant de
- *                 sa session et rend zéro ligne si le document n'est pas le
- *                 sien.
- *
- * Le second chemin n'est essayé QUE si le premier n'a rien rendu. Aucune
- * ligne de l'autorisation du bailleur n'est touchée : ce qui marchait hier
- * marche à l'identique.
- *
- * ─── Pourquoi le locataire ne passe pas par les RLS ─────────────────────────
- *
- * Parce que les politiques de `quittances` disent `auth.uid() = bailleur_id`,
- * et qu'un locataire n'est le bailleur de personne. Les réécrire pour lui
- * aurait ouvert la table entière, colonne par colonne, à tous les locataires —
- * voir la migration 20260913000700.
+ *   Le serveur valide la session, puis lire_quittance_autorisee vérifie
+ *   propriétaire ou compte locataire et toute la chaîne de rattachement.
  *
  * ─── Le fichier est servi, pas refabriqué ───────────────────────────────────
  *
@@ -61,64 +47,19 @@ export async function GET(
     return NextResponse.json({ erreur: 'Authentification requise.' }, { status: 401 })
   }
 
-  // ── Porte 1 : le bailleur, par les RLS ───────────────────────────────────
-  const { data: quittance } = await supabase
-    .from('quittances')
-    .select('paiement_id, numero_document, type, date_generation, pdf_chemin, hash_sha256')
-    .eq('id', id)
-    .maybeSingle()
-
-  let acces: AccesDocument | null = null
-
-  if (quittance) {
-    const { data: apposition } = await supabase
-      .from('signatures_apposees')
-      .select('id')
-      .eq('quittance_id', id)
-      .maybeSingle()
-
-    acces = {
-      paiementId: quittance.paiement_id,
-      numeroDocument: quittance.numero_document,
-      type: quittance.type,
-      dateGeneration: quittance.date_generation,
-      pdfChemin: quittance.pdf_chemin,
-      hash: quittance.hash_sha256,
-      signee: Boolean(apposition),
-    }
-  } else {
-    // ── Porte 2 : le locataire, par sa surface d'accès ─────────────────────
-    const { data: lignes } = await supabase.rpc('ma_quittance', { p_quittance_id: id })
-    const mienne = lignes?.[0]
-
-    if (mienne) {
-      /*
-       * Le chemin du fichier est relu ICI, avec la clé d'administration, et
-       * pas rendu par la fonction.
-       *
-       * `ma_quittance()` est exécutable par `authenticated` : tout ce qu'elle
-       * rend est atteignable depuis un navigateur avec la clé publique. Or
-       * `pdf_chemin` commence par l'identifiant de compte du bailleur. La
-       * fonction établit donc l'appartenance, et le serveur — seul — fait le
-       * lien avec le fichier.
-       */
-      const { data: fichier } = await creerClientAdmin()
-        .from('quittances')
-        .select('pdf_chemin')
-        .eq('id', id)
-        .maybeSingle()
-
-      acces = {
-        paiementId: mienne.paiement_id,
-        numeroDocument: mienne.numero_document,
-        type: mienne.type,
-        dateGeneration: mienne.date_generation,
-        pdfChemin: fichier?.pdf_chemin ?? null,
-        hash: mienne.hash_sha256,
-        signee: mienne.signee,
-      }
-    }
-  }
+  // Une seule lecture SQL lie demandeur, paiement, bail, logement et fichier.
+  // L'identité est revalidée dans le helper privilégié lui-même.
+  const document = await obtenirDocumentAutorise(id)
+  const q = document?.quittance
+  const acces: AccesDocument | null = document && q ? {
+    paiementId: q.paiement_id,
+    numeroDocument: q.numero_document,
+    type: q.type,
+    dateGeneration: q.date_generation,
+    pdfChemin: q.pdf_chemin,
+    hash: q.hash_sha256,
+    signee: document.signee,
+  } : null
 
   if (!acces) {
     // Même réponse pour « ce document n'existe pas » et « il ne vous appartient

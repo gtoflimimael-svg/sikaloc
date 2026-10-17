@@ -14,13 +14,14 @@ import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import type { Bailleur } from '@/lib/types/database'
-import { canauxDisponibles, EXIGENCES_CANAL } from '@/lib/verification/canaux'
+import { canauxDisponibles, EXIGENCES_CANAL, verificationTelephoneExigible } from '@/lib/verification/canaux'
 import { attenteAvantRenvoi } from '@/lib/verification/otp'
 import {
   comptePleinementVerifie,
   masquerEmail,
   masquerTelephone,
 } from '@/lib/verification/regles'
+import { lireTemoinCandidature } from '@/lib/candidatures/temoin'
 import { lireTemoinInvitation, lireTemoinVerification } from '@/lib/verification/temoin'
 
 export const metadata: Metadata = { title: 'Vérification de votre compte' }
@@ -132,14 +133,19 @@ export default async function PageVerification() {
    *
    * Sans cette distinction, l'écran annonçait à un locataire « Téléphone pas
    * encore vérifié · 1 étape restante » pour une étape qui ne viendrait pas.
+   *
+   * Un candidat (Sikaloc_Find) n'a pas non plus de ligne `bailleurs`, et prend
+   * donc le même chemin : son numéro est déjà dans son profil candidat, et
+   * aucun code ne lui sera demandé.
    */
   const compteLocataire = profil === null
+  const temoinCandidature = await lireTemoinCandidature()
 
   // Aucun canal ne peut acheminer un code : l'exigence du téléphone est
   // suspendue, sinon ce compte serait enfermé dehors sans recours. Elle se
   // rétablit d'elle-même dès qu'un fournisseur est branché.
   const canaux = canauxDisponibles()
-  const telephoneExigible = canaux.length > 0 && !compteLocataire
+  const telephoneExigible = verificationTelephoneExigible() && !compteLocataire
 
   // ── Tout est fait ────────────────────────────────────────────────────────
   if (comptePleinementVerifie(etat, { telephoneExigible })) {
@@ -172,12 +178,20 @@ export default async function PageVerification() {
             La destination dépend des rôles : un locataire venu d'une
             invitation n'a rien à faire dans l'espace du bailleur, et l'y
             envoyer le ferait rebondir aussitôt.
+
+            Le témoin de candidature passe avant : quelqu'un qui a créé son
+            compte depuis une annonce revient à cette annonce, pas sur un
+            catalogue où il devrait la retrouver.
           */}
           <Link
-            href={destinationApresConnexion(await rolesDuCompte())}
+            href={
+              temoinCandidature
+                ? `/find/${temoinCandidature}/candidater`
+                : destinationApresConnexion(await rolesDuCompte())
+            }
             className="btn btn-primary w-full"
           >
-            Accéder à Sikaloc
+            {temoinCandidature ? 'Reprendre ma candidature' : 'Accéder à Sikaloc'}
           </Link>
         </div>
       </CarteAuth>

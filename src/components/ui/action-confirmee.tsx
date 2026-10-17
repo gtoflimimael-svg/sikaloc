@@ -1,10 +1,35 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, useState, useTransition, type ReactNode } from 'react'
 
 import { Spinner } from '@/components/ui/boutons'
 import { Alerte } from '@/components/ui/retours'
 import type { EtatFormulaire } from '@/lib/validation'
+
+const ContexteActions = createContext<{
+  occupe: boolean
+  reserver: () => boolean
+  liberer: () => void
+} | null>(null)
+
+/** Des commandes alternatives ne doivent pas partir simultanément. */
+export function GroupeActions({ children }: { children: ReactNode }) {
+  const verrou = useRef(false)
+  const [occupe, setOccupe] = useState(false)
+  return (
+    <ContexteActions.Provider value={{ occupe,
+      reserver: () => {
+        if (verrou.current) return false
+        verrou.current = true
+        setOccupe(true)
+        return true
+      },
+      liberer: () => { verrou.current = false; setOccupe(false) },
+    }}>
+      <div className="flex flex-wrap items-start gap-md" role="group" aria-label="Actions sur le paiement" aria-busy={occupe}>{children}</div>
+    </ContexteActions.Provider>
+  )
+}
 
 /**
  * Bouton d'action irréversible, avec confirmation en deux temps.
@@ -41,15 +66,38 @@ export function ActionConfirmee({
 }) {
   const [confirme, setConfirme] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [succes, setSucces] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
+  const verrou = useRef(false)
+  const declencheur = useRef<HTMLButtonElement>(null)
+  const annulation = useRef<HTMLButtonElement>(null)
+  const confirmationAffichee = useRef(false)
+  const idConfirmation = useId()
+
+  useEffect(() => {
+    if (confirme) {
+      confirmationAffichee.current = true
+      // Le choix sans effet reçoit le focus avant l’action irréversible.
+      annulation.current?.focus()
+    } else if (confirmationAffichee.current) {
+      confirmationAffichee.current = false
+      declencheur.current?.focus()
+    }
+  }, [confirme])
 
   function executer() {
+    if (verrou.current) return
+    verrou.current = true
     setErreur(null)
+    setSucces(null)
     demarrer(async () => {
-      const resultat = await action()
-      if (resultat && 'erreur' in resultat && resultat.erreur) {
-        setErreur(resultat.erreur)
+      try {
+        const resultat = await action()
+        if (resultat?.erreur) setErreur(resultat.erreur)
+        else if (resultat?.succes) setSucces(resultat.succes)
         setConfirme(false)
+      } finally {
+        verrou.current = false
       }
     })
   }
@@ -58,8 +106,10 @@ export function ActionConfirmee({
     return (
       <div className="space-y-md">
         {erreur ? <Alerte ton="erreur">{erreur}</Alerte> : null}
+        {succes ? <Alerte ton="succes">{succes}</Alerte> : null}
         <button
           type="button"
+          ref={declencheur}
           onClick={() => setConfirme(true)}
           className={`btn btn-${varianteDeclencheur ?? variante} ${compact ? 'btn-sm' : ''}`}
         >
@@ -70,9 +120,16 @@ export function ActionConfirmee({
   }
 
   return (
-    <div className="rounded-lg border border-hairline-strong bg-canvas p-lg">
-      <p className="text-body-md font-semibold text-ink">{titreConfirmation}</p>
-      <p className="mt-xs text-body-sm text-mute">{messageConfirmation}</p>
+    <div className="rounded-lg border border-hairline-strong bg-canvas p-lg" role="group" aria-labelledby={`${idConfirmation}-titre`} aria-describedby={`${idConfirmation}-message`} aria-busy={enCours}
+      onKeyDown={(evenement) => {
+        if (evenement.key === 'Escape' && !enCours) {
+          evenement.preventDefault()
+          evenement.stopPropagation()
+          setConfirme(false)
+        }
+      }}>
+      <p id={`${idConfirmation}-titre`} className="text-body-md font-semibold text-ink">{titreConfirmation}</p>
+      <p id={`${idConfirmation}-message`} className="mt-xs text-body-sm text-mute">{messageConfirmation}</p>
 
       <div className="mt-lg flex flex-wrap gap-sm">
         <button
@@ -91,6 +148,7 @@ export function ActionConfirmee({
         </button>
         <button
           type="button"
+          ref={annulation}
           onClick={() => setConfirme(false)}
           disabled={enCours}
           className="btn btn-secondary btn-sm"
@@ -128,6 +186,7 @@ export function BoutonAction({
    */
   const [succes, setSucces] = useState<string | null>(null)
   const [enCours, demarrer] = useTransition()
+  const groupe = useContext(ContexteActions)
 
   return (
     <div className={pleineLargeur ? 'w-full space-y-md' : 'space-y-md'}>
@@ -136,16 +195,19 @@ export function BoutonAction({
 
       <button
         type="button"
-        disabled={enCours}
+        disabled={enCours || groupe?.occupe}
+        aria-busy={enCours}
         onClick={() => {
+          if (enCours || (groupe && !groupe.reserver())) return
           setErreur(null)
           setSucces(null)
           demarrer(async () => {
-            const resultat = await action()
-            if (resultat && 'erreur' in resultat && resultat.erreur) {
-              setErreur(resultat.erreur)
-            } else if (resultat && 'succes' in resultat && resultat.succes) {
-              setSucces(resultat.succes)
+            try {
+              const resultat = await action()
+              if (resultat?.erreur) setErreur(resultat.erreur)
+              else if (resultat?.succes) setSucces(resultat.succes)
+            } finally {
+              groupe?.liberer()
             }
           })
         }}

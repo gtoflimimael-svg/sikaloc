@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { ResumeListe } from '@/components/ui/listes'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
@@ -19,7 +20,7 @@ export default async function PageImpayes() {
 
   // Comme sur `/pro/logements` : la vue est scopée par RLS, pas par l'objet
   // `bailleur` (qui ne sert plus qu'à lire le droit aux relances WhatsApp).
-  const [bailleur, { data }] = await Promise.all([
+  const [bailleur, { data, error: erreurImpayes }] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('v_impayes')
@@ -43,9 +44,11 @@ export default async function PageImpayes() {
         description="Un loyer bascule ici lorsque son échéance est dépassée, tolérance comprise, et qu'il reste un solde impayé."
       />
 
-      {impayes.length === 0 ? (
-        <div className="card-sage">
-          <p className="text-display-xs font-semibold text-ink-deep">
+      {erreurImpayes ? (
+        <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+      ) : impayes.length === 0 ? (
+        <div className="card border-positive/30">
+          <p className="section-title text-positive-deep">
             Aucun loyer en retard
           </p>
           <p className="mt-sm text-body-md text-body">
@@ -57,14 +60,14 @@ export default async function PageImpayes() {
         </div>
       ) : (
         <>
-          <div className="mb-xl flex flex-wrap items-baseline gap-sm text-body-md">
+          <ResumeListe>
             <span className="text-mute">
-              {impayes.length} loyer{impayes.length > 1 ? 's' : ''} en retard ·
+              {impayes.length} loyer{impayes.length > 1 ? 's' : ''} en retard
             </span>
-            <strong className="text-display-xs font-semibold tabular text-negative">
-              {formaterFCFA(total)} à recouvrer
+            <strong className="money text-body-lg font-semibold text-negative-darkest">
+              {formaterFCFA(total)}<span className="ml-xs text-body-sm font-normal text-mute">à recouvrer</span>
             </strong>
-          </div>
+          </ResumeListe>
 
           {!relancesAutorisees ? (
             <div className="mb-xl">
@@ -79,7 +82,7 @@ export default async function PageImpayes() {
             </div>
           ) : null}
 
-          <div className="space-y-md">
+          <ul className="space-y-sm" aria-label="Loyers en retard">
             {impayes.map((impaye) => {
               const lien = lienRelanceImpaye({
                 locataireNom: impaye.locataire_nom,
@@ -91,18 +94,18 @@ export default async function PageImpayes() {
               })
 
               return (
-                <div
+                <li
                   key={`${impaye.bail_id}-${impaye.periode_debut}`}
-                  className="rounded-lg border border-hairline border-l-4 border-l-negative bg-surface-card p-lg"
+                  className="card list-card border-l-4 border-l-negative"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-lg">
-                    <div className="flex min-w-0 items-start gap-lg">
+                  <div className="list-row">
+                    <div className="flex min-w-0 items-start gap-sm">
                       <AvatarPeep id={impaye.locataire_id} nom={impaye.locataire_nom} />
                       <div className="min-w-0">
-                        <p className="truncate text-body-md font-semibold text-ink">
+                        <h2 className="list-title">
                           {impaye.locataire_nom}
-                        </p>
-                        <p className="truncate text-body-sm text-mute">
+                        </h2>
+                        <p className="list-copy text-body-sm text-mute">
                           {impaye.logement_adresse}, {impaye.logement_ville}
                         </p>
                         <p className="mt-sm text-body-sm text-body">
@@ -115,7 +118,7 @@ export default async function PageImpayes() {
                           {impaye.jours_de_retard > 1 ? 's' : ''} de retard
                         </p>
                         {Number(impaye.montant_paye) > 0 ? (
-                          <p className="mt-xxs text-body-sm text-warning-deep">
+                          <p className="mt-xxs text-body-sm text-warning-content">
                             Déjà réglé : {formaterFCFA(impaye.montant_paye)} sur{' '}
                             {formaterFCFA(impaye.loyer_mensuel)}
                           </p>
@@ -123,15 +126,15 @@ export default async function PageImpayes() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-sm">
+                    <div className="list-aside">
                       <Badge ton="negative">Impayé</Badge>
-                      <p className="text-display-xs font-semibold tabular text-ink">
+                      <p className="money text-body-lg font-semibold text-ink">
                         {formaterFCFA(impaye.montant_du)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-lg flex flex-wrap gap-sm border-t border-hairline-soft pt-lg">
+                  <div className="list-actions">
                     {relancesAutorisees ? (
                       <>
                         {whatsappPropose ? (
@@ -188,10 +191,10 @@ export default async function PageImpayes() {
                       Voir le bail
                     </Link>
                   </div>
-                </div>
+                </li>
               )
             })}
-          </div>
+          </ul>
 
           <p className="mt-xl text-body-sm text-mute">
             La relance ouvre WhatsApp avec un message pré-rempli. C&apos;est vous

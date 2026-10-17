@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
@@ -67,10 +68,14 @@ export function EnTeteMe({
   aussiBailleur: boolean
 }) {
   const chemin = usePathname()
+  const navigation = useRef<HTMLElement>(null)
+  useEffect(() => {
+    navigation.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [chemin])
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[900px] items-center justify-between gap-md px-lg">
+      <div className="mx-auto flex h-16 max-w-[900px] items-center justify-between gap-xs px-md sm:gap-md sm:px-lg">
         {/*
           Le nom de l'espace est DANS la marque, pas à côté d'elle.
 
@@ -89,6 +94,7 @@ export function EnTeteMe({
               href="/entrer?choix=1"
               className="btn btn-tertiary btn-sm"
               title="Aller à Sikaloc_Pro"
+              aria-label="Changer d’espace"
             >
               <ArrowLeftRight size={16} strokeWidth={2} aria-hidden="true" />
               <span className="hidden sm:inline">Changer d’espace</span>
@@ -104,8 +110,9 @@ export function EnTeteMe({
       </div>
 
       <nav
-        aria-label="Sections"
-        className="mx-auto max-w-[900px] overflow-x-auto px-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        ref={navigation}
+        aria-label="Sections locataires"
+        className="mx-auto max-w-[900px] overflow-x-auto px-md sm:px-lg"
       >
         <ul className="flex min-w-max gap-xs pb-xs">
           {ONGLETS.map(({ href, libelle, Icone }) => {
@@ -116,9 +123,9 @@ export function EnTeteMe({
                   href={href}
                   prefetch
                   aria-current={actif ? 'page' : undefined}
-                  className={`inline-flex items-center gap-xs whitespace-nowrap border-b-2 px-sm pb-sm pt-xs text-body-sm transition-colors ${
+                  className={`inline-flex items-center min-h-11 gap-xs whitespace-nowrap border-b-2 px-sm py-sm text-body-sm transition-colors rounded-t-md ${
                     actif
-                      ? 'border-primary font-semibold text-ink'
+                      ? 'border-primary bg-primary-pale font-semibold text-ink'
                       : 'border-transparent text-mute hover:text-ink'
                   }`}
                 >

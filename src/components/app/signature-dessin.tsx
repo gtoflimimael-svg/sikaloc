@@ -209,7 +209,7 @@ export function SignatureDessin({
         {vide ? (
           <p
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex items-center justify-center text-body-sm text-mute"
+            className="pointer-events-none absolute inset-0 flex items-center justify-center text-body-sm text-on-paper-mute"
           >
             Signez ici
           </p>

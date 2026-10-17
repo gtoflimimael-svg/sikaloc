@@ -32,6 +32,7 @@
  * exactement l'erreur que le banc des invitations a payée. On importe donc la
  * fonction elle-même : elle rend un vrai PDF et le dépose dans le coffre local.
  */
+import { createRequire } from 'node:module'
 import Module from 'node:module'
 
 // `server-only` lève à l'import hors du rendu serveur Next. `quittance.ts` le
@@ -56,16 +57,15 @@ const resoudre = (Module as unknown as { _resolveFilename: (...a: unknown[]) => 
 
 import { createClient } from '@supabase/supabase-js'
 
+const { exigerPileLocale } = createRequire(import.meta.url)('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // `.env.local` de ce projet pointe sur la PRODUCTION. Un banc qui crée des
 // bailleurs de test et dépose des PDF chez de vrais clients serait un incident,
 // pas un test.
-if (!/127\.0\.0\.1|localhost/.test(SUPABASE ?? '')) {
-  console.error(`Refus : ${SUPABASE ?? '(aucune URL)'} n'est pas une pile locale.`)
-  process.exit(1)
-}
+exigerPileLocale('Ce banc')
 
 if (!SERVICE) {
   console.error('SUPABASE_SERVICE_ROLE_KEY manquante.')

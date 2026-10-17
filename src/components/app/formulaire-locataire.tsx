@@ -1,13 +1,11 @@
 'use client'
 
-import Link from 'next/link'
 import { useActionState, useEffect, useState } from 'react'
 
 import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
-import { BoutonSoumettre } from '@/components/ui/boutons'
+import { ActionsFormulaire, FormulaireMetier, SectionFormulaire } from '@/components/ui/formulaire-metier'
 import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampCase, ChampTexte } from '@/components/ui/champs'
-import { Alerte } from '@/components/ui/retours'
 import type { EtatFormulaire } from '@/lib/validation'
 import type { Locataire } from '@/lib/types/database'
 
@@ -38,56 +36,47 @@ export function FormulaireLocataire({
   }, [locataire])
 
   return (
-    <form action={envoyer} className="card card-lg space-y-lg">
-      {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
+    <FormulaireMetier action={envoyer} etat={etat} titre="Informations du locataire">
 
-      <div className="rounded-lg border border-hairline bg-surface-soft p-lg">
-        <p className="field-label">Avatar du locataire</p>
-        <p className="mb-lg text-caption text-mute">
-          Un visage aide à repérer un locataire d&apos;un coup d&apos;œil dans
-          vos listes.
-        </p>
-        <SelecteurAvatar
-          key={locataire?.id ?? grainePremierAvatar}
-          nom="avatar"
-          identifiant={locataire?.id ?? grainePremierAvatar}
-          valeurInitiale={locataire?.avatar}
-          taille={88}
+      <SectionFormulaire titre="Coordonnées du locataire">
+        <ChampTexte
+          nom="nom"
+          libelle="Nom complet"
+          placeholder="Awa Kponou"
+          valeurDefaut={locataire?.nom}
+          requis
+          erreur={etat.erreursChamps?.nom}
         />
-      </div>
 
-      <ChampTexte
-        nom="nom"
-        libelle="Nom complet"
-        placeholder="Awa Kponou"
-        valeurDefaut={locataire?.nom}
-        requis
-        erreur={etat.erreursChamps?.nom}
-      />
+        <ChampTelephone
+          nom="telephone"
+          libelle="Téléphone"
+          aide="Numéro béninois : saisissez les dix chiffres, sans répéter +229."
+          valeurDefaut={locataire?.telephone}
+          requis
+          erreur={etat.erreursChamps?.telephone}
+        />
 
-      <ChampTelephone
-        nom="telephone"
-        libelle="Téléphone"
-        aide="Utilisé pour l’envoi des quittances et les relances WhatsApp."
-        valeurDefaut={locataire?.telephone}
-        requis
-        erreur={etat.erreursChamps?.telephone}
-      />
+        <ChampTexte
+          nom="email"
+          libelle="Email (facultatif)"
+          aide="Nécessaire pour inviter le locataire sur Sikaloc_Me."
+          type="email"
+          placeholder="awa@exemple.bj"
+          valeurDefaut={locataire?.email}
+          erreur={etat.erreursChamps?.email}
+        />
 
-      <ChampTexte
-        nom="email"
-        libelle="Email (facultatif)"
-        type="email"
-        placeholder="awa@exemple.bj"
-        valeurDefaut={locataire?.email}
-        erreur={etat.erreursChamps?.email}
-      />
-
-      {modification ? (
-        <p className="text-body-sm text-mute">
+      </SectionFormulaire>
+      {modification && locataire?.consentement_donnees ? (
+        <div>
+          <input type="hidden" name="consentement" value="true" />
+          <p className="text-body-sm text-mute">
           Consentement à la collecte des données : attesté
           {locataire?.date_consentement ? ` le ${locataire.date_consentement}` : ''}.
-        </p>
+          </p>
+          {etat.erreursChamps?.consentement ? <p className="field-error" role="alert">{etat.erreursChamps.consentement}</p> : null}
+        </div>
       ) : (
         <ChampCase
           nom="consentement"
@@ -97,14 +86,21 @@ export function FormulaireLocataire({
         />
       )}
 
-      <div className="flex flex-wrap gap-md pt-sm">
-        <BoutonSoumettre libelleEnCours="Enregistrement…">
-          {modification ? 'Enregistrer les modifications' : 'Créer le locataire'}
-        </BoutonSoumettre>
-        <Link href="/pro/locataires" className="btn btn-secondary">
-          Annuler
-        </Link>
-      </div>
-    </form>
+      <details className="rounded-lg border border-hairline p-md">
+        <summary className="cursor-pointer text-body-sm font-semibold text-ink">Personnaliser l’avatar (facultatif)</summary>
+        <div className="mt-lg">
+          <SelecteurAvatar
+            key={locataire?.id ?? grainePremierAvatar}
+            nom="avatar"
+            identifiant={locataire?.id ?? grainePremierAvatar}
+            valeurInitiale={locataire?.avatar}
+            taille={88}
+          />
+        </div>
+      </details>
+      <ActionsFormulaire annulerVers="/pro/locataires">
+        {modification ? 'Enregistrer les modifications' : 'Créer le locataire'}
+      </ActionsFormulaire>
+    </FormulaireMetier>
   )
 }

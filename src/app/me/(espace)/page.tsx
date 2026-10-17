@@ -58,7 +58,7 @@ export default async function PageAccueilMe() {
   return (
     <div className="space-y-xl">
       <div>
-        <h1 className="text-display-md font-extrabold tracking-tight text-ink">
+        <h1 className="page-title">
           Bonjour {nom.split(' ')[0]}
         </h1>
         <p className="mt-xs text-body-md text-mute">
@@ -91,6 +91,11 @@ export default async function PageAccueilMe() {
         </Alerte>
       ) : null}
 
+      <div className="flex flex-wrap gap-sm" aria-label="Accès rapides">
+        <Link href="/me/loyers" className="btn btn-primary">Consulter mes loyers</Link>
+        <Link href="/me/paiements" className="btn btn-secondary">Paiements et documents</Link>
+      </div>
+
       {baux.map((bail) => (
         <CarteBail key={bail.bail_id} bail={bail} echeances={echeances} />
       ))}
@@ -104,7 +109,7 @@ export default async function PageAccueilMe() {
         dit noir sur blanc.
       */}
       {indeterminees.length > 0 ? (
-        <section className="rounded-xl border border-hairline bg-canvas p-xl">
+        <section className="card list-card">
           <p className="flex items-start gap-sm text-body-md font-semibold text-ink">
             <CircleHelp size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             {indeterminees.length === 1
@@ -145,14 +150,14 @@ function CarteBail({
   ).length
 
   return (
-    <section className="rounded-xl border border-hairline bg-canvas p-xl">
+    <section className="card list-card">
       <div className="flex flex-wrap items-start justify-between gap-lg">
-        <div className="min-w-0">
-          <p className="flex items-center gap-sm text-caption uppercase tracking-wide text-mute">
+        <div className="min-w-0 list-copy">
+          <p className="flex items-center gap-sm text-caption text-mute">
             <House size={15} strokeWidth={2} aria-hidden="true" />
             {bail.logement_type}
           </p>
-          <p className="mt-xs text-display-xs font-semibold text-ink">
+          <p className="mt-xs section-title list-copy">
             {bail.logement_adresse}
           </p>
           <p className="text-body-sm text-mute">
@@ -160,16 +165,16 @@ function CarteBail({
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="text-caption uppercase tracking-wide text-mute">Loyer mensuel</p>
-          <p className="mt-xxs text-display-xs font-extrabold tabular text-ink">
+        <div className="w-full sm:w-auto sm:text-right">
+          <p className="text-caption text-mute">Loyer mensuel</p>
+          <p className="mt-xxs text-title-lg font-semibold money text-ink">
             {formaterFCFA(bail.loyer_mensuel)}
           </p>
         </div>
       </div>
 
       {/* ── Où en est ce bail ────────────────────────────────────────────── */}
-      <div className="mt-xl rounded-lg bg-canvas-soft p-lg">
+      <div className="mt-lg rounded-md bg-canvas-soft p-md">
         {resilie ? (
           /*
             `v_echeances` ne calcule que les baux actifs : un bail résilié
@@ -185,7 +190,7 @@ function CarteBail({
           <>
             <div className="flex flex-wrap items-center justify-between gap-md">
               <div>
-                <p className="text-caption uppercase tracking-wide text-mute">
+                <p className="text-caption text-mute">
                   {prochaine.etat === 'Impayé' ? 'Loyer le plus ancien non réglé' : 'Prochain loyer'}
                 </p>
                 <p className="mt-xxs text-body-lg font-semibold text-ink">
@@ -206,7 +211,7 @@ function CarteBail({
               </div>
               <div className="text-right">
                 <BadgeLoyer etat={prochaine.etat} />
-                <p className="mt-sm text-display-xs font-extrabold tabular text-ink">
+                <p className="mt-sm text-title-lg font-semibold money text-ink">
                   {formaterFCFA(prochaine.montant_du)}
                 </p>
               </div>

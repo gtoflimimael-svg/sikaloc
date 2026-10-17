@@ -18,13 +18,11 @@ const ETAT_INITIAL: EtatFormulaire = {}
  * ─── Trois cas, et un seul écran ────────────────────────────────────────────
  *
  *   connecté, même adresse   un bouton : le rattachement suffit
- *   connecté, autre adresse  on prévient avant de rattacher, parce que
- *                            l'invitation visait quelqu'un d'autre
+ *   connecté, autre adresse  on demande la connexion avec l'adresse destinataire
  *   pas de compte            création, puis rattachement dans la foulée
  *
- * Le deuxième cas mérite un avertissement plutôt qu'un refus : un locataire
- * peut très bien avoir un compte Sikaloc sous une autre adresse que celle que
- * son bailleur connaît. Ce n'est pas une anomalie, c'est la vie courante.
+ * Le destinataire confirmé est également vérifié en base. Pour utiliser une
+ * autre adresse, le bailleur doit émettre une invitation vers cette adresse.
  *
  * ─── L'adresse n'est pas modifiable ─────────────────────────────────────────
  *
@@ -57,7 +55,7 @@ export function FormulaireAcceptation({
   // ═══ Déjà connecté ═══════════════════════════════════════════════════════
   if (dejaConnecte) {
     return (
-      <form action={rattacher} className="space-y-lg">
+      <form action={rattacher} className="space-y-lg" aria-label="Accepter l’invitation">
         {etatRattacher.erreur ? (
           <Alerte ton="erreur">{etatRattacher.erreur}</Alerte>
         ) : null}
@@ -65,21 +63,22 @@ export function FormulaireAcceptation({
         {!memeAdresse ? (
           <Alerte ton="attention">
             Vous êtes connecté avec <strong>{emailConnecte}</strong>, alors que
-            cette invitation a été envoyée à <strong>{email}</strong>. Continuez
-            seulement s’il s’agit bien de vous.
+            cette invitation a été envoyée à <strong>{email}</strong>. Connectez-vous avec l’adresse destinataire pour accepter cette invitation.
           </Alerte>
         ) : null}
 
-        <BoutonSoumettre pleineLargeur libelleEnCours="Rattachement…">
-          Accéder à mon espace
-        </BoutonSoumettre>
+        {memeAdresse ? (
+          <BoutonSoumettre pleineLargeur libelleEnCours="Rattachement…">
+            Accéder à mon espace
+          </BoutonSoumettre>
+        ) : null}
       </form>
     )
   }
 
   // ═══ Création du compte ══════════════════════════════════════════════════
   return (
-    <form action={rejoindre} className="space-y-lg">
+    <form action={rejoindre} className="space-y-lg" aria-label="Créer mon compte locataire" onReset={e => e.preventDefault()}>
       {etatRejoindre.erreur ? <Alerte ton="erreur">{etatRejoindre.erreur}</Alerte> : null}
 
       <ChampTexte
@@ -110,9 +109,10 @@ export function FormulaireAcceptation({
           autoComplete="username"
           value={email}
           readOnly
+          aria-describedby="invitation-email-aide"
           className="input mt-sm w-full cursor-not-allowed text-mute"
         />
-        <p className="field-hint">
+        <p id="invitation-email-aide" className="field-hint">
           Celle à laquelle votre bailleur a envoyé l’invitation.
         </p>
       </div>

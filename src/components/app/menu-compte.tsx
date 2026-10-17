@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react'
 
 import { PhotoProfil } from '@/components/ui/photo-profil'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent as EvenementClavierReact } from 'react'
 
 import { deconnecter } from '@/lib/actions/auth'
 
@@ -27,15 +27,36 @@ export function MenuCompte({
 }) {
   const [ouvert, setOuvert] = useState(false)
   const conteneur = useRef<HTMLDivElement>(null)
+  const declencheur = useRef<HTMLButtonElement>(null)
+  const menu = useRef<HTMLDivElement>(null)
+  const idMenu = useId()
+
+  function fermerAvecFocus() {
+    setOuvert(false)
+    declencheur.current?.focus()
+  }
+
+  function naviguer(evenement: EvenementClavierReact<HTMLDivElement>) {
+    const items = Array.from(menu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
+    const courant = items.indexOf(document.activeElement as HTMLElement)
+    const index = evenement.key === 'Home' ? 0 : evenement.key === 'End' ? items.length - 1
+      : evenement.key === 'ArrowDown' ? (courant + 1) % items.length
+      : evenement.key === 'ArrowUp' ? (courant - 1 + items.length) % items.length : -1
+    if (index >= 0) { evenement.preventDefault(); items[index]?.focus() }
+  }
 
   useEffect(() => {
     if (!ouvert) return
+    menu.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus()
 
     function surClic(evenement: MouseEvent) {
       if (!conteneur.current?.contains(evenement.target as Node)) setOuvert(false)
     }
     function surEchap(evenement: KeyboardEvent) {
-      if (evenement.key === 'Escape') setOuvert(false)
+      if (evenement.key === 'Escape') {
+        evenement.preventDefault()
+        fermerAvecFocus()
+      }
     }
 
     document.addEventListener('mousedown', surClic)
@@ -48,10 +69,18 @@ export function MenuCompte({
   }, [ouvert])
 
   return (
-    <div ref={conteneur} className="relative">
+    <div ref={conteneur} className="relative" onBlur={(evenement) => {
+      if (!evenement.currentTarget.contains(evenement.relatedTarget)) setOuvert(false)
+    }}>
       <button
         type="button"
         onClick={() => setOuvert((o) => !o)}
+        ref={declencheur}
+        id={`${idMenu}-bouton`}
+        aria-controls={`${idMenu}-menu`}
+        onKeyDown={(evenement) => {
+          if (evenement.key === 'ArrowDown') { evenement.preventDefault(); setOuvert(true) }
+        }}
         aria-haspopup="menu"
         aria-expanded={ouvert}
         className="flex items-center gap-sm rounded-pill py-xs pl-xs pr-md hover:bg-canvas-soft"
@@ -63,8 +92,12 @@ export function MenuCompte({
 
       {ouvert ? (
         <div
+          ref={menu}
+          id={`${idMenu}-menu`}
+          aria-labelledby={`${idMenu}-bouton`}
+          onKeyDown={naviguer}
           role="menu"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-xl border border-hairline bg-canvas p-sm shadow-[0_4px_24px_rgb(0_0_0/0.06)]"
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-xl border border-hairline bg-canvas p-sm shadow-elevated"
         >
           <div className="border-b border-hairline-soft px-md pb-md pt-sm">
             <p className="text-body-sm font-semibold text-ink">{nom}</p>
@@ -75,6 +108,8 @@ export function MenuCompte({
           <Link
             href="/pro/parametres"
             role="menuitem"
+            tabIndex={-1}
+            onClick={() => setOuvert(false)}
             className="mt-sm block rounded-md px-md py-sm text-body-sm text-body hover:bg-canvas-soft"
           >
             Paramètres du compte
@@ -82,6 +117,8 @@ export function MenuCompte({
           <Link
             href="/pro/parametres/parrainage"
             role="menuitem"
+            tabIndex={-1}
+            onClick={() => setOuvert(false)}
             className="block rounded-md px-md py-sm text-body-sm text-body hover:bg-canvas-soft"
           >
             Parrainer un bailleur
@@ -91,6 +128,7 @@ export function MenuCompte({
             <button
               type="submit"
               role="menuitem"
+              tabIndex={-1}
               className="w-full rounded-md px-md py-sm text-left text-body-sm font-semibold text-negative-darkest hover:bg-negative/5"
             >
               Se déconnecter

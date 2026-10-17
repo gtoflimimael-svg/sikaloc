@@ -16,14 +16,13 @@
 const { chromium } = require('playwright-core')
 
 const BASE = process.env.BASE_GUIDE || 'http://localhost:3000'
+const { exigerPileLocale } = require('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const JOURNAL = process.env.GUIDE_EMAILS_JOURNAL
 
-if (!/127\.0\.0\.1|localhost/.test(SUPABASE || '')) {
-  console.error(`Refus : ${SUPABASE} n'est pas une pile locale.`)
-  process.exit(1)
-}
+exigerPileLocale('Ce banc')
 
 const ADRESSE = `banc-guide-${Date.now()}@exemple.test`
 
@@ -73,7 +72,9 @@ const noter = (nom, ok, detail) => {
   console.log(`Parcours d'inscription au guide — ${ADRESSE}\n`)
 
   // ── 1. Saisie de l'adresse ───────────────────────────────────────────────
-  await page.goto(`${BASE}/?e=${Date.now()}#guide`, { waitUntil: 'networkidle' })
+  // Le formulaire a suivi son public : il vit sur `/pro`, la présentation
+  // destinée aux bailleurs, depuis la restructuration de l'espace public.
+  await page.goto(`${BASE}/pro?e=${Date.now()}#guide`, { waitUntil: 'networkidle' })
   await page.locator('#guide-email').fill(ADRESSE)
   await page.locator('form:has(#guide-email) button[type="submit"]').click()
   await page.waitForSelector('text=/Vérifiez votre boîte mail/', { timeout: 20000 })
@@ -105,7 +106,7 @@ const noter = (nom, ok, detail) => {
   }
 
   // ── 2. Anti-abus ─────────────────────────────────────────────────────────
-  await page.goto(`${BASE}/?e=${Date.now()}#guide`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro?e=${Date.now()}#guide`, { waitUntil: 'networkidle' })
   await page.locator('#guide-email').fill(ADRESSE)
   await page.locator('form:has(#guide-email) button[type="submit"]').click()
   await page.waitForSelector('text=/Vérifiez votre boîte mail/', { timeout: 20000 })
@@ -171,7 +172,7 @@ const noter = (nom, ok, detail) => {
   )
 
   // ── 6. Pas de réinscription accidentelle ─────────────────────────────────
-  await page.goto(`${BASE}/?e=${Date.now()}#guide`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/pro?e=${Date.now()}#guide`, { waitUntil: 'networkidle' })
   await page.locator('#guide-email').fill(ADRESSE)
   await page.locator('form:has(#guide-email) button[type="submit"]').click()
   await page.waitForSelector('text=/Vérifiez votre boîte mail/', { timeout: 20000 })

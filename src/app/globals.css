@@ -2,7 +2,7 @@
 
 /* ============================================================================
    Sikaloc — Design System
-   Traduction directe de « new_design_sikaloc/DESIGN-Sikaloc.md » (alpha).
+   Fondations de référence : design.md (lot E).
    Identité indigo, canvas lavande, display serif Copernicus.
    Règle d'or : aucun hex inline dans les composants, uniquement ces tokens.
    ========================================================================= */
@@ -28,20 +28,22 @@
   --color-body: #3a3a3d;
   --color-mute: #616169;
   --color-muted: #616169;
-  --color-mute-soft: #82828e;
-  --color-muted-soft: #82828e;
+  --color-mute-soft: #6c6c7a;
+  --color-muted-soft: #6c6c7a;
   --color-on-dark: #e8e8f5;
   --color-on-dark-mute: #9696a0;
   --color-on-dark-soft: #9696a0;
+  /* Le papier de signature reste blanc dans les deux thèmes. */
+  --color-on-paper-mute: #616169;
 
   /* ── Couleurs : surfaces ──────────────────────────────────────────────── */
   /* `canvas` est la surface haute (cartes, champs) ; `canvas-soft` le sol de
      page. Le blanc pur n'existe pas dans ce système. */
-  --color-canvas: #f4f4fb;
-  --color-canvas-soft: #e8e8f5;
+  --color-canvas: #fafaff;
+  --color-canvas-soft: #efeff8;
   --color-canvas-sage: #d2d2e8;
   --color-surface-soft: #e8e8f5;
-  --color-surface-card: #dedeef;
+  --color-surface-card: #fafaff;
   --color-surface-cream-strong: #d2d2e8;
   --color-surface-elevated: #dedeef;
   --color-surface-dark: #151518;
@@ -70,6 +72,8 @@
   --color-hairline: #d8d8e6;
   --color-hairline-soft: #dfdfeb;
   --color-hairline-strong: #c9c9dc;
+  --color-control-border: #888898;
+  --color-on-negative: #ffffff;
 
   /* ── Typographie ──────────────────────────────────────────────────────── */
   /* StyreneB pour l'interface, Copernicus pour le display, JetBrains Mono pour
@@ -179,13 +183,15 @@
   --shadow-elevated: 0 2px 12px rgb(19 19 20 / 0.05);
   --shadow-modal: 0 24px 48px rgb(19 19 20 / 0.14);
 
-  /* Philosophie : surface d'abord, ombre rare. */
-  --shadow-elevated: 0 4px 24px rgb(0 0 0 / 0.06);
-  --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.12);
 
   /* ── Conteneurs ───────────────────────────────────────────────────────── */
   --container-marketing: 1200px;
-  --container-app: 1024px;
+  --container-app: 1100px;
+
+  /* Dimensions partagées — pas de contrôle isolé à une hauteur différente. */
+  --control-height: 44px;
+  --control-height-compact: 36px;
+  --card-padding: 20px;
 
   /* ── Mouvement ────────────────────────────────────────────────────────── */
   /* Une seule famille de courbes pour tout le site : `doux` pour ce qui entre
@@ -272,20 +278,22 @@
    ========================================================================= */
 
 @layer components {
-  /* ── Boutons — 40px, rayon md, StyreneB 14/500 ──────────────────────────── */
+  /* ── Boutons — 44px, rayon md, StyreneB 14/500 ──────────────────────────── */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--spacing-xs);
-    height: 40px;
-    padding: 12px 20px;
+    min-height: var(--control-height);
+    max-width: 100%;
+    padding: 10px 18px;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     font-size: var(--text-button);
     font-weight: 500;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
     cursor: pointer;
     transition:
       background-color 150ms ease,
@@ -301,8 +309,8 @@
   }
 
   .btn-sm {
-    height: 32px;
-    padding: 8px 14px;
+    min-height: var(--control-height-compact);
+    padding: 7px 12px;
     font-size: var(--text-caption);
   }
 
@@ -337,19 +345,20 @@
 
   .btn-danger {
     background-color: var(--color-negative);
-    color: #ffffff;
+    color: var(--color-on-negative);
   }
 
   .btn-danger:hover:not(:disabled) {
-    background-color: var(--color-negative-deep);
+    background-color: var(--color-negative-darkest);
   }
 
   .btn-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
     padding: 0;
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-pill);
@@ -358,7 +367,7 @@
     cursor: pointer;
   }
 
-  /* ── Champs — 40px, rayon md ────────────────────────────────────────────── */
+  /* ── Champs — 44px, rayon md ────────────────────────────────────────────── */
   .field-label {
     display: block;
     margin-bottom: var(--spacing-xs);
@@ -375,7 +384,7 @@
 
   .field-error {
     margin-top: var(--spacing-xs);
-    color: var(--color-negative);
+    color: var(--color-negative-darkest);
     font-size: var(--text-caption);
     font-weight: 500;
   }
@@ -383,9 +392,9 @@
   .input {
     display: block;
     width: 100%;
-    height: 40px;
+    height: var(--control-height);
     padding: 10px 14px;
-    border: 1px solid var(--color-hairline);
+    border: 1px solid var(--color-control-border);
     border-radius: var(--radius-md);
     background-color: var(--color-canvas);
     color: var(--color-ink);
@@ -409,15 +418,58 @@
     appearance: auto;
   }
 
+  /* Find : cartes photographiques et critères de recherche. */
+  .card.find-card { padding: 0; }
+  .find-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); }
+  @media (min-width: 1024px) { .find-range { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Me : détails lisibles et montants sans compression au mobile. */
+  .me-detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+  .me-amounts { display: grid; gap: var(--spacing-xs); font-size: var(--text-body-sm); }
+  .me-amounts > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-xs) var(--spacing-sm); }
+  .me-amounts dt { color: var(--color-mute); }
+  .me-amounts dd { color: var(--color-ink); font-weight: 500; }
+  @media (min-width: 640px) {
+    .me-detail-row { flex-direction: row; justify-content: space-between; gap: var(--spacing-lg); }
+    .me-amounts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-md); }
+    .me-amounts > div { display: block; }
+    .me-amounts dd { margin-top: var(--spacing-xs); }
+  }
+
+  /* Formulaires métier : sections sobres et actions constantes. */
+  .form-section + .form-section {
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    border-top: 1px solid var(--color-hairline);
+    padding-top: var(--spacing-lg);
+  }
+
+  .form-actions > .btn { min-width: 0; }
+
+  @media (max-width: 479px) {
+    .form-actions > .btn { width: 100%; }
+  }
+
   /* ── Cartes — la profondeur vient du contraste de surface ───────────────── */
   .card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    border: 1px solid var(--color-hairline);
+    padding: var(--card-padding);
   }
 
   .card-lg {
-    padding: var(--spacing-xl);
+    padding: var(--card-padding);
   }
 
   .card-sage {
@@ -470,6 +522,7 @@
 
   /* ── Tableaux ───────────────────────────────────────────────────────────── */
   .data-table {
+    background-color: var(--color-canvas);
     width: 100%;
     border-collapse: collapse;
   }
@@ -478,11 +531,11 @@
     padding: var(--spacing-sm) var(--spacing-md);
     border-bottom: 1px solid var(--color-hairline);
     color: var(--color-mute);
-    font-size: var(--text-caption-uppercase);
+    font-size: var(--text-caption);
     font-weight: 500;
-    letter-spacing: 1.5px;
+    background-color: var(--color-canvas-soft);
+    letter-spacing: 0;
     text-align: left;
-    text-transform: uppercase;
   }
 
   .data-table tbody td {
@@ -501,7 +554,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: 8px 14px;
+    min-height: 44px;
+    padding: 10px 14px;
     border-radius: var(--radius-md);
     background-color: transparent;
     color: var(--color-mute);
@@ -516,8 +570,182 @@
 
   .sidebar-row-active,
   .sidebar-row-active:hover {
-    background-color: var(--color-surface-card);
+    background-color: var(--color-primary-pale);
+    color: var(--color-ink-deep);
+  }
+}
+
+/* Listes Pro — mêmes surfaces et contrôles que les fondations E. */
+@layer components {
+  .list-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    color: var(--color-mute);
+    font-size: var(--text-body-sm);
+  }
+  .card.list-card { min-width: 0; padding: 20px; }
+  .list-row { display: grid; gap: 16px; }
+  .list-title {
     color: var(--color-ink);
+    font-size: var(--text-title-sm);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .list-copy { min-width: 0; overflow-wrap: anywhere; }
+  .list-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-hairline-soft);
+  }
+  .list-aside { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .filter-bar {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-canvas);
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--control-height);
+    padding: 8px 16px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas);
+    color: var(--color-mute);
+    font-size: var(--text-body-sm);
+    font-weight: 500;
+  }
+  .filter-chip:hover { color: var(--color-ink); border-color: var(--color-hairline-strong); }
+  .filter-chip-active { background-color: var(--color-primary-pale); border-color: var(--color-primary); color: var(--color-ink-deep); }
+  .table-paiements { min-width: 780px; }
+  @media (min-width: 768px) {
+    .filter-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .filter-bar > :last-child { grid-column: 1 / -1; }
+    .list-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+    .list-row > .list-actions { max-width: 26rem; justify-content: flex-end; border: 0; margin: 0; padding: 0; }
+    .list-aside { flex-direction: column; align-items: flex-end; }
+  }
+  @media (min-width: 1280px) {
+    .filter-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+    .filter-bar > :last-child { grid-column: auto; }
+  }
+}
+
+/* Fondations d’application : pilotes E et composants partagés, voir design.md. */
+@layer components {
+  .app-main { padding: 24px 16px; }
+  .page-title {
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: clamp(28px, 2.5vw, 36px);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    overflow-wrap: anywhere;
+  }
+  .section-title {
+    color: var(--color-ink);
+    font-size: var(--text-title-md);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .metric-card {
+    min-width: 0;
+    padding: var(--card-padding);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface-card);
+  }
+  .metric-card-primary {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .metric-value {
+    margin-top: 8px;
+    font-family: var(--font-sans);
+    font-size: clamp(28px, 2.3vw, 32px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .input[aria-invalid='true'] { border-color: var(--color-negative); }
+  .input:disabled { cursor: not-allowed; opacity: 0.65; }
+  .feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-body-sm);
+    line-height: 1.55;
+  }
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px;
+    border: 1px dashed var(--color-hairline-strong);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-canvas);
+    text-align: center;
+  }
+  .empty-state-icon :where(img, svg) { max-width: 136px; max-height: 120px; }
+  .data-table tbody td:last-child { white-space: nowrap; }
+  .data-table tbody tr:last-child td { border-bottom: 0; }
+  .table-defilante { background-color: var(--color-canvas); }
+  .skip-link {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 100;
+    transform: translateY(-200%);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .skip-link:focus { transform: none; }
+  .nav-dialog {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-body);
+  }
+  .nav-dialog::backdrop { background-color: rgb(14 14 17 / 0.6); }
+  @media (min-width: 640px) {
+    .app-main { padding: 32px; }
+    .card { padding: 24px; }
+    .card-lg { padding: 32px; }
+  }
+  @media (pointer: coarse) {
+    .btn-sm { min-height: var(--control-height); }
+    .btn-icon { width: 44px; height: 44px; }
   }
 }
 
@@ -796,13 +1024,9 @@
   .sidebar-row {
     transition:
       background-color var(--duree-rapide) var(--ease-net),
-      color var(--duree-rapide) var(--ease-net),
-      padding-left var(--duree-moyenne) var(--ease-doux);
+      color var(--duree-rapide) var(--ease-net);
   }
 
-  .sidebar-row:hover {
-    padding-left: 18px;
-  }
 
   .data-table tbody tr {
     transition: background-color var(--duree-rapide) var(--ease-net);
@@ -889,6 +1113,8 @@
    passe sous le seuil AA pour du texte.
    ========================================================================= */
 
+:root { color-scheme: light; }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='clair']) {
   --color-primary: #8f8fe8;
@@ -906,10 +1132,10 @@
   --color-ink-deep: #c9c9f2;
   --color-body-strong: #e4e4ec;
   --color-body: #c8c8d2;
-  --color-mute: #9696a4;
-  --color-muted: #9696a4;
-  --color-mute-soft: #75757f;
-  --color-muted-soft: #75757f;
+  --color-mute: #aaaaba;
+  --color-muted: #aaaaba;
+  --color-mute-soft: #aaaaba;
+  --color-muted-soft: #aaaaba;
   --color-on-dark: #f2f2f7;
   --color-on-dark-mute: #9696a4;
   --color-on-dark-soft: #9696a4;
@@ -943,6 +1169,8 @@
   --color-hairline: #33333d;
   --color-hairline-soft: #2a2a33;
   --color-hairline-strong: #454552;
+  --color-control-border: #747485;
+  --color-on-negative: #211013;
 
   --shadow-elevated: 0 2px 12px rgb(0 0 0 / 0.4);
   --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.55);
@@ -966,10 +1194,10 @@
   --color-ink-deep: #c9c9f2;
   --color-body-strong: #e4e4ec;
   --color-body: #c8c8d2;
-  --color-mute: #9696a4;
-  --color-muted: #9696a4;
-  --color-mute-soft: #75757f;
-  --color-muted-soft: #75757f;
+  --color-mute: #aaaaba;
+  --color-muted: #aaaaba;
+  --color-mute-soft: #aaaaba;
+  --color-muted-soft: #aaaaba;
   --color-on-dark: #f2f2f7;
   --color-on-dark-mute: #9696a4;
   --color-on-dark-soft: #9696a4;
@@ -1003,11 +1231,12 @@
   --color-hairline: #33333d;
   --color-hairline-soft: #2a2a33;
   --color-hairline-strong: #454552;
+  --color-control-border: #747485;
+  --color-on-negative: #211013;
 
   --shadow-elevated: 0 2px 12px rgb(0 0 0 / 0.4);
   --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.55);
   color-scheme: dark;
 }
 
-:root { color-scheme: light; }
 :root[data-theme='clair'] { color-scheme: light; }

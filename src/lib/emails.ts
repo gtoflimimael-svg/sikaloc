@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { deposerCourrierLocal, pileLocale } from '@/lib/courrier-local'
 import { formaterFCFA } from '@/lib/format'
 import { PRIX_STANDARD_FCFA } from '@/lib/plan'
 
@@ -32,6 +33,20 @@ export type ModeleEmail =
   // qu'il a fait — inviter quelqu'un — et il n'a aucun autre moyen de savoir
   // que son invitation a abouti.
   | 'locataire_a_rejoint'
+  // ─── Les candidatures (Sikaloc_Find) ─────────────────────────────────
+  //
+  // Le premier va au BAILLEUR : quelqu'un s'intéresse à son annonce, et rien
+  // dans Sikaloc ne le lui dirait autrement. Les trois suivants vont au
+  // CANDIDAT : il a écrit, on lui répond — sans cela, il n'a aucune raison
+  // de revenir voir. Le dernier revient au bailleur, quand le candidat s'en
+  // va de lui-même.
+  //
+  // Aucun ne transmet de coordonnées : le nom, l'annonce, et un lien.
+  | 'candidature_recue'
+  | 'candidature_en_etude'
+  | 'candidature_acceptee'
+  | 'candidature_refusee'
+  | 'candidature_retiree'
 
 export interface VariablesEmail {
   nom?: string
@@ -70,6 +85,25 @@ function urlExport(): string {
  * `scripts/generer-logo-email.ts`) et affiché ici à sa taille /3 — la
  * technique standard pour rester net sur écran Retina en email.
  */
+/** Où le candidat retrouve ses candidatures. */
+function urlMesCandidatures(): string {
+  return `${urlBase()}/me/candidatures`
+}
+
+/**
+ * Où le bailleur lit les candidatures d'une annonce.
+ *
+ * L'identifiant interne de l'annonce est le SEUL identifiant qui figure dans
+ * un email, et seulement dans ce lien-ci : c'est l'adresse de la page, elle ne
+ * s'écrit pas autrement. À défaut, la liste des annonces fait l'affaire.
+ */
+function urlCandidaturesPro(annonceId: unknown): string {
+  const id = String(annonceId ?? '')
+  return /^[0-9a-f-]{36}$/i.test(id)
+    ? `${urlBase()}/pro/annonces/${id}/candidatures`
+    : `${urlBase()}/pro/annonces`
+}
+
 function urlLogo(): string {
   return `${urlBase()}/marque/logo-email.png`
 }
@@ -78,7 +112,104 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
   const prenom = String(variables.nom ?? '').trim().split(/\s+/)[0] || 'Bonjour'
   const action = { libelle: 'Régler mon abonnement', url: urlAbonnement() }
 
+  /** « Appartement à Fidjrossè, Cotonou » — ce que Find publie, rien de plus. */
+  const logementPublic = (): string => {
+    const type = String(variables.type ?? 'Logement')
+    const quartier = String(variables.quartier ?? '').trim()
+    const ville = String(variables.ville ?? '').trim()
+    const lieu = [quartier, ville].filter(Boolean).join(', ')
+    return lieu ? `${type} à ${lieu}` : type
+  }
+  const reference = (): string => `réf. ${String(variables.reference ?? '')}`
+  /** Le nom du candidat, ou un libellé neutre si le compte a disparu. */
+  const candidat = (): string => String(variables.candidat_nom ?? '').trim() || 'Un candidat'
+
   switch (modele) {
+    // ─── Une candidature arrive ───────────────────────────────────────
+    //
+    // Le message ne promet rien au bailleur et ne lui demande rien : il
+    // signale, et ouvre la porte. Le nom du candidat suffit à donner sa
+    // consistance au message ; son téléphone et son adresse ne sont pas là,
+    // et le mail le dit, pour qu'il ne les cherche pas.
+    case 'candidature_recue': {
+      return {
+        ton: 'info',
+        sujet: `Nouvelle candidature — ${logementPublic()}`,
+        titre: `${candidat()} a candidaté à votre annonce`,
+        corps: [
+          `${logementPublic()}, ${reference()}.`,
+          'Vous pouvez lire son message et répondre depuis Sikaloc_Pro.',
+          'Ses coordonnées ne vous sont pas transmises, et Sikaloc ne lui promet aucune réponse de votre part.',
+        ],
+        action: {
+          libelle: 'Voir la candidature',
+          url: urlCandidaturesPro(variables.annonce_id),
+        },
+      }
+    }
+
+    // ─── Le bailleur a répondu ────────────────────────────────────────
+    //
+    // Trois messages voisins, volontairement factuels : ils annoncent un
+    // changement de statut, pas une décision de vie. « Acceptée » ne veut
+    // dire ni logement réservé, ni bail signé — et le message le dit, parce
+    // que c'est exactement ce qu'on lira entre les lignes sinon.
+    case 'candidature_en_etude': {
+      return {
+        ton: 'info',
+        sujet: `Votre candidature est à l’étude — ${logementPublic()}`,
+        titre: 'Votre candidature est à l’étude',
+        corps: [
+          `Le bailleur du ${logementPublic().toLowerCase()} (${reference()}) a mis votre candidature à l’étude.`,
+          'Cela signifie qu’il l’a vue. Sikaloc ne peut ni annoncer de décision, ni de délai.',
+        ],
+        action: { libelle: 'Voir mes candidatures', url: urlMesCandidatures() },
+      }
+    }
+
+    case 'candidature_acceptee': {
+      return {
+        ton: 'info',
+        sujet: `Votre candidature est acceptée — ${logementPublic()}`,
+        titre: 'Votre candidature est acceptée',
+        corps: [
+          `Le bailleur du ${logementPublic().toLowerCase()} (${reference()}) a accepté votre candidature.`,
+          'Cette acceptation ne réserve pas le logement et ne crée aucun bail : la suite se convient directement avec le bailleur.',
+        ],
+        action: { libelle: 'Voir mes candidatures', url: urlMesCandidatures() },
+      }
+    }
+
+    case 'candidature_refusee': {
+      return {
+        ton: 'info',
+        sujet: `Votre candidature n’a pas été retenue — ${logementPublic()}`,
+        titre: 'Votre candidature n’a pas été retenue',
+        corps: [
+          `Le bailleur du ${logementPublic().toLowerCase()} (${reference()}) n’a pas retenu votre candidature.`,
+          'D’autres logements sont publiés sur Sikaloc_Find.',
+        ],
+        action: { libelle: 'Voir mes candidatures', url: urlMesCandidatures() },
+      }
+    }
+
+    // ─── Le candidat se retire ────────────────────────────────────────
+    case 'candidature_retiree': {
+      return {
+        ton: 'info',
+        sujet: `Candidature retirée — ${logementPublic()}`,
+        titre: `${candidat()} a retiré sa candidature`,
+        corps: [
+          `${logementPublic()}, ${reference()}.`,
+          'Elle reste visible dans votre espace, marquée « retirée ». Aucune action n’est attendue de vous.',
+        ],
+        action: {
+          libelle: 'Voir les candidatures',
+          url: urlCandidaturesPro(variables.annonce_id),
+        },
+      }
+    }
+
     // ─── Invitation d'un locataire à Sikaloc_Me ───────────────────────
     //
     // Le ton n'est pas celui des rappels d'impayé : c'est le premier message
@@ -323,14 +454,20 @@ export interface ResultatEnvoi {
   ok: boolean
   id?: string
   message?: string
+  etat?: 'temporaire' | 'definitif' | 'indisponible' | 'incertain'
 }
 
 /**
  * Envoie un email via Resend.
  *
  * `idempotence` est transmis à Resend : si la file est rejouée après un
- * incident, le même message ne part pas deux fois.
+ * incident, la clé déduplique dans la fenêtre de 24 h du prestataire.
+ * Une ambiguïté plus ancienne exige une réconciliation opérateur.
  */
+export function emailOperationnel(): boolean {
+  return pileLocale() || Boolean(process.env.RESEND_API_KEY)
+}
+
 export async function envoyerEmail(
   destinataire: string,
   modele: ModeleEmail,
@@ -339,18 +476,67 @@ export async function envoyerEmail(
 ): Promise<ResultatEnvoi> {
   const cle = process.env.RESEND_API_KEY
 
-  if (!cle) {
-    return { ok: false, message: 'RESEND_API_KEY absente : envoi impossible.' }
-  }
-
   const expediteur = process.env.EMAIL_FROM ?? 'onboarding@resend.dev'
   const nomExpediteur =
     process.env.EMAIL_FROM_NAME ?? process.env.APP_NAME ?? 'Sikaloc'
-  const message = composer(modele, variables)
+
+  /*
+   * Composer peut échouer — un modèle qui n'existe plus dans le code mais
+   * dort encore dans la file, une variable inattendue. L'exception remontait
+   * alors jusqu'au travailleur et faisait échouer TOUT le passage : un seul
+   * message abîmé bloquait les quarante-neuf autres, indéfiniment.
+   *
+   * Un envoi qui ne peut pas être composé est un envoi qui échoue, comme un
+   * envoi que le fournisseur refuse : il rend un motif, sa ligne compte une
+   * tentative de plus, et la file continue.
+   */
+  let message: Message
+  try {
+    message = composer(modele, variables)
+    if (!message) throw new Error(`modèle inconnu : ${modele}`)
+  } catch (erreur) {
+    return {
+      ok: false,
+      etat: 'definitif',
+      message:
+        erreur instanceof Error
+          ? `Message impossible à composer : ${erreur.message}`
+          : `Message impossible à composer (modèle « ${modele} »).`,
+    }
+  }
+
+  // Sur la pile locale, le courrier est déposé, pas expédié : développer et
+  // tester n'écrit à personne. Voir `courrier-local.ts` pour la règle — elle
+  // ne peut pas répondre vrai ailleurs qu'en local.
+  if (pileLocale()) {
+    try {
+      const depot = deposerCourrierLocal({
+        destinataire,
+        modele,
+        sujet: message.sujet,
+        html: rendreHtml(message),
+        texte: rendreTexte(message),
+        idempotence: idempotence ?? null,
+      })
+      return { ok: true, id: `local:${depot}` }
+    } catch (erreur) {
+      // Un dépôt impossible est un envoi manqué, pas un plantage : la file
+      // doit se comporter ici comme elle se comporterait face à Resend.
+      return {
+        ok: false,
+        message: erreur instanceof Error ? `Dépôt local impossible : ${erreur.message}` : 'Dépôt local impossible.',
+      }
+    }
+  }
+
+  if (!cle) {
+    return { ok: false, etat: 'indisponible', message: 'RESEND_API_KEY absente : envoi impossible.' }
+  }
 
   try {
     const reponse = await fetch(RESEND_API, {
       method: 'POST',
+      signal: AbortSignal.timeout(12_000),
       headers: {
         Authorization: `Bearer ${cle}`,
         'Content-Type': 'application/json',
@@ -370,17 +556,20 @@ export async function envoyerEmail(
     if (!reponse.ok) {
       return {
         ok: false,
-        message: donnees?.message ?? `Resend a répondu ${reponse.status}.`,
+        etat: reponse.status === 429 ? 'temporaire' : reponse.status >= 500 || (reponse.status === 409 && donnees?.name === 'concurrent_idempotent_requests') ? 'incertain' : 'definitif',
+        message: `Resend a répondu ${reponse.status}.`,
       }
     }
 
-    return { ok: true, id: donnees?.id }
+    if (typeof donnees?.id !== 'string' || !donnees.id.trim()) return { ok: false, etat: 'incertain', message: 'Confirmation transport absente.' }
+    return { ok: true, id: donnees.id }
   } catch (erreur) {
     return {
       ok: false,
+      etat: 'incertain',
       message:
         erreur instanceof Error
-          ? `Contact impossible avec Resend : ${erreur.message}`
+          ? 'Contact interrompu avec Resend.'
           : 'Contact impossible avec Resend.',
     }
   }

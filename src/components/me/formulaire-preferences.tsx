@@ -20,10 +20,10 @@ const ETAT_INITIAL: EtatFormulaire = {}
  * fournisseur existera.
  */
 export function FormulairePreferencesLocataire({ actif }: { actif: boolean }) {
-  const [etat, action] = useActionState(definirMesNotifications, ETAT_INITIAL)
+  const [etat, action, enCours] = useActionState(definirMesNotifications, ETAT_INITIAL)
 
   return (
-    <form action={action} className="space-y-lg rounded-xl border border-hairline bg-canvas p-xl">
+    <form action={action} className="card space-y-lg" aria-label="Préférences de notification" aria-busy={enCours} onReset={e => e.preventDefault()}>
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
       {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 
@@ -32,13 +32,15 @@ export function FormulairePreferencesLocataire({ actif }: { actif: boolean }) {
           type="checkbox"
           name="notifEmail"
           defaultChecked={actif}
-          className="mt-xxs size-5 shrink-0 accent-[var(--primary)]"
+          disabled={enCours}
+          aria-describedby="notifications-aide"
+          className="mt-xxs size-5 shrink-0 accent-primary"
         />
         <span>
           <span className="block text-body-md font-semibold text-ink">
             Recevoir les emails de Sikaloc
           </span>
-          <span className="mt-xxs block text-body-sm text-mute">
+          <span id="notifications-aide" className="mt-xxs block text-body-sm text-mute">
             Vos quittances quand elles sont émises, et les rappels de loyer que
             votre bailleur vous adresse. Rien d’autre : Sikaloc ne vous envoie
             aucune publicité.

@@ -35,18 +35,18 @@ async function calculerEstPartiel(
   montant: number,
   typePaiement: string,
   paiementExclu?: string,
-): Promise<boolean> {
+): Promise<boolean | null> {
   if (typePaiement !== 'Loyer') return false
 
   const supabase = await creerClientServeur()
 
-  const { data: bail } = await supabase
+  const { data: bail, error: erreurBail } = await supabase
     .from('baux')
     .select('loyer_mensuel')
     .eq('id', bailId)
     .single()
 
-  if (!bail) return false
+  if (erreurBail || !bail) return null
 
   let requete = supabase
     .from('paiements')
@@ -58,7 +58,8 @@ async function calculerEstPartiel(
 
   if (paiementExclu) requete = requete.neq('id', paiementExclu)
 
-  const { data: autres } = await requete
+  const { data: autres, error: erreurVersements } = await requete
+  if (erreurVersements) return null
 
   const dejaPaye = (autres ?? []).reduce((somme, p) => somme + Number(p.montant), 0)
 
@@ -89,6 +90,8 @@ export async function enregistrerPaiement(
     analyse.data.typePaiement,
   )
 
+  if (estPartiel === null) return { erreur: 'Lecture du bail ou des versements impossible.' }
+
   const { data, error } = await supabase
     .from('paiements')
     .insert({
@@ -115,47 +118,20 @@ export async function enregistrerPaiement(
 // ─── Étape 2 — confirmation, validation et émission du document ─────────────
 
 export async function validerPaiement(id: string): Promise<EtatFormulaire> {
-  const supabase = await creerClientServeur()
-
-  // `genererEtStocker` relit le paiement par id et n'utilise jamais son
-  // `statut` pour composer le document (voir `DonneesQuittance`) : rien
-  // n'oblige donc à attendre que l'écriture du statut soit passée avant de
-  // lancer la génération. C'est le point de la confirmation de paiement où la
-  // latence se sent le plus — les deux partent en parallèle plutôt que bout à
-  // bout.
-  const [ecriture, quittance] = await Promise.allSettled([
-    supabase
-      .from('paiements')
-      .update({ statut: 'Validé', valide_le: new Date().toISOString() })
-      .eq('id', id),
-    genererEtStocker(id),
-  ])
-
-  if (ecriture.status === 'rejected' || ecriture.value.error) {
-    const message =
-      ecriture.status === 'rejected'
-        ? String(ecriture.reason)
-        : ecriture.value.error?.message
-    return { erreur: `Validation impossible : ${message}` }
-  }
-
-  if (quittance.status === 'rejected') {
-    // Le paiement reste validé : c'est un fait comptable. Seul le document a
-    // échoué, et il est régénérable depuis la fiche du paiement.
-    const erreur = quittance.reason
-    return {
-      erreur:
-        erreur instanceof Error
-          ? `Paiement validé, mais le document n'a pas pu être produit : ${erreur.message}`
-          : 'Paiement validé, mais le document n’a pas pu être produit.',
-    }
+  let quittance
+  try {
+    // Le générateur authentifie lui-même l'appelant; la RPC valide et autorise
+    // avant tout effet PDF/Storage. Aucune opération lancée en parallèle.
+    quittance = await genererEtStocker(id, true)
+  } catch {
+    return { erreur: 'Validation ou émission impossible. Le paiement peut déjà être validé : consultez sa fiche puis relancez la génération si nécessaire.' }
   }
 
   revalidatePath(ESPACE_PRO.tableauDeBord)
   revalidatePath('/pro/paiements')
   revalidatePath('/pro/impayes')
 
-  redirect(`/pro/quittances/${quittance.value.id}`)
+  redirect(`/pro/quittances/${quittance.id}`)
 }
 
 /** Régénère le document d'un paiement déjà validé. */
@@ -195,6 +171,8 @@ export async function corrigerPaiement(
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
   const periodeDebut = debutDeMois(analyse.data.periodeDebut)
 
@@ -206,7 +184,9 @@ export async function corrigerPaiement(
     id,
   )
 
-  const { error } = await supabase
+  if (estPartiel === null) return { erreur: 'Lecture du bail ou des versements impossible.' }
+
+  const { data: corrige, error } = await supabase
     .from('paiements')
     .update({
       bail_id: analyse.data.bailId,
@@ -223,21 +203,28 @@ export async function corrigerPaiement(
       valide_le: null,
     })
     .eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id)
+    .select('id')
+    .maybeSingle()
 
   if (error) {
     // Le trigger `proteger_paiement_fige` remonte ici passé les 5 minutes.
     return { erreur: error.message.replace(/^.*?:\s*/, '') }
   }
 
+  if (!corrige) return { erreur: 'Paiement impossible ou non autorisé.' }
   revalidatePath('/pro/paiements')
   redirect(`/pro/paiements/${id}/confirmer`)
 }
 
 export async function supprimerPaiement(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase.from('paiements').delete().eq('id', id)
+  const { data, error } = await supabase.from('paiements').delete().eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id).select('id').maybeSingle()
 
-  if (error) return { erreur: error.message.replace(/^.*?:\s*/, '') }
+  if (error || !data) return { erreur: 'Paiement impossible ou non autorisé.' }
 
   revalidatePath('/pro/paiements')
   revalidatePath(ESPACE_PRO.tableauDeBord)

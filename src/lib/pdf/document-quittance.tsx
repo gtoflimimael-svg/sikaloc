@@ -321,6 +321,8 @@ export interface DonneesQuittance {
   modePaiement: string
   typePaiement: string
   estPartiel: boolean
+  /** Total validé du loyer à cette émission, distinct de ce versement. */
+  montantCumule?: number
 
   /** Signature du bailleur en data URI, ou null si non téléversée. */
   signatureDataUri: string | null
@@ -374,7 +376,8 @@ function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
 
 export function DocumentQuittance(donnees: DonneesQuittance) {
   const estQuittance = donnees.type === 'Quittance'
-  const soldeRestant = Math.max(0, donnees.loyerMensuel - donnees.montant)
+  const cumul = donnees.typePaiement === 'Loyer' ? (donnees.montantCumule ?? donnees.montant) : donnees.montant
+  const soldeRestant = Math.max(0, donnees.loyerMensuel - cumul)
 
   /**
    * Le seul cas où le droit de timbre est réellement susceptible de
@@ -428,7 +431,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           </View>
           <View style={styles.recapCellule}>
             <Text style={styles.recapEtiquette}>Montant réglé</Text>
-            <Text style={styles.recapValeur}>{formaterFCFA(donnees.montant)}</Text>
+            <Text style={styles.recapValeur}>{formaterFCFA(cumul)}</Text>
           </View>
           <View style={[styles.recapCellule, { borderRightWidth: 0 }]}>
             <Text style={styles.recapEtiquette}>Solde restant</Text>

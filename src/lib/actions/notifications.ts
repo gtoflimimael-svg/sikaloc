@@ -231,7 +231,15 @@ export async function prevenirBailleurDuRattachement(
   locataireId: string,
 ): Promise<void> {
   try {
+    // Cette fonction exportée est aussi une Server Action appelable directement.
+    // L'identité et le rattachement sont donc vérifiés avant tout envoi privilégié.
+    const client = await creerClientServeur()
+    const { data: { user }, error } = await client.auth.getUser()
+    if (error || !user) return
     const admin = creerClientAdmin()
+    const lien = await admin.from('locataires').select('id')
+      .eq('id', locataireId).eq('bailleur_id', bailleurId).eq('compte_id', user.id).maybeSingle()
+    if (lien.error || !lien.data) return
 
     const [{ data: bailleur }, { data: locataire }] = await Promise.all([
       admin.from('bailleurs').select('nom, email, notif_email').eq('id', bailleurId).maybeSingle(),

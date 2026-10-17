@@ -56,7 +56,7 @@ const DEPART_SUFFIXE = 2355.547 + AVANCE_LETTRE
 const MARGE_DROITE = 50
 
 /** Les noms d'espace tels qu'ils se posent après « Sikaloc_ ». */
-export type SuffixeEspace = 'Pro' | 'Me'
+export type SuffixeEspace = 'Pro' | 'Me' | 'Find'
 
 /** Les deux tracés de l'icône — motif original, inchangé. */
 function TracesIcone() {
@@ -85,7 +85,7 @@ function TracesTexte() {
 /** Icône seule — buste sans le nom, pour les espaces trop étroits pour le wordmark. */
 export function IconeSikaloc({
   taille = 30,
-  couleur = COULEUR_MARQUE,
+  couleur = `var(--color-primary, ${COULEUR_MARQUE})`,
   className = '',
 }: {
   taille?: number
@@ -124,7 +124,7 @@ export function MarqueSikaloc({
   className?: string
 }) {
   const hauteur = HAUTEURS[taille]
-  const couleur = surSombre ? COULEUR_MARQUE_SUR_SOMBRE : COULEUR_MARQUE
+  const couleur = surSombre ? COULEUR_MARQUE_SUR_SOMBRE : `var(--color-primary, ${COULEUR_MARQUE})`
 
   // La boîte s'élargit du nombre exact de cases occupées par le suffixe.
   const largeurBoite = espace

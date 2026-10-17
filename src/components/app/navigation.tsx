@@ -5,6 +5,7 @@ import {
   House,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   Plus,
   ScrollText,
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 
 import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
@@ -35,6 +36,7 @@ const ICONES = {
   baux: ScrollText,
   locataires: Users,
   logements: House,
+  annonces: Megaphone,
   paiements: Banknote,
   impayes: TriangleAlert,
   parametres: Settings,
@@ -47,6 +49,7 @@ export const LIENS_NAV: LienNav[] = [
   { href: '/pro/baux', libelle: 'Baux', icone: 'baux' },
   { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires' },
   { href: '/pro/logements', libelle: 'Logements', icone: 'logements' },
+  { href: '/pro/annonces', libelle: 'Annonces', icone: 'annonces' },
   { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres' },
 ]
 
@@ -77,7 +80,7 @@ function LiensNavigation({
   onNavigation?: () => void
 }) {
   return (
-    <nav className="space-y-xxs">
+    <nav aria-label="Navigation Sikaloc Pro" className="space-y-xxs">
       {LIENS_NAV.map((lien) => {
         const actif = estActif(lien.href, chemin)
         const pastille = lien.href === '/pro/impayes' ? impayes : 0
@@ -114,7 +117,7 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
 
   return (
     <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
-      <div className="sticky top-0 flex h-screen flex-col p-lg">
+      <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto p-md">
         <div className="mb-xl px-md pt-sm">
           <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
         </div>
@@ -164,6 +167,23 @@ export function EnTeteMobile({
 }) {
   const chemin = usePathname()
   const [ouvert, setOuvert] = useState(false)
+  const tiroir = useRef<HTMLDialogElement>(null)
+  const idTiroir = useId()
+
+  function contenirFocus(evenement: KeyboardEvent<HTMLDialogElement>) {
+    if (evenement.key !== 'Tab') return
+    const elements = Array.from(tiroir.current?.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), [tabindex="0"]') ?? [])
+      .filter((element) => element.getClientRects().length > 0)
+    const premier = elements[0]
+    const dernier = elements.at(-1)
+    if (evenement.shiftKey && document.activeElement === premier) {
+      evenement.preventDefault()
+      dernier?.focus()
+    } else if (!evenement.shiftKey && document.activeElement === dernier) {
+      evenement.preventDefault()
+      premier?.focus()
+    }
+  }
 
   // Une navigation depuis le tiroir doit le refermer. Le faire pendant le
   // rendu escamoterait l'animation de fermeture.
@@ -172,31 +192,44 @@ export function EnTeteMobile({
 
   // Un tiroir ouvert ne doit pas laisser la page défiler derrière lui.
   useEffect(() => {
-    document.body.style.overflow = ouvert ? 'hidden' : ''
+    if (!ouvert) return
+    const precedent = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = precedent
     }
   }, [ouvert])
 
-  // Échap referme, comme partout ailleurs dans l'application.
+  // Le dialogue natif isole le fond, contient Tab et restaure le focus.
   useEffect(() => {
-    if (!ouvert) return
-    function surEchap(evenement: KeyboardEvent) {
-      if (evenement.key === 'Escape') setOuvert(false)
+    const dialogue = tiroir.current
+    if (!dialogue) return
+    if (ouvert && !dialogue.open) {
+      dialogue.showModal()
+      dialogue.querySelector<HTMLButtonElement>('[data-fermer]')?.focus()
+    } else if (!ouvert && dialogue.open) {
+      dialogue.close()
     }
-    document.addEventListener('keydown', surEchap)
-    return () => document.removeEventListener('keydown', surEchap)
   }, [ouvert])
+
+  useEffect(() => {
+    const bureau = window.matchMedia('(min-width: 1024px)')
+    const fermerSurBureau = () => { if (bureau.matches) setOuvert(false) }
+    bureau.addEventListener('change', fermerSurBureau)
+    return () => bureau.removeEventListener('change', fermerSurBureau)
+  }, [])
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-sm border-b border-hairline bg-canvas/95 px-lg backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-xs border-b border-hairline bg-canvas/95 px-md backdrop-blur lg:hidden">
         <button
           type="button"
           onClick={() => setOuvert(true)}
           className="btn-icon"
           aria-label="Ouvrir le menu"
           aria-expanded={ouvert}
+          aria-controls={idTiroir}
+          aria-haspopup="dialog"
         >
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
@@ -218,6 +251,9 @@ export function EnTeteMobile({
             type="button"
             onClick={() => setOuvert(true)}
             aria-label="Ouvrir le menu du compte"
+            aria-expanded={ouvert}
+            aria-controls={idTiroir}
+            aria-haspopup="dialog"
             className="inline-flex items-center rounded-pill"
           >
             <PhotoProfil
@@ -231,16 +267,17 @@ export function EnTeteMobile({
         </div>
       </header>
 
-      {ouvert ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label="Fermer le menu"
-            onClick={() => setOuvert(false)}
-            className="anim-apparait absolute inset-0 bg-surface-dark/60"
-          />
-
-          <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-lg">
+      <dialog
+        ref={tiroir}
+        id={idTiroir}
+        aria-label="Menu Sikaloc Pro"
+        className="nav-dialog"
+        onKeyDown={contenirFocus}
+        onCancel={() => setOuvert(false)}
+        onClose={() => setOuvert(false)}
+        onClick={(evenement) => { if (evenement.target === evenement.currentTarget) setOuvert(false) }}
+      >
+          <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-md shadow-modal">
             <div className="mb-lg flex items-center justify-between px-md pt-sm">
               <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
               <button
@@ -248,6 +285,7 @@ export function EnTeteMobile({
                 onClick={() => setOuvert(false)}
                 className="btn-icon"
                 aria-label="Fermer le menu"
+                data-fermer
               >
                 <X size={18} strokeWidth={2} aria-hidden="true" />
               </button>
@@ -301,8 +339,7 @@ export function EnTeteMobile({
               </form>
             </div>
           </div>
-        </div>
-      ) : null}
+      </dialog>
     </>
   )
 }

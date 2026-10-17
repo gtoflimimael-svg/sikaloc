@@ -28,9 +28,9 @@ const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data:;
+  img-src 'self' blob: data: https://pzrixjydnclwvjwqfbal.supabase.co;
   font-src 'self';
-  connect-src 'self';
+  connect-src 'self' https://pzrixjydnclwvjwqfbal.supabase.co wss://pzrixjydnclwvjwqfbal.supabase.co;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

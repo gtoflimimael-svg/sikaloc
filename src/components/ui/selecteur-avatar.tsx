@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, Shuffle } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useRef, useState } from 'react'
 
 import {
   NB_OPTIONS,
@@ -46,6 +46,8 @@ export function SelecteurAvatar({
     resoudre(identifiant, valeurInitiale),
   )
   const [categorie, setCategorie] = useState<Categorie>('coiffure')
+  const id = useId()
+  const onglets = useRef<HTMLDivElement>(null)
 
   const valeur = encoder(config)
 
@@ -88,6 +90,7 @@ export function SelecteurAvatar({
 
       {/* ── Catégories ───────────────────────────────────────────────────── */}
       <div
+        ref={onglets}
         role="tablist"
         aria-label="Éléments de l’avatar"
         className="no-scrollbar -mx-xxs flex gap-xs overflow-x-auto px-xxs pb-xxs"
@@ -100,9 +103,22 @@ export function SelecteurAvatar({
               key={cat}
               type="button"
               role="tab"
+              id={`${id}-${cat}`}
+              aria-controls={`${id}-panneau`}
+              tabIndex={actif ? 0 : -1}
               aria-selected={actif}
               onClick={() => setCategorie(cat)}
-              className={`shrink-0 rounded-pill px-md py-xs text-body-sm font-medium transition-colors duration-150 ${
+              onKeyDown={(evenement) => {
+                const index = ORDRE.indexOf(cat)
+                const suivant = evenement.key === 'ArrowRight' ? (index + 1) % ORDRE.length
+                  : evenement.key === 'ArrowLeft' ? (index + ORDRE.length - 1) % ORDRE.length
+                  : evenement.key === 'Home' ? 0 : evenement.key === 'End' ? ORDRE.length - 1 : null
+                if (suivant === null) return
+                evenement.preventDefault()
+                setCategorie(ORDRE[suivant])
+                onglets.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[suivant]?.focus()
+              }}
+              className={`min-h-11 shrink-0 rounded-pill px-md py-xs text-body-sm font-medium transition-colors duration-150 ${
                 actif
                   ? 'bg-primary text-on-primary'
                   : 'border border-hairline bg-canvas text-mute hover:text-ink'
@@ -117,7 +133,8 @@ export function SelecteurAvatar({
       {/* ── Vignettes ────────────────────────────────────────────────────── */}
       <div
         role="tabpanel"
-        aria-label={LIBELLES_CATEGORIES[categorie]}
+        id={`${id}-panneau`}
+        aria-labelledby={`${id}-${categorie}`}
         key={categorie}
         className="anim-apparait grid max-h-[19rem] grid-cols-4 gap-xs overflow-y-auto rounded-lg bg-canvas p-xs sm:grid-cols-5 md:grid-cols-6"
       >

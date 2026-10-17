@@ -17,6 +17,7 @@
  * `127.0.0.1`.
  */
 const { chromium } = require('playwright-core')
+const { exigerPileLocale } = require('./garde-locale.cjs')
 const fs = require('fs')
 const path = require('path')
 
@@ -63,10 +64,7 @@ const CAPTURES = [
     console.error('NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.')
     process.exit(1)
   }
-  if (!/127\.0\.0\.1|localhost/.test(supabase)) {
-    console.error(`Refus : ${supabase} n'est pas une pile locale.`)
-    process.exit(1)
-  }
+  exigerPileLocale('Ce script de capture')
 
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 

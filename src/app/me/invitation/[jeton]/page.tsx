@@ -136,9 +136,9 @@ export default async function PageInvitation({
 
 function Ligne({ terme, definition }: { terme: string; definition: string }) {
   return (
-    <div className="flex flex-wrap justify-between gap-sm">
+    <div className="flex min-w-0 flex-col gap-xs sm:flex-row sm:justify-between sm:gap-sm">
       <dt className="text-mute">{terme}</dt>
-      <dd className="font-semibold text-ink">{definition}</dd>
+      <dd className="list-copy font-semibold text-ink">{definition}</dd>
     </div>
   )
 }

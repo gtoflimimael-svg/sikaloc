@@ -67,9 +67,9 @@ const inter = Inter({
 /**
  * Ce que Sikaloc fait AUJOURD'HUI, pour tout le site.
  *
- * Rien sur Sikaloc_Find, qui n'existe pas encore : cette phrase s'affiche sous
- * le lien de n'importe quelle page du site dans un résultat de recherche, bien
- * loin de la carte qui précise « n'existe pas encore ».
+ * Rien sur Sikaloc_Find : cette phrase s'affiche sous le lien de n'importe
+ * quelle page du site dans un résultat de recherche. `/find` porte sa propre
+ * description, qui dit ce qu'on y trouve réellement.
  */
 const DESCRIPTION_GLOBALE =
   'Sikaloc accompagne la location au Bénin : les bailleurs suivent leurs loyers ' +
@@ -159,6 +159,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="fr"
+      // Le script anti-flash pose data-theme avant l’hydratation, volontairement.
+      suppressHydrationWarning
       className={`${styrene.variable} ${copernicus.variable} ${jetbrains.variable} ${inter.variable}`}
     >
       <head>

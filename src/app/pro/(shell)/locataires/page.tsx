@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { ResumeListe } from '@/components/ui/listes'
 import { BoutonInvitation } from '@/components/app/bouton-invitation'
 import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
-import { Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { supprimerLocataire } from '@/lib/actions/locataires'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { bailleurOnboarde } from '@/lib/session'
@@ -19,7 +20,7 @@ export default async function PageLocataires() {
   // Le résultat de `bailleurOnboarde()` n'est même pas utilisé ici : il ne
   // sert qu'à vérifier l'accès, ce que les RLS vérifient de toute façon sur la
   // requête elle-même. Les deux partent donc en parallèle plutôt qu'à la suite.
-  const [, { data: locataires }] = await Promise.all([
+  const [, { data: locataires, error: erreurLocataires }] = await Promise.all([
     bailleurOnboarde(),
     supabase.from('locataires').select('*, baux(id, statut)').order('nom', { ascending: true }),
   ])
@@ -28,7 +29,7 @@ export default async function PageLocataires() {
 
   // Les invitations encore en attente, pour distinguer « inviter » de
   // « renvoyer ». Une requête pour toute la liste plutôt qu'une par ligne.
-  const { data: invitations } = await supabase
+  const { data: invitations, error: erreurInvitations } = await supabase
     .from('invitations_locataire')
     .select('locataire_id')
     .is('utilisee_le', null)
@@ -49,7 +50,11 @@ export default async function PageLocataires() {
         }
       />
 
-      {liste.length === 0 ? (
+      {erreurInvitations ? <div className="mb-lg"><Alerte ton="attention">Le statut des invitations ne peut pas être chargé. Les informations d’invitation peuvent être incomplètes.</Alerte></div> : null}
+
+      {erreurLocataires ? (
+        <Alerte ton="erreur">Les locataires ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+      ) : liste.length === 0 ? (
         <EtatVide
           icone={<Illustration nom="attente" taille={200} decorative />}
           titre="Aucun locataire enregistré"
@@ -61,28 +66,30 @@ export default async function PageLocataires() {
           }
         />
       ) : (
-        <div className="space-y-md">
+        <>
+        <ResumeListe>{liste.length} locataire{liste.length > 1 ? 's' : ''} enregistré{liste.length > 1 ? 's' : ''}</ResumeListe>
+        <ul className="space-y-sm" aria-label="Locataires enregistrés">
           {liste.map((locataire) => {
             const baux = (locataire.baux ?? []) as unknown as { id: string; statut: string }[]
             const actifs = baux.filter((b) => b.statut === 'Actif').length
 
             return (
-              <div key={locataire.id} className="card">
-                <div className="flex flex-wrap items-start justify-between gap-lg">
-                  <div className="flex min-w-0 items-center gap-lg">
+              <li key={locataire.id} className="card list-card" aria-labelledby={`locataire-${locataire.id}`}>
+                <div className="list-row">
+                  <div className="flex min-w-0 items-start gap-sm">
                     <AvatarPeep id={locataire.id} avatar={locataire.avatar} nom={locataire.nom} />
                     <div className="min-w-0">
-                      <p className="truncate text-body-md font-semibold text-ink">
+                      <h2 id={`locataire-${locataire.id}`} className="list-title">
                         {locataire.nom}
-                      </p>
-                      <p className="truncate text-body-sm text-mute">
+                      </h2>
+                      <p className="list-copy text-body-sm text-mute">
                         {formaterTelephone(locataire.telephone)}
-                        {locataire.email ? ` · ${locataire.email}` : ''}
+                        {locataire.email ? <span className="block">{locataire.email}</span> : null}
                       </p>
                       <div className="mt-sm">
                         {actifs > 0 ? (
                           <Badge ton="neutral">
-                            {actifs} bail{actifs > 1 ? 'x' : ''} actif{actifs > 1 ? 's' : ''}
+                            {actifs} {actifs > 1 ? 'baux' : 'bail'} actif{actifs > 1 ? 's' : ''}
                           </Badge>
                         ) : (
                           <Badge ton="neutral">Aucun bail actif</Badge>
@@ -91,7 +98,7 @@ export default async function PageLocataires() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-sm">
+                  <div className="list-actions">
                     <BoutonInvitation
                       locataireId={locataire.id}
                       nom={locataire.nom}
@@ -101,6 +108,7 @@ export default async function PageLocataires() {
                     />
                     <Link
                       href={`/pro/locataires/${locataire.id}/modifier`}
+                      aria-label={`Modifier le locataire ${locataire.nom}`}
                       className="btn btn-tertiary btn-sm"
                     >
                       Modifier
@@ -115,10 +123,11 @@ export default async function PageLocataires() {
                     />
                   </div>
                 </div>
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ul>
+        </>
       )}
     </div>
   )

@@ -20,14 +20,13 @@
  */
 const { createClient } = require('@supabase/supabase-js')
 
+const { exigerPileLocale } = require('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!/127\.0\.0\.1|localhost/.test(SUPABASE || '')) {
-  console.error(`Refus : ${SUPABASE || '(aucune URL)'} n'est pas une pile locale.`)
-  process.exit(1)
-}
+exigerPileLocale('Ce banc')
 
 const admin = createClient(SUPABASE, SERVICE, { auth: { persistSession: false } })
 
@@ -119,10 +118,12 @@ const MDP = 'Jonquille7Mn!'
   comparer('le bailleur se sait bailleur', await rolesVusParLuiMeme(pro.email), {
     est_bailleur: true,
     est_locataire: false,
+    est_candidat: false,
   })
   comparer('le compte locataire n’est encore rien', await rolesVusParLuiMeme(me.email), {
     est_bailleur: false,
     est_locataire: false,
+    est_candidat: false,
   })
 
   // ═══ 4 — le rattachement fait le locataire ═════════════════════════════════
@@ -148,6 +149,7 @@ const MDP = 'Jonquille7Mn!'
   comparer('il devient locataire', await rolesVusParLuiMeme(me.email), {
     est_bailleur: false,
     est_locataire: true,
+    est_candidat: false,
   })
   comparer('et pas bailleur pour autant', (await profilBailleur(me.id)) === null, true)
 
@@ -172,6 +174,7 @@ const MDP = 'Jonquille7Mn!'
   comparer('les deux rôles cohabitent', await rolesVusParLuiMeme(pro.email), {
     est_bailleur: true,
     est_locataire: true,
+    est_candidat: false,
   })
   noter('aucune contrainte ne l’a empêché', Boolean(autreBailleur?.id))
 

@@ -35,3 +35,12 @@ ds-bundle/
 # Sauvegardes horodatées créées avant les gros chantiers — locales, jamais versionnées.
 .design-sync.backup-*/
 .backup-site-*/
+
+# Boîte aux lettres locale : le courrier déposé au lieu d’être expédié.
+.emails-locaux/
+
+# Carte du code (Graphify) : artefact local, régénérable via `/graphify .`, jamais versionné.
+graphify-out/
+
+# Boîte WhatsApp locale : les messages déposés au lieu d’être remis à un fournisseur.
+.whatsapp-locaux/

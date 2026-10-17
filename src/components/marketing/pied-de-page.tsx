@@ -39,6 +39,7 @@ const colonnes = [
       // Le pied de page est commun à tout le site : « comment ça marche » y
       // désigne l'écosystème, que la page d'accueil explique en `#parcours`.
       { libelle: 'Comment ça marche', href: '/#parcours' },
+      { libelle: 'Trouver un logement', href: '/find' },
       // Le pied de page est là où l'on cherche quand on ne sait pas où aller —
       // et c'est souvent le cas d'un locataire arrivé ici sans rien demander.
       { libelle: 'Je suis locataire', href: '/me/rejoindre' },

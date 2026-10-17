@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { DEVISE, MONTANT_ABONNEMENT, initierPaiement } from '@/lib/fedapay'
+import { DESCRIPTION_ABONNEMENT, DEVISE, FORMULE_ABONNEMENT, MONTANT_ABONNEMENT, initierPaiement } from '@/lib/fedapay'
 import { bailleurCourant } from '@/lib/session'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -32,36 +32,23 @@ export async function souscrire(_etat: EtatFormulaire): Promise<EtatFormulaire> 
 
   const resultat = await initierPaiement({
     montant: MONTANT_ABONNEMENT,
-    description: 'Abonnement Sikaloc — plan Standard (1 mois)',
+    description: DESCRIPTION_ABONNEMENT,
     urlRetour: `${base}/pro/parametres/abonnement?retour=1`,
     clientNom: bailleur.nom,
     clientEmail: bailleur.email,
     clientTelephone: bailleur.telephone,
     bailleurId: bailleur.id,
+  }, async (transaction) => {
+    const { error } = await creerClientAdmin().from('abonnements_transactions').insert({
+      bailleur_id: bailleur.id, transaction_id: transaction.id,
+      reference_fedapay: transaction.reference, environnement_fedapay: transaction.environnement,
+      montant: MONTANT_ABONNEMENT, devise: DEVISE, formule: FORMULE_ABONNEMENT, contrat_fedapay: 'standard_v1', statut: 'EN_ATTENTE',
+    })
+    if (error) throw new Error('Enregistrement de transaction impossible.')
   })
 
   if (!resultat.ok || !resultat.urlPaiement || !resultat.transactionId) {
     return { erreur: resultat.message ?? 'Le guichet de paiement est indisponible.' }
-  }
-
-  try {
-    const admin = creerClientAdmin()
-    const { error } = await admin.from('abonnements_transactions').insert({
-      bailleur_id: bailleur.id,
-      transaction_id: resultat.transactionId,
-      montant: MONTANT_ABONNEMENT,
-      devise: DEVISE,
-      statut: 'EN_ATTENTE',
-    })
-
-    if (error) return { erreur: `Initialisation impossible : ${error.message}` }
-  } catch (erreur) {
-    return {
-      erreur:
-        erreur instanceof Error
-          ? erreur.message
-          : 'La configuration serveur du paiement est incomplète.',
-    }
   }
 
   redirect(resultat.urlPaiement)

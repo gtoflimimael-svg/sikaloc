@@ -42,7 +42,7 @@ export default async function PagePaiements() {
           description="Dès que votre bailleur enregistrera un versement, il apparaîtra ici avec sa quittance."
         />
       ) : (
-        <ul className="space-y-md">
+        <ul aria-label="Paiements enregistrés" className="space-y-md">
           {paiements.map((paiement) => (
             <LignePaiement
               key={paiement.paiement_id}
@@ -54,7 +54,7 @@ export default async function PagePaiements() {
         </ul>
       )}
 
-      <p className="text-body-sm text-mute">
+      <p className="text-body-sm text-mute list-copy">
         Une quittance manque, ou un montant ne correspond pas ? Seul votre
         bailleur peut corriger un paiement. Sikaloc_Me affiche ce qu’il a
         enregistré, sans le modifier.
@@ -73,9 +73,9 @@ function LignePaiement({
   montrerAdresse: boolean
 }) {
   return (
-    <li className="rounded-xl border border-hairline bg-canvas p-lg">
+    <li className="card list-card">
       <div className="flex flex-wrap items-start justify-between gap-md">
-        <div className="min-w-0">
+        <div className="min-w-0 list-copy">
           <p className="text-body-md font-semibold text-ink">
             {formaterPeriode(paiement.periode_debut)}
             {paiement.type_paiement !== 'Loyer' ? (
@@ -105,7 +105,7 @@ function LignePaiement({
           ) : null}
         </div>
 
-        <p className="text-display-xs font-extrabold tabular text-ink">
+        <p className="text-title-lg font-semibold money text-ink">
           {formaterFCFA(paiement.montant)}
         </p>
       </div>
@@ -114,16 +114,17 @@ function LignePaiement({
       <div className="mt-lg flex flex-wrap items-center justify-between gap-md border-t border-hairline pt-md">
         {paiement.quittance_id && paiement.quittance_telechargeable ? (
           <>
-            <p className="text-body-sm text-mute">
+            <p className="text-body-sm text-mute list-copy">
               {paiement.quittance_type} n° {paiement.quittance_numero}
             </p>
             <a
               href={`/api/quittances/${paiement.quittance_id}/pdf`}
               className="btn btn-tertiary btn-sm"
               download
+              aria-label={`Télécharger ${paiement.quittance_type} n° ${paiement.quittance_numero}`}
             >
               <Download size={15} strokeWidth={2} aria-hidden="true" />
-              Télécharger
+              Télécharger le document
             </a>
           </>
         ) : paiement.quittance_id ? (
@@ -136,7 +137,7 @@ function LignePaiement({
             locataire réessaierait en croyant à une panne passagère. On nomme le
             document, on dit qu'il n'est plus là, et on n'invente rien.
           */
-          <p className="text-body-sm text-mute">
+          <p className="text-body-sm text-mute list-copy">
             {paiement.quittance_type} n° {paiement.quittance_numero} — le
             fichier n’est plus disponible au téléchargement.
           </p>
@@ -147,13 +148,13 @@ function LignePaiement({
             peut donc rien attester. Le dire vaut mieux que laisser un vide qui
             passerait pour un oubli du bailleur.
           */
-          <p className="text-body-sm text-mute">
+          <p className="text-body-sm text-mute list-copy">
             Loyer réglé avant que votre bailleur n’utilise Sikaloc. Aucune
             quittance n’est émise pour ces mois — Sikaloc n’a pas assisté au
             versement.
           </p>
         ) : (
-          <p className="text-body-sm text-mute">
+          <p className="text-body-sm text-mute list-copy">
             Quittance pas encore émise. Vous pouvez la demander à votre bailleur.
           </p>
         )}

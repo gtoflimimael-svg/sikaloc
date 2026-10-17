@@ -2,7 +2,7 @@ import 'server-only'
 
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
-import { canauxDisponibles } from '@/lib/verification/canaux'
+import { verificationTelephoneExigible } from '@/lib/verification/canaux'
 import {
   comptePleinementVerifie,
   etapeCourante,
@@ -62,9 +62,9 @@ export async function etatVerification(bailleur: Bailleur): Promise<EtatComplet>
     telephoneVerifie: Boolean(bailleur.telephone_verifie_le),
   }
 
-  // Aucun canal pour acheminer un code au téléphone : l'exigence est suspendue
-  // le temps qu'un fournisseur existe. Voir `comptePleinementVerifie`.
-  const telephoneExigible = canauxDisponibles().length > 0
+  // Conserver la règle existante quand aucune configuration n'est déclarée.
+  // Un transport déclaré mais inopérant ne doit pas suspendre l'exigence.
+  const telephoneExigible = verificationTelephoneExigible()
 
   return {
     ...etat,

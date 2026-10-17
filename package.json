@@ -39,7 +39,23 @@
     "banc:correction": "tsx scripts/banc-quittance-correction.ts",
     "banc:notifications": "node scripts/banc-notifications.cjs",
     "banc:modeles-email": "tsx scripts/banc-modeles-email.ts",
-    "banc:chemins": "tsx scripts/banc-chemins.ts"
+    "banc:chemins": "tsx scripts/banc-chemins.ts",
+    "banc:annonces-schema": "node scripts/banc-annonces-schema.cjs",
+    "banc:annonces-publiques": "node scripts/banc-annonces-publiques.cjs",
+    "banc:annonces-photos": "tsx scripts/banc-annonces-photos.ts",
+    "banc:annonces-gestion": "tsx scripts/banc-annonces-gestion.ts",
+    "banc:annonces-pro": "node scripts/banc-annonces-pro.cjs",
+    "banc:find": "node scripts/banc-find.cjs",
+    "banc:find-detail": "node scripts/banc-find-detail.cjs",
+    "banc:find-recherche": "node scripts/banc-find-recherche.cjs",
+    "banc:candidatures": "node scripts/banc-candidatures.cjs",
+    "banc:candidat": "node scripts/banc-parcours-candidat.cjs",
+    "banc:candidatures-pro": "node scripts/banc-candidatures-pro.cjs",
+    "banc:notifications-candidature": "node scripts/banc-notifications-candidature.cjs",
+    "banc:suppressions": "node scripts/banc-suppressions.cjs",
+    "banc:whatsapp-candidature": "node scripts/banc-whatsapp-candidature.cjs",
+    "banc:telephone-candidat": "tsx scripts/banc-telephone-candidat.ts",
+    "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
@@ -51,11 +67,12 @@
     "@zxcvbn-ts/language-fr": "^4.1.2",
     "fflate": "^0.8.3",
     "lucide-react": "^1.32.0",
-    "next": "16.3.5",
+    "next": "16.4.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-easy-crop": "^6.2.3",
     "server-only": "^0.0.1",
+    "sharp": "0.35.5",
     "signature_pad": "^5.1.4",
     "zod": "4.3.5"
   },
@@ -67,7 +84,6 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.2",
     "playwright-core": "^1.62.1",
-    "sharp": "^0.35.3",
     "supabase": "2.114.0",
     "tailwindcss": "4.3.3",
     "tsx": "^4.23.12",
@@ -75,6 +91,6 @@
     "vercel": "^59.1.4"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": "22.x"
   }
 }

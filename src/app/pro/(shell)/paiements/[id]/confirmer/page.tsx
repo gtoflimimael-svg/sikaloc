@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
-import { BoutonAction } from '@/components/ui/action-confirmee'
-import { Alerte, Badge } from '@/components/ui/retours'
+import { BoutonAction, GroupeActions } from '@/components/ui/action-confirmee'
+import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { supprimerPaiement, validerPaiement } from '@/lib/actions/paiements'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
@@ -54,7 +54,13 @@ export default async function PageConfirmationPaiement({
 
   const loyer = Number(bail?.loyer_mensuel ?? 0)
   const montant = Number(paiement.montant)
-  const reliquat = Math.max(0, loyer - montant)
+  const { data: autres, error } = await supabase.from('paiements').select('montant')
+    .eq('bail_id', paiement.bail_id).eq('periode_debut', paiement.periode_debut)
+    .eq('type_paiement', 'Loyer').eq('statut', 'Validé').neq('id', paiement.id)
+  if (error) throw new Error('Lecture des versements indisponible.')
+  const cumul = (autres ?? []).reduce((total, p) => total + Number(p.montant), 0) + montant
+  const reliquat = Math.max(0, loyer - cumul)
+  const estPartiel = paiement.type_paiement === 'Loyer' && reliquat > 0
 
   return (
     <div className="mx-auto max-w-[42rem] space-y-xl">
@@ -62,27 +68,26 @@ export default async function PageConfirmationPaiement({
         <Link href="/pro/paiements/nouveau" className="text-body-sm text-mute hover:text-ink">
           ← Modifier la saisie
         </Link>
-        <h1 className="mt-lg text-display-md font-extrabold tracking-tight text-ink">
-          Confirmer le paiement
-        </h1>
-        <p className="mt-xs text-body-md text-mute">
-          Vérifiez avant de valider. Après confirmation, vous disposerez de
-          5 minutes pour corriger.
-        </p>
+        <EnTetePage titre="Confirmer le paiement"
+          description="Vérifiez avant de valider. Après confirmation, vous disposerez de 5 minutes pour corriger." />
       </div>
 
-      {paiement.est_partiel ? (
+      {estPartiel ? (
         <Alerte ton="attention">
-          Ce montant est inférieur au loyer de la période. Le document émis sera
+          Le cumul des versements reste inférieur au loyer de la période. Le document émis sera
           un <strong>reçu</strong>, pas une quittance : il ne libère pas le
           locataire du solde de {formaterFCFA(reliquat)}.
         </Alerte>
       ) : null}
 
       <div className="card card-lg">
+        <div className="mb-lg flex flex-wrap items-center justify-between gap-sm">
+          <h2 className="text-body-md font-semibold text-ink">{paiement.statut === 'Validé' ? 'Montant validé' : 'Montant à confirmer'}</h2>
+          <Badge ton={paiement.statut === 'Validé' ? 'positive' : 'warning'}>{paiement.statut}</Badge>
+        </div>
         <p className="text-body-lg text-ink">
           Vous allez enregistrer un paiement de{' '}
-          <strong className="font-semibold">{formaterFCFA(montant)}</strong> pour
+          <strong className="font-semibold money">{formaterFCFA(montant)}</strong> pour
           le loyer de{' '}
           <strong className="font-semibold">
             {formaterPeriode(paiement.periode_debut)}
@@ -106,19 +111,25 @@ export default async function PageConfirmationPaiement({
           <Ligne terme="Date du paiement" definition={formaterDate(paiement.date_paiement)} />
           <Ligne terme="Mode de paiement" definition={paiement.mode_paiement} />
           <Ligne terme="Nature" definition={paiement.type_paiement} />
-          <Ligne terme="Loyer mensuel du bail" definition={formaterFCFA(loyer)} />
-          <div className="flex items-center justify-between gap-lg pt-sm">
+          <Ligne terme="Loyer mensuel du bail" definition={formaterFCFA(loyer)} montant />
+          {paiement.type_paiement === 'Loyer' ? (
+            <>
+              <Ligne terme="Cumul après confirmation" definition={formaterFCFA(cumul)} montant />
+              <Ligne terme="Solde de la période après confirmation" definition={formaterFCFA(reliquat)} montant />
+            </>
+          ) : null}
+          <div className="flex flex-col gap-xs pt-sm sm:flex-row sm:items-center sm:justify-between sm:gap-lg">
             <dt className="text-body-sm text-mute">Document qui sera émis</dt>
             <dd>
-              <Badge ton={paiement.est_partiel ? 'warning' : 'positive'}>
-                {paiement.est_partiel ? 'Reçu' : 'Quittance de loyer'}
+              <Badge ton={estPartiel ? 'warning' : 'positive'}>
+                {estPartiel ? 'Reçu' : 'Quittance de loyer'}
               </Badge>
             </dd>
           </div>
         </dl>
       </div>
 
-      <div className="flex flex-wrap items-start gap-md">
+      <GroupeActions>
         <BoutonAction
           action={validerPaiement.bind(null, id)}
           libelle="Confirmer et générer le document"
@@ -130,16 +141,16 @@ export default async function PageConfirmationPaiement({
           libelleEnCours="Suppression…"
           variante="secondary"
         />
-      </div>
+      </GroupeActions>
     </div>
   )
 }
 
-function Ligne({ terme, definition }: { terme: string; definition: string }) {
+function Ligne({ terme, definition, montant = false }: { terme: string; definition: string; montant?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-lg">
+    <div className="flex min-w-0 flex-col gap-xs sm:flex-row sm:items-baseline sm:justify-between sm:gap-lg">
       <dt className="text-body-sm text-mute">{terme}</dt>
-      <dd className="text-right text-body-md font-semibold tabular text-ink">{definition}</dd>
+      <dd className={`min-w-0 text-body-md font-semibold text-ink sm:text-right ${montant ? 'money' : 'list-copy'}`}>{definition}</dd>
     </div>
   )
 }

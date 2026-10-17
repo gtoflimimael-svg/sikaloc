@@ -12,9 +12,12 @@
  * divergence entre deux descriptions du schéma qui a causé la panne du
  * 23 août 2026.
  */
+import { createRequire } from 'node:module'
 import Module from 'node:module'
 
 // `server-only` lève à l'import hors du rendu serveur Next. Le contrôle de
+
+const { examinerPileLocale } = createRequire(import.meta.url)('./garde-locale.cjs')
 // schéma le porte à juste titre — il manipule la clé de service — mais un
 // script en ligne de commande est un contexte serveur légitime.
 //
@@ -73,6 +76,24 @@ async function main() {
   const { decrireEcarts, verifierSchema } = await import('../src/lib/schema')
 
   if (!(await verifierFraicheur())) process.exit(1)
+
+  /*
+   * Lecture seule — mais lecture de la PRODUCTION si l'on charge `.env.local`,
+   * ce qui est arrivé. Comparer le schéma d'une base distante à des migrations
+   * qui n'y sont pas appliquées ne produit qu'un rapport trompeur : l'outil
+   * annonce « migration non appliquée » pour des migrations volontairement
+   * locales. On le dit, et on s'arrête.
+   */
+  const verdict = examinerPileLocale()
+  if (!verdict.locale) {
+    console.error(
+      `\nRefus : ${verdict.motif}.\n\n` +
+        'Ce vérificateur compare le schéma aux migrations du dépôt, qui ne sont\n' +
+        'appliquées qu’en local. Chargez l’environnement local :\n\n' +
+        '  set -a && . ./.env.development.local && set +a\n',
+    )
+    process.exit(1)
+  }
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error(

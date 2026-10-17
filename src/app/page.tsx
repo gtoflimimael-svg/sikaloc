@@ -39,25 +39,25 @@ import { obtenirUtilisateur } from '@/lib/supabase/serveur'
  *     Sikaloc_Me     existe, mais on y entre sur
  *                    invitation de son bailleur     → lien vers /me/rejoindre,
  *                                                     qui explique comment
- *     Sikaloc_Find   n'existe pas encore            → AUCUN lien
+ *     Sikaloc_Find   existe depuis S5 : le catalogue
+ *                    des annonces publiées           → lien vers /find
  *
- * Le troisième est celui qui compte. Annoncer une recherche de logements avec
- * un bouton qui mène à une page introuvable serait la promesse en trompe-l'œil
- * que ce produit s'interdit. On dit ce qui vient, et on dit que ce n'est pas
- * là.
+ * Le troisième a longtemps été le seul sans lien : annoncer une recherche de
+ * logements avec un bouton menant à une page introuvable aurait été la
+ * promesse en trompe-l'œil que ce produit s'interdit. Le lien n'est venu
+ * qu'avec la page.
  */
 
 export const metadata: Metadata = {
   // `absolute` : le gabarit de la racine ajouterait « · Sikaloc » à un titre
   // qui commence déjà par le nom de la marque.
   title: { absolute: 'Sikaloc — gestion locative et logements au Bénin' },
-  // « bientôt » : cette description s'affiche seule dans un résultat de
-  // recherche, loin de la carte qui précise que Sikaloc_Find n'existe pas
-  // encore. Au présent, elle promettait à quelqu'un qui cherche un logement
-  // une recherche qu'il ne trouverait pas en cliquant.
+  // Au présent depuis S5 : `/find` existe. Tant qu'il n'existait pas, cette
+  // description disait « bientôt » — elle s'affiche seule dans un résultat de
+  // recherche, et promettait sinon une page qu'on ne trouvait pas en cliquant.
   description:
     'Sikaloc réunit les espaces de la location au Bénin : Sikaloc_Pro pour ' +
-    'les bailleurs, Sikaloc_Me pour les locataires, et bientôt Sikaloc_Find ' +
+    'les bailleurs, Sikaloc_Me pour les locataires, et Sikaloc_Find ' +
     'pour chercher un logement. Un seul compte, des documents partagés.',
   alternates: { canonical: '/' },
 }
@@ -68,10 +68,15 @@ export const metadata: Metadata = {
  * Trois, et courtes : la barre est mesurée au pixel près — à 1024 px elle
  * consommait 949 px pour 960 disponibles avant d'être élargie. Un quatrième
  * libellé la ferait déborder (voir les commentaires d'`EnTetePublic`).
+ *
+ * « Trouver un logement » a donc pris la place de « Comment ça marche », et
+ * non une place de plus : une porte vers une page vaut mieux, dans la barre,
+ * qu'une ancre vers une section qu'on atteint en faisant défiler. L'ancre
+ * reste dans le tiroir et dans le pied de page.
  */
 const LIENS_ACCUEIL: LienEnTete[] = [
   { href: '#espaces', libelle: 'Les espaces' },
-  { href: '#parcours', libelle: 'Comment ça marche' },
+  { href: '/find', libelle: 'Trouver un logement' },
   { href: '/pro', libelle: 'Bailleurs' },
 ]
 
@@ -84,7 +89,10 @@ const LIENS_ACCUEIL: LienEnTete[] = [
  * cherche.
  */
 const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
-  ...LIENS_ACCUEIL,
+  { href: '#espaces', libelle: 'Les espaces' },
+  { href: '#parcours', libelle: 'Comment ça marche' },
+  { href: '/find', libelle: 'Trouver un logement' },
+  { href: '/pro', libelle: 'Bailleurs' },
   { href: '/me/rejoindre', libelle: 'Je suis locataire' },
 ]
 
@@ -92,8 +100,8 @@ const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
  * Les trois espaces, avec leur état RÉEL.
  *
  * `disponible` n'est pas un drapeau d'affichage : c'est ce qui décide si une
- * carte porte un lien ou une mention d'attente. Le jour où Sikaloc_Find
- * ouvrira, c'est cette ligne qui changera — et la page suivra.
+ * carte porte un lien ou une mention d'attente. Sikaloc_Find est passé à
+ * `true` le jour où `/find` a existé — pas avant.
  */
 const ESPACES_PRESENTES = [
   {
@@ -122,8 +130,8 @@ const ESPACES_PRESENTES = [
     pour: 'Personnes en recherche',
     texte:
       'Chercher un logement à louer, et le trouver publié par un bailleur qui gère déjà ses biens sur Sikaloc.',
-    disponible: false,
-    lien: null,
+    disponible: true,
+    lien: { href: '/find', libelle: 'Voir les logements' },
   },
 ]
 
@@ -132,7 +140,7 @@ const ESPACES_PRESENTES = [
  *
  * C'est ce qui distingue Sikaloc d'un logiciel de gestion : le même logement,
  * le même bail et les mêmes documents traversent les trois espaces sans être
- * ressaisis. L'étape 2 est écrite au futur parce qu'elle n'existe pas encore.
+ * ressaisis.
  */
 const PARCOURS = [
   {
@@ -148,8 +156,8 @@ const PARCOURS = [
     espace: 'Sikaloc_Find',
     titre: 'Il le publie s’il est vacant',
     texte:
-      'Le logement est déjà décrit : le publier ne demandera pas de le ressaisir. Cet espace reste à construire.',
-    avenir: true,
+      'Le logement est déjà décrit : le publier ne demande pas de le ressaisir.',
+    avenir: false,
   },
   {
     numero: '3',

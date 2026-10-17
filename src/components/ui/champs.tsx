@@ -3,8 +3,7 @@ import type { ReactNode } from 'react'
 /**
  * Champs de formulaire — spec design « Inputs & Forms ».
  *
- * Hauteur 48px, corps à 16px : le design system l'impose pour la lisibilité et
- * le confort de tap (WCAG AAA).
+ * Hauteur 44px, corps à 16px ; les aides et erreurs sont reliées au champ.
  */
 
 interface ProprietesCommunes {
@@ -30,14 +29,18 @@ function Enveloppe({
         {requis ? <span className="text-negative"> *</span> : null}
       </label>
       {children}
-      {aide && !erreur ? <p className="field-hint">{aide}</p> : null}
+      {aide && !erreur ? <p id={`${nom}-aide`} className="field-hint">{aide}</p> : null}
       {erreur ? (
-        <p className="field-error" role="alert">
+        <p id={`${nom}-erreur`} className="field-error" role="alert">
           {erreur}
         </p>
       ) : null}
     </div>
   )
+}
+
+function descriptionChamp({ nom, erreur, aide }: ProprietesCommunes) {
+  return erreur ? `${nom}-erreur` : aide ? `${nom}-aide` : undefined
 }
 
 export function ChampTexte({
@@ -75,7 +78,7 @@ export function ChampTexte({
         step={step}
         required={commun.requis}
         aria-invalid={commun.erreur ? true : undefined}
-        aria-describedby={commun.erreur ? `${commun.nom}-erreur` : undefined}
+        aria-describedby={descriptionChamp(commun)}
         className="input"
       />
     </Enveloppe>
@@ -100,6 +103,7 @@ export function ChampSelection({
         defaultValue={valeurDefaut ?? ''}
         required={commun.requis}
         aria-invalid={commun.erreur ? true : undefined}
+        aria-describedby={descriptionChamp(commun)}
         className="input"
       >
         {placeholder ? (
@@ -141,17 +145,19 @@ export function ChampCase({
           name={nom}
           type="checkbox"
           defaultChecked={parDefaut}
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur ? `${nom}-erreur` : description ? `${nom}-aide` : undefined}
           className="mt-xxs size-5 shrink-0 accent-primary"
         />
         <span>
           <span className="block text-body-md font-semibold text-ink">{libelle}</span>
           {description ? (
-            <span className="mt-xxs block text-body-sm text-mute">{description}</span>
+            <span id={`${nom}-aide`} className="mt-xxs block text-body-sm text-mute">{description}</span>
           ) : null}
         </span>
       </label>
       {erreur ? (
-        <p className="field-error" role="alert">
+        <p id={`${nom}-erreur`} className="field-error" role="alert">
           {erreur}
         </p>
       ) : null}
@@ -181,6 +187,7 @@ export function ChampMontant({
           required={commun.requis}
           inputMode="numeric"
           aria-invalid={commun.erreur ? true : undefined}
+          aria-describedby={descriptionChamp(commun)}
           className="input tabular pr-[72px]"
         />
         <span className="pointer-events-none absolute right-lg top-1/2 -translate-y-1/2 text-body-sm font-semibold text-mute">

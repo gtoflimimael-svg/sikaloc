@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { ResumeListe } from '@/components/ui/listes'
+import { LienFiltre } from '@/components/ui/lien-filtre'
 import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
-import { Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -37,7 +39,7 @@ export default async function PageBaux({
 
   if (filtre) requete = requete.eq('statut', filtre)
 
-  const { data: baux } = await requete
+  const { data: baux, error: erreurBaux } = await requete
   const liste = baux ?? []
 
   return (
@@ -52,27 +54,25 @@ export default async function PageBaux({
         }
       />
 
-      <div className="mb-xl flex flex-wrap gap-sm">
+      <nav aria-label="Filtrer les baux par statut" className="mb-lg flex flex-wrap gap-xs">
         {FILTRES.map((option) => {
           const actif = (statut ?? 'tous') === option.valeur
 
           return (
-            <Link
+            <LienFiltre
               key={option.valeur}
               href={option.valeur === 'tous' ? '/pro/baux' : `/pro/baux?statut=${option.valeur}`}
-              className={`rounded-pill px-lg py-sm text-body-sm font-semibold transition-colors ${
-                actif
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-canvas text-mute hover:text-ink border border-hairline'
-              }`}
+              actif={actif}
             >
               {option.libelle}
-            </Link>
+            </LienFiltre>
           )
         })}
-      </div>
+      </nav>
 
-      {liste.length === 0 ? (
+      {erreurBaux ? (
+        <Alerte ton="erreur">Les baux ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+      ) : liste.length === 0 ? (
         <EtatVide
           icone={<Illustration nom="lecture" taille={200} decorative />}
           titre={filtre ? `Aucun bail ${filtre.toLowerCase()}` : 'Aucun bail enregistré'}
@@ -84,29 +84,31 @@ export default async function PageBaux({
           }
         />
       ) : (
-        <div className="space-y-md">
+        <>
+        <ResumeListe>{liste.length} {liste.length > 1 ? 'baux' : 'bail'} affiché{liste.length > 1 ? 's' : ''}</ResumeListe>
+        <ul className="space-y-sm" aria-label="Baux affichés">
           {liste.map((bail) => {
             const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
             const locataire = Array.isArray(bail.locataire) ? bail.locataire[0] : bail.locataire
 
             return (
+              <li key={bail.id}>
               <Link
-                key={bail.id}
                 href={`/pro/baux/${bail.id}`}
-                className="card block transition-colors hover:border-hairline-strong"
+                className="card list-card block transition-colors hover:border-hairline-strong"
               >
-                <div className="flex flex-wrap items-start justify-between gap-lg">
-                  <div className="flex min-w-0 items-start gap-lg">
+                <div className="list-row">
+                  <div className="flex min-w-0 items-start gap-sm">
                     <AvatarPeep
                       id={locataire?.id ?? bail.locataire_id}
                       avatar={locataire?.avatar}
                       nom={locataire?.nom}
                     />
                     <div className="min-w-0">
-                      <p className="truncate text-body-md font-semibold text-ink">
+                      <h2 className="list-title">
                         {locataire?.nom ?? 'Locataire inconnu'}
-                      </p>
-                      <p className="truncate text-body-sm text-mute">
+                      </h2>
+                      <p className="list-copy text-body-sm text-mute">
                         {logement?.adresse ?? '—'}
                         {logement?.ville ? `, ${logement.ville}` : ''}
                       </p>
@@ -117,20 +119,22 @@ export default async function PageBaux({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-sm">
+                  <div className="list-aside">
                     <Badge ton={bail.statut === 'Actif' ? 'positive' : 'neutral'}>
                       {bail.statut}
                     </Badge>
-                    <p className="text-body-md font-semibold tabular text-ink">
+                    <p className="money text-body-md font-semibold text-ink">
                       {formaterFCFA(bail.loyer_mensuel)}
                       <span className="text-caption font-normal text-mute"> /mois</span>
                     </p>
                   </div>
                 </div>
               </Link>
+              </li>
             )
           })}
-        </div>
+        </ul>
+        </>
       )}
     </div>
   )

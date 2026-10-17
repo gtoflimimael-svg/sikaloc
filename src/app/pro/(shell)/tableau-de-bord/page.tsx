@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { CarteMetrique } from '@/components/app/carte-metrique'
-import { Badge, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import {
   formaterDateCourte,
   formaterFCFA,
@@ -124,20 +124,11 @@ export default async function PageTableauDeBord({
         reprise, et seulement quand elle est close — sinon elle est déjà à
         l'écran et « reprendre » n'aurait aucun sens.
       */}
-      {visiteClose && !bienvenue ? (
-        <div className="flex justify-end">
-          <ReprendreVisite terminee={Boolean(bailleur.tutoriel_vu_le)} />
-        </div>
-      ) : null}
-
-      <div>
-        <h1 className="text-display-md font-extrabold tracking-tight text-ink">
-          Tableau de bord
-        </h1>
-        <p className="mt-xs text-body-md text-mute">
-          Votre activité locative en temps réel.
-        </p>
-      </div>
+      <EnTetePage
+        titre="Tableau de bord"
+        description="Votre activité locative en temps réel."
+        action={visiteClose && !bienvenue ? <ReprendreVisite terminee={Boolean(bailleur.tutoriel_vu_le)} /> : undefined}
+      />
 
       {/* ── Métriques (§6.1.3) ─────────────────────────────────────────── */}
       {/*
@@ -149,7 +140,9 @@ export default async function PageTableauDeBord({
         police ne ferait que repousser la casse au prochain bailleur au parc
         plus important.
       */}
-      <section data-visite="metriques" className="grid gap-lg sm:grid-cols-2">
+      {metriquesReponse.error ? (
+        <Alerte ton="erreur">Les indicateurs ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+      ) : <section data-visite="metriques" className="grid gap-md sm:grid-cols-2">
         <CarteMetrique
           label="Taux d'occupation"
           valeur={`${Number(metriques?.taux_occupation ?? 0).toLocaleString('fr-FR')} %`}
@@ -176,7 +169,7 @@ export default async function PageTableauDeBord({
           ton="primary"
           detail="Paiements encaissés ce mois-ci"
         />
-      </section>
+      </section>}
 
       {/* ── Accès rapides (§6.1.3) ─────────────────────────────────────── */}
       <section className="flex flex-wrap gap-md">
@@ -193,8 +186,8 @@ export default async function PageTableauDeBord({
 
       {/* ── Impayés ────────────────────────────────────────────────────── */}
       <section>
-        <div className="mb-lg flex items-center justify-between gap-md">
-          <h2 className="text-display-sm font-semibold tracking-tight text-ink">
+        <div className="mb-md flex flex-wrap items-center justify-between gap-sm">
+          <h2 className="section-title">
             Loyers en retard
           </h2>
           {impayes.length > 0 ? (
@@ -204,7 +197,9 @@ export default async function PageTableauDeBord({
           ) : null}
         </div>
 
-        {impayes.length === 0 ? (
+        {impayesReponse.error ? (
+          <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+        ) : impayes.length === 0 ? (
           <div className="rounded-lg bg-positive-pale p-xl">
             <p className="text-body-md font-semibold text-positive-deep">
               Aucun loyer en retard.
@@ -248,8 +243,8 @@ export default async function PageTableauDeBord({
 
       {/* ── Derniers paiements ─────────────────────────────────────────── */}
       <section>
-        <div className="mb-lg flex items-center justify-between gap-md">
-          <h2 className="text-display-sm font-semibold tracking-tight text-ink">
+        <div className="mb-md flex flex-wrap items-center justify-between gap-sm">
+          <h2 className="section-title">
             Derniers paiements
           </h2>
           {paiements.length > 0 ? (
@@ -262,7 +257,9 @@ export default async function PageTableauDeBord({
           ) : null}
         </div>
 
-        {paiements.length === 0 ? (
+        {paiementsReponse.error ? (
+          <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+        ) : paiements.length === 0 ? (
           <EtatVide
             icone={<Illustration nom="joie" taille={200} decorative />}
             titre="Aucun paiement enregistré"
@@ -274,7 +271,7 @@ export default async function PageTableauDeBord({
             }
           />
         ) : (
-          <div className="table-defilante">
+          <div className="table-defilante" role="region" aria-label="Derniers paiements" tabIndex={0}>
             <table className="data-table">
               <thead>
                 <tr>

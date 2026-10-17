@@ -17,6 +17,136 @@ export interface ObjetDeclare {
 export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "contrainte",
+    "nom": "annonce_photos_annonce_fkey",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_chemin_key",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_chemin_scope",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_dimensions_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_poids_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_position_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_position_unique",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonce_photos_type_mime_valide",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_avance_mois_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_chambres_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_charges_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_cloturee_le_coherente",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_complete_hors_brouillon",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_depot_garantie_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_description_longueur",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_equipements_valides",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_id_bailleur_key",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_logement_si_vivante",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_loyer_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_motif_cloture_coherent",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_publiee_le_coherente",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_quartier_longueur",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_reference_format",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_reference_key",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_surface_bornes",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "annonces_ville_longueur",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "bailleurs_avatar_format",
     "migration": "20260819000100_avatars.sql"
   },
@@ -37,6 +167,41 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "baux_historique_declare_par_fkey",
+    "migration": "20260920000100_integrite_suppressions.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "candidats_nom_longueur",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "candidats_telephone_longueur",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "candidatures_message_longueur",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "candidatures_reponse_coherente",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "codes_verification_compte_id_fkey",
+    "migration": "20260920000300_verification_telephone_candidat.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "invitations_locataire_cree_par_fkey",
+    "migration": "20260920000100_integrite_suppressions.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "locataires_avatar_format",
     "migration": "20260819000100_avatars.sql"
   },
@@ -52,6 +217,46 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "notifications_candidature_destinataire_non_vide",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_candidature_evenement_valide",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_candidature_role_valide",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_candidature_tentatives_bornees",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_whatsapp_destinataire_canonique",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_whatsapp_evenement_valide",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_whatsapp_role_valide",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "contrainte",
+    "nom": "notifications_whatsapp_tentatives_bornees",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "paiements_date_connue_sauf_historique",
     "migration": "20260913000300_echeances_et_historique.sql"
   },
@@ -61,6 +266,21 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "migration": "20260817000700_documents_v2_1.sql"
   },
   {
+    "categorie": "contrainte",
+    "nom": "signatures_apposees_bailleur_id_fkey",
+    "migration": "20260920000100_integrite_suppressions.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "a_verrou_paiements_locatifs",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "annuler_notifications_candidat",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
     "categorie": "declencheur",
     "nom": "attribuer_numero_document",
     "migration": "20260817000700_documents_v2_1.sql"
@@ -68,12 +288,37 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "declencheur",
     "nom": "canoniser_telephone",
-    "migration": "20260912000600_telephones_canoniques.sql"
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "cloturer_annonce_sur_bail_actif",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "declencheur",
     "nom": "creer_profil_bailleur",
     "migration": "20260817000200_fonctions_et_triggers.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "detacher_compte_locataire",
+    "migration": "20260920000100_integrite_suppressions.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "encadrer_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "notifier_candidature",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "proteger_derniere_photo",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "declencheur",
@@ -84,6 +329,21 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "declencheur",
     "nom": "proteger_paiement_fige_update",
     "migration": "20260817000200_fonctions_et_triggers.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "proteger_suppression_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "reinitialiser_verification_bailleur",
+    "migration": "20260920000400_reinit_verification_telephone_bailleur.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "reinitialiser_verification_candidat",
+    "migration": "20260920000300_verification_telephone_candidat.sql"
   },
   {
     "categorie": "declencheur",
@@ -102,6 +362,31 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "declencheur",
+    "nom": "toucher_annonces",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "toucher_candidats",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "toucher_candidatures",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "verifier_annonce_candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "verifier_coherence_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "declencheur",
     "nom": "verifier_coherence_bail",
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
@@ -111,9 +396,44 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
   {
+    "categorie": "declencheur",
+    "nom": "verifier_publication_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "verifier_transition_candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
     "categorie": "fonction",
     "nom": "accepter_invitation",
-    "migration": "20260913000500_invitations_locataire.sql"
+    "migration": "20261015204712_securiser_destinataires_invitations.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "annonce_publiee",
+    "migration": "20260919000400_find_catalogue.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "annonces_publiees",
+    "migration": "20260919000400_find_catalogue.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "annonces_publiees_sitemap",
+    "migration": "20260919000500_find_detail.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "annonces_recherche",
+    "migration": "20260919000600_find_recherche.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "annuler_notifications_candidat",
+    "migration": "20260920000200_notifications_whatsapp.sql"
   },
   {
     "categorie": "fonction",
@@ -127,8 +447,28 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "candidatures_de_mes_annonces",
+    "migration": "20260919000900_candidatures_bailleur.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "candidatures_par_annonce",
+    "migration": "20260919000900_candidatures_bailleur.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "canoniser_telephone",
     "migration": "20260912000600_telephones_canoniques.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "cloturer_annonce_sur_bail_actif",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "contexte_emission",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
   },
   {
     "categorie": "fonction",
@@ -139,6 +479,26 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "definir_mes_notifications",
     "migration": "20260913000900_notifications_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "detacher_compte_locataire",
+    "migration": "20260920000100_integrite_suppressions.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "empreinte_paiement_locatif",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "encadrer_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "enregistrer_profil_candidat",
+    "migration": "20260919000700_candidatures.sql"
   },
   {
     "categorie": "fonction",
@@ -157,18 +517,48 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "finaliser_abonnement_fedapay",
+    "migration": "20261015190840_finaliser_abonnements_fedapay_atomiquement.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "finances_paiement_locatif",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "generer_code_parrainage",
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
   {
     "categorie": "fonction",
+    "nom": "generer_reference_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "gerer_nouvel_utilisateur",
-    "migration": "20260913000400_roles_et_compte_locataire.sql"
+    "migration": "20260919000800_inscription_candidat.sql"
   },
   {
     "categorie": "fonction",
     "nom": "inventaire_schema",
     "migration": "20260824000200_inventaire_schema_auth.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "liberer_emission_quittance",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "lieux_publies",
+    "migration": "20260919000600_find_recherche.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "lire_quittance_autorisee",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
   },
   {
     "categorie": "fonction",
@@ -179,6 +569,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "mes_baux",
     "migration": "20260913000700_acces_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "mes_candidatures",
+    "migration": "20260919000700_candidatures.sql"
   },
   {
     "categorie": "fonction",
@@ -198,7 +593,47 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "mes_roles",
-    "migration": "20260913000400_roles_et_compte_locataire.sql"
+    "migration": "20260919000800_inscription_candidat.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "nom_public",
+    "migration": "20260919000200_annonces_publiques.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "notifier_candidature",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "photo_publiee",
+    "migration": "20260919000400_find_catalogue.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "photos_publiees",
+    "migration": "20260919000500_find_detail.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "preparer_emission_quittance",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "profil_public_bailleur",
+    "migration": "20260919000200_annonces_publiques.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "prolonger_abonnement",
+    "migration": "20261015190840_finaliser_abonnements_fedapay_atomiquement.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "proteger_derniere_photo",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "fonction",
@@ -207,8 +642,18 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "proteger_suppression_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "proteger_suppression_paiement_fige",
-    "migration": "20260817000200_fonctions_et_triggers.sql"
+    "migration": "20260920000100_integrite_suppressions.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "publier_emission_quittance",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
   },
   {
     "categorie": "fonction",
@@ -238,7 +683,37 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "refuser_suppression_signature",
-    "migration": "20260912000500_signatures_apposees.sql"
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "reinitialiser_verification_bailleur",
+    "migration": "20260920000400_reinit_verification_telephone_bailleur.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "reinitialiser_verification_candidat",
+    "migration": "20260920000300_verification_telephone_candidat.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "repondre_candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "reserver_notification",
+    "migration": "20261016112439_fiabiliser_files_notifications.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "retirer_candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "soumettre_candidature",
+    "migration": "20260919000700_candidatures.sql"
   },
   {
     "categorie": "fonction",
@@ -247,8 +722,23 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "terminer_notification",
+    "migration": "20261016112439_fiabiliser_files_notifications.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "toucher_mis_a_jour_le",
     "migration": "20260817000200_fonctions_et_triggers.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "verifier_annonce_candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "verifier_coherence_annonce",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "fonction",
@@ -261,9 +751,64 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "migration": "20260817000200_fonctions_et_triggers.sql"
   },
   {
+    "categorie": "fonction",
+    "nom": "verifier_publication_annonce",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "verifier_transition_candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "verrou_paiements_locatifs",
+    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "whatsapp_du_bailleur",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "whatsapp_du_candidat",
+    "migration": "20260920000300_verification_telephone_candidat.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "abonnements_reference_fedapay_unique",
+    "migration": "20261015190840_finaliser_abonnements_fedapay_atomiquement.sql"
+  },
+  {
     "categorie": "index",
     "nom": "abonnements_transactions_bailleur_idx",
     "migration": "20260817000100_schema_initial.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "annonces_bailleur_id_idx",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "annonces_statut_loyer_idx",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "annonces_statut_publiee_le_idx",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "annonces_statut_ville_idx",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "annonces_une_vivante_par_logement",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "index",
@@ -297,6 +842,21 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "candidatures_annonce_idx",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "candidatures_candidat_idx",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "candidatures_une_par_candidat_et_annonce",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "emails_a_envoyer_en_attente_idx",
     "migration": "20260817000800_cycle_de_grace.sql"
   },
@@ -308,7 +868,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "index",
     "nom": "idx_codes_verification_recherche",
-    "migration": "20260913000100_verification_coordonnees.sql"
+    "migration": "20260920000300_verification_telephone_candidat.sql"
   },
   {
     "categorie": "index",
@@ -339,6 +899,26 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "logements_bailleur_id_idx",
     "migration": "20260817000100_schema_initial.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "notifications_candidature_candidature_idx",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "notifications_candidature_en_attente_idx",
+    "migration": "20260919001000_notifications_candidatures.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "notifications_whatsapp_candidature_idx",
+    "migration": "20260920000200_notifications_whatsapp.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "notifications_whatsapp_en_attente_idx",
+    "migration": "20260920000200_notifications_whatsapp.sql"
   },
   {
     "categorie": "index",
@@ -377,6 +957,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur ajoute des photos à ses annonces",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur annule ses invitations",
     "migration": "20260913000600_droits_invitations.sql"
   },
@@ -384,6 +969,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur corrige ses paiements",
     "migration": "20260817000300_rls.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur crée ses annonces",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "politique",
@@ -422,6 +1012,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur lit les candidatures de ses annonces",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur lit les photos de ses annonces",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur lit sa photo",
     "migration": "20260912000300_photo_profil.sql"
   },
@@ -429,6 +1029,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur lit sa signature",
     "migration": "20260817000500_storage.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur lit ses annonces",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "politique",
@@ -482,6 +1087,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur modifie les photos de ses annonces",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur modifie ses annonces",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur modifie ses baux",
     "migration": "20260817000300_rls.sql"
   },
@@ -512,6 +1127,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "Un bailleur répond aux candidatures de ses annonces",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur retire les photos de ses annonces",
+    "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur retire sa photo",
     "migration": "20260912000300_photo_profil.sql"
   },
@@ -519,6 +1144,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur supprime sa signature",
     "migration": "20260817000500_storage.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un bailleur supprime ses annonces",
+    "migration": "20260919000100_annonces.sql"
   },
   {
     "categorie": "politique",
@@ -539,6 +1169,36 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur supprime ses paiements",
     "migration": "20260817000300_rls.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un candidat crée son profil",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un candidat dépose sa candidature",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un candidat lit ses candidatures",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un candidat lit son profil",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un candidat modifie son profil",
+    "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Un candidat retire sa candidature",
+    "migration": "20260919000700_candidatures.sql"
   },
   {
     "categorie": "politique",

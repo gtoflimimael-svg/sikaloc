@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CheckCircle2, CircleAlert, Info, TriangleAlert } from 'lucide-react'
 
 /** Bandeau d'erreur ou de succès affiché en tête de formulaire. */
 export function Alerte({
@@ -14,13 +15,15 @@ export function Alerte({
     info: 'bg-canvas-sage text-ink-deep border-primary/20',
     attention: 'bg-warning-pale text-warning-content border-warning/30',
   }[ton]
+  const Icone = { erreur: CircleAlert, succes: CheckCircle2, info: Info, attention: TriangleAlert }[ton]
 
   return (
     <div
       role={ton === 'erreur' ? 'alert' : 'status'}
-      className={`rounded-lg border px-lg py-md text-body-sm font-semibold ${styles}`}
+      className={`feedback ${styles}`}
     >
-      {children}
+      <Icone size={18} aria-hidden="true" className="mt-xxs shrink-0" />
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   )
 }
@@ -49,8 +52,8 @@ export function EtatVide({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center rounded-xl bg-canvas-soft px-xl py-4xl text-center">
-      {icone ? <div className="mb-lg text-mute-soft">{icone}</div> : null}
+    <div className="empty-state">
+      {icone ? <div className="empty-state-icon mb-md text-mute-soft">{icone}</div> : null}
       <p className="text-body-md font-semibold text-ink">{titre}</p>
       <p className="mx-auto mt-sm max-w-[28rem] text-body-md text-mute">{description}</p>
       {action ? <div className="mt-xl">{action}</div> : null}
@@ -81,7 +84,7 @@ export function Avatar({
   )
 }
 
-/** Titre de page — display-md (32/800), le bon équilibre autorité/respiration. */
+/** Titre de page — Copernicus Book, taille responsive commune aux espaces. */
 export function EnTetePage({
   titre,
   description,
@@ -93,8 +96,8 @@ export function EnTetePage({
 }) {
   return (
     <div className="mb-xl flex flex-wrap items-start justify-between gap-lg">
-      <div>
-        <h1 className="text-display-md font-extrabold tracking-tight text-ink">{titre}</h1>
+      <div className="min-w-0">
+        <h1 className="page-title">{titre}</h1>
         {description ? (
           <p className="mt-xs max-w-[42rem] text-body-md text-mute">{description}</p>
         ) : null}

@@ -38,11 +38,12 @@ export default async function proxy(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesAEcrire) {
+        setAll(cookiesAEcrire, enTetes) {
           for (const { name, value } of cookiesAEcrire) {
             request.cookies.set(name, value)
           }
           reponse = NextResponse.next({ request })
+          for (const [nom, valeur] of Object.entries(enTetes)) reponse.headers.set(nom, valeur)
           for (const { name, value, options } of cookiesAEcrire) {
             reponse.cookies.set(name, value, options)
           }
@@ -57,6 +58,17 @@ export default async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Conserver les mutations Auth et ses en-têtes anti-cache sur chaque sortie.
+  function rediriger(url: URL) {
+    const sortie = NextResponse.redirect(url)
+    for (const cookie of reponse.cookies.getAll()) sortie.cookies.set(cookie)
+    for (const nom of ['Cache-Control', 'Expires', 'Pragma']) {
+      const valeur = reponse.headers.get(nom)
+      if (valeur !== null) sortie.headers.set(nom, valeur)
+    }
+    return sortie
+  }
+
   const chemin = request.nextUrl.pathname
 
   const publique = cheminPublic(chemin)
@@ -65,7 +77,7 @@ export default async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/connexion'
     url.searchParams.set('suite', chemin)
-    return NextResponse.redirect(url)
+    return rediriger(url)
   }
 
   if (user && PAGES_AUTH.includes(chemin)) {
@@ -75,7 +87,7 @@ export default async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/entrer'
     url.search = ''
-    return NextResponse.redirect(url)
+    return rediriger(url)
   }
 
   return reponse

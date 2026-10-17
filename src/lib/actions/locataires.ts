@@ -58,10 +58,11 @@ export async function modifierLocataire(
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
   const supabase = await creerClientServeur()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { erreur: 'Votre session a expiré. Reconnectez-vous pour continuer.' }
 
-  // Pas de filtre sur bailleur_id : les RLS s'en chargent, et un id volé
-  // renverrait simplement zéro ligne modifiée.
-  const { error } = await supabase
+  // La RLS peut refuser une mutation sans erreur SQL : vérifier la ligne rendue.
+  const { data: modifie, error } = await supabase
     .from('locataires')
     .update({
       nom: analyse.data.nom,
@@ -70,8 +71,12 @@ export async function modifierLocataire(
       avatar: analyse.data.avatar || null,
     })
     .eq('id', id)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+  if (error) return { erreur: 'La modification n’a pas pu être enregistrée. Réessayez dans quelques instants.' }
+  // Même message pour une ressource absente ou étrangère : aucune information divulguée.
+  if (!modifie) return { erreur: 'Modification impossible : locataire introuvable ou non autorisé.' }
 
   revalidatePath('/pro/locataires')
   redirect('/pro/locataires')
@@ -79,7 +84,8 @@ export async function modifierLocataire(
 
 export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
   const supabase = await creerClientServeur()
-  const { error } = await supabase.from('locataires').delete().eq('id', id)
+  const { data: supprime, error } = await supabase.from('locataires').delete().eq('id', id)
+    .select('id').maybeSingle()
 
   if (error) {
     // FK RESTRICT depuis `baux` : un locataire sous bail n'est pas supprimable.
@@ -91,6 +97,8 @@ export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
     }
     return { erreur: `Suppression impossible : ${error.message}` }
   }
+
+  if (!supprime) return { erreur: 'Suppression impossible : locataire introuvable ou non autorisé.' }
 
   revalidatePath('/pro/locataires')
   return { succes: 'Locataire supprimé.' }

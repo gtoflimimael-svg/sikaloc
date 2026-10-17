@@ -51,7 +51,7 @@ export default async function PageLoyers() {
               bruit.
             */}
             {baux.length > 1 ? (
-              <h2 className="text-body-lg font-semibold text-ink">
+              <h2 className="section-title list-copy">
                 {bail.logement_adresse}
                 <span className="ml-sm text-body-sm font-normal text-mute">
                   {bail.logement_ville}
@@ -81,7 +81,7 @@ export default async function PageLoyers() {
       })}
 
       {/* ── La légende ───────────────────────────────────────────────────── */}
-      <section className="rounded-xl border border-hairline bg-canvas p-xl">
+      <section className="card list-card">
         <h2 className="text-body-md font-semibold text-ink">Ce que veut dire chaque état</h2>
         <dl className="mt-lg space-y-md">
           {(['Réglé', 'À venir', 'Impayé', 'À déterminer'] as const).map((etat) => (
@@ -103,7 +103,7 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
     <div className="space-y-xl">
       {parAnneeDecroissante(echeances).map(({ annee, mois }) => (
         <div key={annee}>
-          <h3 className="mb-sm text-body-sm font-semibold uppercase tracking-wide text-mute">
+          <h3 className="mb-sm text-body-sm font-semibold text-mute">
             {annee}
           </h3>
 
@@ -142,23 +142,16 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-lg">
-                  <div className="text-right">
-                    <p className="text-body-md font-semibold tabular text-ink">
-                      {formaterFCFA(echeance.loyer_mensuel)}
-                    </p>
-                    {Number(echeance.montant_paye) > 0 &&
-                    Number(echeance.montant_du) > 0 ? (
-                      /* Un versement partiel : dire ce qui reste, sinon le
-                         montant affiché passerait pour la totalité due. */
-                      <p className="text-caption text-mute">
-                        {formaterFCFA(echeance.montant_paye)} versés · reste{' '}
-                        {formaterFCFA(echeance.montant_du)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <BadgeLoyer etat={echeance.etat} />
-                </div>
+                <BadgeLoyer etat={echeance.etat} />
+                <dl className="me-amounts w-full">
+                  <div><dt>Loyer mensuel</dt><dd className="money">{formaterFCFA(echeance.loyer_mensuel)}</dd></div>
+                  {echeance.etat !== 'À déterminer' ? (
+                    <>
+                      <div><dt>Versements enregistrés</dt><dd className="money">{formaterFCFA(echeance.montant_paye)}</dd></div>
+                      <div><dt>Solde de la période</dt><dd className="money">{formaterFCFA(echeance.montant_du)}</dd></div>
+                    </>
+                  ) : null}
+                </dl>
               </li>
             ))}
           </ul>

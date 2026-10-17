@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { EnTeteMe } from '@/components/me/navigation'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { mesBaux } from '@/lib/locataire'
-import { ESPACE_ME } from '@/lib/roles'
+import { CANDIDATURES, ESPACE_ME } from '@/lib/roles'
 import { locataireCourant, rolesDuCompte } from '@/lib/session'
 
 /**
@@ -37,13 +37,16 @@ export default async function LayoutMe({ children }: { children: React.ReactNode
     mesBaux(),
   ])
 
-  if (baux.length === 0) redirect('/me/rejoindre')
+  // Sans bail rattaché : l'explication de l'invitation, sauf pour un candidat,
+  // qui vient chercher autre chose.
+  if (baux.length === 0) redirect(roles.estCandidat ? CANDIDATURES : '/me/rejoindre')
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas-soft">
+      <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <EnTeteMe email={compte.email} aussiBailleur={roles.estBailleur} />
 
-      <main className="flex-1 px-lg py-xl sm:px-xl sm:py-2xl">
+      <main id="contenu-principal" tabIndex={-1} className="app-main flex-1">
         <div className="mx-auto max-w-[900px]">
           <TransitionPage>{children}</TransitionPage>
         </div>

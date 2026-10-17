@@ -89,6 +89,15 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
           'Ce logement porte un bail. Supprimez le bail associé avant de retirer le logement.',
       }
     }
+    // Une annonce vivante (brouillon, publiée, suspendue) retient son
+    // logement : `annonces_logement_si_vivante`. Une annonce clôturée, elle,
+    // lui survit et ne bloque rien.
+    if (error.code === '23514' && error.message.includes('annonces_logement_si_vivante')) {
+      return {
+        erreur:
+          'Ce logement a une annonce en cours. Supprimez le brouillon ou clôturez l’annonce avant de retirer le logement.',
+      }
+    }
     return { erreur: `Suppression impossible : ${error.message}` }
   }
 

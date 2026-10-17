@@ -124,7 +124,8 @@ export type CanalCodeVerification = 'EMAIL' | 'SMS' | 'WHATSAPP'
  */
 export type CodeVerification = {
   id: string
-  bailleur_id: string
+  /** Le COMPTE (auth.users) vérifié — bailleur ou candidat. */
+  compte_id: string
   type: TypeCodeVerification
   canal: CanalCodeVerification
   /** Adresse ou numéro visé, tel qu'il l'a été au moment de la demande. */
@@ -184,6 +185,141 @@ export type Logement = {
   created_at: string
 }
 
+/* ═══ Sikaloc_Find — les annonces (migration 20260919000100) ═════════════════
+ *
+ * Une annonce n'est pas un logement : elle en recopie le type et la ville à sa
+ * création, et ne rend jamais l'adresse. Privée en S1 — seul le bailleur
+ * propriétaire la lit.
+ */
+
+export type StatutAnnonce = 'brouillon' | 'publiee' | 'suspendue' | 'cloturee'
+
+export type MotifClotureAnnonce = 'louee_sikaloc' | 'louee_ailleurs' | 'retiree'
+
+/**
+ * La liste fermée des équipements. La même vit dans la contrainte
+ * `annonces_equipements_valides` : une valeur ajoutée ici sans migration serait
+ * refusée par la base.
+ */
+export const EQUIPEMENTS_ANNONCE = [
+  'eau_courante',
+  'electricite',
+  'compteur_eau_individuel',
+  'compteur_electrique_individuel',
+  'douche_interieure',
+  'wc_interieur',
+  'cuisine_interieure',
+  'cour_cloturee',
+  'gardien',
+  'parking',
+  'climatisation',
+] as const
+
+export type EquipementAnnonce = (typeof EQUIPEMENTS_ANNONCE)[number]
+
+export type Annonce = {
+  id: string
+  /** Identifiant public : 10 caractères base32, générés par la base. Ne change jamais. */
+  reference: string
+  bailleur_id: string
+  /** NULL seulement pour une annonce clôturée dont le logement a été supprimé. */
+  logement_id: string | null
+  statut: StatutAnnonce
+  /** Renseigné si et seulement si l'annonce est clôturée. */
+  motif_cloture: MotifClotureAnnonce | null
+  type: TypeLogement
+  ville: string
+  quartier: string | null
+  /** 0 = entrer-coucher ou studio. */
+  chambres: number | null
+  surface_m2: number | null
+  /** Montants entiers en FCFA. */
+  loyer: number | null
+  /** NULL = non précisées, 0 = aucune. */
+  charges: number | null
+  /** La caution. Même nom que dans `baux`. */
+  depot_garantie: number | null
+  avance_mois: number | null
+  equipements: EquipementAnnonce[]
+  description: string | null
+  /** NULL = disponible dès maintenant. */
+  disponible_le: string | null
+  /** Premier passage à « publiée ». Jamais réécrite ensuite. */
+  publiee_le: string | null
+  cloturee_le: string | null
+  created_at: string
+  mis_a_jour_le: string
+}
+
+/**
+ * Une annonce vue par le public (migration 20260919000200).
+ *
+ * Ne décrit aucune table : c'est le retour de `annonces_publiees` et de
+ * `annonce_publiee`, qui énumèrent leurs colonnes. Ni `id`, ni `bailleur_id`,
+ * ni `logement_id`, ni statut : ce qui manque ici par rapport à `Annonce` est
+ * la réponse à « le public n'a pas à le connaître ».
+ */
+export type AnnoncePublique = Pick<
+  Annonce,
+  | 'reference'
+  | 'type'
+  | 'ville'
+  | 'quartier'
+  | 'chambres'
+  | 'surface_m2'
+  | 'loyer'
+  | 'charges'
+  | 'depot_garantie'
+  | 'avance_mois'
+  | 'equipements'
+  | 'description'
+  | 'disponible_le'
+  | 'publiee_le'
+> & {
+  /**
+   * La photo principale (migration 20260919000400) : sa position — la plus
+   * petite présente, 0 en temps normal — et ses dimensions. Jamais son chemin.
+   * Servie par `/find/photo/[reference]/[position]`.
+   */
+  photo_position: number | null
+  photo_largeur: number | null
+  photo_hauteur: number | null
+}
+
+/**
+ * Une photo d'annonce publiée, telle que la galerie la connaît
+ * (migration 20260919000500) : sa position et ses dimensions. Le fichier se
+ * lit par `/find/photo/[reference]/[position]` ; le chemin ne sort jamais.
+ */
+export type PhotoPublique = { position: number; largeur: number; hauteur: number }
+
+/**
+ * Le bailleur d'une annonce publiée, tel que le public le voit.
+ *
+ * `telephone_verifie` ne compte que les codes reçus par SMS ou WhatsApp : une
+ * attestation ADMIN n'en fait pas partie.
+ */
+export type ProfilPublicBailleur = {
+  /** « Koffi A. » — jamais le nom complet. */
+  nom_affiche: string | null
+  telephone_verifie: boolean
+}
+
+/** Une photo d'annonce. La position 0 est la photo principale ; 8 au plus. */
+export type AnnoncePhoto = {
+  id: string
+  annonce_id: string
+  bailleur_id: string
+  /** `<bailleur_id>/<annonce_id>/<uuid>.jpg|webp`, jamais une URL. */
+  chemin: string
+  position: number
+  largeur: number
+  hauteur: number
+  type_mime: 'image/jpeg' | 'image/webp'
+  poids: number
+  created_at: string
+}
+
 export type Bail = {
   id: string
   bailleur_id: string
@@ -239,6 +375,7 @@ export type Paiement = {
 }
 
 export type Quittance = {
+  donnees_financieres: unknown | null
   id: string
   bailleur_id: string
   paiement_id: string
@@ -252,6 +389,10 @@ export type Quittance = {
 }
 
 export type AbonnementTransaction = {
+  reference_fedapay: string | null
+  environnement_fedapay: 'sandbox' | 'live' | null
+  formule: 'Standard'
+  contrat_fedapay: 'historique' | 'standard_v1'
   id: string
   bailleur_id: string
   transaction_id: string
@@ -282,6 +423,72 @@ export type EmailAEnvoyer = {
   envoye_le: string | null
   tentatives: number
   derniere_erreur: string | null
+  etat_traitement: 'attente' | 'reserve' | 'accepte' | 'temporaire' | 'definitif' | 'indisponible' | 'incertain' | 'a_verifier'
+  reservation: string | null
+  reserve_jusqua: string | null
+  prochain_essai: string
+  premiere_tentative: string | null
+  transport_id: string | null
+}
+
+/**
+ * Une notification de candidature en attente d'envoi (S8-D).
+ *
+ * Même forme de service que `EmailAEnvoyer` — destinataire, modèle, variables,
+ * tentatives — pour que le même travailleur vide les deux files de la même
+ * manière. Ce qui diffère est ce qu'elle désigne : une candidature, et qui
+ * doit en être prévenu.
+ */
+export type NotificationCandidature = {
+  id: string
+  candidature_id: string
+  /** 'nouvelle' | 'en_etude' | 'acceptee' | 'refusee' | 'retiree' */
+  evenement: string
+  /** 'bailleur' | 'candidat' */
+  destinataire_role: string
+  /** L'adresse, figée au moment de l'événement. */
+  destinataire: string
+  modele: string
+  variables: Record<string, unknown>
+  cree_le: string
+  envoye_le: string | null
+  tentatives: number
+  derniere_erreur: string | null
+  etat_traitement: 'attente' | 'reserve' | 'accepte' | 'temporaire' | 'definitif' | 'indisponible' | 'incertain' | 'a_verifier'
+  reservation: string | null
+  reserve_jusqua: string | null
+  prochain_essai: string
+  premiere_tentative: string | null
+  transport_id: string | null
+}
+
+/**
+ * Une notification WhatsApp en attente d'envoi (S8-F).
+ *
+ * La jumelle de `NotificationCandidature`, pour le second canal : mêmes
+ * colonnes de service, mais `destinataire` porte un NUMÉRO (`+229…`) et non une
+ * adresse. Sa file est distincte pour qu'un échec WhatsApp n'atteigne jamais
+ * l'email.
+ */
+export type NotificationWhatsApp = {
+  id: string
+  candidature_id: string
+  evenement: string
+  destinataire_role: string
+  /** Le numéro canonique, figé au moment de l'événement. */
+  destinataire: string
+  modele: string
+  variables: Record<string, unknown>
+  cree_le: string
+  envoye_le: string | null
+  tentatives: number
+  derniere_erreur: string | null
+  etat_traitement: 'attente' | 'reserve' | 'accepte' | 'temporaire' | 'definitif' | 'indisponible' | 'incertain' | 'a_verifier'
+  reservation: string | null
+  reserve_jusqua: string | null
+  prochain_essai: string
+  premiere_tentative: string | null
+  transport_id: string | null
 }
 
 /**
@@ -384,6 +591,90 @@ export type InvitationLocataire = {
   annulee_le: string | null
   cree_le: string
   cree_par: string | null
+}
+
+/* ═══ Sikaloc_Find — candidats et candidatures (migration 20260919000700) ═══
+ *
+ * `candidats` est le profil du compte qui candidate : sa clé primaire EST
+ * l'identifiant du compte, comme pour `bailleurs`. Le nom et le téléphone y
+ * vivent parce qu'ils n'existent nulle part ailleurs pour ce compte ; l'email
+ * reste dans `auth.users`.
+ *
+ * Rien de tout cela n'est public : aucune fonction de Find ne l'expose.
+ */
+
+export type StatutCandidature = 'envoyee' | 'en_etude' | 'acceptee' | 'refusee' | 'retiree'
+
+export type Candidat = {
+  /** L'identifiant du compte lui-même. */
+  id: string
+  nom: string
+  /** Forme canonique, posée par `prive.canoniser_telephone`. */
+  telephone: string
+  /** Consentement WhatsApp — opt-in explicite, défaut faux (S8-F). */
+  notif_whatsapp: boolean
+  /** Vérification du numéro par code OTP. NULL = pas vérifié (S8-G). */
+  telephone_verifie_le: string | null
+  created_at: string
+  mis_a_jour_le: string
+}
+
+export type Candidature = {
+  id: string
+  /** NULL quand le compte a été supprimé : la candidature reste, l'identité part. */
+  candidat_id: string | null
+  /** L'identifiant interne de l'annonce, jamais sa référence publique. */
+  annonce_id: string
+  statut: StatutCandidature
+  message: string | null
+  /** Renseignée si et seulement si la candidature est acceptée ou refusée. */
+  repondue_le: string | null
+  created_at: string
+  mis_a_jour_le: string
+}
+
+/** Une candidature vue par son candidat, avec de quoi reconnaître l'annonce. */
+export type CandidatureDuCandidat = {
+  candidature_id: string
+  statut: StatutCandidature
+  message: string | null
+  deposee_le: string
+  repondue_le: string | null
+  reference: string
+  annonce_type: TypeLogement
+  annonce_ville: string
+  annonce_quartier: string | null
+  annonce_loyer: number | null
+  annonce_statut: StatutAnnonce
+}
+
+/**
+ * Une candidature vue par le bailleur de l'annonce : le nom du candidat, et
+ * rien d'autre de lui. Ni téléphone, ni email — leur transmission demande un
+ * consentement qui n'existe pas encore.
+ */
+export type CandidatureDuBailleur = {
+  candidature_id: string
+  reference: string
+  statut: StatutCandidature
+  message: string | null
+  deposee_le: string
+  repondue_le: string | null
+  /** NULL si le compte du candidat a été supprimé. */
+  candidat_nom: string | null
+}
+
+/**
+ * Le décompte d'une annonce, pour la liste de Sikaloc_Pro.
+ *
+ * Des entiers, et rien d'autre : de quoi écrire « 3 candidatures · 2
+ * nouvelles » sans rapatrier un seul message.
+ */
+export type CompteurCandidatures = {
+  annonce_id: string
+  total: number
+  /** Celles encore au statut « envoyée » : personne n'y a répondu. */
+  nouvelles: number
 }
 
 /* ═══ Sikaloc_Me — ce qu'un locataire lit ═══════════════════════════════════
@@ -594,11 +885,17 @@ export interface Database {
       signatures_apposees: Ligne<SignatureApposee>
       tentatives_connexion: Ligne<TentativeConnexion>
       emails_a_envoyer: Ligne<EmailAEnvoyer>
+      notifications_candidature: Ligne<NotificationCandidature>
+      notifications_whatsapp: Ligne<NotificationWhatsApp>
       journal_purges: Ligne<JournalPurge>
       compteurs_documents: Ligne<CompteurDocuments>
       inscriptions_guide: Ligne<InscriptionGuide>
       codes_verification: Ligne<CodeVerification>
       invitations_locataire: Ligne<InvitationLocataire>
+      annonces: Ligne<Annonce>
+      annonce_photos: Ligne<AnnoncePhoto>
+      candidats: Ligne<Candidat>
+      candidatures: Ligne<Candidature>
     }
     Views: {
       v_impayes: Vue<Impaye>
@@ -607,6 +904,35 @@ export interface Database {
       v_echeances: Vue<Echeance>
     }
     Functions: {
+      reserver_notification: {
+        Args: { p_file: string; p_operationnel: boolean }
+        Returns: Record<string, unknown>[]
+      }
+      terminer_notification: {
+        Args: { p_file: string; p_id: string; p_reservation: string; p_etat: string; p_transport_id?: string }
+        Returns: boolean
+      }
+      liberer_emission_quittance: {
+        Args: { p_acteur: string; p_paiement: string; p_jeton: string }
+        Returns: undefined
+      }
+      finaliser_abonnement_fedapay: {
+        Args: { p_transaction_id: string; p_reference: string; p_bailleur: string;
+          p_montant: number; p_devise: string; p_statut: string; p_formule: string; p_environnement: string }
+        Returns: string
+      }
+      preparer_emission_quittance: {
+        Args: { p_acteur: string; p_paiement: string; p_valider?: boolean }
+        Returns: unknown
+      }
+      publier_emission_quittance: {
+        Args: { p_acteur: string; p_paiement: string; p_jeton: string; p_hash: string; p_snapshot?: string | null; p_hash_signature?: string | null }
+        Returns: undefined
+      }
+      lire_quittance_autorisee: {
+        Args: { p_acteur: string; p_quittance: string }
+        Returns: unknown
+      }
       creer_premier_bail: {
         Args: {
           p_locataire_nom: string
@@ -626,7 +952,7 @@ export interface Database {
         Returns: { bailleur: string; ancien: string; nouveau: string }[]
       }
       /**
-       * Les rôles de l'appelant.
+       * Les rôles de l'appelant — bailleur, locataire, candidat, ou plusieurs.
        *
        * `SECURITY DEFINER` par nécessité : un locataire ne verrait jamais sa
        * propre ligne `locataires`, dont les politiques ne rendent que celles
@@ -634,7 +960,7 @@ export interface Database {
        */
       mes_roles: {
         Args: Record<string, never>
-        Returns: { est_bailleur: boolean; est_locataire: boolean }[]
+        Returns: { est_bailleur: boolean; est_locataire: boolean; est_candidat: boolean }[]
       }
       /**
        * Consomme une invitation et rattache le compte appelant à sa ligne
@@ -691,6 +1017,114 @@ export interface Database {
         Args: { p_actif: boolean }
         Returns: undefined
       }
+      /* ─── Sikaloc_Find — la vitrine ──────────────────────────────────
+       *
+       * Les portes du public sur les annonces (migration
+       * 20260919000200). `SECURITY DEFINER`, ouvertes à `anon` comme à
+       * `authenticated`, et indépendantes de l'appelant : une annonce
+       * publiée est la même pour tous.
+       */
+
+      /** Les annonces publiées, les plus récentes d'abord. 48 au plus par appel. */
+      annonces_publiees: {
+        Args: { p_limite?: number; p_decalage?: number }
+        Returns: AnnoncePublique[]
+      }
+      /** Une annonce par sa référence. Vide si elle n'est pas publiée. */
+      annonce_publiee: {
+        Args: { p_reference: string }
+        Returns: AnnoncePublique[]
+      }
+      /**
+       * Le chemin interne d'une photo d'annonce publiée. Réservée à la clé de
+       * service : seule la route `/find/photo/…` l'appelle.
+       */
+      photo_publiee: {
+        Args: { p_reference: string; p_position: number }
+        Returns: { chemin: string; type_mime: string }[]
+      }
+      /**
+       * La recherche (migration 20260919000600) : mêmes colonnes publiques que
+       * `annonces_publiees`, filtrées. Un argument `null` ne filtre rien.
+       */
+      annonces_recherche: {
+        Args: {
+          p_ville?: string | null
+          p_quartier?: string | null
+          p_type?: TypeLogement | null
+          p_loyer_min?: number | null
+          p_loyer_max?: number | null
+          p_chambres?: number | null
+          p_surface_min?: number | null
+          p_surface_max?: number | null
+          p_disponible?: boolean | null
+          p_equipements?: string[] | null
+          p_limite?: number
+          p_decalage?: number
+        }
+        Returns: AnnoncePublique[]
+      }
+      /** Villes et quartiers des annonces publiées, dédoublonnés. */
+      lieux_publies: {
+        Args: Record<string, never>
+        Returns: { ville: string; quartier: string | null }[]
+      }
+      /* ─── Candidatures (S8-A) ────────────────────────────────────────
+       *
+       * Réservées aux comptes connectés : aucune n'est ouverte à `anon`, et
+       * chacune rend un MOTIF plutôt qu'une erreur SQL.
+       */
+
+      /** Crée ou met à jour le profil candidat du compte appelant. */
+      enregistrer_profil_candidat: {
+        Args: { p_nom: string; p_telephone: string }
+        Returns: { motif: string }[]
+      }
+      /** Dépose une candidature sur une annonce publiée, désignée par sa référence. */
+      soumettre_candidature: {
+        Args: { p_reference: string; p_message?: string | null }
+        Returns: { candidature_id: string | null; motif: string }[]
+      }
+      /** Les candidatures du compte appelant. */
+      mes_candidatures: {
+        Args: Record<string, never>
+        Returns: CandidatureDuCandidat[]
+      }
+      /** Les candidatures reçues sur les annonces du bailleur appelant. */
+      candidatures_de_mes_annonces: {
+        Args: { p_reference?: string | null; p_limite?: number | null; p_decalage?: number }
+        Returns: CandidatureDuBailleur[]
+      }
+      /** Combien de candidatures par annonce, et combien restent sans réponse. */
+      candidatures_par_annonce: {
+        Args: Record<string, never>
+        Returns: CompteurCandidatures[]
+      }
+      /** Le candidat retire sa candidature — elle reste, marquée « retirée ». */
+      retirer_candidature: {
+        Args: { p_candidature_id: string }
+        Returns: { motif: string }[]
+      }
+      /** Le bailleur met en étude, accepte ou refuse une candidature de son annonce. */
+      repondre_candidature: {
+        Args: { p_candidature_id: string; p_statut: StatutCandidature }
+        Returns: { motif: string }[]
+      }
+      /** Les photos d'une annonce publiée, par position croissante. Sans chemin. */
+      photos_publiees: {
+        Args: { p_reference: string }
+        Returns: PhotoPublique[]
+      }
+      /** Référence et date de publication de chaque annonce publiée — le plan du site. */
+      annonces_publiees_sitemap: {
+        Args: Record<string, never>
+        Returns: { reference: string; publiee_le: string }[]
+      }
+      /** Le bailleur d'une annonce publiée : nom réduit, téléphone vérifié par code. */
+      profil_public_bailleur: {
+        Args: { p_reference: string }
+        Returns: ProfilPublicBailleur[]
+      }
       /** Purge J+90, volet base — réservé au service_role. */
       executer_purge_j90: {
         Args: Record<string, never>
@@ -706,6 +1140,9 @@ export interface Database {
       plan_abonnement: PlanAbonnement
       type_document: TypeDocument
       statut_abonnement: StatutAbonnement
+      statut_annonce: StatutAnnonce
+      motif_cloture_annonce: MotifClotureAnnonce
+      statut_candidature: StatutCandidature
     }
   }
 }

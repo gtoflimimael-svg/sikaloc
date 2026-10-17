@@ -68,6 +68,7 @@ export default async function LayoutApplication({
 
   return (
     <div className="flex min-h-screen bg-canvas-soft">
+      <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <BarreLaterale impayes={impayes} />
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -105,7 +106,7 @@ export default async function LayoutApplication({
           />
         </header>
 
-        <main className="flex-1 px-lg py-xl sm:px-xl sm:py-2xl">
+        <main id="contenu-principal" tabIndex={-1} className="app-main flex-1">
           <div className="mx-auto max-w-[1100px]">
             <TransitionPage>{children}</TransitionPage>
           </div>

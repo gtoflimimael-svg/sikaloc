@@ -45,32 +45,37 @@ import type {
 
 export const mesBaux = cache(async (): Promise<BailLocataire[]> => {
   const supabase = await creerClientServeur()
-  const { data } = await supabase.rpc('mes_baux')
+  const { data, error } = await supabase.rpc('mes_baux')
+  if (error) throw new Error('Les informations locatives sont momentanément indisponibles.')
   return data ?? []
 })
 
 export const mesEcheances = cache(async (): Promise<EcheanceLocataire[]> => {
   const supabase = await creerClientServeur()
-  const { data } = await supabase.rpc('mes_echeances')
+  const { data, error } = await supabase.rpc('mes_echeances')
+  if (error) throw new Error('Les informations locatives sont momentanément indisponibles.')
   return data ?? []
 })
 
 export const mesPaiements = cache(async (): Promise<PaiementLocataire[]> => {
   const supabase = await creerClientServeur()
-  const { data } = await supabase.rpc('mes_paiements')
+  const { data, error } = await supabase.rpc('mes_paiements')
+  if (error) throw new Error('Les informations locatives sont momentanément indisponibles.')
   return data ?? []
 })
 
 /**
  * Les préférences de notification de l'appelant.
  *
- * Rend « oui » par défaut si la lecture échoue : cet écran sert à consulter et
+ * Signale une erreur de lecture ; le défaut « oui » est réservé à une préférence absente.
+ * Cet écran sert à consulter et
  * à modifier un réglage, pas à décider d'un envoi. Le contrôle qui compte est
  * en base, dans les actions d'envoi, et il lit la colonne elle-même.
  */
 export const mesPreferences = cache(async (): Promise<{ notifEmail: boolean }> => {
   const supabase = await creerClientServeur()
-  const { data } = await supabase.rpc('mes_preferences')
+  const { data, error } = await supabase.rpc('mes_preferences')
+  if (error) throw new Error('Les informations locatives sont momentanément indisponibles.')
   return { notifEmail: data?.[0]?.notif_email !== false }
 })
 

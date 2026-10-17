@@ -46,13 +46,13 @@ export default function PageRejoindre() {
             numero={1}
             icone={<MessageCircle size={18} strokeWidth={2} aria-hidden="true" />}
             titre="Votre bailleur vous invite"
-            texte="Il vous envoie un lien par WhatsApp ou par email, depuis votre fiche dans Sikaloc_Pro."
+            texte="Il vous envoie un lien par email, depuis votre fiche dans Sikaloc_Pro."
           />
           <Etape
             numero={2}
             icone={<ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />}
             titre="Vous confirmez que c’est bien vous"
-            texte="Un code vous est envoyé. Il vérifie votre adresse et votre numéro avant tout accès."
+            texte="Créez votre compte ou connectez-vous avec l’adresse email destinataire de l’invitation."
           />
           <Etape
             numero={3}

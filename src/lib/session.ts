@@ -1,7 +1,13 @@
 import { redirect } from 'next/navigation'
 
 import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
-import { AUCUN_ROLE, destinationApresConnexion, ESPACE_PRO, type Roles } from '@/lib/roles'
+import {
+  AUCUN_ROLE,
+  CANDIDATURES,
+  destinationApresConnexion,
+  ESPACE_PRO,
+  type Roles,
+} from '@/lib/roles'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -70,6 +76,7 @@ export async function rolesDuCompte(): Promise<Roles> {
   return {
     estBailleur: ligne.est_bailleur === true,
     estLocataire: ligne.est_locataire === true,
+    estCandidat: ligne.est_candidat === true,
   }
 }
 
@@ -106,10 +113,13 @@ export async function locataireCourant(): Promise<{ compteId: string; email: str
   const roles = await rolesDuCompte()
 
   if (!roles.estLocataire) {
-    // Un bailleur égaré : on le renvoie chez lui. Quelqu'un sans aucun rôle —
-    // un compte créé depuis une invitation dont le rattachement a échoué —
-    // atterrit sur l'explication, qui est la seule réponse utile.
-    redirect(roles.estBailleur ? ESPACE_PRO.tableauDeBord : '/me/rejoindre')
+    // Un bailleur égaré : on le renvoie chez lui. Un candidat : vers ses
+    // candidatures — lui dire « demandez une invitation à votre bailleur »
+    // serait une réponse à une question qu'il n'a pas posée. Quelqu'un sans
+    // aucun rôle — un compte créé depuis une invitation dont le rattachement a
+    // échoué — atterrit sur l'explication, qui reste la seule réponse utile.
+    if (roles.estBailleur) redirect(ESPACE_PRO.tableauDeBord)
+    redirect(roles.estCandidat ? CANDIDATURES : '/me/rejoindre')
   }
 
   return { compteId: user.id, email: user.email ?? '' }
