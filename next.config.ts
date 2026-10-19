@@ -1,4 +1,6 @@
 import type { NextConfig } from 'next'
+import { isMaintenanceEnabled } from './src/lib/maintenance-policy.mjs'
+import { getSupabaseCspOrigins } from './src/lib/supabase-csp.mjs'
 
 /**
  * Politique de sécurité du contenu (CSP) — spec §9 « protéger le site contre
@@ -23,15 +25,17 @@ import type { NextConfig } from 'next'
  * la surface XSS réelle que ce relâchement expose est donc quasi nulle.
  */
 const isDev = process.env.NODE_ENV === 'development'
-const maintenanceActive = process.env.SIKALOC_MAINTENANCE_MODE !== 'off'
+const maintenanceActive = isMaintenanceEnabled(process.env.SIKALOC_MAINTENANCE_MODE)
+const { httpOrigin: supabaseHttpOrigin, websocketOrigin: supabaseWebsocketOrigin } =
+  getSupabaseCspOrigins(process.env.NEXT_PUBLIC_SUPABASE_URL)
 
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://pzrixjydnclwvjwqfbal.supabase.co;
+  img-src 'self' blob: data: ${supabaseHttpOrigin};
   font-src 'self';
-  connect-src 'self' https://pzrixjydnclwvjwqfbal.supabase.co wss://pzrixjydnclwvjwqfbal.supabase.co;
+  connect-src 'self' ${supabaseHttpOrigin} ${supabaseWebsocketOrigin};
   object-src 'none';
   base-uri 'self';
   form-action 'self';

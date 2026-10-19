@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "test:maintenance": "node tests/maintenance.test.mjs",
+    "verifier:migrations": "node scripts/verifier-migrations-statique.mjs",
     "verifier:quittance": "tsx scripts/verifier-quittance.ts",
     "verifier:parcours": "node scripts/parcours-e2e.mjs",
     "generer:logo-email": "tsx scripts/generer-logo-email.ts",
