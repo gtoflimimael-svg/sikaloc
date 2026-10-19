@@ -23,6 +23,7 @@ import type { NextConfig } from 'next'
  * la surface XSS réelle que ce relâchement expose est donc quasi nulle.
  */
 const isDev = process.env.NODE_ENV === 'development'
+const maintenanceActive = process.env.SIKALOC_MAINTENANCE_MODE !== 'off'
 
 const cspHeader = `
   default-src 'self';
@@ -107,6 +108,11 @@ const nextConfig: NextConfig = {
    * `/app` lui-même ET tous ses descendants.
    */
   async redirects() {
+    // Les redirects du fichier de configuration sont exécutées avant Proxy.
+    // Les suspendre en maintenance garantit notamment un 503 direct sur les
+    // anciennes URL `/app/*`, sans détour ni redirection.
+    if (maintenanceActive) return []
+
     return [
       {
         source: '/app/:chemin*',
