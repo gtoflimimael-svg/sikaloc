@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import localFont from 'next/font/local'
 
 import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
@@ -10,10 +9,10 @@ import './globals.css'
  * Typographie Sikaloc — StyreneB pour l'interface, Copernicus pour les titres
  * display, JetBrains Mono pour le contenu technique.
  *
- * Inter reste chargée : les fichiers de marque fournis ne couvrent que le latin
- * de base et ne contiennent aucun caractère accenté. Elle vient juste derrière
- * eux dans `--font-sans` pour rendre é/è/à/ç/œ/«»/—. Remplacer les fichiers de
- * `src/app/fonts/` par des versions complètes rend ce repli inerte.
+ * Inter est embarquée depuis le fichier variable local pour fournir un rendu
+ * cohérent des caractères accentués absents des fontes de marque, sans accès
+ * réseau au build ou au chargement du site. Sa licence OFL est conservée avec
+ * le fichier de police.
  */
 const styrene = localFont({
   src: [
@@ -48,11 +47,11 @@ const jetbrains = localFont({
   adjustFontFallback: false,
 })
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/Inter-Variable.ttf',
   variable: '--font-inter',
   display: 'swap',
-  weight: ['400', '500', '600', '800', '900'],
+  weight: '100 900',
 })
 
 /**

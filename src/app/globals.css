@@ -77,9 +77,8 @@
 
   /* ── Typographie ──────────────────────────────────────────────────────── */
   /* StyreneB pour l'interface, Copernicus pour le display, JetBrains Mono pour
-     le technique — chargées par next/font dans layout.tsx.
-     Inter suit StyreneB dans la pile : les fichiers de marque ne contiennent
-     pas les caractères accentués (voir le commentaire de layout.tsx). */
+     le technique — chargées localement par next/font dans layout.tsx.
+     Inter locale suit StyreneB pour les glyphes accentués non couverts. */
   --font-sans:
     var(--font-styrene), var(--font-inter), 'Inter', system-ui, -apple-system,
     BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
