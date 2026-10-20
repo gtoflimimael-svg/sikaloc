@@ -10,6 +10,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test:maintenance": "node tests/maintenance.test.mjs",
+    "test:email-otp": "node --experimental-strip-types tests/email-otp.test.mjs",
     "verifier:migrations": "node scripts/verifier-migrations-statique.mjs",
     "verifier:quittance": "tsx scripts/verifier-quittance.ts",
     "verifier:parcours": "node scripts/parcours-e2e.mjs",

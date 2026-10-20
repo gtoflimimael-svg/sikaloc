@@ -31,6 +31,7 @@ jobs:
       - run: npm ci
       - run: npm run verifier:migrations
       - run: npm run test:maintenance
+      - run: npm run test:email-otp
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build

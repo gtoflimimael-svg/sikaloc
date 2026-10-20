@@ -24,12 +24,16 @@ import {
 } from '@/lib/verification/otp'
 import {
   LIBELLE_CANAL,
-  LONGUEUR_CODE,
   MESSAGES_VERIFICATION,
   masquerEmail,
   masquerTelephone,
   type CanalTelephone,
 } from '@/lib/verification/regles'
+import {
+  LONGUEUR_CODE_EMAIL,
+  MESSAGES_FORMAT_CODE_EMAIL,
+  validerCodeEmail,
+} from '@/lib/verification/email-otp'
 import {
   poserTemoinVerification,
   retirerTemoinVerification,
@@ -70,7 +74,8 @@ function estCanal(valeur: unknown): valeur is CanalTelephone {
 // ═══ Email ═══════════════════════════════════════════════════════════════════
 
 /**
- * Valide le code à six chiffres reçu par email.
+ * Valide le code reçu par email avec la longueur configurée pour cet
+ * environnement. Le téléphone conserve son mécanisme et sa longueur propres.
  *
  * `verifyOtp` fait tout : il compare le code, marque l'email confirmé et ouvre
  * la session. C'est le remplaçant exact de l'ancien `exchangeCodeForSession`,
@@ -81,16 +86,21 @@ export async function verifierCodeEmail(
   donnees: FormData,
 ): Promise<EtatFormulaire> {
   const email = String(donnees.get('email') ?? '').trim().toLowerCase()
-  const code = String(donnees.get('code') ?? '').replace(/\D/g, '')
+  const verdict = validerCodeEmail(donnees.get('code'), LONGUEUR_CODE_EMAIL)
 
   if (!email) return { erreur: MESSAGES_VERIFICATION.code_absent }
 
-  if (code.length !== LONGUEUR_CODE) {
-    return { erreursChamps: { code: MESSAGES_VERIFICATION.code_incorrect } }
+  if (!verdict.ok) {
+    return { erreursChamps: { code: MESSAGES_FORMAT_CODE_EMAIL[verdict.motif] } }
   }
+  const code = verdict.code
 
   const supabase = await creerClientServeur()
-  const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'signup' })
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token: code,
+    type: 'signup',
+  })
 
   if (error) {
     // ─── Pourquoi un seul message pour deux causes ───────────────────────
