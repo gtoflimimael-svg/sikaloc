@@ -31,8 +31,8 @@ export const metadata: Metadata = { title: 'Vérification de votre compte' }
  *
  * ─── Trois situations, une seule page ───────────────────────────────────────
  *
- *   1. Session ouverte  → l'email est déjà confirmé (GoTrue n'ouvre de session
- *                         qu'à ce moment) : reste le téléphone.
+ *   1. Session ouverte  → l'email est confirmé ; le téléphone ne reste une
+ *                         étape que si un fournisseur réel est opérationnel.
  *   2. Pas de session, témoin présent → on sort de l'inscription : saisie du
  *                         code email.
  *   3. Ni l'un ni l'autre → on revient un autre jour : on redemande l'adresse.
@@ -59,20 +59,21 @@ export default async function PageVerification() {
      * existe, mais rien ne permet de le lire tant que l'email n'est pas
      * confirmé.
      *
-     * Le témoin d'invitation, lui, répond : il n'est posé que par
-     * `rejoindreAvecInvitation`, c'est-à-dire par un locataire qui vient de
-     * créer son compte depuis un lien reçu de son bailleur. Sa présence suffit
-     * à savoir qu'aucune étape téléphone ne suivra.
+     * Les témoins d'invitation et de candidature identifient les parcours
+     * non-bailleur, qui ne doivent pas recevoir l'étape téléphone du bailleur.
      */
     const invitationEnAttente = Boolean(await lireTemoinInvitation())
+    const candidatureEnAttente = Boolean(await lireTemoinCandidature())
+    const telephoneExigible =
+      verificationTelephoneExigible() && !invitationEnAttente && !candidatureEnAttente
 
     return (
       <CarteAuth
         titre="Vérifiez votre compte"
         description={
-          invitationEnAttente
-            ? 'Une étape : confirmez votre adresse email.'
-            : 'Deux étapes : votre adresse email, puis votre numéro de téléphone.'
+          telephoneExigible
+            ? 'Confirmez votre adresse email, puis votre numéro de téléphone.'
+            : 'Confirmez votre adresse email pour activer votre compte.'
         }
         bas={
           <>
@@ -87,7 +88,7 @@ export default async function PageVerification() {
           <ProgressionVerification
             etat={{ emailVerifie: false, telephoneVerifie: false }}
             courante="email"
-            telephoneConcerne={!invitationEnAttente}
+            telephoneConcerne={telephoneExigible}
           />
 
           {temoin ? (
@@ -131,8 +132,8 @@ export default async function PageVerification() {
    * explicitement un profil bailleur. Son numéro, son bailleur le détient déjà
    * et l'a saisi lui-même — Sikaloc ne le lui redemandera jamais.
    *
-   * Sans cette distinction, l'écran annonçait à un locataire « Téléphone pas
-   * encore vérifié · 1 étape restante » pour une étape qui ne viendrait pas.
+   * Sans cette distinction, l'écran pourrait annoncer à un locataire ou un
+   * candidat une étape téléphone qui ne viendra pas.
    *
    * Un candidat (Sikaloc_Find) n'a pas non plus de ligne `bailleurs`, et prend
    * donc le même chemin : son numéro est déjà dans son profil candidat, et
@@ -141,16 +142,15 @@ export default async function PageVerification() {
   const compteLocataire = profil === null
   const temoinCandidature = await lireTemoinCandidature()
 
-  // Aucun canal ne peut acheminer un code : l'exigence du téléphone est
-  // suspendue, sinon ce compte serait enfermé dehors sans recours. Elle se
-  // rétablit d'elle-même dès qu'un fournisseur est branché.
+  // Un compte non-bailleur et un canal non opérationnel ne peuvent pas imposer
+  // une vérification téléphone. La présence de clés seules ne suffit pas.
   const canaux = canauxDisponibles()
   const telephoneExigible = verificationTelephoneExigible() && !compteLocataire
 
   // ── Tout est fait ────────────────────────────────────────────────────────
   if (comptePleinementVerifie(etat, { telephoneExigible })) {
     return (
-      <CarteAuth titre="Compte vérifié">
+      <CarteAuth titre={telephoneExigible ? 'Compte vérifié' : 'Votre compte est prêt'}>
         <div className="space-y-xl">
           <div className="flex items-start gap-md rounded-md border border-positive/30 bg-positive-pale p-lg">
             <CheckCircle2
@@ -164,14 +164,14 @@ export default async function PageVerification() {
                 ? 'Votre adresse email est confirmée. Votre compte est prêt.'
                 : etat.telephoneVerifie
                   ? 'Votre adresse email et votre numéro de téléphone sont confirmés.'
-                  : 'Votre adresse email est confirmée. La vérification du numéro sera demandée dès qu’elle sera disponible.'}
+                  : 'Votre adresse email est confirmée. Votre compte est prêt ; votre numéro reste non vérifié et ne bloque pas votre accès.'}
             </p>
           </div>
 
           <ProgressionVerification
             etat={etat}
             courante={null}
-            telephoneConcerne={!compteLocataire}
+            telephoneConcerne={telephoneExigible}
           />
 
           {/*
@@ -212,7 +212,11 @@ export default async function PageVerification() {
       description="Votre adresse email est confirmée. Il reste votre numéro de téléphone."
     >
       <div className="space-y-xl">
-        <ProgressionVerification etat={etat} courante="telephone" />
+        <ProgressionVerification
+          etat={etat}
+          courante="telephone"
+          telephoneConcerne={telephoneExigible}
+        />
 
         <FormulaireCodeTelephone
           telephoneMasque={masquerTelephone(profil?.telephone ?? '')}

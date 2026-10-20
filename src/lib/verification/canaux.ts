@@ -1,7 +1,13 @@
 import 'server-only'
 
 import { formaterTelephone } from '@/lib/telephone'
-import { LIBELLE_CANAL, type CanalTelephone } from '@/lib/verification/regles'
+import {
+  CANAUX_TELEPHONE,
+  LIBELLE_CANAL,
+  etatCanalDepuisConfiguration,
+  telephoneExigiblePourActivation,
+  type CanalTelephone,
+} from '@/lib/verification/regles'
 
 /**
  * Les canaux par lesquels un code peut atteindre un téléphone.
@@ -95,22 +101,25 @@ export function etatCanal(canal: CanalTelephone): EtatCanal {
   const cles = canal === 'SMS'
     ? ['SMS_FOURNISSEUR', 'SMS_IDENTIFIANT', 'SMS_JETON', 'SMS_EXPEDITEUR']
     : ['WHATSAPP_ID_TELEPHONE', 'WHATSAPP_JETON']
-  const presentes = cles.filter((cle) => Boolean(process.env[cle]))
-  if (presentes.length === 0) return 'desactive'
-  return presentes.length === cles.length ? 'configure' : 'indisponible'
+  const nombrePresentes = cles.filter((cle) => Boolean(process.env[cle])).length
+  return etatCanalDepuisConfiguration(cles.length, nombrePresentes)
 }
 
 export function canalDisponible(canal: CanalTelephone): boolean {
   return etatCanal(canal) === 'operationnel'
 }
 
-/** Conserve l'exigence antérieure quand des identifiants étaient déclarés.
- * L'indisponibilité d'un transport ne doit pas devenir un contournement.
+/**
+ * Le téléphone n'est exigible que si le code déclare au moins un transport
+ * fournisseur réellement opérationnel. Des clés présentes mais un adaptateur
+ * absent donnent `configure`, pas `operationnel`. La trappe console est utile
+ * aux tests locaux, mais ne constitue pas un fournisseur validé.
  */
 export function verificationTelephoneExigible(): boolean {
-  return trappeDeveloppement()
-    || Boolean(process.env.SMS_FOURNISSEUR && process.env.SMS_JETON)
-    || Boolean(process.env.WHATSAPP_ID_TELEPHONE && process.env.WHATSAPP_JETON)
+  return telephoneExigiblePourActivation(
+    CANAUX_TELEPHONE.map(etatCanal),
+    { trappeDeveloppement: trappeDeveloppement() },
+  )
 }
 
 /**

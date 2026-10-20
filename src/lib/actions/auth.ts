@@ -87,9 +87,10 @@ export async function inscrire(
 
   // ── Vers la vérification, pas vers l'application ────────────────────────
   //
-  // Un compte fraîchement créé n'est vérifié sur rien : ni l'adresse email, ni
-  // le numéro. Il n'a donc pas à atteindre `/pro/onboarding`, et `session.ts`
-  // l'en empêcherait de toute façon.
+  // Un compte fraîchement créé n'est pas encore confirmé par email. L'email
+  // reste obligatoire pour ouvrir l'espace bailleur ; le téléphone n'est pas
+  // une preuve par sa seule saisie et ne bloque pas l'activation tant qu'aucun
+  // fournisseur réel n'est opérationnel.
   //
   // Le témoin porte l'adresse jusqu'à l'écran de saisie : GoTrue n'ouvre pas
   // de session avant la validation du code, il n'y a donc rien d'autre pour
@@ -98,9 +99,9 @@ export async function inscrire(
 
   revalidatePath('/', 'layout')
 
-  // `data.session` est renseignée si la confirmation d'email est désactivée sur
-  // le projet. Le parcours reste le même : la vérification du téléphone n'est
-  // pas faite, et c'est `/verification` qui la conduit.
+  // `data.session` peut être renseignée si la confirmation d'email est
+  // désactivée côté projet. Le garde serveur `bailleurCourant()` contrôle quand
+  // même `email_confirmed_at` avant tout accès à l'espace bailleur.
   void data
   redirect('/verification')
 }

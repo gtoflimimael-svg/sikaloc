@@ -31,7 +31,7 @@ import {
  */
 
 export interface EtatComplet extends EtatVerification {
-  /** Un canal peut-il réellement acheminer un code ? Sinon l'exigence est suspendue. */
+  /** Un fournisseur réel est-il opérationnel et rend-il le téléphone obligatoire ? */
   telephoneExigible: boolean
   email: string
   telephone: string
@@ -62,9 +62,11 @@ export async function etatVerification(bailleur: Bailleur): Promise<EtatComplet>
     telephoneVerifie: Boolean(bailleur.telephone_verifie_le),
   }
 
-  // Conserver la règle existante quand aucune configuration n'est déclarée.
-  // Un transport déclaré mais inopérant ne doit pas suspendre l'exigence.
+  // Des variables seules ne prouvent pas qu'un fournisseur sait envoyer un
+  // code. La règle d'exigibilité repose sur l'état opérationnel déclaré par
+  // l'adaptateur, pas sur la présence d'identifiants.
   const telephoneExigible = verificationTelephoneExigible()
+  const options = { telephoneExigible }
 
   return {
     ...etat,
@@ -73,9 +75,9 @@ export async function etatVerification(bailleur: Bailleur): Promise<EtatComplet>
     // `bailleurs.email` n'en est qu'une copie, posée à l'inscription.
     email: user?.email ?? bailleur.email,
     telephone: bailleur.telephone,
-    pleinementVerifie: comptePleinementVerifie(etat, { telephoneExigible }),
-    etape: etapeCourante(etat),
-    restantes: etapesRestantes(etat),
+    pleinementVerifie: comptePleinementVerifie(etat, options),
+    etape: etapeCourante(etat, options),
+    restantes: etapesRestantes(etat, options),
     canal: bailleur.telephone_canal_verification,
     emailVerifieLe,
     telephoneVerifieLe: bailleur.telephone_verifie_le,
