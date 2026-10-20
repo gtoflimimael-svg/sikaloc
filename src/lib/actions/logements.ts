@@ -32,11 +32,13 @@ export async function creerLogement(
   // Plafond du plan Gratuit (§4.2) : contrôlé à la création, pas à l'affichage.
   const limite = capacites(bailleur).maxLogements
   if (limite !== null) {
-    const { count } = await supabase
+    const { count, error: erreurComptage } = await supabase
       .from('logements')
       .select('id', { count: 'exact', head: true })
+      .eq('bailleur_id', bailleur.id)
 
-    if ((count ?? 0) >= limite) return { erreur: messageLimiteLogements(count ?? 0) }
+    if (erreurComptage || count === null) return { erreur: 'Impossible de vérifier la limite de logements. Réessayez dans quelques instants.' }
+    if (count >= limite) return { erreur: messageLimiteLogements(count) }
   }
 
   const { error } = await supabase.from('logements').insert({

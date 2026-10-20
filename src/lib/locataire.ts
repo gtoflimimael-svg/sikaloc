@@ -9,7 +9,6 @@ import type {
   EcheanceLocataire,
   EtatEcheance,
   PaiementLocataire,
-  QuittanceLocataire,
 } from '@/lib/types/database'
 
 /**
@@ -79,18 +78,6 @@ export const mesPreferences = cache(async (): Promise<{ notifEmail: boolean }> =
   if (error) throw new Error('Les informations locatives sont momentanément indisponibles.')
   return { notifEmail: data?.[0]?.notif_email !== false }
 })
-
-/**
- * Une quittance de l'appelant — ou `null` si elle ne le concerne pas.
- *
- * Rend le chemin du fichier : réservé au serveur qui le sert. Ne jamais passer
- * cet objet tel quel à un composant client.
- */
-export async function maQuittance(id: string): Promise<QuittanceLocataire | null> {
-  const supabase = await creerClientServeur()
-  const { data } = await supabase.rpc('ma_quittance', { p_quittance_id: id })
-  return data?.[0] ?? null
-}
 
 // ═══ Présentation ════════════════════════════════════════════════════════════
 

@@ -15,6 +15,7 @@ import {
   type ParametresBruts,
 } from '@/lib/find/recherche'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
+import { lireNumeroPage } from '@/lib/pagination'
 import type { AnnoncePublique } from '@/lib/types/database'
 
 /**
@@ -40,20 +41,11 @@ import type { AnnoncePublique } from '@/lib/types/database'
  */
 
 const PAR_PAGE = 24
-const PAGE_MAX = 1000
 
 const TITRE = 'Logements à louer au Bénin — Sikaloc_Find'
 const DESCRIPTION =
   'Appartements, maisons, studios et boutiques à louer au Bénin, publiés par leurs bailleurs sur ' +
   'Sikaloc. Loyer, charges, caution, équipements et disponibilité, sans adresse exacte.'
-
-/** `undefined` → page 1 ; un entier valide → ce nombre ; tout le reste → `null`. */
-function lirePage(brut: string | string[] | undefined): number | null {
-  if (brut === undefined) return 1
-  if (typeof brut !== 'string' || !/^[1-9]\d{0,3}$/.test(brut)) return null
-  const page = Number(brut)
-  return page <= PAGE_MAX ? page : null
-}
 
 export async function generateMetadata({
   searchParams,
@@ -61,7 +53,7 @@ export async function generateMetadata({
   searchParams: Promise<ParametresBruts>
 }): Promise<Metadata> {
   const parametres = await searchParams
-  const page = lirePage(parametres.page)
+  const page = lireNumeroPage(parametres.page)
   const filtres = lireFiltres(parametres)
   const filtree = !aucunFiltre(filtres)
 
@@ -91,7 +83,7 @@ export async function generateMetadata({
 export default async function PageFind({ searchParams }: { searchParams: Promise<ParametresBruts> }) {
   const parametres = await searchParams
   if (parametres.page === '1') redirect(urlRecherche(lireFiltres(parametres)))
-  const page = lirePage(parametres.page)
+  const page = lireNumeroPage(parametres.page)
   if (page === null) notFound()
 
   const filtres = lireFiltres(parametres)

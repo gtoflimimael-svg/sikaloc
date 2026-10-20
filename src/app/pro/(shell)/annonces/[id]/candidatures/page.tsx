@@ -8,6 +8,7 @@ import { repondreCandidature } from '@/lib/actions/candidatures-pro'
 import { LIBELLES_STATUT, libelleChambres } from '@/lib/annonces/libelles'
 import { LIBELLES_STATUT_CANDIDATURE, TON_STATUT_CANDIDATURE } from '@/lib/candidatures/messages'
 import { formaterDate } from '@/lib/format'
+import { lireNumeroPage } from '@/lib/pagination'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { CandidatureDuBailleur, StatutAnnonce } from '@/lib/types/database'
@@ -46,12 +47,13 @@ export default async function PageCandidaturesRecues({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string | string[] }>
 }) {
   const [{ id }, { page }] = await Promise.all([params, searchParams])
   if (!UUID.test(id)) notFound()
 
-  const numeroPage = Math.max(1, Number.parseInt(page ?? '1', 10) || 1)
+  const numeroPage = lireNumeroPage(page)
+  if (numeroPage === null) notFound()
 
   const supabase = await creerClientServeur()
   const [, { data: annonce }] = await Promise.all([
@@ -112,7 +114,8 @@ export default async function PageCandidaturesRecues({
 
       <p className="text-body-sm text-mute">
         Le candidat vous a transmis son nom et son message. Son téléphone et son adresse email ne
-        vous sont pas communiqués, et Sikaloc ne le prévient pas encore de votre réponse.
+        vous sont pas communiqués. Après votre décision, un email de réponse est mis en file pour
+        le candidat ; sa livraison dépend du service d’envoi et n’est pas garantie par ce clic.
       </p>
 
       {candidatures.length === 0 ? (

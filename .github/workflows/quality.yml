@@ -35,6 +35,7 @@ jobs:
       - run: npm run test:verification
       - run: npm run test:email-otp
       - run: npm run test:loyers
+      - run: npm run test:lot2b
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
