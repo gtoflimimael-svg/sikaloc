@@ -13,6 +13,7 @@
     "test:security-mutations": "node tests/security-mutations.test.mjs",
     "test:verification": "node --experimental-strip-types tests/verification-regles.test.mjs",
     "test:email-otp": "node --experimental-strip-types tests/email-otp.test.mjs",
+    "test:loyers": "node --experimental-strip-types tests/loyers-echeances.test.mjs",
     "verifier:migrations": "node scripts/verifier-migrations-statique.mjs",
     "verifier:quittance": "tsx scripts/verifier-quittance.ts",
     "verifier:parcours": "node scripts/parcours-e2e.mjs",

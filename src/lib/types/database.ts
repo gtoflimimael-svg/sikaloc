@@ -348,6 +348,14 @@ export type Bail = {
   created_at: string
 }
 
+/** Tarif contractuel d'un bail, effectif à partir du mois indiqué. */
+export type BailLoyer = {
+  bail_id: string
+  periode_debut: string
+  loyer_mensuel: number
+  cree_le: string
+}
+
 export type Paiement = {
   id: string
   bailleur_id: string
@@ -558,6 +566,8 @@ export type Echeance = {
   tolerance_jours: number
   montant_paye: number
   montant_du: number
+  /** Part payée au-delà du loyer de ce mois, non affectée au mois suivant. */
+  montant_excedentaire: number
   jours_de_retard: number
   /** L'échéance était déjà échue quand le bail a été enregistré dans Sikaloc. */
   anterieure: boolean
@@ -728,6 +738,7 @@ export type EcheanceLocataire = {
   loyer_mensuel: number
   montant_paye: number
   montant_du: number
+  montant_excedentaire: number
   jours_de_retard: number
   etat: EtatEcheance
 }
@@ -878,6 +889,7 @@ export interface Database {
       locataires: Ligne<Locataire>
       logements: Ligne<Logement>
       baux: Ligne<Bail>
+      baux_loyers: Ligne<BailLoyer>
       paiements: Ligne<Paiement>
       quittances: Ligne<Quittance>
       abonnements_transactions: Ligne<AbonnementTransaction>

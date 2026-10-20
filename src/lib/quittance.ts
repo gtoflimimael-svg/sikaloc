@@ -7,7 +7,16 @@ import { DocumentQuittance, type DonneesQuittance } from '@/lib/pdf/document-qui
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { bailleurAvecEcriture } from '@/lib/session'
-import type { Bail, Bailleur, Logement, Locataire, Paiement, Quittance } from '@/lib/types/database'
+import type {
+  Bail,
+  Bailleur,
+  Logement,
+  Locataire,
+  Paiement,
+  Quittance,
+  TypePaiement,
+} from '@/lib/types/database'
+import { typeDocumentPaiement } from '@/lib/documents-paiement'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -61,8 +70,9 @@ interface ContexteQuittance {
   locataire: Locataire
   finances?: {
     montant: number; cumul_loyer: number; loyer_mensuel: number; solde_restant: number;
+    trop_percu?: number
     est_partiel: boolean; periode_debut: string; periode_fin: string;
-    date_paiement: string; mode_paiement: string; type_paiement: string
+    date_paiement: string; mode_paiement: string; type_paiement: TypePaiement
   }
 }
 
@@ -102,9 +112,17 @@ async function donneesDuContexte(
     chargerSignature(bailleur.signature_chemin),
     chargerSignature(locataire.signature_chemin ?? null),
   ])
+  const typePaiement = finances?.type_paiement ?? paiement.type_paiement
+  const estPartiel = finances?.est_partiel ?? paiement.est_partiel
+  const loyerMensuel = typePaiement === 'Loyer'
+    ? Number(finances?.loyer_mensuel ?? bail.loyer_mensuel)
+    : 0
+  const montantCumule = typePaiement === 'Loyer' && finances
+    ? Number(finances.cumul_loyer)
+    : undefined
   return {
     numeroDocument: options.numeroDocument ?? '',
-    type: (finances?.est_partiel ?? paiement.est_partiel) ? 'Reçu' : 'Quittance',
+    type: typeDocumentPaiement(typePaiement, estPartiel),
     dateGeneration: options.dateGeneration ?? new Date().toISOString(),
     pays: logement.pays ?? 'Bénin',
     bailleurNom: bailleur.nom, bailleurTelephone: bailleur.telephone,
@@ -113,12 +131,15 @@ async function donneesDuContexte(
     signatureLocataireDataUri: signatureLocataire,
     logementAdresse: logement.adresse, logementVille: logement.ville,
     logementPays: logement.pays ?? 'Bénin', logementType: logement.type,
-    loyerMensuel: Number(finances?.loyer_mensuel ?? bail.loyer_mensuel),
-    montantCumule: finances ? Number(finances.cumul_loyer) : undefined,
+    loyerMensuel,
+    montantCumule,
+    montantExcedentaire: typePaiement === 'Loyer'
+      ? Number(finances?.trop_percu ?? Math.max(0, (montantCumule ?? Number(paiement.montant)) - loyerMensuel))
+      : 0,
     periodeDebut: finances?.periode_debut ?? paiement.periode_debut, periodeFin: finances?.periode_fin ?? paiement.periode_fin,
     montant: Number(finances?.montant ?? paiement.montant), datePaiement: finances?.date_paiement ?? paiement.date_paiement!,
-    modePaiement: finances?.mode_paiement ?? paiement.mode_paiement, typePaiement: finances?.type_paiement ?? paiement.type_paiement,
-    estPartiel: finances?.est_partiel ?? paiement.est_partiel, signatureDataUri: signatureBailleur,
+    modePaiement: finances?.mode_paiement ?? paiement.mode_paiement, typePaiement,
+    estPartiel, signatureDataUri: signatureBailleur,
     apercu: options.apercu,
   }
 }
@@ -235,8 +256,14 @@ export async function genererEtStocker(
       publicationCommencee = !/^[0-9A-Z]{5}$/.test(publication.code ?? '')
       throw new Error(REFUS_QUITTANCE)
     }
-    return { id: quittance.id, numeroDocument: quittance.numero_document ?? '',
-      type: (contexte.finances?.est_partiel ?? contexte.paiement.est_partiel) ? 'Reçu' : 'Quittance' }
+    return {
+      id: quittance.id,
+      numeroDocument: quittance.numero_document ?? '',
+      type: typeDocumentPaiement(
+        contexte.finances?.type_paiement ?? contexte.paiement.type_paiement,
+        contexte.finances?.est_partiel ?? contexte.paiement.est_partiel,
+      ),
+    }
   } catch {
     if (!publicationCommencee) {
       // Uniquement les objets de CETTE tentative; jamais un document antérieur.

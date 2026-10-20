@@ -32,6 +32,10 @@ export const metadata: Metadata = { title: 'Mes loyers' }
  */
 export default async function PageLoyers() {
   const [baux, echeances] = await Promise.all([mesBaux(), mesEcheances()])
+  const excedentTotal = echeances.reduce(
+    (total, echeance) => total + Number(echeance.montant_excedentaire),
+    0,
+  )
 
   return (
     <div className="space-y-2xl">
@@ -39,6 +43,13 @@ export default async function PageLoyers() {
         titre="Mes loyers"
         description="Chaque mois de votre bail, et ce que Sikaloc en sait."
       />
+
+      {excedentTotal > 0 ? (
+        <p className="rounded-md border border-hairline bg-canvas-soft p-md text-body-sm text-mute">
+          Les versements supérieurs au loyer de leur mois restent affichés comme
+          excédents non reportés. Ils ne sont pas automatiquement imputés au mois suivant.
+        </p>
+      ) : null}
 
       {baux.map((bail) => {
         const duBail = echeances.filter((e) => e.bail_id === bail.bail_id)
@@ -63,12 +74,12 @@ export default async function PageLoyers() {
               <EtatVide
                 icone={<CalendarDays size={32} strokeWidth={1.5} aria-hidden="true" />}
                 titre={
-                  sansEcheancesCalculees(bail)
+                  sansEcheancesCalculees(bail, duBail)
                     ? 'Ce bail est résilié'
                     : 'Aucun mois à afficher'
                 }
                 description={
-                  sansEcheancesCalculees(bail)
+                  sansEcheancesCalculees(bail, duBail)
                     ? 'Les loyers ne sont plus calculés pour un bail résilié. Vos paiements et vos quittances restent consultables dans l’onglet « Mes paiements ».'
                     : 'Votre bail vient d’être enregistré : le premier mois apparaîtra ici dès qu’il commencera.'
                 }
@@ -149,6 +160,12 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
                     <>
                       <div><dt>Versements enregistrés</dt><dd className="money">{formaterFCFA(echeance.montant_paye)}</dd></div>
                       <div><dt>Solde de la période</dt><dd className="money">{formaterFCFA(echeance.montant_du)}</dd></div>
+                      {echeance.montant_excedentaire > 0 ? (
+                        <div>
+                          <dt>Excédent non reporté</dt>
+                          <dd className="money">{formaterFCFA(echeance.montant_excedentaire)}</dd>
+                        </div>
+                      ) : null}
                     </>
                   ) : null}
                 </dl>

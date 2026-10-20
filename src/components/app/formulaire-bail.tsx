@@ -87,6 +87,13 @@ export function FormulaireBail({
           requis
           erreur={etat.erreursChamps?.loyerMensuel}
         />
+        {bail ? (
+          <p className="-mt-md text-caption text-mute">
+            Le nouveau montant prend effet sur la période du mois en cours (ou au
+            début du bail s’il commence plus tard). Les périodes passées sont
+            conservées; un loyer déjà saisi pour la période empêche sa modification.
+          </p>
+        ) : null}
 
         <div className="grid gap-lg sm:grid-cols-2">
           <ChampTexte

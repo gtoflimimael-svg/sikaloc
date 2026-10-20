@@ -2,6 +2,7 @@ import 'server-only'
 
 import { cache } from 'react'
 
+import { parAnnee } from '@/lib/echeances'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type {
   BailLocataire,
@@ -178,31 +179,16 @@ export function resteADevoir(echeances: EcheanceLocataire[], bailId: string): nu
 export function parAnneeDecroissante(
   echeances: EcheanceLocataire[],
 ): { annee: string; mois: EcheanceLocataire[] }[] {
-  const groupes = new Map<string, EcheanceLocataire[]>()
-
-  for (const echeance of echeances) {
-    const annee = echeance.periode_debut.slice(0, 4)
-    const liste = groupes.get(annee)
-    if (liste) liste.push(echeance)
-    else groupes.set(annee, [echeance])
-  }
-
-  return [...groupes.entries()]
-    .map(([annee, mois]) => ({
-      annee,
-      mois: mois.sort((a, b) => b.periode_debut.localeCompare(a.periode_debut)),
-    }))
-    .sort((a, b) => b.annee.localeCompare(a.annee))
+  return parAnnee(echeances, 'desc')
 }
 
 /**
- * Un bail résilié conserve-t-il des échéances à afficher ?
- *
- * Non : `v_echeances` ne calcule que les baux actifs. Un bail résilié apparaît
- * donc sans aucun mois, et l'écran doit le dire au lieu de laisser une liste
- * vide qui ressemble à une panne. C'est ce que cette fonction permet de
- * distinguer.
+ * Distingue un bail résilié sans période restante d'un bail résilié dont
+ * l'historique ou les impayés restent à consulter.
  */
-export function sansEcheancesCalculees(bail: BailLocataire): boolean {
-  return bail.statut !== 'Actif'
+export function sansEcheancesCalculees(
+  bail: BailLocataire,
+  echeances: EcheanceLocataire[],
+): boolean {
+  return bail.statut !== 'Actif' && !echeances.some((e) => e.bail_id === bail.bail_id)
 }
