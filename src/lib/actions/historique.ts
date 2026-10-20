@@ -75,6 +75,7 @@ export async function declarerHistorique(
     .from('v_echeances')
     .select('*')
     .eq('bail_id', bailId)
+    .eq('bailleur_id', bailleur.id)
 
   const echeances = (lignes ?? []) as Echeance[]
   const declarables = echeancesADeclarer(echeances)
@@ -111,49 +112,16 @@ export async function declarerHistorique(
     retenues.push(echeance)
   }
 
-  // ── Écriture ─────────────────────────────────────────────────────────────
-  //
-  // Le montant vient de l'échéance, pas du formulaire : le loyer d'un mois est
-  // une donnée du bail, jamais quelque chose que l'écran décide.
-  if (retenues.length > 0) {
-    const { error } = await supabase.from('paiements').insert(
-      retenues.map((e) => ({
-        bailleur_id: bailleur.id,
-        bail_id: bailId,
-        date_paiement: null,
-        montant: e.loyer_mensuel,
-        periode_debut: e.periode_debut,
-        periode_fin: e.periode_fin,
-        mode_paiement: 'Espèces' as const,
-        type_paiement: 'Loyer' as const,
-        est_partiel: false,
-        statut: 'Validé' as const,
-        valide_le: new Date().toISOString(),
-        historique: true,
-      })),
-    )
+  // Validation et écriture sont répétées et atomisées en base. Le formulaire
+  // sert à guider l'utilisateur; la RPC reste l'autorité contre les requêtes
+  // rejouées, les doublons et les changements concurrents d'échéance.
+  const { data: nombreInsere, error } = await supabase.rpc('declarer_paiements_historiques', {
+    p_bail_id: bailId,
+    p_periodes: retenues.map((e) => e.periode_debut),
+  })
 
-    if (error) {
-      return { erreur: `Enregistrement impossible : ${error.message}` }
-    }
-  }
-
-  // ── La marque, posée en dernier ──────────────────────────────────────────
-  //
-  // C'est elle qui fait basculer les mois non déclarés en « Impayé ». Si
-  // l'insertion précédente avait échoué, on ne serait pas ici : mieux vaut un
-  // historique à refaire que des mois réglés comptés comme impayés.
-  const { error: erreurMarque } = await supabase
-    .from('baux')
-    .update({
-      historique_declare_le: new Date().toISOString(),
-      historique_declare_par: bailleur.id,
-    })
-    .eq('id', bailId)
-
-  if (erreurMarque) {
-    return { erreur: `Enregistrement impossible : ${erreurMarque.message}` }
-  }
+  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (nombreInsere === null) return { erreur: 'Enregistrement impossible. Réessayez.' }
 
   revalidatePath('/pro/impayes')
   revalidatePath('/pro/paiements')

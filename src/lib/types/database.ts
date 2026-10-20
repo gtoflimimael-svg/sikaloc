@@ -904,6 +904,55 @@ export interface Database {
       v_echeances: Vue<Echeance>
     }
     Functions: {
+      /** Change le statut du bail propre à l'appelant avec les effets de la transition en base. */
+      definir_statut_bail: {
+        Args: { p_bail_id: string; p_statut: StatutBail }
+        Returns: StatutBail
+      }
+      /** Définit ou efface le chemin de signature du bailleur appelant, après contrôle de statut et de format. */
+      definir_signature_bailleur: {
+        Args: { p_chemin: string | null }
+        Returns: undefined
+      }
+      /** Définit ou efface le chemin de signature d'un locataire propriétaire, après contrôle d'abonnement. */
+      definir_signature_locataire: {
+        Args: { p_locataire_id: string; p_chemin: string | null }
+        Returns: undefined
+      }
+      /** Crée un brouillon en calculant le cumul et le propriétaire en base. */
+      creer_paiement_brouillon: {
+        Args: {
+          p_bail_id: string
+          p_date_paiement: string
+          p_montant: number
+          p_periode_debut: string
+          p_mode_paiement: ModePaiement
+          p_type_paiement?: TypePaiement
+        }
+        Returns: string
+      }
+      /** Corrige un paiement du bailleur appelant dans les conditions métier. */
+      corriger_paiement: {
+        Args: {
+          p_paiement_id: string
+          p_bail_id: string
+          p_date_paiement: string
+          p_montant: number
+          p_periode_debut: string
+          p_mode_paiement: ModePaiement
+          p_type_paiement: TypePaiement
+        }
+        Returns: string
+      }
+      supprimer_paiement: {
+        Args: { p_paiement_id: string }
+        Returns: boolean
+      }
+      /** Crée les lignes historiques et pose leur marqueur dans une seule transaction. */
+      declarer_paiements_historiques: {
+        Args: { p_bail_id: string; p_periodes: string[] }
+        Returns: number
+      }
       reserver_notification: {
         Args: { p_file: string; p_operationnel: boolean }
         Returns: Record<string, unknown>[]

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { aujourdhuiISO } from '@/lib/format'
-import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
+import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
 import { erreursChamps, schemaLocataire, type EtatFormulaire } from '@/lib/validation'
@@ -57,9 +57,9 @@ export async function modifierLocataire(
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { erreur: 'Votre session a expiré. Reconnectez-vous pour continuer.' }
 
   // La RLS peut refuser une mutation sans erreur SQL : vérifier la ligne rendue.
   const { data: modifie, error } = await supabase
@@ -71,6 +71,7 @@ export async function modifierLocataire(
       avatar: analyse.data.avatar || null,
     })
     .eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id)
     .select('id')
     .maybeSingle()
 
@@ -83,8 +84,11 @@ export async function modifierLocataire(
 }
 
 export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
   const { data: supprime, error } = await supabase.from('locataires').delete().eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id)
     .select('id').maybeSingle()
 
   if (error) {
@@ -138,7 +142,9 @@ export async function televerserSignatureLocataire(
 
   const { type: typeReel, extension } = DESCRIPTION_FORMAT[format]
 
-  const bailleur = await bailleurCourant()
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
+  const bailleur = acces.bailleur
   const supabase = await creerClientServeur()
 
   // Les RLS vérifient déjà que le locataire appartient au bailleur ; on relit
@@ -147,6 +153,7 @@ export async function televerserSignatureLocataire(
     .from('locataires')
     .select('signature_chemin')
     .eq('id', locataireId)
+    .eq('bailleur_id', bailleur.id)
     .maybeSingle()
 
   if (!locataire) return { erreur: 'Locataire introuvable.' }
@@ -159,42 +166,50 @@ export async function televerserSignatureLocataire(
 
   if (erreurUpload) return { erreur: `Téléversement impossible : ${erreurUpload.message}` }
 
+  const { error } = await supabase.rpc('definir_signature_locataire', {
+    p_locataire_id: locataireId,
+    p_chemin: chemin,
+  })
+
+  if (error) {
+    if (locataire.signature_chemin !== chemin) {
+      await supabase.storage.from('signatures').remove([chemin])
+    }
+    return { erreur: `Enregistrement impossible : ${error.message}` }
+  }
+
   if (locataire.signature_chemin && locataire.signature_chemin !== chemin) {
     await supabase.storage.from('signatures').remove([locataire.signature_chemin])
   }
-
-  const { error } = await supabase
-    .from('locataires')
-    .update({ signature_chemin: chemin })
-    .eq('id', locataireId)
-
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
   revalidatePath(`/pro/locataires/${locataireId}/modifier`)
   return { succes: 'Signature du locataire enregistrée. Elle apparaîtra sur ses prochaines quittances.' }
 }
 
 export async function supprimerSignatureLocataire(locataireId: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
 
   const { data: locataire } = await supabase
     .from('locataires')
     .select('signature_chemin')
     .eq('id', locataireId)
+    .eq('bailleur_id', acces.bailleur.id)
     .maybeSingle()
 
   if (!locataire) return { erreur: 'Locataire introuvable.' }
 
+  const { error } = await supabase.rpc('definir_signature_locataire', {
+    p_locataire_id: locataireId,
+    p_chemin: null,
+  })
+
+  if (error) return { erreur: `Suppression impossible : ${error.message}` }
+
   if (locataire.signature_chemin) {
     await supabase.storage.from('signatures').remove([locataire.signature_chemin])
   }
-
-  const { error } = await supabase
-    .from('locataires')
-    .update({ signature_chemin: null })
-    .eq('id', locataireId)
-
-  if (error) return { erreur: `Suppression impossible : ${error.message}` }
 
   revalidatePath(`/pro/locataires/${locataireId}/modifier`)
   return { succes: 'Signature du locataire supprimée.' }

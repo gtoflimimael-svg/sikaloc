@@ -61,8 +61,10 @@ export async function modifierLogement(
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase
+  const { data: modifie, error } = await supabase
     .from('logements')
     .update({
       adresse: analyse.data.adresse,
@@ -71,16 +73,23 @@ export async function modifierLogement(
       pays: analyse.data.pays,
     })
     .eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id)
+    .select('id')
+    .maybeSingle()
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+  if (!modifie) return { erreur: 'Modification impossible : logement introuvable ou non autorisé.' }
 
   revalidatePath('/pro/logements')
   redirect('/pro/logements')
 }
 
 export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase.from('logements').delete().eq('id', id)
+  const { data: supprime, error } = await supabase.from('logements').delete()
+    .eq('id', id).eq('bailleur_id', acces.bailleur.id).select('id').maybeSingle()
 
   if (error) {
     if (error.code === '23503') {
@@ -100,6 +109,8 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
     }
     return { erreur: `Suppression impossible : ${error.message}` }
   }
+
+  if (!supprime) return { erreur: 'Suppression impossible : logement introuvable ou non autorisé.' }
 
   revalidatePath('/pro/logements')
   return { succes: 'Logement supprimé.' }
