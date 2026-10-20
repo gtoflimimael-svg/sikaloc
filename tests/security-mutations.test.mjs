@@ -6,6 +6,10 @@ const racine = new URL('../', import.meta.url)
 const lire = async (chemin) => readFile(new URL(chemin, racine), 'utf8')
 const migration = await lire('supabase/migrations/20261020102334_securiser_mutations_metier.sql')
 const migrationSignature = await lire('supabase/migrations/20261020103659_corriger_signature_locataire.sql')
+const migrationAbonnements = await lire('supabase/migrations/20261015141119_securiser_quittances_et_abonnements.sql')
+const migrationCredit = await lire('supabase/migrations/20261015190840_finaliser_abonnements_fedapay_atomiquement.sql')
+const migrationFinances = await lire('supabase/migrations/20261015193157_fiabiliser_paiements_fractionnes_documents.sql')
+const migrationSoldeHistorique = await lire('supabase/migrations/20261020174549_corriger_solde_recu_historique.sql')
 
 function corps(source, nom, suivant) {
   const debut = source.indexOf(`export async function ${nom}(`)
@@ -95,4 +99,45 @@ test('toutes les Server Actions de mutation visées exigent le garde d’écritu
       assert.match(corps(source, nom, suivant), /bailleurAvecEcriture\(\)/, `${nom} doit vérifier le droit d’écriture`)
     }
   }
+})
+
+test('les champs commerciaux et les transactions ne sont pas modifiables directement par authenticated', () => {
+  assert.match(migrationAbonnements, /revoke all on public\.bailleurs from public, anon, authenticated/i)
+  assert.match(migrationAbonnements, /grant update \([\s\S]*?on public\.bailleurs to authenticated/i)
+  const colonnesModifiables = migrationAbonnements.match(/grant update \(([\s\S]*?)\) on public\.bailleurs to authenticated/i)?.[1] ?? ''
+  const nomsModifiables = colonnesModifiables.split(',').map((nom) => nom.trim())
+  for (const sensible of ['plan', 'date_fin_abonnement', 'statut_abonnement', 'date_echec_paiement']) {
+    assert.ok(!nomsModifiables.includes(sensible), `${sensible} ne doit pas être modifiable directement`)
+    assert.ok(migrationAbonnements.includes(`has_column_privilege('authenticated','public.bailleurs','${sensible}','UPDATE')`))
+  }
+  assert.match(migrationAbonnements, /revoke all on public\.abonnements_transactions, public\.recompenses_parrainage from public, anon, authenticated/i)
+  assert.match(migrationAbonnements, /grant select on public\.abonnements_transactions, public\.recompenses_parrainage to authenticated/i)
+  assert.match(migrationCredit, /revoke all on public\.abonnements_transactions from public,anon,authenticated/i)
+})
+
+test('le crédit Standard, les récompenses et le statut REGLEE sont atomiques et idempotents', () => {
+  const debut = migrationCredit.indexOf('create function public.finaliser_abonnement_fedapay(')
+  const fin = migrationCredit.indexOf('end $$;', debut)
+  assert.notEqual(debut, -1)
+  assert.notEqual(fin, -1)
+  const finaliser = migrationCredit.slice(debut, fin + 6)
+  assert.match(finaliser, /security definer set search_path=''/i)
+  assert.match(finaliser, /pg_advisory_xact_lock\(72150301\)/)
+  assert.match(finaliser, /where transaction_id=p_transaction_id for update/i)
+  assert.match(finaliser, /if exists\(select 1 from prive\.credits_abonnement where transaction_id=t\.id\) then\s*return 'deja_regle'/i)
+  assert.match(finaliser, /insert into public\.recompenses_parrainage[\s\S]*?on conflict\(parrain_id,filleul_id\) do nothing/i)
+  assert.match(finaliser, /update public\.bailleurs set plan='Standard'/i)
+  assert.match(finaliser, /insert into prive\.credits_abonnement[\s\S]*?update public\.abonnements_transactions set statut='REGLEE'/i)
+  assert.match(migrationCredit, /unique\(environnement_fedapay,reference_fedapay\)/i)
+  assert.match(migrationCredit, /grant execute on function public\.finaliser_abonnement_fedapay[\s\S]*?to service_role/i)
+})
+
+test('le reçu historique sans snapshot borne ses versements à la date de publication', () => {
+  assert.match(migrationFinances, /Les versements ultérieurs ne réécrivent pas un reçu antérieur/i)
+  assert.match(migrationFinances, /x\.statut='Validé'/)
+  assert.match(migrationFinances, /'solde_restant',greatest\(0,loyer-cumul\)/)
+  assert.match(migrationSoldeHistorique, /x\.valide_le<=p_date_reference/i)
+  assert.match(migrationSoldeHistorique, /q\.pdf_chemin is not null[\s\S]*?q\.date_generation/i)
+  assert.match(migrationSoldeHistorique, /q\.donnees_financieres[\s\S]*?prive\.finances_paiement_locatif_a_date/i)
+  assert.match(migrationSoldeHistorique, /grant execute on function public\.lire_quittance_autorisee\(uuid,uuid\) to service_role/i)
 })
