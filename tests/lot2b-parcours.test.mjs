@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import { lireNumeroPage } from '../src/lib/pagination.ts'
+import { normaliserTelephone } from '../src/lib/telephone.ts'
 
 const racine = new URL('../', import.meta.url)
 const lire = (chemin) => readFile(new URL(chemin, racine), 'utf8')
@@ -49,5 +50,16 @@ test('Pro/Find : la pagination refuse les numéros partiels, répétés et exces
   assert.equal(lireNumeroPage('1000'), 1000)
   for (const invalide of ['0', '02', '2abc', '1001', '99999999999999', ['2', '3']]) {
     assert.equal(lireNumeroPage(invalide), null)
+  }
+})
+
+test('Me : un téléphone absent ne devient pas un lien d’appel', async () => {
+  assert.equal(normaliserTelephone('Non renseigné'), null)
+  assert.equal(normaliserTelephone(''), null)
+  assert.equal(normaliserTelephone('+2290190459821'), '+2290190459821')
+  for (const chemin of ['src/app/me/(espace)/page.tsx', 'src/app/me/(espace)/bail/page.tsx']) {
+    const source = await lire(chemin)
+    assert.match(source, /normaliserTelephone\(bail\.bailleur_telephone\)/)
+    assert.doesNotMatch(source, /href=\{`tel:\$\{bail\.bailleur_telephone\}`\}/)
   }
 })

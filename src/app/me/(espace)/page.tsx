@@ -15,7 +15,7 @@ import {
   resteADevoir,
 } from '@/lib/locataire'
 import { ESPACE_ME } from '@/lib/roles'
-import { formaterTelephone } from '@/lib/telephone'
+import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
 import type { BailLocataire, EcheanceLocataire } from '@/lib/types/database'
 
 /*
@@ -140,6 +140,7 @@ function CarteBail({
   bail: BailLocataire
   echeances: EcheanceLocataire[]
 }) {
+  const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   const prochaine = prochaineEcheance(echeances, bail.bail_id)
   const du = resteADevoir(echeances, bail.bail_id)
   const resilie = bail.statut !== 'Actif'
@@ -254,13 +255,12 @@ function CarteBail({
           <span className="text-mute">Bailleur : </span>
           <span className="font-semibold text-ink">{bail.bailleur_nom}</span>
         </div>
-        <a
-          href={`tel:${bail.bailleur_telephone}`}
-          className="btn btn-tertiary btn-sm"
-        >
-          <Phone size={15} strokeWidth={2} aria-hidden="true" />
-          {formaterTelephone(bail.bailleur_telephone)}
-        </a>
+        {numeroBailleur ? (
+          <a href={`tel:${numeroBailleur}`} className="btn btn-tertiary btn-sm">
+            <Phone size={15} strokeWidth={2} aria-hidden="true" />
+            {formaterTelephone(numeroBailleur)}
+          </a>
+        ) : <span className="text-body-sm text-mute">Téléphone non renseigné</span>}
       </div>
     </section>
   )
