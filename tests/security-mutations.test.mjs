@@ -10,6 +10,7 @@ const migrationAbonnements = await lire('supabase/migrations/20261015141119_secu
 const migrationCredit = await lire('supabase/migrations/20261015190840_finaliser_abonnements_fedapay_atomiquement.sql')
 const migrationFinances = await lire('supabase/migrations/20261015193157_fiabiliser_paiements_fractionnes_documents.sql')
 const migrationSoldeHistorique = await lire('supabase/migrations/20261020174549_corriger_solde_recu_historique.sql')
+const scenarioSoldeHistorique = await lire('tests/receipt-historique-asof.integration.sql')
 
 function corps(source, nom, suivant) {
   const debut = source.indexOf(`export async function ${nom}(`)
@@ -140,4 +141,13 @@ test('le reçu historique sans snapshot borne ses versements à la date de publi
   assert.match(migrationSoldeHistorique, /q\.pdf_chemin is not null[\s\S]*?q\.date_generation/i)
   assert.match(migrationSoldeHistorique, /q\.donnees_financieres[\s\S]*?prive\.finances_paiement_locatif_a_date/i)
   assert.match(migrationSoldeHistorique, /grant execute on function public\.lire_quittance_autorisee\(uuid,uuid\) to service_role/i)
+})
+
+test('le scénario SQL compare plusieurs versements et annule ses fixtures', () => {
+  assert.match(scenarioSoldeHistorique, /doc_at timestamptz/i)
+  assert.match(scenarioSoldeHistorique, /doc_at\+interval '1 minute'/i)
+  assert.match(scenarioSoldeHistorique, /ROLLBACK_FIXTURES_AFTER_PASS/)
+  assert.match(scenarioSoldeHistorique, /cumul_loyer[^\n]*distinct from 30000/)
+  assert.match(scenarioSoldeHistorique, /solde_restant[^\n]*distinct from 70000/)
+  assert.match(scenarioSoldeHistorique, /numero_document,type,date_generation,pdf_chemin/)
 })
