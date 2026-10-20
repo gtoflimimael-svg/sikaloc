@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import {
+  maintenanceDecision,
+  maintenanceResponseSpec,
+} from '@/lib/maintenance-policy.mjs'
 import { cheminProtege, cheminPublic } from '@/lib/roles'
 import type { Database } from '@/lib/types/database'
 
@@ -25,19 +29,7 @@ const PAGES_AUTH = ['/connexion', '/inscription']
  * Mode maintenance global. Il est activé par défaut et ne peut être levé que
  * par une valeur explicite définie dans l'environnement Vercel.
  */
-const MAINTENANCE_ACTIVE = process.env.SIKALOC_MAINTENANCE_MODE !== 'off'
-
-/**
- * Entrées techniques conservées pendant la maintenance. Chacune applique sa
- * propre authentification dans son handler : signature FedaPay ou CRON_SECRET.
- */
-const ROUTES_TECHNIQUES = new Set([
-  '/api/abonnement/fedapay',
-  '/api/cron/cycle-grace',
-  '/api/cron/notifications',
-  '/api/cron/purge',
-  '/api/cron/schema',
-])
+const MAINTENANCE_MODE = process.env.SIKALOC_MAINTENANCE_MODE
 
 const PAGE_MAINTENANCE = `<!doctype html>
 <html lang="fr">
@@ -78,19 +70,10 @@ const PAGE_MAINTENANCE = `<!doctype html>
 </html>`
 
 function reponseMaintenance(request: NextRequest) {
-  const headers = new Headers({
-    'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-    'CDN-Cache-Control': 'no-store',
-    'Vercel-CDN-Cache-Control': 'no-store',
-    'Surrogate-Control': 'no-store',
-    'Retry-After': '3600',
-    'X-Robots-Tag': 'noindex, nofollow, noarchive',
-  })
-
-  return new NextResponse(request.method === 'HEAD' ? null : PAGE_MAINTENANCE, {
-    status: 503,
-    headers,
+  const spec = maintenanceResponseSpec(request.method, PAGE_MAINTENANCE)
+  return new NextResponse(spec.body, {
+    status: spec.status,
+    headers: new Headers(spec.headers),
   })
 }
 
@@ -102,13 +85,16 @@ function reponseMaintenance(request: NextRequest) {
  */
 export default async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname
-  const routeTechniqueSecurisee =
-    ROUTES_TECHNIQUES.has(chemin) && ['GET', 'POST'].includes(request.method)
+  const decisionMaintenance = maintenanceDecision(
+    chemin,
+    request.method,
+    MAINTENANCE_MODE,
+  )
 
   // Les endpoints techniques gardent leurs propres contrôles de signature ou
   // de secret. Toute autre navigation, API ou Server Action reçoit un 503.
-  if (MAINTENANCE_ACTIVE) {
-    if (routeTechniqueSecurisee) return NextResponse.next({ request })
+  if (decisionMaintenance !== 'normal') {
+    if (decisionMaintenance === 'technical') return NextResponse.next({ request })
     return reponseMaintenance(request)
   }
 

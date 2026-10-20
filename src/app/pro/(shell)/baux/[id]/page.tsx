@@ -45,7 +45,7 @@ export default async function PageDetailBail({
 
   if (!bail) notFound()
 
-  const [{ data: paiements }, { data: impayes }, { count: aDeterminer }] =
+  const [{ data: paiements }, { data: impayes }, { count: aDeterminer }, { data: excedents }] =
     await Promise.all([
       supabase
         .from('paiements')
@@ -66,12 +66,20 @@ export default async function PageDetailBail({
         .select('periode_debut', { count: 'exact', head: true })
         .eq('bail_id', id)
         .eq('etat', 'À déterminer'),
+      supabase
+        .from('v_echeances')
+        .select('periode_debut, montant_excedentaire')
+        .eq('bail_id', id)
+        .gt('montant_excedentaire', 0)
+        .order('periode_debut', { ascending: false })
+        .limit(12),
     ])
 
   const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
   const locataire = Array.isArray(bail.locataire) ? bail.locataire[0] : bail.locataire
   const listePaiements = paiements ?? []
   const listeImpayes = (impayes ?? []) as Impaye[]
+  const listeExcedents = excedents ?? []
 
   return (
     <div className="space-y-2xl">
@@ -192,6 +200,23 @@ export default async function PageDetailBail({
               </div>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {listeExcedents.length > 0 ? (
+        <section className="rounded-lg border border-hairline bg-canvas-soft p-lg">
+          <h2 className="text-body-md font-semibold text-ink">Excédents non reportés</h2>
+          <p className="mt-xs text-body-sm text-mute">
+            Ces versements dépassent le loyer de leur période. Ils ne réduisent pas automatiquement le mois suivant.
+          </p>
+          <ul className="mt-md space-y-xs">
+            {listeExcedents.map((ligne) => (
+              <li key={ligne.periode_debut} className="flex justify-between gap-md text-body-sm">
+                <span>{formaterPeriode(ligne.periode_debut)}</span>
+                <strong className="tabular">{formaterFCFA(ligne.montant_excedentaire)}</strong>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

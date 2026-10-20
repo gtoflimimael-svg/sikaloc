@@ -25,6 +25,7 @@ import {
 } from '@/lib/marque'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
 import { formaterTelephone } from '@/lib/telephone'
+import type { TypePaiement } from '@/lib/types/database'
 
 /**
  * Quittance de loyer / Reçu — template Bénin.
@@ -319,10 +320,12 @@ export interface DonneesQuittance {
   montant: number
   datePaiement: string
   modePaiement: string
-  typePaiement: string
+  typePaiement: TypePaiement
   estPartiel: boolean
   /** Total validé du loyer à cette émission, distinct de ce versement. */
   montantCumule?: number
+  /** Excédent du loyer de cette période; il n'est pas reporté automatiquement. */
+  montantExcedentaire?: number
 
   /** Signature du bailleur en data URI, ou null si non téléversée. */
   signatureDataUri: string | null
@@ -375,9 +378,13 @@ function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
 }
 
 export function DocumentQuittance(donnees: DonneesQuittance) {
-  const estQuittance = donnees.type === 'Quittance'
-  const cumul = donnees.typePaiement === 'Loyer' ? (donnees.montantCumule ?? donnees.montant) : donnees.montant
-  const soldeRestant = Math.max(0, donnees.loyerMensuel - cumul)
+  const estLoyer = donnees.typePaiement === 'Loyer'
+  const estQuittance = estLoyer && donnees.type === 'Quittance'
+  const cumul = estLoyer ? (donnees.montantCumule ?? donnees.montant) : 0
+  const soldeRestant = estLoyer ? Math.max(0, donnees.loyerMensuel - cumul) : 0
+  const excedent = estLoyer
+    ? Math.max(0, donnees.montantExcedentaire ?? cumul - donnees.loyerMensuel)
+    : 0
 
   /**
    * Le seul cas où le droit de timbre est réellement susceptible de
@@ -392,7 +399,9 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
     <Document
       title={`${donnees.type} ${donnees.numeroDocument}`}
       author={donnees.bailleurNom}
-      subject={`${donnees.type} de loyer — ${formaterPeriode(donnees.periodeDebut)}`}
+      subject={estLoyer
+        ? `${donnees.type} de loyer — ${formaterPeriode(donnees.periodeDebut)}`
+        : `${donnees.type} — ${donnees.typePaiement}`}
       creator="Sikaloc"
       producer="Sikaloc"
     >
@@ -414,36 +423,65 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
         </View>
 
         <Text style={styles.titre}>
-          {estQuittance ? 'Quittance de loyer' : 'Reçu de paiement partiel'}
+          {estQuittance
+            ? 'Quittance de loyer'
+            : estLoyer && donnees.estPartiel
+              ? 'Reçu de paiement partiel'
+              : 'Reçu de paiement'}
         </Text>
         <Text style={styles.sousTitre}>
-          Période du {formaterDate(donnees.periodeDebut)} au {formaterDate(donnees.periodeFin)}
-          {donnees.estPartiel ? ' — paiement partiel' : ''}
+          {estLoyer
+            ? `Période du ${formaterDate(donnees.periodeDebut)} au ${formaterDate(donnees.periodeFin)}`
+            : `Paiement enregistré le ${formaterDate(donnees.datePaiement)}`}
+          {estLoyer && donnees.estPartiel ? ' — paiement partiel' : ''}
         </Text>
 
         {/* ── Synthèse ───────────────────────────────────────────────────── */}
         {/* Trois chiffres, lisibles d'un regard, avant même le détail qui
             suit — le loyer dû, ce qui a été réglé, et ce qu'il reste. */}
         <View style={styles.recapitulatif}>
-          <View style={styles.recapCellule}>
-            <Text style={styles.recapEtiquette}>Loyer mensuel</Text>
-            <Text style={styles.recapValeur}>{formaterFCFA(donnees.loyerMensuel)}</Text>
-          </View>
-          <View style={styles.recapCellule}>
-            <Text style={styles.recapEtiquette}>Montant réglé</Text>
-            <Text style={styles.recapValeur}>{formaterFCFA(cumul)}</Text>
-          </View>
-          <View style={[styles.recapCellule, { borderRightWidth: 0 }]}>
-            <Text style={styles.recapEtiquette}>Solde restant</Text>
-            <Text
-              style={[
-                styles.recapValeur,
-                soldeRestant > 0 ? { color: couleurs.warningDeep } : { color: couleurs.positiveDeep },
-              ]}
-            >
-              {formaterFCFA(soldeRestant)}
-            </Text>
-          </View>
+          {estLoyer ? (
+            <>
+              <View style={styles.recapCellule}>
+                <Text style={styles.recapEtiquette}>Loyer mensuel</Text>
+                <Text style={styles.recapValeur}>{formaterFCFA(donnees.loyerMensuel)}</Text>
+              </View>
+              <View style={styles.recapCellule}>
+                <Text style={styles.recapEtiquette}>Montant réglé</Text>
+                <Text style={styles.recapValeur}>{formaterFCFA(cumul)}</Text>
+              </View>
+              <View style={[styles.recapCellule, { borderRightWidth: 0 }]}>
+                <Text style={styles.recapEtiquette}>
+                  {excedent > 0 ? 'Excédent non reporté' : 'Solde restant'}
+                </Text>
+                <Text
+                  style={[
+                    styles.recapValeur,
+                    soldeRestant > 0 || excedent > 0
+                      ? { color: couleurs.warningDeep }
+                      : { color: couleurs.positiveDeep },
+                  ]}
+                >
+                  {formaterFCFA(excedent > 0 ? excedent : soldeRestant)}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.recapCellule}>
+                <Text style={styles.recapEtiquette}>Nature</Text>
+                <Text style={styles.recapValeur}>{donnees.typePaiement}</Text>
+              </View>
+              <View style={styles.recapCellule}>
+                <Text style={styles.recapEtiquette}>Montant reçu</Text>
+                <Text style={styles.recapValeur}>{formaterFCFA(donnees.montant)}</Text>
+              </View>
+              <View style={[styles.recapCellule, { borderRightWidth: 0 }]}>
+                <Text style={styles.recapEtiquette}>Report au loyer</Text>
+                <Text style={styles.recapValeur}>Non</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* ── Parties ────────────────────────────────────────────────────── */}
@@ -466,14 +504,16 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
 
         {/* ── Logement et bail ───────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.titreSection}>Logement loué</Text>
+          <Text style={styles.titreSection}>{estLoyer ? 'Logement loué' : 'Logement concerné'}</Text>
           <Ligne etiquette="Adresse" valeur={donnees.logementAdresse} />
           <Ligne
             etiquette="Ville"
             valeur={`${donnees.logementVille}, ${donnees.logementPays}`}
           />
           <Ligne etiquette="Type de bien" valeur={donnees.logementType} />
-          <Ligne etiquette="Loyer mensuel" valeur={formaterFCFA(donnees.loyerMensuel)} />
+          {estLoyer ? (
+            <Ligne etiquette="Loyer mensuel" valeur={formaterFCFA(donnees.loyerMensuel)} />
+          ) : null}
         </View>
 
         {/* ── Paiement ───────────────────────────────────────────────────── */}
@@ -482,7 +522,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           <Ligne etiquette="Date de paiement" valeur={formaterDate(donnees.datePaiement)} />
           <Ligne etiquette="Mode de paiement" valeur={donnees.modePaiement} />
           <Ligne etiquette="Nature" valeur={donnees.typePaiement} />
-          {donnees.estPartiel ? (
+          {estLoyer && donnees.estPartiel ? (
             <Ligne
               etiquette="Solde restant dû pour la période"
               valeur={formaterFCFA(soldeRestant)}
@@ -506,10 +546,17 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
                 coller « ) » à « pour ». */}
             {`Reçu de ${donnees.locataireNom} la somme de ` +
               `${montantEnLettresCapitalise(donnees.montant)} francs CFA ` +
-              `(${formaterFCFA(donnees.montant)}) pour le loyer de la période du ` +
-              `${formaterDate(donnees.periodeDebut)} au ${formaterDate(donnees.periodeFin)}.`}
+              `(${formaterFCFA(donnees.montant)}) ` +
+              (estLoyer
+                ? `pour le loyer de la période du ${formaterDate(donnees.periodeDebut)} au ${formaterDate(donnees.periodeFin)}.`
+                : `au titre de ${donnees.typePaiement.toLowerCase()}.`)}
           </Text>
-          {donnees.estPartiel ? (
+          {estLoyer && excedent > 0 ? (
+            <Text style={[styles.texteDecharge, { marginTop: 5 }]}>
+              {`L’excédent de ${formaterFCFA(excedent)} n’est pas affecté au mois suivant.`}
+            </Text>
+          ) : null}
+          {estLoyer && donnees.estPartiel ? (
             <Text style={[styles.texteDecharge, { marginTop: 5 }]}>
               {`Ce paiement étant partiel, le présent document vaut reçu et non ` +
                 `quittance : il ne libère pas le locataire du solde restant dû ` +

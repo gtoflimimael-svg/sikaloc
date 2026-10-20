@@ -15,7 +15,7 @@ import {
   resteADevoir,
 } from '@/lib/locataire'
 import { ESPACE_ME } from '@/lib/roles'
-import { formaterTelephone } from '@/lib/telephone'
+import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
 import type { BailLocataire, EcheanceLocataire } from '@/lib/types/database'
 
 /*
@@ -140,6 +140,7 @@ function CarteBail({
   bail: BailLocataire
   echeances: EcheanceLocataire[]
 }) {
+  const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   const prochaine = prochaineEcheance(echeances, bail.bail_id)
   const du = resteADevoir(echeances, bail.bail_id)
   const resilie = bail.statut !== 'Actif'
@@ -176,15 +177,11 @@ function CarteBail({
       {/* ── Où en est ce bail ────────────────────────────────────────────── */}
       <div className="mt-lg rounded-md bg-canvas-soft p-md">
         {resilie ? (
-          /*
-            `v_echeances` ne calcule que les baux actifs : un bail résilié
-            n'aurait aucune ligne, et une liste vide ressemblerait à une panne.
-            On dit donc pourquoi elle est vide.
-          */
           <p className="text-body-md text-mute">
-            Ce bail est <strong className="text-ink">résilié</strong>. Vos
-            quittances et vos paiements restent consultables, mais aucun loyer
-            n’est plus calculé pour ce logement.
+            Ce bail est <strong className="text-ink">résilié</strong>. Les
+            échéances jusqu’à sa date de fin restent visibles dans « Mes loyers »
+            {du > 0 ? ` et le solde restant est de ${formaterFCFA(du)}.` : '.'}
+            {' '}Aucun mois après la fin du bail n’est calculé.
           </p>
         ) : prochaine ? (
           <>
@@ -258,13 +255,12 @@ function CarteBail({
           <span className="text-mute">Bailleur : </span>
           <span className="font-semibold text-ink">{bail.bailleur_nom}</span>
         </div>
-        <a
-          href={`tel:${bail.bailleur_telephone}`}
-          className="btn btn-tertiary btn-sm"
-        >
-          <Phone size={15} strokeWidth={2} aria-hidden="true" />
-          {formaterTelephone(bail.bailleur_telephone)}
-        </a>
+        {numeroBailleur ? (
+          <a href={`tel:${numeroBailleur}`} className="btn btn-tertiary btn-sm">
+            <Phone size={15} strokeWidth={2} aria-hidden="true" />
+            {formaterTelephone(numeroBailleur)}
+          </a>
+        ) : <span className="text-body-sm text-mute">Téléphone non renseigné</span>}
       </div>
     </section>
   )

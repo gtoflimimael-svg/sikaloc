@@ -7,12 +7,10 @@
  *
  * ─── La règle, en une phrase ────────────────────────────────────────────────
  *
- * Un compte est pleinement vérifié quand l'email ET le téléphone l'ont été.
- * Pas l'un ou l'autre. Les deux.
- *
- * Ce n'est pas une précaution administrative. Sikaloc envoie des quittances et
- * des relances sur le numéro saisi à l'inscription : un numéro non vérifié,
- * c'est un document de loyer qui part chez un inconnu.
+ * L'email confirmé est requis pour ouvrir l'espace bailleur. Le téléphone reste
+ * un état distinct : sa simple saisie ne le vérifie jamais. Il ne devient une
+ * condition d'activation que si un transport fournisseur réellement opérationnel
+ * est déclaré par le code, jamais parce que des identifiants sont présents.
  */
 
 // ─── Étapes ─────────────────────────────────────────────────────────────────
@@ -36,33 +34,46 @@ export interface EtatVerification {
   telephoneVerifie: boolean
 }
 
+export type EtatCanalOtp = 'desactive' | 'indisponible' | 'configure' | 'operationnel'
+
+/** Résume la présence des variables attendues sans la confondre avec l'envoi réel. */
+export function etatCanalDepuisConfiguration(
+  nombreClesRequises: number,
+  nombreClesPresentes: number,
+): EtatCanalOtp {
+  if (nombreClesPresentes <= 0) return 'desactive'
+  return nombreClesRequises > 0 && nombreClesPresentes >= nombreClesRequises
+    ? 'configure'
+    : 'indisponible'
+}
+
+/**
+ * La configuration seule ne rend pas un canal opérationnel. Le mode console
+ * de développement n'est pas non plus un fournisseur réel et ne doit jamais
+ * rendre le téléphone obligatoire pour l'activation.
+ */
+export function telephoneExigiblePourActivation(
+  etatsCanaux: readonly EtatCanalOtp[],
+  options: { trappeDeveloppement?: boolean } = {},
+): boolean {
+  return options.trappeDeveloppement !== true && etatsCanaux.includes('operationnel')
+}
+
 /**
  * La règle métier fondamentale.
  *
  * Écrite une seule fois, appelée partout. Un `&&` recopié dans dix fichiers
  * finit par devenir un `||` dans le onzième.
  *
- * ─── Pourquoi le téléphone peut ne pas être exigé ───────────────────────────
- *
- * Parce qu'une exigence qu'on ne peut pas satisfaire n'est pas une exigence,
- * c'est une porte murée. Tant qu'aucun canal ne peut acheminer un code — ni
- * SMS ni WhatsApp ne sont configurés — personne ne peut vérifier son numéro.
- * Maintenir l'obligation enfermerait dehors chaque compte créé, sans qu'aucun
- * geste de l'utilisateur n'y change quoi que ce soit.
- *
- * La règle n'est pas affaiblie pour autant : elle est suspendue par l'absence
- * de moyen, et se rétablit d'elle-même le jour où un canal existe. Rien à
- * repenser ce jour-là, rien à se rappeler de réactiver — c'est la disponibilité
- * du canal qui décide, pas un interrupteur qu'on oublierait.
- *
- * `telephoneExigible` vaut `true` par défaut : le cas nominal reste
- * l'exigence des deux vérifications.
+ * L'email reste toujours requis. L'option téléphone est explicite et vaut
+ * `false` par défaut : une omission d'option ne peut donc pas enfermer les
+ * comptes derrière une vérification SMS/WhatsApp indisponible.
  */
 export function comptePleinementVerifie(
   etat: EtatVerification,
   options: { telephoneExigible?: boolean } = {},
 ): boolean {
-  const telephoneExigible = options.telephoneExigible ?? true
+  const telephoneExigible = options.telephoneExigible ?? false
 
   if (etat.emailVerifie !== true) return false
   if (!telephoneExigible) return true
@@ -82,14 +93,18 @@ export function etapeCourante(
   options: { telephoneExigible?: boolean } = {},
 ): EtapeVerification | null {
   if (!etat.emailVerifie) return 'email'
-  if (!etat.telephoneVerifie) return 'telephone'
-  void options
+  const telephoneExigible = options.telephoneExigible ?? false
+  if (telephoneExigible && !etat.telephoneVerifie) return 'telephone'
   return null
 }
 
 /** « 1 étape restante », pour l'indicateur de progression. */
-export function etapesRestantes(etat: EtatVerification): number {
-  return (etat.emailVerifie ? 0 : 1) + (etat.telephoneVerifie ? 0 : 1)
+export function etapesRestantes(
+  etat: EtatVerification,
+  options: { telephoneExigible?: boolean } = {},
+): number {
+  const telephoneExigible = options.telephoneExigible ?? false
+  return (etat.emailVerifie ? 0 : 1) + (telephoneExigible && !etat.telephoneVerifie ? 1 : 0)
 }
 
 // ─── Masquage des coordonnées ───────────────────────────────────────────────

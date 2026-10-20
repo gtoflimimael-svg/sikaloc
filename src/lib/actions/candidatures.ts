@@ -119,6 +119,8 @@ export async function enregistrerProfilCandidat(
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
   const supabase = await creerClientServeur()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { erreur: messageCandidature('authentification_requise') }
   const { data, error } = await supabase.rpc('enregistrer_profil_candidat', {
     p_nom: analyse.data.nom,
     p_telephone: analyse.data.telephone,
@@ -134,16 +136,18 @@ export async function enregistrerProfilCandidat(
   // Le consentement WhatsApp vit à part du RPC de S8-A : le candidat écrit
   // lui-même sur sa propre ligne (RLS « Un candidat modifie son profil »). Une
   // case cochée vaut oui, absente vaut non — jamais un consentement supposé.
-  const { error: erreurWhatsApp } = await supabase
+  const { data: profilMisAJour, error: erreurWhatsApp } = await supabase
     .from('candidats')
     .update({ notif_whatsapp: donnees.get('notifWhatsApp') === 'on' })
-    .eq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
-  if (erreurWhatsApp) {
-    console.error('[candidatures] consentement WhatsApp', erreurWhatsApp.code, erreurWhatsApp.message)
-  }
+    .eq('id', user.id)
+    .select('id')
+    .maybeSingle()
 
   if (REFERENCE.test(reference)) revalidatePath(`/find/${reference}/candidater`)
   revalidatePath('/me/candidatures')
+  if (erreurWhatsApp || !profilMisAJour) return {
+    erreur: 'Profil enregistré, mais votre préférence WhatsApp n’a pas pu être sauvegardée. Réessayez.',
+  }
   return { succes: 'Profil enregistré.' }
 }
 

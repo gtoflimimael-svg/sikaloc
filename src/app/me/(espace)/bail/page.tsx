@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { Badge, EnTetePage } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { mesBaux } from '@/lib/locataire'
-import { formaterTelephone } from '@/lib/telephone'
+import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
 import type { BailLocataire } from '@/lib/types/database'
 
 export const metadata: Metadata = { title: 'Mon bail' }
@@ -49,6 +49,7 @@ export default async function PageBail() {
 }
 
 function CarteDetail({ bail }: { bail: BailLocataire }) {
+  const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   return (
     <section className="overflow-hidden rounded-xl border border-hairline bg-canvas">
       <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline p-lg">
@@ -93,10 +94,12 @@ function CarteDetail({ bail }: { bail: BailLocataire }) {
           <p className="text-caption text-mute">Votre bailleur</p>
           <p className="mt-xxs text-body-md font-semibold text-ink">{bail.bailleur_nom}</p>
         </div>
-        <a href={`tel:${bail.bailleur_telephone}`} className="btn btn-secondary btn-sm">
-          <Phone size={15} strokeWidth={2} aria-hidden="true" />
-          {formaterTelephone(bail.bailleur_telephone)}
-        </a>
+        {numeroBailleur ? (
+          <a href={`tel:${numeroBailleur}`} className="btn btn-secondary btn-sm">
+            <Phone size={15} strokeWidth={2} aria-hidden="true" />
+            {formaterTelephone(numeroBailleur)}
+          </a>
+        ) : <span className="text-body-sm text-mute">Téléphone non renseigné</span>}
       </footer>
     </section>
   )

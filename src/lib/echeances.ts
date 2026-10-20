@@ -78,8 +78,11 @@ export function echeancesAnterieuresReglees(echeances: Echeance[]): Echeance[] {
  * soixante-dix mois. Une liste plate de soixante-dix cases n'est pas
  * remplissable ; par année, elle le redevient.
  */
-export function parAnnee(echeances: Echeance[]): { annee: string; mois: Echeance[] }[] {
-  const groupes = new Map<string, Echeance[]>()
+export function parAnnee<T extends { periode_debut: string }>(
+  echeances: T[],
+  ordre: 'asc' | 'desc' = 'asc',
+): { annee: string; mois: T[] }[] {
+  const groupes = new Map<string, T[]>()
 
   for (const echeance of echeances) {
     const annee = echeance.periode_debut.slice(0, 4)
@@ -88,9 +91,13 @@ export function parAnnee(echeances: Echeance[]): { annee: string; mois: Echeance
     else groupes.set(annee, [echeance])
   }
 
+  const sens = ordre === 'asc' ? 1 : -1
   return [...groupes.entries()]
-    .map(([annee, mois]) => ({ annee, mois }))
-    .sort((a, b) => a.annee.localeCompare(b.annee))
+    .map(([annee, mois]) => ({
+      annee,
+      mois: mois.sort((a, b) => sens * a.periode_debut.localeCompare(b.periode_debut)),
+    }))
+    .sort((a, b) => sens * a.annee.localeCompare(b.annee))
 }
 
 /** Le total d'une liste d'échéances, pour le récapitulatif. */

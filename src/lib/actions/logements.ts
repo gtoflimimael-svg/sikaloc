@@ -32,11 +32,13 @@ export async function creerLogement(
   // Plafond du plan Gratuit (§4.2) : contrôlé à la création, pas à l'affichage.
   const limite = capacites(bailleur).maxLogements
   if (limite !== null) {
-    const { count } = await supabase
+    const { count, error: erreurComptage } = await supabase
       .from('logements')
       .select('id', { count: 'exact', head: true })
+      .eq('bailleur_id', bailleur.id)
 
-    if ((count ?? 0) >= limite) return { erreur: messageLimiteLogements(count ?? 0) }
+    if (erreurComptage || count === null) return { erreur: 'Impossible de vérifier la limite de logements. Réessayez dans quelques instants.' }
+    if (count >= limite) return { erreur: messageLimiteLogements(count) }
   }
 
   const { error } = await supabase.from('logements').insert({
@@ -61,8 +63,10 @@ export async function modifierLogement(
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase
+  const { data: modifie, error } = await supabase
     .from('logements')
     .update({
       adresse: analyse.data.adresse,
@@ -71,16 +75,23 @@ export async function modifierLogement(
       pays: analyse.data.pays,
     })
     .eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id)
+    .select('id')
+    .maybeSingle()
 
   if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+  if (!modifie) return { erreur: 'Modification impossible : logement introuvable ou non autorisé.' }
 
   revalidatePath('/pro/logements')
   redirect('/pro/logements')
 }
 
 export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase.from('logements').delete().eq('id', id)
+  const { data: supprime, error } = await supabase.from('logements').delete()
+    .eq('id', id).eq('bailleur_id', acces.bailleur.id).select('id').maybeSingle()
 
   if (error) {
     if (error.code === '23503') {
@@ -100,6 +111,8 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
     }
     return { erreur: `Suppression impossible : ${error.message}` }
   }
+
+  if (!supprime) return { erreur: 'Suppression impossible : logement introuvable ou non autorisé.' }
 
   revalidatePath('/pro/logements')
   return { succes: 'Logement supprimé.' }

@@ -348,6 +348,14 @@ export type Bail = {
   created_at: string
 }
 
+/** Tarif contractuel d'un bail, effectif à partir du mois indiqué. */
+export type BailLoyer = {
+  bail_id: string
+  periode_debut: string
+  loyer_mensuel: number
+  cree_le: string
+}
+
 export type Paiement = {
   id: string
   bailleur_id: string
@@ -558,6 +566,8 @@ export type Echeance = {
   tolerance_jours: number
   montant_paye: number
   montant_du: number
+  /** Part payée au-delà du loyer de ce mois, non affectée au mois suivant. */
+  montant_excedentaire: number
   jours_de_retard: number
   /** L'échéance était déjà échue quand le bail a été enregistré dans Sikaloc. */
   anterieure: boolean
@@ -728,6 +738,7 @@ export type EcheanceLocataire = {
   loyer_mensuel: number
   montant_paye: number
   montant_du: number
+  montant_excedentaire: number
   jours_de_retard: number
   etat: EtatEcheance
 }
@@ -878,6 +889,7 @@ export interface Database {
       locataires: Ligne<Locataire>
       logements: Ligne<Logement>
       baux: Ligne<Bail>
+      baux_loyers: Ligne<BailLoyer>
       paiements: Ligne<Paiement>
       quittances: Ligne<Quittance>
       abonnements_transactions: Ligne<AbonnementTransaction>
@@ -904,6 +916,55 @@ export interface Database {
       v_echeances: Vue<Echeance>
     }
     Functions: {
+      /** Change le statut du bail propre à l'appelant avec les effets de la transition en base. */
+      definir_statut_bail: {
+        Args: { p_bail_id: string; p_statut: StatutBail }
+        Returns: StatutBail
+      }
+      /** Définit ou efface le chemin de signature du bailleur appelant, après contrôle de statut et de format. */
+      definir_signature_bailleur: {
+        Args: { p_chemin: string | null }
+        Returns: undefined
+      }
+      /** Définit ou efface le chemin de signature d'un locataire propriétaire, après contrôle d'abonnement. */
+      definir_signature_locataire: {
+        Args: { p_locataire_id: string; p_chemin: string | null }
+        Returns: undefined
+      }
+      /** Crée un brouillon en calculant le cumul et le propriétaire en base. */
+      creer_paiement_brouillon: {
+        Args: {
+          p_bail_id: string
+          p_date_paiement: string
+          p_montant: number
+          p_periode_debut: string
+          p_mode_paiement: ModePaiement
+          p_type_paiement?: TypePaiement
+        }
+        Returns: string
+      }
+      /** Corrige un paiement du bailleur appelant dans les conditions métier. */
+      corriger_paiement: {
+        Args: {
+          p_paiement_id: string
+          p_bail_id: string
+          p_date_paiement: string
+          p_montant: number
+          p_periode_debut: string
+          p_mode_paiement: ModePaiement
+          p_type_paiement: TypePaiement
+        }
+        Returns: string
+      }
+      supprimer_paiement: {
+        Args: { p_paiement_id: string }
+        Returns: boolean
+      }
+      /** Crée les lignes historiques et pose leur marqueur dans une seule transaction. */
+      declarer_paiements_historiques: {
+        Args: { p_bail_id: string; p_periodes: string[] }
+        Returns: number
+      }
       reserver_notification: {
         Args: { p_file: string; p_operationnel: boolean }
         Returns: Record<string, unknown>[]

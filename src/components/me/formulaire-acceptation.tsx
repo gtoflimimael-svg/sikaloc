@@ -95,8 +95,9 @@ export function FormulaireAcceptation({
         celle de l'invitation. Un champ modifiable permettrait de détourner un
         lien reçu par erreur vers un compte qu'on contrôle.
 
-        `readOnly` et non `disabled` : un champ désactivé n'est pas soumis, et
-        les gestionnaires de mots de passe ne le lisent pas.
+        `readOnly` et non `disabled` : les gestionnaires de mots de passe
+        peuvent le lire. L'action serveur ignore sa valeur transmise et relit
+        l'adresse à partir du jeton d'invitation.
       */}
       <div>
         <label htmlFor="email" className="field-label">
