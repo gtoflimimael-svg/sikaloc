@@ -29,11 +29,14 @@ export function FiltresFind({
   filtres,
   lieux,
   nbFiltresActifs,
+  compacte = false,
 }: {
   filtres: Filtres
   /** Villes et quartiers réellement publiés — `lieux_publies`. */
   lieux: { ville: string; quartier: string | null }[]
   nbFiltresActifs: number
+  /** Variante de l'accueil : ville, type et budget, soumis au vrai catalogue. */
+  compacte?: boolean
 }) {
   const [ouvert, setOuvert] = useState(false)
   const panneau = useId()
@@ -88,7 +91,7 @@ export function FiltresFind({
             if (controle.name && 'value' in controle && controle.value === '') controle.disabled = true
           }
         }}
-        className={`card list-card mt-md space-y-lg lg:mt-0 lg:block ${ouvert ? 'block' : 'hidden'}`}
+        className={`card list-card mt-md space-y-lg lg:mt-0 lg:block ${compacte ? 'find-filters--compact' : ''} ${ouvert ? 'block' : 'hidden'}`}
         aria-label="Filtrer les logements"
       >
         <div>
@@ -105,7 +108,7 @@ export function FiltresFind({
           </select>
         </div>
 
-        {quartiers.length > 0 ? (
+        {!compacte && quartiers.length > 0 ? (
           <div>
             <label htmlFor="f-quartier" className="field-label">
               Quartier
@@ -173,7 +176,7 @@ export function FiltresFind({
           </div>
         </fieldset>
 
-        <div>
+        {!compacte ? <div>
           <label htmlFor="f-chambres" className="field-label">
             Chambres
           </label>
@@ -186,9 +189,9 @@ export function FiltresFind({
               </option>
             ))}
           </select>
-        </div>
+        </div> : null}
 
-        <fieldset className="min-w-0">
+        {!compacte ? <fieldset className="min-w-0">
           <legend className="field-label">Surface (m²)</legend>
           <div className="find-range">
             <div>
@@ -224,9 +227,9 @@ export function FiltresFind({
               />
             </div>
           </div>
-        </fieldset>
+        </fieldset> : null}
 
-        <div>
+        {!compacte ? <div>
           <label
             htmlFor="f-disponible"
             className="flex cursor-pointer items-center gap-md rounded-md border border-hairline bg-canvas px-lg py-md"
@@ -241,9 +244,9 @@ export function FiltresFind({
             />
             <span className="text-body-md text-ink">Disponible maintenant</span>
           </label>
-        </div>
+        </div> : null}
 
-        <details open={filtres.equipements.length > 0}>
+        {!compacte ? <details open={filtres.equipements.length > 0}>
           <summary className="min-h-11 cursor-pointer py-sm text-body-sm font-medium text-ink">Équipements</summary>
           <fieldset className="mt-sm min-w-0"><legend className="sr-only">Équipements souhaités</legend>
           {/*
@@ -267,7 +270,7 @@ export function FiltresFind({
             ))}
           </div>
           </fieldset>
-        </details>
+        </details> : null}
 
         <div className="flex flex-wrap gap-sm pt-sm">
           <button type="submit" className="btn btn-primary">

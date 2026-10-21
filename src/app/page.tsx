@@ -4,7 +4,6 @@ import {
   FileCheck,
   Home,
   Lock,
-  MapPin,
   Search,
   SlidersHorizontal,
   ScrollText,
@@ -16,8 +15,10 @@ import Image from 'next/image'
 import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-public'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
+import { FiltresFind } from '@/components/find/filtres'
+import { lireFiltres } from '@/lib/find/recherche'
 import { ESPACE_ME, ESPACE_PRO } from '@/lib/roles'
-import { obtenirUtilisateur } from '@/lib/supabase/serveur'
+import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
 
 /**
  * La page d'accueil de Sikaloc — la marque, pas l'un de ses espaces.
@@ -111,7 +112,7 @@ const ESPACES_PRESENTES = [
     image: '/illustrations/home-02.webp',
     pour: 'Propriétaires et bailleurs',
     texte:
-      'Logements, locataires, baux et versements réunis pour suivre la gestion au fil des périodes.',
+      'Organisez vos logements, locataires et baux. Retrouvez les paiements enregistrés et les documents disponibles.',
     disponible: true,
     lien: { href: '/pro?presentation=1', libelle: 'Découvrir Sikaloc Pro' },
   },
@@ -122,7 +123,7 @@ const ESPACES_PRESENTES = [
     image: '/illustrations/home-03.webp',
     pour: 'Locataires',
     texte:
-      'Retrouvez les informations de votre bail, les paiements enregistrés et les documents mis à votre disposition.',
+      'Après invitation, consultez les informations de votre bail, les paiements enregistrés et les documents partagés.',
     disponible: true,
     // Pas `/me` : cette adresse exige une session, et un curieux y serait
     // renvoyé vers un formulaire de connexion sans identifiants.
@@ -135,7 +136,7 @@ const ESPACES_PRESENTES = [
     image: '/illustrations/home-04.webp',
     pour: 'Personnes en recherche',
     texte:
-      'Chercher un logement à louer, et le trouver publié par un bailleur qui gère déjà ses biens sur Sikaloc.',
+      'Explorez les annonces publiées et candidatez depuis la fiche lorsqu’une candidature est ouverte.',
     disponible: true,
     lien: { href: '/find', libelle: 'Voir les logements' },
   },
@@ -150,28 +151,22 @@ const ESPACES_PRESENTES = [
  */
 const PARCOURS = [
   {
-    numero: '1',
     espace: ESPACE_PRO.nom,
     titre: 'Le bailleur enregistre son bien',
     texte:
       'Il renseigne le logement et suit séparément le bail, les loyers et les paiements enregistrés.',
-    avenir: false,
   },
   {
-    numero: '2',
     espace: 'Sikaloc_Find',
     titre: 'Il le publie s’il est vacant',
     texte:
       'S’il souhaite le proposer à la location, le bailleur peut publier une annonce à partir des informations du logement.',
-    avenir: false,
   },
   {
-    numero: '3',
     espace: ESPACE_ME.nom,
     titre: 'Le locataire entre dans son espace',
     texte:
       'Une fois la relation locative établie, le bailleur peut l’inviter à consulter les informations et documents disponibles dans Me.',
-    avenir: false,
   },
 ]
 
@@ -221,7 +216,11 @@ const VERIFIABLE = [
 ]
 
 export default async function PageAccueil() {
-  const utilisateur = await obtenirUtilisateur()
+  const supabase = await creerClientServeur()
+  const [utilisateur, { data: lieux }] = await Promise.all([
+    obtenirUtilisateur(),
+    supabase.rpc('lieux_publies'),
+  ])
 
   return (
     <div className="min-h-screen bg-canvas-soft">
@@ -255,9 +254,9 @@ export default async function PageAccueil() {
                 </p>
 
                 <h1 className="home-hero-title text-balance">
-                  Un logement à trouver.
-                  <span>Des loyers à suivre.</span>
-                  <span className="public-hero-accent">Des preuves à garder.</span>
+                  <span className="home-hero-title-main">Un logement à trouver.</span>
+                  <span className="home-hero-title-support">Des loyers à suivre.</span>
+                  <span className="home-hero-title-support public-hero-accent">Des preuves à garder.</span>
                 </h1>
 
                 <p className="public-hero-copy home-hero-description">
@@ -291,7 +290,7 @@ export default async function PageAccueil() {
                     width={1440}
                     height={1080}
                     priority
-                    sizes="(max-width: 767px) 100vw, (max-width: 1199px) 52vw, 640px"
+                    sizes="(max-width: 767px) 110vw, (max-width: 1199px) 62vw, 780px"
                     className="home-hero-image"
                   />
                 </picture>
@@ -300,8 +299,8 @@ export default async function PageAccueil() {
                     <Home size={18} strokeWidth={1.8} />
                   </span>
                   <span>
-                    <strong>Un même parcours locatif</strong>
-                    <small>Recherche · gestion · documents</small>
+                    <strong>Trois usages locatifs</strong>
+                    <small>Gérer · chercher · consulter</small>
                   </span>
                 </figcaption>
                 <div className="home-hero-space-tags" aria-hidden="true">
@@ -363,9 +362,9 @@ export default async function PageAccueil() {
           <div className="mx-auto max-w-[1200px]">
             <div className="home-spaces-heading">
               <div>
-                <p className="home-section-label">Trois espaces, une même location</p>
+                <p className="home-section-label">Trois espaces, des rôles distincts</p>
                 <h2 className="home-section-title">
-                  Chaque personne retrouve ce qui la concerne.
+                  Le bon espace pour votre moment de location.
                 </h2>
               </div>
               <p className="home-section-intro">
@@ -412,36 +411,37 @@ export default async function PageAccueil() {
           </div>
         </section>
 
-        <section id="trouver" className="home-find-section">
+        <section id="trouver" className="home-find-section home-find-section--signature">
           <div className="home-find-layout mx-auto max-w-[1200px]">
             <div className="home-find-copy">
-              <p className="home-section-label">Sikaloc Find</p>
+              <p className="home-find-overline">Sikaloc Find</p>
               <h2 className="home-section-title">
-                Une recherche guidée par vos critères.
+                Cherchez avec vos propres repères.
               </h2>
-              <p className="home-section-intro">
-                Parcourez les annonces publiées, comparez les informations d’un
-                logement et candidatez depuis sa fiche. Le bailleur examine
-                ensuite chaque demande.
+              <p className="home-find-description">
+                Choisissez une ville, un type de bien ou une fourchette de loyer.
+                Find affiche les annonces publiées qui correspondent à votre recherche.
               </p>
-              <Link href="/find" className="btn btn-primary home-find-cta">
-                Explorer les annonces <ArrowRight size={18} aria-hidden="true" />
+              <Link href="/find" className="home-find-text-link">
+                Voir le catalogue complet <ArrowRight size={18} aria-hidden="true" />
               </Link>
-              <p className="home-find-note">Une candidature ne crée pas automatiquement un bail.</p>
+              <p className="home-find-note">Une candidature reste une demande ; le bailleur décide de la suite.</p>
             </div>
 
-            <div className="home-find-preview" role="group" aria-label="Aperçu illustratif des critères de recherche Find">
-              <div className="home-find-preview-head">
-                <span className="home-find-preview-mark"><Search size={18} aria-hidden="true" /></span>
-                <div><strong>Affinez votre recherche</strong><small>Aperçu des critères du catalogue</small></div>
+            <div className="home-find-live" role="group" aria-label="Filtres de recherche de Sikaloc Find">
+              <div className="home-find-live-heading">
+                <span className="home-find-live-mark"><SlidersHorizontal size={17} aria-hidden="true" /></span>
+                <div>
+                  <strong>Construisez votre recherche</strong>
+                  <span>Les villes proposées correspondent aux annonces publiées.</span>
+                </div>
               </div>
-              <div className="home-find-fields">
-                <div className="home-find-field home-find-field--wide"><span>Localisation</span><strong>Ville et quartier</strong><MapPin size={17} aria-hidden="true" /></div>
-                <div className="home-find-field"><span>Type de bien</span><strong>Choisir un type</strong><Home size={17} aria-hidden="true" /></div>
-                <div className="home-find-field"><span>Loyer mensuel</span><strong>Définir une fourchette</strong><span className="home-find-currency">FCFA</span></div>
-                <div className="home-find-field"><span>Chambres</span><strong>Selon vos besoins</strong><SlidersHorizontal size={17} aria-hidden="true" /></div>
-              </div>
-              <div className="home-find-preview-foot"><span className="home-find-live-dot" /> Aperçu illustratif : les résultats réels viennent des annonces publiées.</div>
+              <FiltresFind
+                filtres={lireFiltres({})}
+                lieux={lieux ?? []}
+                nbFiltresActifs={0}
+                compacte
+              />
             </div>
           </div>
         </section>
@@ -450,25 +450,24 @@ export default async function PageAccueil() {
         <section id="parcours" className="home-journey-section">
           <div className="mx-auto max-w-[1200px]">
             <div className="home-journey-heading">
-              <p className="home-section-label">Comment ça marche</p>
-              <h2 className="home-section-title">Chaque espace a son rôle dans la location.</h2>
+              <p className="home-section-label">Des usages qui se complètent</p>
+              <h2 className="home-section-title">Chaque espace intervient à sa juste place.</h2>
               <p className="home-section-intro">
-                Le bailleur peut publier un logement sur Find. Le locataire
-                accède à Me sur invitation ; une candidature ne crée pas de bail.
+                Chaque espace intervient quand vous en avez besoin. Une annonce
+                ne crée pas de bail et l’accès locataire reste sur invitation.
               </p>
             </div>
-            <ol className="home-journey-list">
-              {PARCOURS.map(({ numero, espace, titre, texte }) => (
-                <li key={numero} className="home-journey-step">
-                  <span className="home-journey-number" aria-hidden="true">{numero.padStart(2, '0')}</span>
+            <div className="home-journey-list" role="list">
+              {PARCOURS.map(({ espace, titre, texte }) => (
+                <article key={espace} className="home-journey-step" role="listitem">
                   <div className="home-journey-copy">
                     <p className="home-journey-space">{espace}</p>
                     <h3>{titre}</h3>
                     <p>{texte}</p>
                   </div>
-                </li>
+                </article>
               ))}
-            </ol>
+            </div>
           </div>
         </section>
 
@@ -508,10 +507,10 @@ export default async function PageAccueil() {
           <div className="mx-auto max-w-[1200px]">
             <div className="home-trust-heading">
               <p className="home-section-label">Une promesse mesurée</p>
-              <h2 className="home-section-title">Pas de témoignages : des faits contrôlables.</h2>
+              <h2 className="home-section-title">Des repères concrets, à chaque étape.</h2>
               <p className="home-section-intro">
-                Pas de chiffres d’usage inventés ni de promesse d’attribution.
-                Voici ce que les espaces Sikaloc font réellement.
+                Découvrez ce que chaque espace permet de faire et comment les
+                informations sont mises à disposition.
               </p>
             </div>
 
