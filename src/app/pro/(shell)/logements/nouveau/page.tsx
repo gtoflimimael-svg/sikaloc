@@ -24,7 +24,7 @@ export default async function PageNouveauLogement() {
   const restants = limite === null ? null : Math.max(0, limite - enregistres)
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="property-form-page mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Nouveau logement"
         description={

@@ -89,7 +89,7 @@ export default async function PageHistorique({
   const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
 
   return (
-    <div>
+    <div className="lease-history-page">
       <EnTetePage
         titre={correction ? 'Corriger l’historique' : 'Historique des loyers'}
         description={
@@ -99,7 +99,7 @@ export default async function PageHistorique({
         }
       />
 
-      <div className="card mb-xl">
+      <div className="lease-history-context card mb-xl">
         <dl className="grid gap-md sm:grid-cols-3">
           <div>
             <dt className="text-caption text-mute">Locataire</dt>
@@ -137,7 +137,7 @@ export default async function PageHistorique({
         ) : null}
       </div>
 
-      <div className="card">
+      <div className="lease-history-editor card">
         <FormulaireHistorique
           bailId={id}
           echeances={aDeclarer}

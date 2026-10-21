@@ -47,7 +47,7 @@ export default async function PageMesCandidatures() {
   const candidatures = (lignes ?? []) as CandidatureDuCandidat[]
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas-soft">
+    <div className="me-candidatures-page flex min-h-screen flex-col bg-canvas-soft">
       <EnTeteFind connecte />
 
       <main id="contenu" className="app-main flex-1">

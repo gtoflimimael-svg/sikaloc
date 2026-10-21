@@ -76,7 +76,7 @@ export default async function PageHistoriquePaiements({
     .reduce((somme, p) => somme + Number(p.montant), 0)
 
   return (
-    <div>
+    <div className="payment-history-page">
       <EnTetePage
         titre="Historique des paiements"
         description="Tous les encaissements enregistrés, du plus récent au plus ancien."

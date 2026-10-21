@@ -110,11 +110,11 @@ export default async function PageFind({ searchParams }: { searchParams: Promise
   const aujourdhui = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <div className="find-catalog-page min-h-screen bg-canvas-soft">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
       <main id="contenu" className="mx-auto max-w-[1200px] app-main">
-        <header className="relative isolate overflow-hidden rounded-xl bg-surface-dark px-lg py-2xl text-on-dark sm:px-2xl lg:min-h-[250px] lg:py-3xl">
+        <header className="find-catalog-hero relative isolate overflow-hidden rounded-xl bg-surface-dark px-lg py-2xl text-on-dark sm:px-2xl lg:min-h-[250px] lg:py-3xl">
           <div className="relative z-10 max-w-[42rem]">
             <p className="text-body-sm font-semibold text-primary-on-dark">Sikaloc Find</p>
             <h1 className="mt-sm text-display-md font-extrabold tracking-tight text-on-dark">

@@ -23,7 +23,7 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
             <Link href="/legal/confidentialite" className="font-medium text-ink hover:underline">Confidentialité</Link>
             {mentionsCompletes() ? <Link href="/legal/mentions" className="font-medium text-ink hover:underline">Mentions légales</Link> : null}
           </nav>
-          <article className="legal-copy card card-lg min-w-0">{children}</article>
+          <article className="legal-copy legal-reading-surface card card-lg min-w-0">{children}</article>
         </div>
       </main>
 

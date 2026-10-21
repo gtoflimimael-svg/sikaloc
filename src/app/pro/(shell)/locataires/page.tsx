@@ -39,7 +39,7 @@ export default async function PageLocataires() {
   const enAttente = new Set((invitations ?? []).map((i) => i.locataire_id))
 
   return (
-    <div>
+    <div className="tenants-page">
       <EnTetePage
         titre="Locataires"
         description="Les personnes à qui vous louez. Invitez-les sur Sikaloc_Me pour qu’elles suivent leurs loyers et leurs quittances."
@@ -74,8 +74,8 @@ export default async function PageLocataires() {
             const actifs = baux.filter((b) => b.statut === 'Actif').length
 
             return (
-              <li key={locataire.id} className="card list-card" aria-labelledby={`locataire-${locataire.id}`}>
-                <div className="list-row">
+              <li key={locataire.id} className="card list-card tenant-list-card" aria-labelledby={`locataire-${locataire.id}`}>
+                <div className="tenant-list-row list-row">
                   <div className="flex min-w-0 items-start gap-sm">
                     <AvatarPeep id={locataire.id} avatar={locataire.avatar} nom={locataire.nom} />
                     <div className="min-w-0">

@@ -45,7 +45,7 @@ export default async function PageNouveauBail() {
   const impossible = diagnostiquer(situation) !== null
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="lease-form-page mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Nouveau bail"
         description={

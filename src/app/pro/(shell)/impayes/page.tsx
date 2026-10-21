@@ -38,7 +38,7 @@ export default async function PageImpayes() {
   const whatsappPropose = bailleur.notif_whatsapp !== false
 
   return (
-    <div>
+    <div className="arrears-page">
       <EnTetePage
         titre="Loyers en retard"
         description="Un loyer bascule ici lorsque son échéance est dépassée, tolérance comprise, et qu'il reste un solde impayé."
@@ -47,7 +47,7 @@ export default async function PageImpayes() {
       {erreurImpayes ? (
         <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : impayes.length === 0 ? (
-        <div className="card border-positive/30">
+        <div className="arrears-empty-card card">
           <p className="section-title text-positive-deep">
             Aucun loyer en retard
           </p>
@@ -83,7 +83,7 @@ export default async function PageImpayes() {
             </div>
           ) : null}
 
-          <ul className="space-y-sm" aria-label="Loyers en retard">
+          <ul className="arrears-list space-y-sm" aria-label="Loyers en retard">
             {impayes.map((impaye) => {
               const lien = lienRelanceImpaye({
                 locataireNom: impaye.locataire_nom,
@@ -97,7 +97,7 @@ export default async function PageImpayes() {
               return (
                 <li
                   key={`${impaye.bail_id}-${impaye.periode_debut}`}
-                  className="card list-card border-l-4 border-l-negative"
+                  className="card list-card arrears-card border-l-4 border-l-negative"
                 >
                   <div className="list-row">
                     <div className="flex min-w-0 items-start gap-sm">

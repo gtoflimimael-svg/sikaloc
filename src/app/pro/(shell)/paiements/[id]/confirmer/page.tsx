@@ -78,7 +78,7 @@ export default async function PageConfirmationPaiement({
   })
 
   return (
-    <div className="mx-auto max-w-[42rem] space-y-xl">
+    <div className="payment-confirmation-page mx-auto max-w-[42rem] space-y-xl">
       <div>
         <Link href={`/pro/paiements/${paiement.id}/modifier`} className="text-body-sm text-mute hover:text-ink">
           ← Modifier la saisie
@@ -109,7 +109,7 @@ export default async function PageConfirmationPaiement({
         </Alerte>
       ) : null}
 
-      <div className="card card-lg">
+      <div className="payment-confirmation-summary card card-lg">
         <div className="mb-lg flex flex-wrap items-center justify-between gap-sm">
           <h2 className="text-body-md font-semibold text-ink">{paiementDejaValide ? 'Paiement validé' : 'Montant à confirmer'}</h2>
           <Badge ton={paiement.statut === 'Validé' ? 'positive' : 'warning'}>{paiement.statut}</Badge>

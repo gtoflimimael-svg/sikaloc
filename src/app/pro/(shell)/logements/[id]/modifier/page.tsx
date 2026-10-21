@@ -29,7 +29,7 @@ export default async function PageModifierLogement({
   if (!logement) notFound()
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="property-form-page mx-auto max-w-[42rem]">
       <EnTetePage titre="Modifier le logement" />
       <FormulaireLogement action={modifierLogement.bind(null, id)} logement={logement} />
     </div>

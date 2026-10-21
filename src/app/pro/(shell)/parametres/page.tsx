@@ -46,13 +46,13 @@ export default async function PageParametres({
   }
 
   return (
-    <div>
+    <div className="settings-index-page">
       <EnTetePage
         titre="Paramètres"
         description="Votre profil, votre signature, vos préférences et votre abonnement."
       />
 
-      <div className="grid gap-lg sm:grid-cols-2">
+      <div className="settings-section-list grid gap-lg sm:grid-cols-2">
         {SECTIONS_PARAMETRES.map((section, index) => {
           const Icone = ICONES[section.cle]
 
@@ -61,9 +61,9 @@ export default async function PageParametres({
               key={section.cle}
               href={`/pro/parametres/${section.cle}`}
               style={{ '--delai': `${index * 45}ms` } as React.CSSProperties}
-              className="card card-lg anim-monte group flex flex-col gap-md transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-surface-elevated hover:shadow-elevated focus-visible:-translate-y-0.5"
+              className="settings-link-card anim-monte group flex flex-col gap-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
             >
-              <span className="flex size-11 items-center justify-center rounded-lg bg-primary-pale text-ink-deep transition-transform duration-200 group-hover:scale-105">
+              <span className="settings-link-icon flex items-center justify-center bg-primary-pale text-ink-deep transition-colors duration-200 group-hover:bg-primary">
                 <Icone size={21} strokeWidth={1.8} aria-hidden="true" />
               </span>
 

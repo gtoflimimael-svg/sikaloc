@@ -95,7 +95,7 @@ export default async function PageTableauDeBord({
       : null
 
   return (
-    <div className="space-y-2xl">
+    <div className="dashboard-home space-y-2xl">
       {/*
         Le message d'accueil ne peut plus annoncer « votre premier bail est
         enregistré » : l'onboarding n'en exige plus. Il invite désormais à la
@@ -179,16 +179,17 @@ export default async function PageTableauDeBord({
       </section>}
 
       {/* ── Accès rapides (§6.1.3) ─────────────────────────────────────── */}
-      <section className="flex flex-wrap gap-md">
-        <Link href="/pro/paiements/nouveau" className="btn btn-primary">
-          Nouveau paiement
-        </Link>
-        <Link href="/pro/baux/nouveau" className="btn btn-tertiary">
-          Nouveau bail
-        </Link>
-        <Link href="/pro/impayes" className="btn btn-tertiary">
-          Consulter les impayés
-        </Link>
+      <section className="dashboard-actions" aria-labelledby="actions-rapides">
+        <div className="dashboard-actions-copy">
+          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-ink-deep">À portée de main</p>
+          <h2 id="actions-rapides" className="mt-xs text-title-lg font-semibold text-ink">Actions rapides</h2>
+          <p className="mt-xs text-body-sm text-mute">Accédez directement aux opérations fréquentes.</p>
+        </div>
+        <div className="dashboard-actions-links">
+          <Link href="/pro/paiements/nouveau" className="btn btn-primary">Nouveau paiement</Link>
+          <Link href="/pro/baux/nouveau" className="btn btn-secondary">Créer un bail</Link>
+          <Link href="/pro/impayes" className="btn btn-tertiary">Suivre les retards</Link>
+        </div>
       </section>
 
       {/* ── Impayés ────────────────────────────────────────────────────── */}

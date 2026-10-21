@@ -82,7 +82,7 @@ export default async function PageAbonnement({
             }
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-subscription-page max-w-[46rem]">
       <EnteteParametre cle="abonnement" />
 
       <div className="space-y-xl">
@@ -90,7 +90,7 @@ export default async function PageAbonnement({
           <Alerte ton={messageRetour.ton}>{messageRetour.texte}</Alerte>
         ) : null}
 
-        <div className="card card-lg">
+        <div className="subscription-current-card card card-lg">
           <div className="flex flex-wrap items-start justify-between gap-md">
             <div>
               <p className="text-body-sm text-mute">Votre plan actuel</p>
@@ -120,7 +120,7 @@ export default async function PageAbonnement({
           )}
         </div>
 
-        <div className="rounded-xl border-t-2 border-t-primary bg-surface-dark p-2xl text-on-dark">
+        <div className="subscription-offer-card rounded-xl border-t-2 border-t-primary bg-surface-dark p-2xl text-on-dark">
           <p className="text-display-xs font-semibold text-on-dark">Plan Standard</p>
           <p className="mt-sm text-display-md font-extrabold tracking-tight text-on-dark">
             {formaterFCFA(PRIX_STANDARD_FCFA)}

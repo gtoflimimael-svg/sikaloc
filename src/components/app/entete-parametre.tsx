@@ -14,8 +14,8 @@ export function EnteteParametre({ cle }: { cle: CleParametre }) {
   const section = sectionParametre(cle)
 
   return (
-    <div className="mb-xl anim-monte">
-      <nav aria-label="Fil d’Ariane" className="mb-sm">
+    <div className="mb-xl anim-monte settings-page-header">
+      <nav aria-label="Fil d’Ariane" className="mb-md">
         <ol className="flex flex-wrap items-center gap-xxs text-body-sm">
           <li>
             <Link
@@ -35,7 +35,8 @@ export function EnteteParametre({ cle }: { cle: CleParametre }) {
         </ol>
       </nav>
 
-      <h1 className="text-display-md font-extrabold tracking-tight text-ink">
+      <p className="page-header-kicker">CENTRE DE PARAMÈTRES</p>
+      <h1 className="page-title text-display-md font-extrabold tracking-tight text-ink">
         {section.titre}
       </h1>
       <p className="mt-xs max-w-[42rem] text-body-md text-mute">

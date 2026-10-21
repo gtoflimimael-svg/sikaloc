@@ -127,7 +127,7 @@ export default async function PageDetailBail({
           ← Tous les baux
         </Link>
 
-        <div className="mt-lg flex flex-wrap items-start justify-between gap-lg">
+        <div className="lease-detail-heading mt-lg flex flex-wrap items-start justify-between gap-lg">
           <div className="flex items-center gap-lg">
             <AvatarPeep
               id={locataire?.id ?? bail.locataire_id}
@@ -164,7 +164,7 @@ export default async function PageDetailBail({
       </div>
 
       {/* ── Caractéristiques ───────────────────────────────────────────── */}
-      <section className="grid gap-lg sm:grid-cols-2 lg:grid-cols-4">
+      <section className="lease-facts-grid grid gap-lg sm:grid-cols-2 lg:grid-cols-4" aria-label="Conditions et informations du bail">
         <Fiche libelle="Loyer mensuel" valeur={formaterFCFA(bail.loyer_mensuel)} />
         <Fiche libelle="Jour d'échéance" valeur={`Le ${bail.jour_echeance} du mois`} />
         <Fiche libelle="Tolérance" valeur={`${bail.tolerance_jours} jours`} />

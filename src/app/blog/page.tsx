@@ -48,7 +48,7 @@ export default function PageBlog() {
 
         <ul role="list" className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2">
           {ARTICLES.map((article) => (
-            <li key={article.slug} className="card card-lg flex flex-col border border-hairline">
+            <li key={article.slug} className="blog-article-card card card-lg flex flex-col border border-hairline">
               <p className="mb-md text-caption font-semibold uppercase tracking-wide text-ink-deep">Comprendre Sikaloc</p>
               <h2 className="text-display-sm font-bold text-ink">
                 <Link href={`/blog/${article.slug}`} className="lien-anime">

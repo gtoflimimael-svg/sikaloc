@@ -57,7 +57,7 @@ export default async function PageAccueilMe() {
 
   return (
     <div className="space-y-xl">
-      <div className="rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+      <div className="me-dashboard-hero rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
         <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre espace personnel</p>
         <h1 className="mt-xs page-title text-on-dark">
           Bonjour {nom.split(' ')[0]}

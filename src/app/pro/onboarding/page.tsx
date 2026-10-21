@@ -25,12 +25,12 @@ export default async function PageOnboarding() {
   if (bailleur.onboarding_termine) redirect(ESPACE_PRO.tableauDeBord)
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
-      <header className="flex h-16 items-center justify-center border-b border-hairline bg-canvas px-lg">
+    <div className="onboarding-page min-h-screen bg-canvas-soft">
+      <header className="onboarding-page-header flex h-16 items-center justify-center border-b border-hairline bg-canvas px-lg">
         <MarqueSikaloc href={null} taille="sm" />
       </header>
 
-      <main className="mx-auto max-w-[640px] px-lg py-3xl">
+      <main className="onboarding-page-main mx-auto max-w-[640px] px-lg py-3xl">
         <AssistantOnboarding
           nomBailleur={bailleur.nom}
           telephoneBailleur={bailleur.telephone}

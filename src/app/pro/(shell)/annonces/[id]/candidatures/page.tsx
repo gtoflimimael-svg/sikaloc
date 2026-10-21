@@ -83,7 +83,7 @@ export default async function PageCandidaturesRecues({
   const titre = `${libelleChambres(annonce.chambres) ?? annonce.type}${annonce.quartier ? ` · ${annonce.quartier}` : ''}`
 
   return (
-    <div className="mx-auto max-w-[56rem] space-y-xl">
+    <div className="listing-candidates-page mx-auto max-w-[56rem] space-y-xl">
       <div>
         <Link href={`/pro/annonces/${annonce.id}`} className="text-body-sm text-mute hover:text-ink">
           ← {titre}
@@ -112,7 +112,7 @@ export default async function PageCandidaturesRecues({
         </Alerte>
       ) : null}
 
-      <p className="text-body-sm text-mute">
+      <p className="candidate-privacy-note text-body-sm text-mute">
         Le candidat vous a transmis son nom et son message. Son téléphone et son adresse email ne
         vous sont pas communiqués. Après votre décision, un email de réponse est mis en file pour
         le candidat ; sa livraison dépend du service d’envoi et n’est pas garantie par ce clic.
@@ -185,7 +185,7 @@ function Candidature({ candidature: c }: { candidature: CandidatureDuBailleur })
   const reetudiable = c.statut === 'refusee'
 
   return (
-    <li className="card space-y-md">
+    <li className="listing-candidate-card card space-y-md">
       <div className="flex flex-wrap items-start justify-between gap-sm">
         <div className="min-w-0">
           <p className="text-body-md font-semibold text-ink">

@@ -167,7 +167,7 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
   ]
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <div className="find-listing-page min-h-screen bg-canvas-soft">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
       <main id="contenu" className="mx-auto max-w-[1200px] app-main">
@@ -175,7 +175,7 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
           <ArrowLeft size={16} aria-hidden="true" /> Tous les logements
         </Link>
 
-        <header className="mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+        <header className="find-listing-hero mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
           <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Annonce {a.reference}</p>
           <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
           <p className="mt-sm flex items-center gap-xs text-body-lg text-on-dark-mute"><MapPin size={18} aria-hidden="true" /> {lieu(a)}</p>

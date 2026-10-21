@@ -11,11 +11,11 @@ export default async function PageSignature() {
   const bailleur = await bailleurOnboarde()
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-signature-page max-w-[46rem]">
       <EnteteParametre cle="signature" />
 
       <div className="space-y-lg">
-        <div className="card-sage">
+        <div className="signature-explainer card-sage">
           <p className="text-body-md font-semibold text-ink-deep">
             Pourquoi une signature ?
           </p>

@@ -22,11 +22,11 @@ export default async function PageParrainage() {
   const lienInscription = `${base}/inscription?parrain=${bailleur.code_parrainage}`
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-referral-page max-w-[46rem]">
       <EnteteParametre cle="parrainage" />
 
       <div className="space-y-xl">
-        <div className="card-sage">
+        <div className="referral-intro card-sage">
           <p className="text-display-xs font-semibold text-ink-deep">
             Parrainez un bailleur, gagnez 1 mois
           </p>
@@ -36,7 +36,7 @@ export default async function PageParrainage() {
           </p>
         </div>
 
-        <div className="card card-lg space-y-lg">
+        <div className="referral-code-card card card-lg space-y-lg">
           <div>
             <p className="field-label">Votre code de parrainage</p>
             <p className="text-display-sm font-extrabold tracking-tight text-primary">

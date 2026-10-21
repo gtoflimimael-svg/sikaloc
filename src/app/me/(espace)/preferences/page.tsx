@@ -34,7 +34,7 @@ export default async function PagePreferences() {
 
       <FormulairePreferencesLocataire actif={preferences.notifEmail} />
 
-      <p className="rounded-lg border border-hairline bg-canvas p-md text-body-sm text-mute">
+      <p className="me-preferences-privacy rounded-lg border border-hairline bg-canvas p-md text-body-sm text-mute">
         Les emails partent à <strong className="text-ink list-copy">{compte.email}</strong>,
         l’adresse de votre compte. Pour en changer, écrivez à votre bailleur : la
         fiche qu’il tient est celle qui sert d’adresse de contact.

@@ -82,7 +82,7 @@ export default async function PageAnnonce({
     'Elle rejoindra le catalogue public de Sikaloc_Find : type, ville, quartier, prix, équipements, description, disponibilité et photos. L’adresse exacte, votre téléphone et votre email ne sont jamais publiés.'
 
   return (
-    <div className="mx-auto max-w-[56rem] space-y-xl">
+    <div className="listing-detail-page mx-auto max-w-[56rem] space-y-xl">
       <div>
         <Link href="/pro/annonces" className="text-body-sm text-mute hover:text-ink">
           ← Annonces
@@ -134,7 +134,7 @@ export default async function PageAnnonce({
       ) : null}
 
       {annonce.statut !== 'brouillon' ? (
-        <section className="card flex flex-wrap items-center justify-between gap-md">
+        <section className="listing-candidate-shortcut card flex flex-wrap items-center justify-between gap-md">
           <div>
             <p className="text-body-md font-semibold text-ink">Candidatures reçues</p>
             <p className="text-body-sm text-mute">
@@ -147,7 +147,7 @@ export default async function PageAnnonce({
         </section>
       ) : null}
 
-      <section className="card space-y-md">
+      <section className="listing-detail-controls card space-y-md">
         <p className="text-body-sm text-mute">
           Logement :{' '}
           <span className="text-ink">

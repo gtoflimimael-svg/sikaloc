@@ -32,7 +32,7 @@ export default async function PageLogements() {
   const plafondAtteint = limite !== null && liste.length >= limite
 
   return (
-    <div>
+    <div className="properties-page">
       <EnTetePage
         titre="Logements"
         description="Les biens que vous mettez en location."
@@ -75,7 +75,7 @@ export default async function PageLogements() {
       ) : (
         <>
         <ResumeListe>{liste.length} logement{liste.length > 1 ? 's' : ''} enregistré{liste.length > 1 ? 's' : ''}</ResumeListe>
-        <ul className="grid gap-md lg:grid-cols-2" aria-label="Logements enregistrés">
+        <ul className="property-list-grid grid gap-md lg:grid-cols-2" aria-label="Logements enregistrés">
           {liste.map((logement) => {
             const baux = (logement.baux ?? []) as unknown as {
               id: string
@@ -94,8 +94,9 @@ export default async function PageLogements() {
               : bailActif?.locataire
 
             return (
-              <li key={logement.id} className="card list-card flex flex-col" aria-labelledby={`logement-${logement.id}`}>
-                <div className="flex items-start justify-between gap-md">
+              <li key={logement.id} className="card list-card property-list-card flex flex-col" aria-labelledby={`logement-${logement.id}`}>
+                <div className="property-list-heading flex items-start justify-between gap-md">
+                  <span className="property-list-mark" aria-hidden="true">{String(logement.type).slice(0, 1).toUpperCase()}</span>
                   <div className="min-w-0">
                     <h2 id={`logement-${logement.id}`} className="list-title">{logement.adresse}</h2>
                     <p className="mt-xxs text-body-sm text-mute">
@@ -105,7 +106,7 @@ export default async function PageLogements() {
                   <Badge ton="neutral">{logement.type}</Badge>
                 </div>
 
-                <div className="mt-md flex flex-wrap items-start justify-between gap-xs border-t border-hairline-soft pt-md">
+                <div className="property-list-tenancy mt-md flex flex-wrap items-start justify-between gap-xs border-t border-hairline-soft pt-md">
                   {bailActif ? (
                     <>
                     <p className="list-copy text-body-sm text-body">

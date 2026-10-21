@@ -89,14 +89,29 @@ export function EnTetePage({
   titre,
   description,
   action,
+  surTitre,
 }: {
   titre: string
   description?: string
   action?: ReactNode
+  surTitre?: string
 }) {
+  const famille = surTitre ?? (
+    /tableau de bord/i.test(titre) ? 'PILOTAGE' :
+    /impay/i.test(titre) ? 'RECOUVREMENT' :
+    /logement/i.test(titre) ? 'PARC IMMOBILIER' :
+    /locataire/i.test(titre) ? 'RELATIONS LOCATAIRES' :
+    /bail/i.test(titre) ? 'CONTRATS LOCATIFS' :
+    /annonce|candidature/i.test(titre) ? 'DIFFUSION LOCATIVE' :
+    /paiement|quittance|reçu/i.test(titre) ? 'FINANCES' :
+    /paramètre|profil|préférence|signature|abonnement|parrainage|donnée/i.test(titre) ? 'CONFIGURATION' :
+    'ESPACE PRO'
+  )
+
   return (
-    <div className="page-header mb-xl flex flex-wrap items-start justify-between gap-lg">
+    <div className="page-header page-header-workspace mb-xl flex flex-wrap items-end justify-between gap-lg">
       <div className="min-w-0">
+        <p className="page-header-kicker">{famille}</p>
         <h1 className="page-title">{titre}</h1>
         {description ? (
           <p className="mt-xs max-w-[42rem] text-body-md text-mute">{description}</p>

@@ -1,5 +1,6 @@
 'use client'
 
+import { ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef, type ReactNode, type FormEventHandler } from 'react'
 import { useFormStatus } from 'react-dom'
@@ -24,15 +25,26 @@ export function FormulaireMetier({ action, etat, titre, children, onChange }: {
   }, [etat])
 
   return (
-    <form ref={formulaire} action={action} aria-label={titre} className="card card-lg"
+    <form ref={formulaire} action={action} aria-label={titre} className="card card-lg formulaire-metier"
       onChange={onChange}
       // Ces parcours redirigent à la réussite. Un refus doit conserver la saisie.
       onReset={(evenement) => evenement.preventDefault()}>
+      <div className="formulaire-metier-intro">
+        <div>
+          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-ink-deep">Dossier à compléter</p>
+          <h2 className="mt-xs">{titre}</h2>
+        </div>
+        <span aria-hidden="true" className="hidden size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-ink sm:inline-flex">
+          <ClipboardList size={19} strokeWidth={1.8} />
+        </span>
+      </div>
+      <div className="formulaire-metier-corps">
       <ContenuFormulaire>
         <p className="text-caption text-mute">Les champs marqués d’un * sont obligatoires.</p>
         {etat.erreur ? <div tabIndex={-1} data-erreur-formulaire><Alerte ton="erreur">{etat.erreur}</Alerte></div> : null}
         {children}
       </ContenuFormulaire>
+      </div>
     </form>
   )
 }

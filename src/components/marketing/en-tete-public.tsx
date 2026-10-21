@@ -87,7 +87,7 @@ export function EnTetePublic({
   marqueHref?: string
 }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur">
+    <header className="public-navigation sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-sm px-lg xl:px-xl">
         {/*
           Le wordmark fait 178 px de large en taille `md` — à lui seul, plus

@@ -53,7 +53,7 @@ export default async function PageBail() {
 function CarteDetail({ bail }: { bail: BailLocataire }) {
   const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   return (
-    <section className="overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
+    <section className="me-contract-card overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
       <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline bg-canvas-sage p-lg">
         <div className="min-w-0">
           <p className="section-title list-copy">{bail.logement_adresse}</p>

@@ -39,7 +39,7 @@ export default async function PageNouveauPaiement({
   })
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="payment-form-page mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Enregistrer un paiement"
         description="Vous verrez un récapitulatif avant validation. À la confirmation, Sikaloc produit le reçu ou la quittance correspondant au paiement."

@@ -16,7 +16,7 @@ export default async function PageProfil() {
   const bailleur = await bailleurOnboarde()
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-profile-page max-w-[46rem]">
       <EnteteParametre cle="profil" />
 
       <div className="space-y-xl">

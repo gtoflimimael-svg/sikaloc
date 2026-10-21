@@ -47,7 +47,7 @@ export function CarteAuth({
             <MarqueSikaloc />
           </div>
 
-          <div className="card card-lg anim-monte min-w-0 w-full" style={{ animationDelay: '60ms' }}>
+          <div className="auth-form-card card card-lg anim-monte min-w-0 w-full" style={{ animationDelay: '60ms' }}>
             <h1 className="text-display-sm font-bold tracking-tight text-ink">{titre}</h1>
             {description ? (
               <p className="mt-xs mb-xl text-body-md text-mute">{description}</p>

@@ -58,7 +58,7 @@ export default async function PageCorrigerPaiement({
 
   if (!corrigeable) {
     return (
-      <div className="mx-auto max-w-[42rem] space-y-lg">
+      <div className="payment-form-page mx-auto max-w-[42rem] space-y-lg">
         <EnTetePage titre="Paiement figé" />
         <Alerte ton="attention">
           La fenêtre de correction de 5 minutes est écoulée. Ce paiement ne peut
@@ -79,7 +79,7 @@ export default async function PageCorrigerPaiement({
   }
 
   return (
-    <div className="mx-auto max-w-[42rem] space-y-lg">
+    <div className="payment-form-page mx-auto max-w-[42rem] space-y-lg">
       <EnTetePage
         titre="Corriger le paiement"
         description="La correction repasse le paiement en brouillon : vous devrez le confirmer à nouveau pour réémettre le document."

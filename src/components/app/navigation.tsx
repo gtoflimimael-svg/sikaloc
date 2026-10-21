@@ -175,7 +175,7 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
   const chemin = usePathname()
 
   return (
-    <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
+    <aside className="pro-sidebar hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
       <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto p-md">
         <div className="mb-xl px-md pt-sm">
           <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />

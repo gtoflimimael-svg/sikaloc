@@ -42,11 +42,11 @@ export default async function LayoutMe({ children }: { children: React.ReactNode
   if (baux.length === 0) redirect(roles.estCandidat ? CANDIDATURES : '/me/rejoindre')
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas-soft">
+    <div className="me-space-root flex min-h-screen flex-col bg-canvas-soft">
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <EnTeteMe email={compte.email} aussiBailleur={roles.estBailleur} aussiCandidat={roles.estCandidat} />
 
-      <main id="contenu-principal" tabIndex={-1} className="app-main flex-1">
+      <main id="contenu-principal" tabIndex={-1} className="me-space-page app-main flex-1">
         <div className="mx-auto max-w-[900px]">
           <TransitionPage>{children}</TransitionPage>
         </div>

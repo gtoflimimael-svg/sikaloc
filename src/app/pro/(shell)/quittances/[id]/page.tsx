@@ -101,13 +101,13 @@ export default async function PageQuittance({
 
 
   return (
-    <div className="mx-auto max-w-[48rem] space-y-xl">
-      <div className="print-hidden">
+    <div className="document-detail-page mx-auto max-w-[48rem] space-y-xl">
+      <div className="document-detail-heading print-hidden">
         <Link href="/pro/paiements" className="text-body-sm text-mute hover:text-ink">
           ← Historique des paiements
         </Link>
 
-        <div className="mt-lg flex flex-wrap items-start justify-between gap-lg">
+        <div className="document-title-row mt-lg flex flex-wrap items-start justify-between gap-lg">
           <div>
             <h1 className="text-display-md font-extrabold tracking-tight text-ink">
               {quittance.type === 'Quittance' ? 'Quittance de loyer' : 'Reçu de paiement'}

@@ -75,7 +75,7 @@ function LignePaiement({
   montrerAdresse: boolean
 }) {
   return (
-    <li className="card list-card shadow-sm">
+    <li className="me-payment-card card list-card shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-md">
         <div className="min-w-0 list-copy">
           <p className="text-body-md font-semibold text-ink">

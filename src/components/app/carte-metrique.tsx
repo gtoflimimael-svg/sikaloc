@@ -19,7 +19,7 @@ export function CarteMetrique({
   if (ton === 'primary') {
     return (
       <div className="metric-card metric-card-primary">
-        <p className="text-body-sm font-semibold opacity-90">{label}</p>
+        <p className="metric-label font-semibold">{label}</p>
         <p className="metric-value">{valeur}</p>
         {detail ? <p className="mt-xs text-caption opacity-90">{detail}</p> : null}
       </div>
@@ -27,8 +27,8 @@ export function CarteMetrique({
   }
 
   return (
-    <div className="metric-card">
-      <p className="text-body-sm text-mute">{label}</p>
+    <div className={`metric-card ${ton === 'alerte' ? 'metric-card-alert' : ''}`}>
+      <p className="metric-label">{label}</p>
       <p
         className={`metric-value ${
           ton === 'alerte' ? 'text-negative' : 'text-ink'

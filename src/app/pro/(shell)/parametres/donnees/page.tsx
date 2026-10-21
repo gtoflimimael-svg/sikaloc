@@ -18,11 +18,11 @@ export default async function PageDonnees() {
   const bailleur = await bailleurOnboarde()
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-data-page max-w-[46rem]">
       <EnteteParametre cle="donnees" />
 
       <div className="space-y-lg">
-        <div className="card card-lg">
+        <div className="data-export-card card card-lg">
           <h2 className="text-title-lg font-bold text-ink">
             Télécharger vos données et documents
           </h2>
@@ -49,7 +49,7 @@ export default async function PageDonnees() {
           </p>
         </div>
 
-        <div className="card-sage">
+        <div className="data-integrity-note card-sage">
           <p className="text-body-md font-semibold text-ink-deep">
             Vérifier qu&apos;un document n&apos;a pas été modifié
           </p>

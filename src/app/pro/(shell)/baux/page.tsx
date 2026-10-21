@@ -43,7 +43,7 @@ export default async function PageBaux({
   const liste = baux ?? []
 
   return (
-    <div>
+    <div className="leases-page">
       <EnTetePage
         titre="Baux"
         description="Le contrat qui relie un logement, un locataire et un loyer."
@@ -95,7 +95,7 @@ export default async function PageBaux({
               <li key={bail.id}>
               <Link
                 href={`/pro/baux/${bail.id}`}
-                className="card list-card block transition-colors hover:border-hairline-strong"
+                className="card list-card lease-list-card block transition-colors hover:border-hairline-strong"
               >
                 <div className="list-row">
                   <div className="flex min-w-0 items-start gap-sm">

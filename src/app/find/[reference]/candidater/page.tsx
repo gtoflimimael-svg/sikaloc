@@ -99,7 +99,7 @@ export default async function PageCandidater({
   }
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <div className="find-application-page min-h-screen bg-canvas-soft">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
       <main id="contenu" className="mx-auto max-w-[48rem] app-main">
@@ -107,7 +107,7 @@ export default async function PageCandidater({
           ← Revenir à l’annonce
         </Link>
 
-        <section className="mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+        <section className="find-application-context mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
           <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre candidature · Réf. {annonce.reference}</p>
           <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
           <p className="mt-sm list-copy text-body-md text-on-dark-mute">

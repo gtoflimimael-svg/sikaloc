@@ -32,7 +32,7 @@ export default async function PageModifierLocataire({
   if (!locataire) notFound()
 
   return (
-    <div className="mx-auto max-w-[42rem] space-y-xl">
+    <div className="tenant-form-page mx-auto max-w-[42rem] space-y-xl">
       <EnTetePage titre="Modifier le locataire" />
       <FormulaireLocataire
         action={modifierLocataire.bind(null, id)}

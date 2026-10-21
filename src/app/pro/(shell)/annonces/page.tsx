@@ -59,7 +59,7 @@ export default async function PageAnnonces() {
   )
 
   return (
-    <div>
+    <div className="listings-page">
       <EnTetePage
         titre="Annonces"
         description="Vos logements mis en location sur Sikaloc_Find."
@@ -92,7 +92,7 @@ export default async function PageAnnonces() {
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2">
+        <div className="listing-management-grid grid gap-md md:grid-cols-2">
           {annonces.map((annonce) => {
             const principale = annonce.annonce_photos.find((p) => p.position === 0)
             const nbPhotos = annonce.annonce_photos.length
@@ -102,9 +102,9 @@ export default async function PageAnnonces() {
               <Link
                 key={annonce.id}
                 href={`/pro/annonces/${annonce.id}`}
-                className="card flex gap-lg transition-colors hover:border-hairline-strong"
+                className="card listing-management-card flex gap-lg transition-colors hover:border-hairline-strong"
               >
-                <div className="size-24 shrink-0 overflow-hidden rounded-md border border-hairline bg-canvas-soft">
+                <div className="listing-management-photo size-24 shrink-0 overflow-hidden rounded-md border border-hairline bg-canvas-soft">
                   {principale ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img

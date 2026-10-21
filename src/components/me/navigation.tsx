@@ -77,7 +77,7 @@ export function EnTeteMe({
   }, [chemin])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 shadow-sm backdrop-blur">
+    <header className="me-navigation sticky top-0 z-40 border-b border-hairline bg-canvas/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[900px] items-center justify-between gap-xs px-md sm:gap-md sm:px-lg">
         {/*
           Le nom de l'espace est DANS la marque, pas à côté d'elle.

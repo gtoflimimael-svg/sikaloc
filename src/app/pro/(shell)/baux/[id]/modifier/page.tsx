@@ -50,7 +50,7 @@ export default async function PageModifierBail({
   })
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="lease-form-page mx-auto max-w-[42rem]">
       <EnTetePage titre="Modifier le bail" />
 
       <FormulaireBail

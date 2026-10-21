@@ -48,7 +48,7 @@ export default async function PageNouvelleAnnonce({
   const loue = (l: LigneLogement) => l.baux.some((b) => b.statut === 'Actif')
 
   return (
-    <div className="mx-auto max-w-[42rem] space-y-xl">
+    <div className="listing-form-page mx-auto max-w-[42rem] space-y-xl">
       <EnTetePage
         titre="Nouvelle annonce"
         description="Choisissez le logement à proposer. L’annonce commence en brouillon : rien n’est publié tant que vous ne l’avez pas décidé."

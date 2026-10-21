@@ -108,13 +108,13 @@
   --text-display-md--font-weight: 800;
 
   --text-display-sm: 32px;
-  --text-display-sm--line-height: 1.2;
+  --text-display-sm--line-height: 1.25;
   --text-display-sm--letter-spacing: -0.3px;
   --text-display-sm--font-weight: 700;
 
-  --text-display-xs: 22px;
+  --text-display-xs: 24px;
   --text-display-xs--line-height: 1.3;
-  --text-display-xs--font-weight: 500;
+  --text-display-xs--font-weight: 700;
 
   /* Titres et corps — StyreneB. */
   --text-title-lg: 22px;
@@ -243,10 +243,12 @@
   .text-display-xxl,
   .text-display-xl,
   .text-display-lg,
-  .text-display-md,
-  .text-display-sm {
+  .text-display-md {
     font-family: var(--font-display);
   }
+  .text-display-sm,
+  .text-display-xs,
+  .page-title { font-family: var(--font-sans); }
 
   /* Les montants FCFA s'alignent en colonne : chiffres tabulaires partout. */
   .tabular,
@@ -644,10 +646,10 @@
   .app-main { padding: 24px 16px; }
   .page-title {
     color: var(--color-ink);
-    font-family: var(--font-display);
-    font-size: clamp(28px, 2.5vw, 36px);
-    font-weight: 400;
-    line-height: 1.2;
+    font-family: var(--font-sans);
+    font-size: clamp(26px, 2vw, 28px);
+    font-weight: 700;
+    line-height: 1.3;
     letter-spacing: -0.025em;
     overflow-wrap: anywhere;
   }
@@ -658,17 +660,23 @@
     line-height: 1.4;
   }
   .metric-card {
+    position: relative;
     min-width: 0;
     padding: var(--card-padding);
-    border: 1px solid var(--color-hairline);
-    border-radius: var(--radius-lg);
+    border: 0;
+    border-top: 3px solid var(--color-hairline-strong);
+    border-radius: var(--radius-md);
     background-color: var(--color-surface-card);
+    box-shadow: 0 1px 0 var(--color-hairline);
   }
+  .metric-label { color: var(--color-mute); font-size: var(--text-caption); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
   .metric-card-primary {
-    border-color: var(--color-primary);
+    border-top-color: var(--color-primary);
     background-color: var(--color-primary);
     color: var(--color-on-primary);
   }
+  .metric-card-primary .metric-label { color: var(--color-ink-deep); }
+  .metric-card-alert { border-top-color: var(--color-negative); }
   .metric-value {
     margin-top: 8px;
     font-family: var(--font-sans);
@@ -1303,6 +1311,252 @@
 }
 
 @layer components {
+  /* Pro : pages de travail à forte hiérarchie, sans décor marketing. */
+  .page-header-workspace {
+    position: relative;
+    padding: 4px 0 20px 18px;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .pro-sidebar { box-shadow: 1px 0 0 color-mix(in srgb, var(--color-hairline) 55%, transparent); }
+  .pro-sidebar > div > div:first-child { min-height: 64px; border-bottom: 1px solid var(--color-hairline-soft); }
+  .pro-sidebar .sidebar-row { position: relative; min-height: 46px; }
+  .pro-sidebar .sidebar-row-active::before { position: absolute; inset: 9px auto 9px 0; width: 3px; border-radius: var(--radius-pill); background: var(--color-primary); content: ''; }
+  .me-navigation { box-shadow: 0 1px 0 color-mix(in srgb, var(--color-hairline) 55%, transparent); }
+  .me-navigation nav { scrollbar-width: thin; scrollbar-color: var(--color-hairline-strong) transparent; }
+  .public-navigation { box-shadow: 0 1px 0 color-mix(in srgb, var(--color-hairline) 45%, transparent); }
+  .auth-form-card { border-top: 4px solid var(--color-primary); }
+  .auth-form-card h1 { font-family: var(--font-sans); font-size: clamp(26px, 4vw, 32px); font-weight: 700; line-height: 1.25; letter-spacing: -0.03em; }
+  .blog-article-card { border-top: 3px solid var(--color-primary); transition: background-color var(--duree-rapide) var(--ease-net); }
+  .blog-article-card:hover { background: var(--color-primary-pale); }
+  .legal-reading-surface { border-top: 3px solid var(--color-ink-deep); line-height: 1.7; }
+  .page-header-workspace::before {
+    position: absolute;
+    inset: 3px auto 20px 0;
+    width: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    content: '';
+  }
+  .page-header-kicker {
+    margin-bottom: 6px;
+    color: var(--color-accent-teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+  }
+  .settings-page-header {
+    padding-left: 18px;
+    border-left: 4px solid var(--color-primary);
+  }
+  .page-header-workspace .page-title {
+    font-size: clamp(26px, 2vw, 28px);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+  .page-header-workspace .page-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  /* Les formulaires métier prennent la forme de dossiers structurés. */
+  .formulaire-metier {
+    overflow: hidden;
+    padding: 0;
+  }
+  .formulaire-metier-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    border-bottom: 1px solid var(--color-hairline);
+    background: linear-gradient(110deg, var(--color-primary-pale), var(--color-canvas) 72%);
+  }
+  .formulaire-metier-intro h2 {
+    color: var(--color-ink);
+    font-size: var(--text-title-lg);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .formulaire-metier-corps { padding: var(--spacing-xl); }
+  .form-section {
+    position: relative;
+    padding-top: var(--spacing-lg);
+  }
+  .form-section legend {
+    padding-right: var(--spacing-md);
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .form-section + .form-section { margin-top: var(--spacing-lg); }
+  .form-actions { margin-top: var(--spacing-lg); }
+
+  /* Les listes donnent la priorité à l'entité, puis à son état et à son action. */
+  .list-summary {
+    padding: 12px 16px;
+    border-left: 3px solid var(--color-primary);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--color-canvas);
+  }
+  .card.list-card {
+    border-color: transparent;
+    background: var(--color-canvas);
+    box-shadow: 0 1px 0 var(--color-hairline);
+  }
+  .card.list-card:hover {
+    border-color: var(--color-hairline);
+    background: color-mix(in srgb, var(--color-canvas) 82%, var(--color-canvas-soft));
+  }
+  .list-actions { row-gap: 10px; }
+  .property-list-card { gap: 4px; }
+  .property-list-heading { min-height: 76px; align-items: center; }
+  .property-list-mark {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-primary-pale);
+    color: var(--color-ink-deep);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .property-list-tenancy { min-height: 58px; }
+  .tenant-list-card { border-left: 3px solid var(--color-primary) !important; }
+  .tenant-list-row { align-items: flex-start; }
+  .lease-list-card { border-left: 3px solid var(--color-primary) !important; }
+  .listing-management-card { display: flex; flex-direction: column; gap: var(--spacing-md); padding: 0 !important; overflow: hidden; }
+  .listing-management-photo { width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0 !important; border-radius: 0; }
+  .listing-management-card > :not(.listing-management-photo) { margin-inline: var(--spacing-lg); }
+  .listing-management-card > :last-child { margin-bottom: var(--spacing-lg); }
+  .listing-candidate-shortcut { border-left: 4px solid var(--color-accent-teal); }
+  .listing-detail-controls { border-top: 3px solid var(--color-primary); }
+  .listing-candidate-card { border-left: 3px solid var(--color-primary); }
+  .listing-candidates-page .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+  .properties-page .list-summary, .tenants-page .list-summary, .leases-page .list-summary,
+  .listings-page .list-summary, .payment-history-page .list-summary { margin-top: var(--spacing-md); }
+  .arrears-page .list-summary { margin-top: var(--spacing-lg); background: var(--color-negative-pale); border-left-color: var(--color-negative); color: var(--color-negative-deep); }
+  .dashboard-home > section[data-visite='metriques'] { gap: var(--spacing-md); }
+  .settings-index-page .settings-section-list { border-top: 1px solid var(--color-hairline); }
+  .lease-history-page .formulaire-metier { border-top: 3px solid var(--color-ink-deep); }
+  .arrears-card { border-left-width: 4px !important; }
+  .arrears-card .money { font-size: clamp(18px, 3vw, 23px); }
+  .arrears-empty-card { border-left: 4px solid var(--color-positive); }
+  .arrears-list { display: grid; gap: var(--spacing-md); }
+  .lease-detail-heading {
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    background: var(--color-canvas);
+    box-shadow: inset 0 0 0 1px var(--color-hairline);
+  }
+  .lease-facts-grid > * { min-width: 0; border-top: 2px solid var(--color-primary); }
+  .document-detail-heading { padding-bottom: var(--spacing-lg); border-bottom: 1px solid var(--color-hairline); }
+  .document-title-row { padding: var(--spacing-xl); border-radius: var(--radius-xl); background: var(--color-canvas); }
+  .document-detail-page > .print-hidden:has(.btn) { padding: var(--spacing-md) 0; }
+  .onboarding-page { background-image: radial-gradient(circle at 50% 7rem, var(--color-primary-pale), transparent 30rem); }
+  .onboarding-page-header { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); background: color-mix(in srgb, var(--color-canvas) 92%, transparent); }
+  .onboarding-page-main { padding-top: clamp(32px, 7vw, 72px); }
+  .subscription-current-card { border-top: 3px solid var(--color-primary); }
+  .subscription-offer-card { position: relative; overflow: hidden; border-radius: var(--radius-xl); }
+  .subscription-offer-card::after { position: absolute; top: -56px; right: -56px; width: 160px; height: 160px; border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent); border-radius: 50%; content: ''; pointer-events: none; }
+  .referral-intro { border-left: 4px solid var(--color-primary); }
+  .referral-code-card { display: grid; gap: var(--spacing-lg); }
+  .data-export-card { border-top: 3px solid var(--color-primary); }
+  .data-integrity-note { border-left: 4px solid var(--color-ink-deep); }
+  .signature-explainer { border-left: 4px solid var(--color-primary); }
+  .find-catalog-hero { border-radius: 32px; }
+  .find-catalog-page .filter-bar { position: relative; top: 0; }
+  .find-listing-hero { border-radius: 24px; border-bottom: 4px solid var(--color-primary); }
+  .find-application-context { border-left: 4px solid var(--color-primary); }
+  .me-dashboard-hero { position: relative; overflow: hidden; border-radius: 28px; }
+  .me-dashboard-hero::after { position: absolute; top: -58px; right: -48px; width: 180px; height: 180px; border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent); border-radius: 50%; content: ''; pointer-events: none; }
+  .me-contract-card { box-shadow: none !important; border-top: 3px solid var(--color-primary) !important; }
+  .me-payment-card { border-left: 3px solid var(--color-primary) !important; }
+  .me-preferences-privacy { border-left-width: 3px; border-left-color: var(--color-ink-deep); }
+  .me-space-page .section-title { text-wrap: balance; }
+  .me-space-page .card { box-shadow: none; }
+  .me-candidatures-page li.card { border-left: 3px solid var(--color-primary); }
+  .me-rejoindre-page ol > li { padding: var(--spacing-md); border-radius: var(--radius-md); background: var(--color-canvas); }
+  .me-invitation-page dl > div { padding-block: var(--spacing-xs); border-bottom: 1px solid var(--color-hairline-soft); }
+  .property-form-page .formulaire-metier { border-top: 4px solid var(--color-primary); }
+  .tenant-form-page .formulaire-metier { border-top: 4px solid var(--color-accent-teal); }
+  .lease-form-page .formulaire-metier { border-top: 4px solid var(--color-ink-deep); }
+  .listing-form-page .form-section:first-of-type { border-top: 0; padding-top: 0; }
+  .payment-form-page .formulaire-metier { border-top: 4px solid var(--color-warning); }
+  .payment-form-page .input[name*='montant'], .payment-form-page input[inputmode='decimal'] { font-variant-numeric: tabular-nums; }
+  .settings-profile-page > .space-y-xl > * { border-radius: var(--radius-lg); }
+  .settings-preferences-page .card { padding: var(--spacing-xl); }
+  .settings-signature-page .card-sage { line-height: 1.65; }
+  .settings-subscription-page .data-table { border-radius: var(--radius-md); overflow: hidden; }
+  .settings-referral-page .badge { max-width: 100%; white-space: normal; text-align: center; }
+  .settings-data-page .btn { min-height: 48px; }
+  .payment-confirmation-summary { border-top: 4px solid var(--color-primary); }
+  .payment-confirmation-summary > p.text-body-lg { font-size: clamp(18px, 2.4vw, 22px); line-height: 1.5; }
+  .payment-confirmation-summary dl > div { padding-block: var(--spacing-xs); }
+  .candidate-privacy-note { padding: var(--spacing-md) var(--spacing-lg); border-left: 3px solid var(--color-accent-teal); background: var(--color-canvas); }
+  .lease-history-context { border-top: 3px solid var(--color-primary); }
+  .lease-history-editor { padding: 0; overflow: hidden; }
+  .data-table thead th { background: var(--color-primary-pale); color: var(--color-ink-deep); }
+  .data-table tbody tr:last-child td { border-bottom-color: transparent; }
+  .filter-bar { border-color: transparent; box-shadow: 0 1px 0 var(--color-hairline); }
+  .settings-link-card {
+    position: relative;
+    min-height: 190px;
+    border: 0;
+    border-bottom: 1px solid var(--color-hairline);
+    border-radius: 0;
+    background: transparent;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    transition: background-color var(--duree-rapide) var(--ease-net);
+  }
+  .settings-link-card:hover { background: var(--color-canvas); box-shadow: none; transform: none; }
+  .settings-link-card .settings-link-icon { width: 44px; height: 44px; border-radius: var(--radius-md); }
+  .dashboard-actions {
+    display: grid;
+    gap: var(--spacing-lg);
+    align-items: center;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
+  }
+  .dashboard-actions-copy .text-caption { color: var(--color-primary-on-dark); }
+  .dashboard-actions-copy h2 { color: var(--color-on-dark); }
+  .dashboard-actions-copy p:last-child { color: var(--color-on-dark-mute); }
+  .dashboard-actions-links { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+  .dashboard-actions .btn-secondary { background: var(--color-surface-dark-elevated); color: var(--color-on-dark); }
+  .dashboard-actions .btn-tertiary { border-color: var(--color-hairline-strong); background: transparent; color: var(--color-on-dark); }
+
+  @media (max-width: 639px) {
+    .page-header-workspace { align-items: stretch; padding-left: 14px; }
+    .settings-page-header { padding-left: 14px; }
+    .page-header-workspace .page-header-actions { width: 100%; }
+    .page-header-workspace .page-header-actions > .btn { flex: 1 1 100%; }
+    .formulaire-metier-intro { align-items: flex-start; padding: var(--spacing-lg); }
+    .formulaire-metier-corps { padding: var(--spacing-lg); }
+    .card.list-card { padding: var(--spacing-lg); }
+    .dashboard-actions { padding: var(--spacing-lg); }
+    .dashboard-actions-links { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .property-list-mark { width: 44px; height: 44px; flex-basis: 44px; font-size: 18px; }
+    .listing-management-card > :not(.listing-management-photo) { margin-inline: var(--spacing-md); }
+    .listing-management-card > :last-child { margin-bottom: var(--spacing-md); }
+    .lease-detail-heading { padding: var(--spacing-lg); }
+    .document-title-row { padding: var(--spacing-lg); }
+    .payment-confirmation-summary { padding: var(--spacing-lg); }
+    .find-catalog-hero { border-radius: var(--radius-xl); }
+    .me-dashboard-hero { border-radius: var(--radius-xl); }
+    .me-dashboard-hero::after { width: 118px; height: 118px; top: -40px; right: -36px; }
+  }
+  @media (min-width: 900px) {
+    .dashboard-actions { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+    .dashboard-actions-links { justify-content: flex-end; }
+  }
+
   .btn { border-radius: var(--radius-xl); font-size: 16px; font-weight: 600; }
   .btn-secondary { background-color: var(--color-canvas-soft); }
   .card { border-radius: var(--radius-xl); }

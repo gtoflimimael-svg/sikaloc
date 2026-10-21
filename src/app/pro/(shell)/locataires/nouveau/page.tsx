@@ -11,7 +11,7 @@ export default async function PageNouveauLocataire() {
   await bailleurOnboarde()
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="tenant-form-page mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Nouveau locataire"
         description="Ces coordonnées servent à rattacher le locataire à ses baux et à préparer les moyens de partage disponibles."
