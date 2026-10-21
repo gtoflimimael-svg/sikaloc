@@ -224,7 +224,7 @@ export default async function PageAccueil() {
 
       <main id="contenu">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-                <section className="public-hero home-hero relative overflow-hidden">
+        <section className="public-hero home-hero home-hero--clair relative overflow-hidden">
           <div className="home-hero-inner relative mx-auto max-w-[1320px]">
             <div className="home-hero-layout">
               <div className="home-hero-copy-block">
@@ -236,20 +236,19 @@ export default async function PageAccueil() {
                 <h1 className="home-hero-title text-balance">
                   <span className="home-hero-title-main">Un logement à trouver.</span>
                   <span className="home-hero-title-support">Des loyers à suivre.</span>
-                  <span className="home-hero-title-support public-hero-accent">Des preuves à garder.</span>
+                  <span className="home-hero-title-support home-hero-title-mark">Des preuves à garder.</span>
                 </h1>
 
                 <p className="public-hero-copy home-hero-description">
-                  Sikaloc réunit la recherche de logements, le suivi locatif et
-                  les documents de location dans des espaces pensés pour les
-                  bailleurs, les locataires et les candidats.
+                  Sikaloc réunit la recherche de logements, le suivi locatif et les documents de location
+                  dans des espaces dédiés aux bailleurs, aux locataires invités et aux candidats.
                 </p>
 
                 <div className="home-hero-actions">
                   <Link href="/pro?presentation=1" className="btn btn-primary">
                     Découvrir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
                   </Link>
-                  <Link href="/find" className="home-hero-secondary">
+                  <Link href="/find" className="btn btn-secondary home-hero-secondary">
                     Trouver un logement <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 </div>
@@ -261,38 +260,16 @@ export default async function PageAccueil() {
               </div>
 
               <figure className="home-hero-art">
-                <div aria-hidden="true" className="home-hero-art-halo" />
-                <picture>
-                  <source media="(max-width: 639px)" srcSet="/illustrations/home-01-mobile.webp" />
-                  <Image
-                    src="/illustrations/home-01.webp"
-                    alt="Composition architecturale illustrée reliant trois logements stylisés"
-                    width={1440}
-                    height={1080}
-                    priority
-                    sizes="(max-width: 767px) 110vw, (max-width: 1199px) 62vw, 780px"
-                    className="home-hero-image"
-                  />
-                </picture>
-                <figcaption className="home-hero-caption">
-                  <span className="home-caption-symbol" aria-hidden="true">
-                    <Home size={18} strokeWidth={1.8} />
-                  </span>
-                  <span>
-                    <strong>Trois usages locatifs</strong>
-                    <small>Gérer · chercher · consulter</small>
-                  </span>
-                </figcaption>
-                <div className="home-hero-space-tags" aria-hidden="true">
-                  <span>Pro</span><span>Me</span><span>Find</span>
-                </div>
+                <Image
+                  src="/illustrations/home-01-sculpture.png"
+                  alt="Sculpture architecturale de trois maisons en marbre crème et vert, reliées par des passerelles courbes"
+                  width={1536}
+                  height={1024}
+                  priority
+                  sizes="(max-width: 639px) 100vw, (max-width: 1199px) 94vw, 1100px"
+                  className="home-hero-image"
+                />
               </figure>
-            </div>
-
-            <div className="home-hero-index" role="group" aria-label="Les trois usages de Sikaloc">
-              <span>Gérer un logement</span>
-              <span>Retrouver ses documents</span>
-              <span>Explorer les annonces</span>
             </div>
           </div>
         </section>
