@@ -1,9 +1,16 @@
--- Sikaloc-Test seulement. Le bloc EXCEPTION annule toute fixture; aucun service externe/Storage.
+-- Pile Supabase locale fraîche et explicitement marquée jetable seulement.
+-- Le bloc EXCEPTION annule toute fixture; aucun service externe/Storage.
 do $test$
 declare
   u uuid := gen_random_uuid(); l uuid; t uuid; b uuid; p1 uuid:=gen_random_uuid(); p2 uuid:=gen_random_uuid(); q uuid:=gen_random_uuid();
   doc_at timestamptz:=clock_timestamp()-interval '5 minutes'; pay public.paiements; current_fin jsonb; receipt jsonb;
 begin
+  if to_regclass('sikaloc_test_guard.instance') is null then
+    raise exception 'Pile jetable non confirmée : marqueur absent.';
+  end if;
+  if not exists (select 1 from sikaloc_test_guard.instance where disposable is true) then
+    raise exception 'Pile jetable non confirmée : marqueur invalide.';
+  end if;
   begin
     insert into auth.users(id,email,raw_user_meta_data) values(u,'fixture-'||replace(u::text,'-','')||'@example.invalid',jsonb_build_object('nom','Fixture historique','telephone','+22997000001'));
     insert into public.logements(bailleur_id,adresse,type,ville) values(u,'Fixture temporaire','Appartement','Cotonou') returning id into l;
