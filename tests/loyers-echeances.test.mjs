@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import { parAnnee } from '../src/lib/echeances.ts'
-import { typeDocumentPaiement } from '../src/lib/documents-paiement.ts'
+import { apercuDocumentPaiement, typeDocumentPaiement } from '../src/lib/documents-paiement.ts'
 
 const racine = new URL('../', import.meta.url)
 const migration = await readFile(
@@ -11,6 +11,10 @@ const migration = await readFile(
   'utf8',
 )
 const pdf = await readFile(new URL('src/lib/pdf/document-quittance.tsx', racine), 'utf8')
+const confirmation = await readFile(
+  new URL('src/app/pro/(shell)/paiements/[id]/confirmer/page.tsx', racine),
+  'utf8',
+)
 
 test('les échéances incluent les baux résiliés jusqu’à leur date de fin', () => {
   assert.match(migration, /where b\.statut in \('Actif'::public\.statut_bail, 'Résilié'::public\.statut_bail\)/)
@@ -46,8 +50,66 @@ test('charges et dépôt donnent toujours un reçu, jamais une quittance de loye
   assert.equal(typeDocumentPaiement('Charges', false), 'Reçu')
   assert.equal(typeDocumentPaiement('Dépôt de garantie', false), 'Reçu')
   assert.match(migration, /if v_type <> 'Loyer'::public\.type_paiement then\s+new\.type := 'Reçu'/)
+  assert.match(confirmation, /apercuDocumentPaiement\(/)
+  assert.match(confirmation, /ne constitue pas une quittance de loyer/)
   assert.match(pdf, /estLoyer && donnees\.estPartiel[\s\S]*'Reçu de paiement partiel'[\s\S]*'Reçu de paiement'/)
   assert.match(pdf, /au titre de \$\{donnees\.typePaiement\.toLowerCase\(\)\}/)
+})
+
+test('l’aperçu de confirmation prend le loyer historisé et ne devine pas si la donnée manque', () => {
+  assert.match(confirmation, /\.from\('v_echeances'\)[\s\S]*\.eq\('periode_debut', paiement\.periode_debut\)/)
+  assert.match(confirmation, /Le loyer historique de cette période n’est pas disponible dans l’aperçu/)
+
+  const historiquePartiel = apercuDocumentPaiement({
+    typePaiement: 'Loyer',
+    montant: 30000,
+    loyerApplicable: 60000,
+    cumulValideAvant: 20000,
+  })
+  assert.deepEqual(historiquePartiel, {
+    cumul: 50000,
+    solde: 10000,
+    estPartiel: true,
+    typeDocument: 'Reçu',
+  })
+
+  const historiqueSolde = apercuDocumentPaiement({
+    typePaiement: 'Loyer',
+    montant: 30000,
+    loyerApplicable: 50000,
+    cumulValideAvant: 20000,
+  })
+  assert.equal(historiqueSolde.typeDocument, 'Quittance')
+  assert.equal(historiqueSolde.solde, 0)
+
+  const inconnu = apercuDocumentPaiement({
+    typePaiement: 'Loyer',
+    montant: 30000,
+    loyerApplicable: null,
+    cumulValideAvant: null,
+  })
+  assert.equal(inconnu.typeDocument, null)
+
+  const loyerInvalide = apercuDocumentPaiement({
+    typePaiement: 'Loyer',
+    montant: Number.NaN,
+    loyerApplicable: 50000,
+    cumulValideAvant: 0,
+  })
+  assert.deepEqual(loyerInvalide, {
+    cumul: null,
+    solde: null,
+    estPartiel: null,
+    typeDocument: null,
+  })
+
+  const depot = apercuDocumentPaiement({
+    typePaiement: 'Dépôt de garantie',
+    montant: 80000,
+    loyerApplicable: null,
+    cumulValideAvant: null,
+  })
+  assert.equal(depot.typeDocument, 'Reçu')
 })
 
 test('le regroupement annuel ascendant et descendant partage une seule implémentation', () => {
