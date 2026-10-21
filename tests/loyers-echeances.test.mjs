@@ -59,6 +59,8 @@ test('charges et dépôt donnent toujours un reçu, jamais une quittance de loye
 test('l’aperçu de confirmation prend le loyer historisé et ne devine pas si la donnée manque', () => {
   assert.match(confirmation, /\.from\('v_echeances'\)[\s\S]*\.eq\('periode_debut', paiement\.periode_debut\)/)
   assert.match(confirmation, /Le loyer historique de cette période n’est pas disponible dans l’aperçu/)
+  assert.match(confirmation, /paiementDejaValide \? 'Générer le document' : 'Confirmer et générer le document'/)
+  assert.match(confirmation, /Le paiement déjà validé est de/)
 
   const historiquePartiel = apercuDocumentPaiement({
     typePaiement: 'Loyer',

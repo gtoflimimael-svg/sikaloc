@@ -53,6 +53,7 @@ export default async function PageConfirmationPaiement({
   const logement = Array.isArray(bail?.logement) ? bail?.logement[0] : bail?.logement
   const locataire = Array.isArray(bail?.locataire) ? bail?.locataire[0] : bail?.locataire
 
+  const paiementDejaValide = paiement.statut === 'Validé'
   const montant = Number(paiement.montant)
   const { data: echeance, error: erreurEcheance } = paiement.type_paiement === 'Loyer'
     ? await supabase
@@ -83,7 +84,9 @@ export default async function PageConfirmationPaiement({
           ← Modifier la saisie
         </Link>
         <EnTetePage titre="Confirmer le paiement"
-          description="Vérifiez avant de valider. Après confirmation, vous disposerez de 5 minutes pour corriger." />
+          description={paiementDejaValide
+            ? 'Le paiement est déjà validé. Cette étape permet de reprendre la génération de son document.'
+            : 'Vérifiez avant de valider. Après confirmation, vous disposerez de 5 minutes pour corriger.'} />
       </div>
 
       {paiement.type_paiement !== 'Loyer' ? (
@@ -108,11 +111,11 @@ export default async function PageConfirmationPaiement({
 
       <div className="card card-lg">
         <div className="mb-lg flex flex-wrap items-center justify-between gap-sm">
-          <h2 className="text-body-md font-semibold text-ink">{paiement.statut === 'Validé' ? 'Montant validé' : 'Montant à confirmer'}</h2>
+          <h2 className="text-body-md font-semibold text-ink">{paiementDejaValide ? 'Paiement validé' : 'Montant à confirmer'}</h2>
           <Badge ton={paiement.statut === 'Validé' ? 'positive' : 'warning'}>{paiement.statut}</Badge>
         </div>
         <p className="text-body-lg text-ink">
-          Vous allez enregistrer un paiement de{' '}
+          {paiementDejaValide ? 'Le paiement déjà validé est de ' : 'Vous allez enregistrer un paiement de '}
           <strong className="font-semibold money">{formaterFCFA(montant)}</strong>{' '}
           {paiement.type_paiement === 'Loyer'
             ? 'pour le loyer de'
@@ -164,7 +167,7 @@ export default async function PageConfirmationPaiement({
       <GroupeActions>
         <BoutonAction
           action={validerPaiement.bind(null, id)}
-          libelle="Confirmer et générer le document"
+          libelle={paiementDejaValide ? 'Générer le document' : 'Confirmer et générer le document'}
           libelleEnCours="Génération…"
         />
         <BoutonAction
