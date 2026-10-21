@@ -25,6 +25,18 @@
 
 Le défaut d'affichage du retour de paiement sans transaction et les affirmations excessives « tous les loyers réglés » ont été corrigés localement dans cette branche. Ils ne sont pas corrigés en production.
 
+## Mise à jour — consolidation locale, 21 octobre 2026
+
+Les tests sont **suspendus explicitement à la demande de l'utilisateur** pour le présent lot. Aucun test, build, lint, contrôle TypeScript, parcours navigateur ou campagne de recette n'a été lancé ici ; les résultats des lots antérieurs ne valident pas ces modifications.
+
+- **P0 inchangés** : environnement PostgreSQL réellement jetable et reconstruction/mise à niveau des migrations non établis ; sauvegarde/restauration Production non réalisée ; livraison coordonnée application/SQL non autorisée ni validée. Aucune opération sur Production n'a eu lieu dans cette intervention.
+- **P1 inchangés** : sessions Auth réelles, RLS en conditions réelles, parcours Pro/Me/Find, documents, paiements et exports n'ont pas été exécutés. Les 56 pages n'ont pas été inspectées au navigateur.
+- **P1 visuel** : les largeurs 320, 390, 768, 1024 et 1440 px, clavier, zoom, contrastes, focus et reduced-motion restent à inspecter. Le remplacement des illustrations vides Pro est uniquement une modification de code, pas une validation de rendu.
+- **P2 assets** : aucune capture authentique récente des écrans Pro n'a été produite. Le ZIP du kit logo n'est pas présent dans le dépôt ; les SVG officiels versionnés sont conservés. Les avatars Open Peeps restent utilisés comme avatars d'interface, distincts des illustrations éditoriales, et leur statut de marque doit être revu si l'interdiction s'étend à eux.
+- **P2 ressources** : Manrope local demeure indisponible selon le dossier antérieur ; Inter reste le fallback. Aucune nouvelle illustration n'a été générée dans ce lot.
+
+Les changements d'interface de cette consolidation remplacent dans huit états vides Pro les tracés Transhumans par les WebP Sikaloc locaux et retirent le module SVG devenu sans usage direct ; le bandeau commun des formulaires perd son étiquette et son pictogramme génériques. Ces changements ne sont pas testés ni considérés prêts pour publication. Voir `ETAT-FINAL-SIKALOC.md` et `MODIFICATIONS-FINALES.md`.
+
 ## Mise à jour priorité 1 — 21 octobre 2026
 
 - **P0 maintenu** : aucune pile Supabase/PostgreSQL jetable opérationnelle dans cet environnement. Docker refuse l'accès, les binaires serveur PostgreSQL sont absents et la CLI locale ne fournit pas le mode natif. Les 57 migrations, les rôles réels et les scénarios financiers restent donc non exécutés. Un garde-fou de cible et une procédure reproductible ont été ajoutés, mais ils ne remplacent pas ces essais.

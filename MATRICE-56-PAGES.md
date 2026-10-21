@@ -62,3 +62,9 @@
 | Pro | `/pro/parametres/donnees` | Présent | Export non rejoué | NV | NV | NV | Réserve |
 
 Total : 56 routes uniques (15 publiques/Auth, 3 Find, 8 Me, 30 Pro). Les statuts « Réserve » signalent l'absence de recette, pas un défaut démontré. Aucune inspection visuelle authentifiée des 56 pages n'a été réalisée dans ce lot ; les largeurs 320/390/768/1024/1440 restent donc non validées. Voir `REGISTRE-RESERVES.md`.
+
+## Addendum — consolidation visuelle locale
+
+Branche `codex/consolidation-livraison-3`, issue de `76037c70626c078f34d661d00df047dc321d417c`. Les huit pages Pro qui affichent un état vide (tableau de bord, logements, locataires, baux, détail d'un bail, annonces, nouvelle annonce sans logement et paiements) utilisent désormais des images WebP éditoriales Sikaloc à la place du SVG Transhumans. Le bandeau du composant commun de formulaire a également été épuré. Les autres interventions mentionnées ci-dessus sont l'historique des lots précédents ; elles ne signifient pas qu'une page est visuellement ou fonctionnellement recettée.
+
+À la demande de l'utilisateur, aucune validation technique ou visuelle n'a été exécutée pour cette consolidation. Les colonnes V/F/S demeurent **NV** pour les 56 routes. Voir `ETAT-FINAL-SIKALOC.md` pour le relevé page par page et `REGISTRE-RESERVES.md` pour les conditions bloquantes.
