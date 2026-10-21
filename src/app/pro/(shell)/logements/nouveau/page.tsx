@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Nouveau logement' }
 export default async function PageNouveauLogement() {
   const supabase = await creerClientServeur()
 
-  const [bailleur, { count }] = await Promise.all([
+  const [bailleur, { count, error: erreurCompteur }] = await Promise.all([
     bailleurOnboarde(),
     supabase.from('logements').select('id', { count: 'exact', head: true }),
   ])
@@ -36,7 +36,12 @@ export default async function PageNouveauLogement() {
         }
       />
 
-      {plafondAtteint ? (
+      {erreurCompteur ? (
+        <Alerte ton="erreur">
+          La limite de votre plan ne peut pas être vérifiée. Le formulaire est momentanément
+          indisponible ; actualisez la page pour réessayer.
+        </Alerte>
+      ) : plafondAtteint ? (
         <div className="card card-lg space-y-lg anim-monte">
           {/* Le décompte est dit explicitement : « limité à 2 » sans rappeler
               qu'on en a déjà 2 laisse croire qu'il en reste. */}

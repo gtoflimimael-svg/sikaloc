@@ -33,7 +33,7 @@ export default async function PageDetailBail({
   // des params, et les RLS scopent la ligne de toute façon. Les deux partent
   // donc en parallèle ; seul le `notFound()` qui suit reste séquentiel, car
   // lui dépend réellement du résultat.
-  const [, { data: bail }] = await Promise.all([
+  const [, { data: bail, error: erreurBail }] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('baux')
@@ -44,10 +44,21 @@ export default async function PageDetailBail({
       .maybeSingle(),
   ])
 
+  if (erreurBail) {
+    return (
+      <Alerte ton="erreur">
+        Les informations du bail ne peuvent pas être chargées. Actualisez la page pour réessayer.
+      </Alerte>
+    )
+  }
   if (!bail) notFound()
 
-  const [{ data: paiements }, { data: impayes }, { count: aDeterminer }, { data: excedents }] =
-    await Promise.all([
+  const [
+    { data: paiements, error: erreurPaiements },
+    { data: impayes, error: erreurImpayes },
+    { count: aDeterminer, error: erreurEcheances },
+    { data: excedents, error: erreurExcedents },
+  ] = await Promise.all([
       supabase
         .from('paiements')
         .select('*, quittance:quittances(id, numero_document, type)')
@@ -74,7 +85,7 @@ export default async function PageDetailBail({
         .gt('montant_excedentaire', 0)
         .order('periode_debut', { ascending: false })
         .limit(12),
-    ])
+  ])
 
   const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
   const locataire = Array.isArray(bail.locataire) ? bail.locataire[0] : bail.locataire
@@ -84,6 +95,11 @@ export default async function PageDetailBail({
 
   return (
     <div className="space-y-2xl">
+      {erreurEcheances ? (
+        <Alerte ton="erreur">
+          Le suivi des échéances n’a pas pu être vérifié. Actualisez la page avant d’utiliser ces informations.
+        </Alerte>
+      ) : null}
       {/*
         Le bail a commencé avant son enregistrement, et personne ne s'est encore
         prononcé sur les mois d'avant. Ils ne figurent nulle part dans les
@@ -169,12 +185,14 @@ export default async function PageDetailBail({
       </section>
 
       {/* ── Impayés du bail ────────────────────────────────────────────── */}
-      {listeImpayes.length > 0 ? (
+      {erreurImpayes || listeImpayes.length > 0 ? (
         <section>
           <h2 className="mb-lg text-display-sm font-semibold tracking-tight text-ink">
             Loyers en retard sur ce bail
           </h2>
-          <div className="space-y-md">
+          {erreurImpayes ? (
+            <Alerte ton="erreur">Les loyers en retard n’ont pas pu être vérifiés.</Alerte>
+          ) : <div className="space-y-md">
             {listeImpayes.map((impaye) => (
               <div
                 key={impaye.periode_debut}
@@ -200,11 +218,13 @@ export default async function PageDetailBail({
                 </div>
               </div>
             ))}
-          </div>
+          </div>}
         </section>
       ) : null}
 
-      {listeExcedents.length > 0 ? (
+      {erreurExcedents ? (
+        <Alerte ton="erreur">Les éventuels excédents n’ont pas pu être vérifiés.</Alerte>
+      ) : listeExcedents.length > 0 ? (
         <section className="rounded-lg border border-hairline bg-canvas-soft p-lg">
           <h2 className="text-body-md font-semibold text-ink">Excédents non reportés</h2>
           <p className="mt-xs text-body-sm text-mute">
@@ -227,11 +247,13 @@ export default async function PageDetailBail({
           Historique des paiements
         </h2>
 
-        {listePaiements.length === 0 ? (
+        {erreurPaiements ? (
+          <Alerte ton="erreur">L’historique des paiements n’a pas pu être chargé.</Alerte>
+        ) : listePaiements.length === 0 ? (
           <EtatVide
             icone={<Illustration nom="reflexion" taille={200} decorative />}
             titre="Aucun paiement sur ce bail"
-            description="Le premier paiement enregistré générera automatiquement une quittance."
+            description="Après validation, chaque paiement reçoit le document correspondant à sa nature et au solde de la période."
             action={
               <Link href={`/pro/paiements/nouveau?bail=${id}`} className="btn btn-primary">
                 Enregistrer un paiement

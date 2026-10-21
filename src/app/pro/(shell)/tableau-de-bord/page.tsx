@@ -92,7 +92,7 @@ export default async function PageTableauDeBord({
       ? Math.round(
           (Number(metriques.loyers_percus_mois) / Number(metriques.loyers_attendus_mois)) * 100,
         )
-      : 0
+      : null
 
   return (
     <div className="space-y-2xl">
@@ -107,8 +107,8 @@ export default async function PageTableauDeBord({
             Bienvenue sur Sikaloc, {bailleur.nom.split(' ')[0]} 👋
           </p>
           <p className="mt-sm text-body-md text-body">
-            Votre tableau de bord est encore vide. Commencez par enregistrer un
-            logement : tout le reste s&apos;y rattache.
+            Retrouvez ici le suivi de votre parc, des baux et des paiements.
+            Vous pouvez ajouter un logement à tout moment.
           </p>
           <div className="mt-lg flex flex-wrap items-center gap-lg">
             <Link href="/pro/logements/nouveau" className="btn btn-primary">
@@ -143,6 +143,8 @@ export default async function PageTableauDeBord({
       */}
       {metriquesReponse.error ? (
         <Alerte ton="erreur">Les indicateurs ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+      ) : !metriques ? (
+        <Alerte ton="attention">Les indicateurs ne sont pas disponibles pour le moment.</Alerte>
       ) : <section data-visite="metriques" className="grid gap-md sm:grid-cols-2">
         <CarteMetrique
           label="Taux d'occupation"
@@ -151,8 +153,12 @@ export default async function PageTableauDeBord({
         />
         <CarteMetrique
           label="Taux de recouvrement"
-          valeur={`${tauxRecouvrement} %`}
-          detail={`${formaterFCFA(metriques?.loyers_percus_mois ?? 0)} sur ${formaterFCFA(metriques?.loyers_attendus_mois ?? 0)} attendus`}
+          valeur={tauxRecouvrement === null ? '—' : `${tauxRecouvrement} %`}
+          detail={
+            Number(metriques.loyers_attendus_mois) > 0
+              ? `${formaterFCFA(metriques.loyers_percus_mois)} sur ${formaterFCFA(metriques.loyers_attendus_mois)} attendus`
+              : 'Aucun loyer exigible ce mois-ci'
+          }
         />
         <CarteMetrique
           label="Impayés"
@@ -264,7 +270,7 @@ export default async function PageTableauDeBord({
           <EtatVide
             icone={<Illustration nom="joie" taille={200} decorative />}
             titre="Aucun paiement enregistré"
-            description="Dès votre premier paiement saisi, la quittance est générée automatiquement et apparaît ici."
+            description="Après validation d’un paiement, Sikaloc produit le reçu ou la quittance correspondant à sa nature et au solde de la période."
             action={
               <Link href="/pro/paiements/nouveau" className="btn btn-primary">
                 Enregistrer un paiement

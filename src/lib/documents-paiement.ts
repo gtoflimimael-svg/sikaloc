@@ -15,6 +15,50 @@ export interface ApercuDocumentPaiement {
   typeDocument: TypeDocument | null
 }
 
+export interface FinancesDocumentApercu {
+  montant?: number | null
+  type_paiement?: TypePaiement | null
+  loyer_mensuel?: number | null
+}
+
+export interface ApercuQuittanceFinance {
+  typePaiement: TypePaiement
+  montant: number
+  /** NULL signifie que le loyer de référence n'est pas établi par les données. */
+  loyerMensuel: number | null
+}
+
+/**
+ * Prépare uniquement les valeurs d'affichage d'un document.
+ * Un snapshot financier prévaut sur la ligne de paiement mutable ; à défaut,
+ * le loyer courant n'est jamais présenté comme un montant historique établi.
+ */
+export function apercuQuittanceFinance({
+  typePaiementPaiement,
+  montantPaiement,
+  finances,
+}: {
+  typePaiementPaiement: TypePaiement
+  montantPaiement: number
+  finances?: FinancesDocumentApercu | null
+}): ApercuQuittanceFinance {
+  const typePaiement = finances?.type_paiement ?? typePaiementPaiement
+  const montantSnapshot = finances?.montant
+  const montant =
+    typeof montantSnapshot === 'number' && Number.isFinite(montantSnapshot)
+      ? montantSnapshot
+      : montantPaiement
+  const loyerSnapshot = finances?.loyer_mensuel
+  const loyerMensuel =
+    typePaiement === 'Loyer' &&
+    typeof loyerSnapshot === 'number' &&
+    Number.isFinite(loyerSnapshot)
+      ? loyerSnapshot
+      : null
+
+  return { typePaiement, montant, loyerMensuel }
+}
+
 /** Aperçu prudent : le calcul d'autorité du document reste effectué côté SQL. */
 export function apercuDocumentPaiement({
   typePaiement,

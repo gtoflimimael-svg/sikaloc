@@ -99,13 +99,19 @@ export default async function PageLocataires() {
                   </div>
 
                   <div className="list-actions">
-                    <BoutonInvitation
-                      locataireId={locataire.id}
-                      nom={locataire.nom}
-                      email={locataire.email}
-                      rattache={Boolean(locataire.compte_id)}
-                      invitationEnAttente={enAttente.has(locataire.id)}
-                    />
+                    {erreurInvitations ? (
+                      <span className="text-caption text-warning-content">
+                        Invitation indisponible tant que son état n&apos;est pas vérifié
+                      </span>
+                    ) : (
+                      <BoutonInvitation
+                        locataireId={locataire.id}
+                        nom={locataire.nom}
+                        email={locataire.email}
+                        rattache={Boolean(locataire.compte_id)}
+                        invitationEnAttente={enAttente.has(locataire.id)}
+                      />
+                    )}
                     <Link
                       href={`/pro/locataires/${locataire.id}/modifier`}
                       aria-label={`Modifier le locataire ${locataire.nom}`}

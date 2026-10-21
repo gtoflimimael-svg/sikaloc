@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { BailImpossible, diagnostiquer } from '@/components/app/bail-impossible'
 import { FormulaireBail } from '@/components/app/formulaire-bail'
-import { EnTetePage } from '@/components/ui/retours'
+import { Alerte, EnTetePage } from '@/components/ui/retours'
 import { creerBail } from '@/lib/actions/baux'
 import { capacites } from '@/lib/plan'
 import { bailleurOnboarde } from '@/lib/session'
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Nouveau bail' }
 export default async function PageNouveauBail() {
   const supabase = await creerClientServeur()
 
-  const [bailleur, { data: logements }, { data: locataires }] = await Promise.all([
+  const [bailleur, reponseLogements, reponseLocataires] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('logements')
@@ -22,6 +22,8 @@ export default async function PageNouveauBail() {
       .order('adresse'),
     supabase.from('locataires').select('id, nom, telephone').order('nom'),
   ])
+  const { data: logements, error: erreurLogements } = reponseLogements
+  const { data: locataires, error: erreurLocataires } = reponseLocataires
 
   // Un logement déjà sous bail actif n'est pas proposé : la base le refuserait
   // de toute façon (index unique partiel), autant l'écarter en amont.
@@ -51,7 +53,12 @@ export default async function PageNouveauBail() {
         }
       />
 
-      {impossible ? (
+      {erreurLogements || erreurLocataires ? (
+        <Alerte ton="erreur">
+          Les logements et locataires n’ont pas pu être chargés. Le formulaire reste indisponible
+          pour éviter une saisie incomplète ; actualisez la page pour réessayer.
+        </Alerte>
+      ) : impossible ? (
         <BailImpossible situation={situation} />
       ) : (
         <FormulaireBail

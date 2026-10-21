@@ -14,7 +14,7 @@ export default async function PageNouveauLocataire() {
     <div className="mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Nouveau locataire"
-        description="Le locataire recevra ses quittances par WhatsApp, sans créer de compte."
+        description="Ces coordonnées servent à rattacher le locataire à ses baux et à préparer les moyens de partage disponibles."
       />
       <FormulaireLocataire action={creerLocataire} />
     </div>

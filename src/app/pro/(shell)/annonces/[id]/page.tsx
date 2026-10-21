@@ -49,7 +49,7 @@ export default async function PageAnnonce({
   if (!UUID.test(id)) notFound()
 
   const supabase = await creerClientServeur()
-  const [, { data: annonce }, { data: photos }] = await Promise.all([
+  const [, reponseAnnonce, reponsePhotos] = await Promise.all([
     bailleurOnboarde(),
     supabase.from('annonces').select('*').eq('id', id).maybeSingle(),
     supabase
@@ -58,9 +58,19 @@ export default async function PageAnnonce({
       .eq('annonce_id', id)
       .order('position'),
   ])
+  const { data: annonce, error: erreurAnnonce } = reponseAnnonce
+  const { data: photos, error: erreurPhotos } = reponsePhotos
+  if (erreurAnnonce) {
+    return (
+      <div className="space-y-md">
+        <Alerte ton="erreur">Cette annonce n’a pas pu être chargée. Actualisez la page pour réessayer.</Alerte>
+        <Link href="/pro/annonces" className="btn btn-secondary">Retour aux annonces</Link>
+      </div>
+    )
+  }
   if (!annonce) notFound()
 
-  const { data: logement } = annonce.logement_id
+  const { data: logement, error: erreurLogement } = annonce.logement_id
     ? await supabase.from('logements').select('adresse, ville').eq('id', annonce.logement_id).maybeSingle()
     : { data: null }
 
@@ -93,6 +103,9 @@ export default async function PageAnnonce({
 
       {existante ? (
         <Alerte ton="info">Ce logement avait déjà une annonce en cours : la voici.</Alerte>
+      ) : null}
+      {erreurLogement ? (
+        <Alerte ton="attention">Les informations du logement associé n’ont pas pu être chargées.</Alerte>
       ) : null}
 
       {annonce.statut === 'brouillon' ? (
@@ -219,12 +232,18 @@ export default async function PageAnnonce({
         ) : null}
       </section>
 
-      <PhotosAnnonce
-        annonceId={annonce.id}
-        photos={listePhotos}
-        modifiable={!cloturee}
-        publiee={annonce.statut === 'publiee'}
-      />
+      {erreurPhotos ? (
+        <Alerte ton="erreur">
+          Les photos n’ont pas pu être chargées. Les actions photo sont désactivées jusqu’à une nouvelle tentative.
+        </Alerte>
+      ) : (
+        <PhotosAnnonce
+          annonceId={annonce.id}
+          photos={listePhotos}
+          modifiable={!cloturee}
+          publiee={annonce.statut === 'publiee'}
+        />
+      )}
 
       {cloturee ? (
         <section className="card card-lg">

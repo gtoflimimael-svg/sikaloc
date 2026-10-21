@@ -80,7 +80,7 @@ export default async function PageConfirmationPaiement({
   return (
     <div className="mx-auto max-w-[42rem] space-y-xl">
       <div>
-        <Link href="/pro/paiements/nouveau" className="text-body-sm text-mute hover:text-ink">
+        <Link href={`/pro/paiements/${paiement.id}/modifier`} className="text-body-sm text-mute hover:text-ink">
           ← Modifier la saisie
         </Link>
         <EnTetePage titre="Confirmer le paiement"

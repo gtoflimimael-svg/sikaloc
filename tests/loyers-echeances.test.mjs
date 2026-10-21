@@ -3,7 +3,11 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import { parAnnee } from '../src/lib/echeances.ts'
-import { apercuDocumentPaiement, typeDocumentPaiement } from '../src/lib/documents-paiement.ts'
+import {
+  apercuDocumentPaiement,
+  apercuQuittanceFinance,
+  typeDocumentPaiement,
+} from '../src/lib/documents-paiement.ts'
 
 const racine = new URL('../', import.meta.url)
 const migration = await readFile(
@@ -54,6 +58,67 @@ test('charges et dépôt donnent toujours un reçu, jamais une quittance de loye
   assert.match(confirmation, /ne constitue pas une quittance de loyer/)
   assert.match(pdf, /estLoyer && donnees\.estPartiel[\s\S]*'Reçu de paiement partiel'[\s\S]*'Reçu de paiement'/)
   assert.match(pdf, /au titre de \$\{donnees\.typePaiement\.toLowerCase\(\)\}/)
+})
+
+test('l’aperçu d’une quittance préfère le snapshot et ne confond pas charges/dépôt avec un loyer', () => {
+  assert.deepEqual(
+    apercuQuittanceFinance({
+      typePaiementPaiement: 'Loyer',
+      montantPaiement: 50000,
+      finances: { type_paiement: 'Loyer', montant: 30000, loyer_mensuel: 100000 },
+    }),
+    { typePaiement: 'Loyer', montant: 30000, loyerMensuel: 100000 },
+  )
+
+  assert.deepEqual(
+    apercuQuittanceFinance({
+      typePaiementPaiement: 'Charges',
+      montantPaiement: 12000,
+      finances: { type_paiement: 'Charges', montant: 12000, loyer_mensuel: 100000 },
+    }),
+    { typePaiement: 'Charges', montant: 12000, loyerMensuel: null },
+  )
+
+  assert.deepEqual(
+    apercuQuittanceFinance({
+      typePaiementPaiement: 'Dépôt de garantie',
+      montantPaiement: 90000,
+      finances: null,
+    }),
+    { typePaiement: 'Dépôt de garantie', montant: 90000, loyerMensuel: null },
+  )
+})
+
+test('le retour « modifier la saisie » rouvre le paiement concerné, sans en créer un autre', async () => {
+  const confirmation = await readFile(
+    new URL('src/app/pro/(shell)/paiements/[id]/confirmer/page.tsx', racine),
+    'utf8',
+  )
+  assert.match(confirmation, /href=\{`\/pro\/paiements\/\$\{paiement\.id\}\/modifier`\}/)
+})
+
+test('l’aperçu de quittance utilise la lecture SQL autorisée et les données figées', async () => {
+  const quittancePage = await readFile(
+    new URL('src/app/pro/(shell)/quittances/[id]/page.tsx', racine),
+    'utf8',
+  )
+  assert.match(quittancePage, /obtenirDocumentAutorise\(id\)/)
+  assert.match(quittancePage, /contexte\?\.finances/)
+  assert.match(quittancePage, /finances\.typePaiement === 'Charges'/)
+  assert.doesNotMatch(quittancePage, /definition=\{formaterFCFA\(bail\?\.loyer_mensuel/)
+})
+
+test('l’export annonce les baux et les loyers historiques réellement conservés', async () => {
+  const exportSource = await readFile(new URL('src/lib/export.ts', racine), 'utf8')
+  const pageDonnees = await readFile(
+    new URL('src/app/pro/(shell)/parametres/donnees/page.tsx', racine),
+    'utf8',
+  )
+  assert.match(exportSource, /fichiers\['baux\.csv'\]/)
+  assert.match(exportSource, /fichiers\['loyers-historiques\.csv'\]/)
+  assert.match(exportSource, /identifiantsBaux/)
+  assert.match(pageDonnees, /loyers historiques disponibles/)
+  assert.match(pageDonnees, /ne peuvent pas\s+être reconstruits/)
 })
 
 test('l’aperçu de confirmation prend le loyer historisé et ne devine pas si la donnée manque', () => {

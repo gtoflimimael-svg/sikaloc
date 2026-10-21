@@ -29,13 +29,14 @@ export default async function PageNouvelleAnnonce({
   const { logement: selection } = await searchParams
   const supabase = await creerClientServeur()
 
-  const [, { data }] = await Promise.all([
+  const [, reponseLogements] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('logements')
       .select('id, adresse, ville, type, baux(statut), annonces(id, statut)')
       .order('created_at', { ascending: false }),
   ])
+  const { data, error: erreurLogements } = reponseLogements
 
   const logements = (data ?? []) as unknown as LigneLogement[]
 
@@ -53,7 +54,12 @@ export default async function PageNouvelleAnnonce({
         description="Choisissez le logement à proposer. L’annonce commence en brouillon : rien n’est publié tant que vous ne l’avez pas décidé."
       />
 
-      {logements.length === 0 ? (
+      {erreurLogements ? (
+        <Alerte ton="erreur">
+          Vos logements n’ont pas pu être chargés. La création de l’annonce est suspendue ;
+          actualisez la page pour réessayer.
+        </Alerte>
+      ) : logements.length === 0 ? (
         <EtatVide
           icone={<Illustration nom="plante" taille={200} decorative />}
           titre="Aucun logement enregistré"

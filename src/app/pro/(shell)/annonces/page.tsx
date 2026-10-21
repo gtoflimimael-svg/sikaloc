@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Illustration } from '@/components/ui/illustration'
-import { Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { LIBELLES_MOTIF, LIBELLES_STATUT, TON_STATUT, libelleChambres } from '@/lib/annonces/libelles'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
@@ -36,7 +36,7 @@ export default async function PageAnnonces() {
   // du bailleur connecté.
   // Une requête pour les annonces, une pour TOUS les décomptes : compter
   // annonce par annonce ferait une requête de plus par carte affichée.
-  const [, { data }, { data: compteurs }] = await Promise.all([
+  const [, reponseAnnonces, reponseCompteurs] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('annonces')
@@ -46,6 +46,8 @@ export default async function PageAnnonces() {
       .order('created_at', { ascending: false }),
     supabase.rpc('candidatures_par_annonce'),
   ])
+  const { data, error: erreurAnnonces } = reponseAnnonces
+  const { data: compteurs, error: erreurCompteurs } = reponseCompteurs
 
   const annonces = ((data ?? []) as unknown as LigneAnnonce[]).sort(
     (a, b) => RANG[a.statut] - RANG[b.statut],
@@ -68,7 +70,17 @@ export default async function PageAnnonces() {
         }
       />
 
-      {annonces.length === 0 ? (
+      {erreurCompteurs ? (
+        <Alerte ton="attention">
+          Les candidatures par annonce n’ont pas pu être comptées ; la liste des annonces reste consultable.
+        </Alerte>
+      ) : null}
+
+      {erreurAnnonces ? (
+        <Alerte ton="erreur">
+          Les annonces n’ont pas pu être chargées. Actualisez la page pour réessayer.
+        </Alerte>
+      ) : annonces.length === 0 ? (
         <EtatVide
           icone={<Illustration nom="plante" taille={200} decorative />}
           titre="Aucune annonce"

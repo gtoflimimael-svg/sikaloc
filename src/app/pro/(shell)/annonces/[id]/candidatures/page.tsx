@@ -118,7 +118,7 @@ export default async function PageCandidaturesRecues({
         le candidat ; sa livraison dépend du service d’envoi et n’est pas garantie par ce clic.
       </p>
 
-      {candidatures.length === 0 ? (
+      {error ? null : candidatures.length === 0 ? (
         <EtatVide
           titre="Aucune candidature"
           description={

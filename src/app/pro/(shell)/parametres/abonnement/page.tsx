@@ -30,7 +30,7 @@ export default async function PageAbonnement({
   const bailleur = etatRetour === 'credite' ? await bailleurCourant() : bailleurInitial
 
   const supabase = await creerClientServeur()
-  const { data: transactions } = await supabase
+  const { data: transactions, error: erreurTransactions } = await supabase
     .from('abonnements_transactions')
     .select('*')
     .order('created_at', { ascending: false })
@@ -140,7 +140,11 @@ export default async function PageAbonnement({
           <h2 className="mb-lg text-display-xs font-semibold text-ink">
             Historique de facturation
           </h2>
-          {(transactions ?? []).length === 0 ? (
+          {erreurTransactions ? (
+            <Alerte ton="erreur">
+              L’historique de facturation n’a pas pu être chargé. Actualisez la page pour réessayer.
+            </Alerte>
+          ) : (transactions ?? []).length === 0 ? (
             <p className="rounded-xl bg-canvas-soft p-xl text-body-md text-mute">
               Aucune transaction pour le moment.
             </p>
