@@ -52,16 +52,14 @@ export default async function PageArticle({
     <>
       <header className="border-b border-hairline px-xl py-lg">
         <div className="mx-auto flex max-w-[46rem] items-center justify-between gap-lg">
-          <Link href="/" aria-label="Sikaloc — accueil">
-            <MarqueSikaloc taille="sm" />
-          </Link>
+          <MarqueSikaloc taille="sm" />
           <Link href="/inscription" className="btn btn-primary btn-sm">
             Commencer
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[46rem] px-xl py-5xl">
+      <main className="mx-auto max-w-[48rem] px-xl py-5xl">
         <Link href="/blog" className="text-body-sm font-semibold text-mute hover:text-ink">
           ← Tous les articles
         </Link>

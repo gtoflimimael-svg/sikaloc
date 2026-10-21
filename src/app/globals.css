@@ -2,120 +2,115 @@
 
 /* ============================================================================
    Sikaloc — Design System
-   Fondations de référence : design.md (lot E).
-   Identité indigo, canvas lavande, display serif Copernicus.
+   Identité Sikaloc : vert signature, encre, sauge et blanc.
    Règle d'or : aucun hex inline dans les composants, uniquement ces tokens.
    ========================================================================= */
 
 @theme {
   /* ── Couleurs : marque ────────────────────────────────────────────────── */
-  --color-primary: #5555bc;
-  --color-on-primary: #ffffff;
-  --color-primary-active: #3e3ea9;
-  --color-primary-disabled: #d8d8e6;
-  --color-primary-neutral: #8f8fdd;
-  --color-primary-pale: #dedeef;
-  --color-primary-on-dark: #9a9aef;
+  --color-primary: #b8f36d;
+  --color-on-primary: #111810;
+  --color-primary-active: #a4e951;
+  --color-primary-disabled: #dce8d4;
+  --color-primary-neutral: #d5f5b2;
+  --color-primary-pale: #f0fbe4;
+  --color-primary-on-dark: #b8f36d;
 
   /* ── Couleurs : accents ───────────────────────────────────────────────── */
-  --color-accent-teal: #5d5db8;
-  --color-accent-amber: #5a5ae8;
+  --color-accent-teal: #397748;
+  --color-accent-amber: #b66c25;
 
   /* ── Couleurs : texte ─────────────────────────────────────────────────── */
-  --color-ink: #131314;
-  --color-ink-deep: #3e3ea9;
-  --color-body-strong: #232325;
-  --color-body: #3a3a3d;
-  --color-mute: #616169;
-  --color-muted: #616169;
-  --color-mute-soft: #6c6c7a;
-  --color-muted-soft: #6c6c7a;
-  --color-on-dark: #e8e8f5;
-  --color-on-dark-mute: #9696a0;
-  --color-on-dark-soft: #9696a0;
+  --color-ink: #111810;
+  --color-ink-deep: #17311c;
+  --color-body-strong: #223125;
+  --color-body: #424940;
+  --color-mute: #636d63;
+  --color-muted: #636d63;
+  --color-mute-soft: #637267;
+  --color-muted-soft: #637267;
+  --color-on-dark: #f7fcf3;
+  --color-on-dark-mute: #c8d8c5;
+  --color-on-dark-soft: #c8d8c5;
   /* Le papier de signature reste blanc dans les deux thèmes. */
-  --color-on-paper-mute: #616169;
+  --color-on-paper-mute: #526254;
 
   /* ── Couleurs : surfaces ──────────────────────────────────────────────── */
-  /* `canvas` est la surface haute (cartes, champs) ; `canvas-soft` le sol de
-     page. Le blanc pur n'existe pas dans ce système. */
-  --color-canvas: #fafaff;
-  --color-canvas-soft: #efeff8;
-  --color-canvas-sage: #d2d2e8;
-  --color-surface-soft: #e8e8f5;
-  --color-surface-card: #fafaff;
-  --color-surface-cream-strong: #d2d2e8;
-  --color-surface-elevated: #dedeef;
-  --color-surface-dark: #151518;
-  --color-surface-dark-elevated: #202025;
-  --color-surface-dark-soft: #1b1b1f;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #eaf1e7;
+  --color-canvas-sage: #eaf1e7;
+  --color-surface-soft: #eaf1e7;
+  --color-surface-card: #ffffff;
+  --color-surface-cream-strong: #dce8d4;
+  --color-surface-elevated: #eef5e9;
+  --color-surface-dark: #17311c;
+  --color-surface-dark-elevated: #23452a;
+  --color-surface-dark-soft: #1b3921;
 
   /* ── Couleurs : sémantique ────────────────────────────────────────────── */
-  /* Inchangées par le rebrand : le vert de succès n'est plus la couleur de
-     marque, il redevient purement sémantique. */
-  --color-positive: #5db872;
-  --color-success: #5db872;
-  --color-positive-pale: #e3f3e7;
-  --color-positive-deep: #2f6b3f;
-  --color-warning: #d4a017;
-  --color-warning-deep: #a37b12;
-  --color-warning-content: #6b5210;
-  --color-warning-pale: #faf0d4;
-  --color-negative: #a63a3a;
-  --color-error: #c64545;
-  --color-negative-pale: #f7e3e3;
-  --color-negative-deep: #a63a3a;
-  --color-negative-darkest: #8f2f2f;
+  /* Les états métier restent distincts du vert signature des actions. */
+  --color-positive: #1d874a;
+  --color-success: #1d874a;
+  --color-positive-pale: #e4f5e8;
+  --color-positive-deep: #125b32;
+  --color-warning: #f1ba39;
+  --color-warning-deep: #755000;
+  --color-warning-content: #3e2d0a;
+  --color-warning-pale: #fff3d8;
+  --color-negative: #c63842;
+  --color-error: #c63842;
+  --color-negative-pale: #fff0ef;
+  --color-negative-deep: #8f1e27;
+  --color-negative-darkest: #8f1e27;
   --color-negative-bg: #3a1414;
 
   /* ── Couleurs : filets ────────────────────────────────────────────────── */
-  --color-hairline: #d8d8e6;
-  --color-hairline-soft: #dfdfeb;
-  --color-hairline-strong: #c9c9dc;
-  --color-control-border: #888898;
+  --color-hairline: #d6e0d2;
+  --color-hairline-soft: #e2ebe0;
+  --color-hairline-strong: #b5c8b1;
+  --color-control-border: #758a77;
   --color-on-negative: #ffffff;
 
   /* ── Typographie ──────────────────────────────────────────────────────── */
-  /* StyreneB pour l'interface, Copernicus pour le display, JetBrains Mono pour
-     le technique — chargées localement par next/font dans layout.tsx.
-     Inter locale suit StyreneB pour les glyphes accentués non couverts. */
+  /* Inter locale ; Manrope devient prioritaire dès qu'un fichier officiel et
+     sa licence peuvent être intégrés sans dépendance réseau au build. */
   --font-sans:
-    var(--font-styrene), var(--font-inter), 'Inter', system-ui, -apple-system,
+    var(--font-inter), 'Inter', system-ui, -apple-system,
     BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: var(--font-copernicus), Georgia, 'Times New Roman', serif;
-  --font-serif: var(--font-copernicus), Georgia, 'Times New Roman', serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-manrope, var(--font-inter)), 'Inter', system-ui, sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Display — Copernicus, graisse 400, approches négatives. */
-  --text-display-mega: 80px;
+  /* Display — Manrope/Inter, graisse forte, approches négatives. */
+  --text-display-mega: clamp(40px, 6vw, 96px);
   --text-display-mega--line-height: 1.05;
   --text-display-mega--letter-spacing: -2px;
-  --text-display-mega--font-weight: 400;
+  --text-display-mega--font-weight: 800;
 
-  --text-display-xxl: 64px;
+  --text-display-xxl: clamp(36px, 5.5vw, 80px);
   --text-display-xxl--line-height: 1.05;
   --text-display-xxl--letter-spacing: -1.5px;
-  --text-display-xxl--font-weight: 400;
+  --text-display-xxl--font-weight: 800;
 
-  --text-display-xl: 48px;
+  --text-display-xl: clamp(32px, 4.5vw, 64px);
   --text-display-xl--line-height: 1.1;
   --text-display-xl--letter-spacing: -1px;
-  --text-display-xl--font-weight: 400;
+  --text-display-xl--font-weight: 800;
 
-  --text-display-lg: 36px;
+  --text-display-lg: clamp(30px, 3.5vw, 48px);
   --text-display-lg--line-height: 1.15;
   --text-display-lg--letter-spacing: -0.5px;
-  --text-display-lg--font-weight: 400;
+  --text-display-lg--font-weight: 800;
 
-  --text-display-md: 36px;
+  --text-display-md: clamp(28px, 3vw, 40px);
   --text-display-md--line-height: 1.15;
   --text-display-md--letter-spacing: -0.5px;
-  --text-display-md--font-weight: 400;
+  --text-display-md--font-weight: 800;
 
-  --text-display-sm: 28px;
+  --text-display-sm: 32px;
   --text-display-sm--line-height: 1.2;
   --text-display-sm--letter-spacing: -0.3px;
-  --text-display-sm--font-weight: 400;
+  --text-display-sm--font-weight: 700;
 
   --text-display-xs: 22px;
   --text-display-xs--line-height: 1.3;
@@ -156,31 +151,31 @@
   --text-code--line-height: 1.6;
 
   /* ── Rayons ───────────────────────────────────────────────────────────── */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xs: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-pill: 9999px;
 
   /* ── Espacements (base 4px) ───────────────────────────────────────────── */
-  --spacing-xxs: 4px;
-  --spacing-xs: 8px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
   --spacing-2xl: 32px;
   --spacing-xxl: 48px;
   --spacing-3xl: 48px;
   --spacing-4xl: 64px;
-  --spacing-5xl: 96px;
-  --spacing-section: 96px;
+  --spacing-5xl: 64px;
+  --spacing-section: 48px;
 
   /* ── Élévation ────────────────────────────────────────────────────────── */
   /* Philosophie : la profondeur vient du contraste de surface, l'ombre est rare. */
-  --shadow-elevated: 0 2px 12px rgb(19 19 20 / 0.05);
-  --shadow-modal: 0 24px 48px rgb(19 19 20 / 0.14);
+  --shadow-elevated: 0 8px 24px rgb(17 24 16 / 0.12);
+  --shadow-modal: 0 24px 64px rgb(17 24 16 / 0.18);
 
 
   /* ── Conteneurs ───────────────────────────────────────────────────────── */
@@ -188,8 +183,8 @@
   --container-app: 1100px;
 
   /* Dimensions partagées — pas de contrôle isolé à une hauteur différente. */
-  --control-height: 44px;
-  --control-height-compact: 36px;
+  --control-height: 48px;
+  --control-height-compact: 40px;
   --card-padding: 20px;
 
   /* ── Mouvement ────────────────────────────────────────────────────────── */
@@ -233,7 +228,7 @@
   }
 
   body {
-    /* Le canvas lavande est le sol de Sikaloc — jamais le blanc pur en fond de page. */
+    /* Sol sauge très clair, surfaces de lecture blanches. */
     background-color: var(--color-canvas-soft);
     color: var(--color-body);
     font-family: var(--font-sans);
@@ -243,8 +238,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Tailwind n'attache pas de famille aux utilitaires `text-*` : les titres
-     display sont rattachés ici à Copernicus. */
+  /* Tailwind n'attache pas de famille aux utilitaires `text-*`. */
   .text-display-mega,
   .text-display-xxl,
   .text-display-xl,
@@ -262,7 +256,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--color-ink-deep);
     outline-offset: 2px;
   }
 
@@ -1239,3 +1233,97 @@
 }
 
 :root[data-theme='clair'] { color-scheme: light; }
+
+/* Refonte publique : les variantes sombres suivent la même identité verte.
+   Ces règles tardives remplacent les anciennes variantes indigo conservées
+   plus haut le temps de migrer les écrans applicatifs des prochains lots. */
+:root[data-theme='sombre'] {
+  --color-primary: #b8f36d;
+  --color-on-primary: #111810;
+  --color-primary-active: #a4e951;
+  --color-primary-neutral: #345736;
+  --color-primary-pale: #24412a;
+  --color-primary-on-dark: #b8f36d;
+  --color-accent-teal: #b8f36d;
+  --color-accent-amber: #f1ba39;
+  --color-ink-deep: #d5f5b2;
+  --color-canvas: #1b2e20;
+  --color-canvas-soft: #111810;
+  --color-canvas-sage: #24412a;
+  --color-surface-soft: #203726;
+  --color-surface-card: #203726;
+  --color-surface-cream-strong: #345736;
+  --color-surface-elevated: #294630;
+  --color-surface-dark: #111810;
+  --color-surface-dark-elevated: #24412a;
+  --color-surface-dark-soft: #17311c;
+  --color-hairline: #36523a;
+  --color-hairline-soft: #294630;
+  --color-hairline-strong: #527459;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='clair']) {
+    --color-primary: #b8f36d;
+    --color-on-primary: #111810;
+    --color-primary-active: #a4e951;
+    --color-primary-neutral: #345736;
+    --color-primary-pale: #24412a;
+    --color-primary-on-dark: #b8f36d;
+    --color-accent-teal: #b8f36d;
+    --color-accent-amber: #f1ba39;
+    --color-ink-deep: #d5f5b2;
+    --color-canvas: #1b2e20;
+    --color-canvas-soft: #111810;
+    --color-canvas-sage: #24412a;
+    --color-surface-soft: #203726;
+    --color-surface-card: #203726;
+    --color-surface-cream-strong: #345736;
+    --color-surface-elevated: #294630;
+    --color-surface-dark: #111810;
+    --color-surface-dark-elevated: #24412a;
+    --color-surface-dark-soft: #17311c;
+    --color-hairline: #36523a;
+    --color-hairline-soft: #294630;
+    --color-hairline-strong: #527459;
+  }
+}
+
+@layer components {
+  .btn { border-radius: var(--radius-xl); font-size: 16px; font-weight: 600; }
+  .btn-secondary { background-color: var(--color-canvas-soft); }
+  .card { border-radius: var(--radius-xl); }
+  .public-hero {
+    background: var(--color-ink);
+    color: #ffffff;
+  }
+  .public-hero .public-hero-copy { color: #eaf1e7; }
+  .public-hero .public-hero-accent { color: #b8f36d; }
+  .public-hero .btn-secondary { background: transparent; color: #ffffff; border-color: #ffffff; }
+  .public-hero .btn-secondary:hover { background: rgb(255 255 255 / 0.12); }
+  .public-space-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    background: var(--color-canvas);
+  }
+  .public-space-card img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+  .public-space-card-content { display: flex; flex: 1; flex-direction: column; padding: 24px; }
+  .legal-copy { max-width: 52rem; }
+  .legal-copy h1 { text-wrap: balance; }
+  .legal-copy :is(h2, h3) { scroll-margin-top: 6rem; }
+  .marque-officielle { max-width: 100%; }
+}
+
+/* Le vert signature ne porte pas du texte fin sur fond blanc : les légendes
+   utilisent le vert encre, tandis que les boutons gardent le vert vif. */
+@layer utilities {
+  .text-primary { color: var(--color-ink-deep); }
+  .public-hero .text-primary { color: #b8f36d; }
+}
+
+:root[data-theme='sombre'] .marque-officielle { filter: brightness(0) invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='clair']) .marque-officielle { filter: brightness(0) invert(1); }
+}

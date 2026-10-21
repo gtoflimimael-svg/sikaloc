@@ -419,7 +419,7 @@ function rendreHtml(message: Message): string {
              style="max-width:560px;background:#F4F4FB;border:1px solid #D8D8E6;border-radius:24px;">
         <tr><td style="padding:32px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 
-          <img src="${urlLogo()}" width="124" height="28" alt="Sikaloc"
+          <img src="${urlLogo()}" width="120" height="28" alt="Sikaloc"
                style="display:block;width:124px;height:28px;border:0;" />
 
           <div style="height:4px;width:48px;background:${accent};border-radius:2px;margin:24px 0;"></div>

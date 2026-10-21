@@ -6,47 +6,10 @@ import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
 import './globals.css'
 
 /**
- * Typographie Sikaloc — StyreneB pour l'interface, Copernicus pour les titres
- * display, JetBrains Mono pour le contenu technique.
- *
- * Inter est embarquée depuis le fichier variable local pour fournir un rendu
- * cohérent des caractères accentués absents des fontes de marque, sans accès
- * réseau au build ou au chargement du site. Sa licence OFL est conservée avec
- * le fichier de police.
+ * Inter est servie localement, sans accès réseau au build ni au navigateur.
+ * Le design officiel prévoit Manrope pour les grands titres ; en son absence
+ * locale, les titres utilisent explicitement Inter et non une police distante.
  */
-const styrene = localFont({
-  src: [
-    { path: './fonts/StyreneB-Regular.otf', weight: '400', style: 'normal' },
-    { path: './fonts/StyreneB-Medium.otf', weight: '500', style: 'normal' },
-    { path: './fonts/StyreneB-Bold.otf', weight: '700', style: 'normal' },
-  ],
-  variable: '--font-styrene',
-  display: 'swap',
-  adjustFontFallback: false,
-})
-
-const copernicus = localFont({
-  src: [
-    { path: './fonts/Copernicus-Book.ttf', weight: '400', style: 'normal' },
-    { path: './fonts/Copernicus-Bold.ttf', weight: '700', style: 'normal' },
-    { path: './fonts/Copernicus-Extrabold.ttf', weight: '800', style: 'normal' },
-    { path: './fonts/Copernicus-Heavy.ttf', weight: '900', style: 'normal' },
-  ],
-  variable: '--font-copernicus',
-  display: 'swap',
-  adjustFontFallback: false,
-})
-
-const jetbrains = localFont({
-  src: [
-    { path: './fonts/JetBrainsMono-Regular.ttf', weight: '400', style: 'normal' },
-    { path: './fonts/JetBrainsMono-Medium.ttf', weight: '500', style: 'normal' },
-  ],
-  variable: '--font-jetbrains',
-  display: 'swap',
-  adjustFontFallback: false,
-})
-
 const inter = localFont({
   src: './fonts/Inter-Variable.ttf',
   variable: '--font-inter',
@@ -149,7 +112,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#5555BC',
+  themeColor: '#17311C',
   width: 'device-width',
   initialScale: 1,
 }
@@ -160,7 +123,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="fr"
       // Le script anti-flash pose data-theme avant l’hydratation, volontairement.
       suppressHydrationWarning
-      className={`${styrene.variable} ${copernicus.variable} ${jetbrains.variable} ${inter.variable}`}
+      className={inter.variable}
     >
       <head>
         {/*

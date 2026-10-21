@@ -30,35 +30,33 @@ export default function PageBlog() {
     <>
       <header className="border-b border-hairline px-xl py-lg">
         <div className="mx-auto flex max-w-[56rem] items-center justify-between gap-lg">
-          <Link href="/" aria-label="Sikaloc — accueil">
-            <MarqueSikaloc taille="sm" />
-          </Link>
+          <MarqueSikaloc taille="sm" />
           <Link href="/inscription" className="btn btn-primary btn-sm">
             Commencer
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[56rem] px-xl py-5xl">
-        <p className="text-caption-uppercase uppercase text-primary">Le blog</p>
-        <h1 className="mt-sm text-display-lg font-extrabold tracking-tight text-ink">
-          Comment fonctionnent vos quittances
-        </h1>
+      <main className="mx-auto max-w-[1200px] px-xl py-5xl">
+        <p className="text-caption-uppercase uppercase text-primary">Ressources</p>
+        <h1 className="mt-sm max-w-[48rem] text-display-lg font-extrabold tracking-tight text-ink">Le blog Sikaloc</h1>
         <p className="mt-md max-w-[42rem] text-body-lg text-mute">
           Ce que le document contient, ce qu&apos;il calcule, et comment il parvient
           à votre locataire. Tout ce qui est écrit ici se vérifie en ouvrant un
           document réel.
         </p>
 
-        <ul role="list" className="anim-cascade mt-3xl space-y-xl">
+        <ul role="list" className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2">
           {ARTICLES.map((article) => (
-            <li key={article.slug} className="border-t border-hairline-strong pt-lg">
+            <li key={article.slug} className="card card-lg flex flex-col border border-hairline">
+              <p className="mb-md text-caption font-semibold uppercase tracking-wide text-ink-deep">Comprendre Sikaloc</p>
               <h2 className="text-display-sm font-bold text-ink">
                 <Link href={`/blog/${article.slug}`} className="lien-anime">
                   {article.titre}
                 </Link>
               </h2>
-              <p className="mt-sm max-w-[42rem] text-body-md text-body">{article.resume}</p>
+              <p className="mt-sm flex-1 text-body-md text-body">{article.resume}</p>
+              <Link href={`/blog/${article.slug}`} className="mt-lg inline-flex text-body-sm font-semibold text-ink underline underline-offset-4">Lire l’article →</Link>
             </li>
           ))}
         </ul>

@@ -22,7 +22,6 @@ import { EnTetePublic, LIENS_PRO, LIENS_TIROIR_PRO } from '@/components/marketin
 import { FormulaireGuide } from '@/components/marketing/formulaire-guide'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
-import { Illustration } from '@/components/ui/illustration'
 import { formaterFCFA } from '@/lib/format'
 import { LIMITE_LOGEMENTS_GRATUIT, PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { ESPACE_PRO } from '@/lib/roles'
@@ -531,7 +530,7 @@ export default async function PagePresentationPro({
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-40 -left-20 size-80 rounded-pill bg-accent-sand opacity-20 blur-3xl"
+          className="pointer-events-none absolute -bottom-40 -left-20 size-80 rounded-pill bg-primary-neutral opacity-20 blur-3xl"
         />
 
         <div className="relative mx-auto max-w-[1200px]">
@@ -647,20 +646,15 @@ export default async function PagePresentationPro({
 
             </div>
 
-            {/*
-              Illustration plutôt que maquette d'interface : un faux tableau de
-              bord promet un écran, une illustration promet un état d'esprit —
-              et c'est ce que vend la page (« sans effort »).
-            */}
-            <div className="relative flex justify-center lg:justify-end">
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 m-auto size-[26rem] rounded-pill bg-primary-pale opacity-70 blur-3xl"
-              />
-              <Illustration
-                nom="fauteuil"
-                taille={460}
-                className="relative w-full max-w-[28rem] text-ink"
+            <div className="relative overflow-hidden rounded-xl bg-canvas-sage">
+              <Image
+                src="/illustrations/home-02.webp"
+                alt="Illustration stylisée d’un logement organisé autour de ses documents"
+                width={1200}
+                height={900}
+                priority
+                sizes="(max-width: 1023px) 100vw, 46vw"
+                className="h-auto w-full"
               />
             </div>
           </div>
@@ -826,7 +820,8 @@ export default async function PagePresentationPro({
           </ul>
 
           <p className="mt-2xl text-body-sm text-mute">
-            Captures de l&apos;application réelle. Les locataires, montants et
+            Captures de démonstration d&apos;une interface antérieure : elles
+            seront actualisées avant publication. Les locataires, montants et
             adresses sont fictifs.{' '}
             <Link href="/exemple-quittance" className="font-semibold text-ink underline">
               Voir une vraie quittance
