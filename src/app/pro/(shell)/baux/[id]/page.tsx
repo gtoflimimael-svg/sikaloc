@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { Illustration } from '@/components/ui/illustration'
+import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
@@ -251,7 +251,7 @@ export default async function PageDetailBail({
           <Alerte ton="erreur">L’historique des paiements n’a pas pu être chargé.</Alerte>
         ) : listePaiements.length === 0 ? (
           <EtatVide
-            icone={<Illustration nom="reflexion" taille={200} decorative />}
+            icone={<IllustrationMarque variante="habitat" />}
             titre="Aucun paiement sur ce bail"
             description="Après validation, chaque paiement reçoit le document correspondant à sa nature et au solde de la période."
             action={

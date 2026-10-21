@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { Illustration } from '@/components/ui/illustration'
+import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { LIBELLES_MOTIF, LIBELLES_STATUT, TON_STATUT, libelleChambres } from '@/lib/annonces/libelles'
 import { formaterDate, formaterFCFA } from '@/lib/format'
@@ -82,7 +82,7 @@ export default async function PageAnnonces() {
         </Alerte>
       ) : annonces.length === 0 ? (
         <EtatVide
-          icone={<Illustration nom="plante" taille={200} decorative />}
+          icone={<IllustrationMarque variante="recherche" />}
           titre="Aucune annonce"
           description="Un logement libre, ou qui le sera bientôt, peut être proposé à la location : préparez son annonce, ajoutez des photos, puis publiez-la."
           action={

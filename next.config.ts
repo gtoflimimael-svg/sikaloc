@@ -19,10 +19,9 @@ import { getSupabaseCspOrigins } from './src/lib/supabase-csp.mjs'
  * (`form-action 'self'`).
  *
  * `'unsafe-inline'` reste un compromis assumé plutôt qu'un oubli : l'audit du
- * code n'a trouvé que deux `dangerouslySetInnerHTML`
- * (`src/components/ui/illustration.tsx`, `src/app/layout.tsx`), tous deux sur
- * du contenu statique écrit par l'équipe, jamais sur une entrée utilisateur —
- * la surface XSS réelle que ce relâchement expose est donc quasi nulle.
+ * code ne repose plus sur l'injection SVG d'illustrations ; les usages
+ * conservés dans `src/app/layout.tsx` sont du balisage statique, jamais une
+ * entrée utilisateur.
  */
 const isDev = process.env.NODE_ENV === 'development'
 const maintenanceActive = isMaintenanceEnabled(process.env.SIKALOC_MAINTENANCE_MODE)

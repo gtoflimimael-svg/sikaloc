@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import { ResumeListe } from '@/components/ui/listes'
 import { LienFiltre } from '@/components/ui/lien-filtre'
-import { Illustration } from '@/components/ui/illustration'
+import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
@@ -74,7 +74,7 @@ export default async function PageBaux({
         <Alerte ton="erreur">Les baux ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<Illustration nom="lecture" taille={200} decorative />}
+          icone={<IllustrationMarque variante="habitat" />}
           titre={filtre ? `Aucun bail ${filtre.toLowerCase()}` : 'Aucun bail enregistré'}
           description="Un bail relie un logement à un locataire. C’est lui qui déclenche le suivi des loyers et la détection des impayés."
           action={

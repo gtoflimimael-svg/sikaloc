@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { ESPACE_PRO } from '@/lib/roles'
 import Link from 'next/link'
 
-import { Illustration } from '@/components/ui/illustration'
+import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { CarteMetrique } from '@/components/app/carte-metrique'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
@@ -270,7 +270,7 @@ export default async function PageTableauDeBord({
           <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
         ) : paiements.length === 0 ? (
           <EtatVide
-            icone={<Illustration nom="joie" taille={200} decorative />}
+            icone={<IllustrationMarque variante="ecosysteme" />}
             titre="Aucun paiement enregistré"
             description="Après validation d’un paiement, Sikaloc produit le reçu ou la quittance correspondant à sa nature et au solde de la période."
             action={

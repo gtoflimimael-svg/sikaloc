@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import { ResumeListe } from '@/components/ui/listes'
 import { BoutonInvitation } from '@/components/app/bouton-invitation'
-import { Illustration } from '@/components/ui/illustration'
+import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
@@ -56,7 +56,7 @@ export default async function PageLocataires() {
         <Alerte ton="erreur">Les locataires ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<Illustration nom="attente" taille={200} decorative />}
+          icone={<IllustrationMarque variante="locataire" />}
           titre="Aucun locataire enregistré"
           description="Ajoutez un locataire, puis rattachez-lui un bail pour commencer à suivre ses loyers."
           action={
