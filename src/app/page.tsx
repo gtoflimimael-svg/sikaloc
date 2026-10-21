@@ -57,9 +57,8 @@ export const metadata: Metadata = {
   // description disait « bientôt » — elle s'affiche seule dans un résultat de
   // recherche, et promettait sinon une page qu'on ne trouvait pas en cliquant.
   description:
-    'Sikaloc réunit les espaces de la location au Bénin : Sikaloc_Pro pour ' +
-    'les bailleurs, Sikaloc_Me pour les locataires, et Sikaloc_Find ' +
-    'pour chercher un logement. Un seul compte, des documents partagés.',
+    'Sikaloc relie recherche de logements, gestion locative et accès aux ' +
+    'informations de location au Bénin, avec un espace adapté à chaque usage.',
   alternates: { canonical: '/' },
 }
 
@@ -145,9 +144,9 @@ const ESPACES_PRESENTES = [
 /**
  * Le parcours d'un logement, d'un bout à l'autre de l'écosystème.
  *
- * C'est ce qui distingue Sikaloc d'un logiciel de gestion : le même logement,
- * le même bail et les mêmes documents traversent les trois espaces sans être
- * ressaisis.
+ * Ces usages se complètent sans former un parcours automatique : le bailleur
+ * publie une annonce s'il le souhaite, et l'accès du locataire à Me dépend
+ * d'une invitation.
  */
 const PARCOURS = [
   {
@@ -155,7 +154,7 @@ const PARCOURS = [
     espace: ESPACE_PRO.nom,
     titre: 'Le bailleur enregistre son bien',
     texte:
-      'Logement, locataire, bail, loyer. C’est là que vivent les paiements et les quittances.',
+      'Il renseigne le logement et suit séparément le bail, les loyers et les paiements enregistrés.',
     avenir: false,
   },
   {
@@ -163,7 +162,7 @@ const PARCOURS = [
     espace: 'Sikaloc_Find',
     titre: 'Il le publie s’il est vacant',
     texte:
-      'Le logement est déjà décrit : le publier ne demande pas de le ressaisir.',
+      'S’il souhaite le proposer à la location, le bailleur peut publier une annonce à partir des informations du logement.',
     avenir: false,
   },
   {
@@ -171,7 +170,7 @@ const PARCOURS = [
     espace: ESPACE_ME.nom,
     titre: 'Le locataire entre dans son espace',
     texte:
-      'Son bailleur l’invite. Il retrouve son bail, ses loyers et ses quittances, sans rien installer ni payer.',
+      'Une fois la relation locative établie, le bailleur peut l’inviter à consulter les informations et documents disponibles dans Me.',
     avenir: false,
   },
 ]
@@ -370,8 +369,8 @@ export default async function PageAccueil() {
                 </h2>
               </div>
               <p className="home-section-intro">
-                La gestion reste côté bailleur, la consultation côté locataire,
-                et les annonces publiées sont ouvertes à la recherche.
+                Le bailleur gère ses biens, le locataire consulte ce qui lui est
+                partagé sur invitation, et Find rassemble les annonces publiées.
               </p>
             </div>
 
@@ -431,10 +430,10 @@ export default async function PageAccueil() {
               <p className="home-find-note">Une candidature ne crée pas automatiquement un bail.</p>
             </div>
 
-            <div className="home-find-preview" role="group" aria-label="Critères disponibles dans la recherche Find">
+            <div className="home-find-preview" role="group" aria-label="Aperçu illustratif des critères de recherche Find">
               <div className="home-find-preview-head">
                 <span className="home-find-preview-mark"><Search size={18} aria-hidden="true" /></span>
-                <div><strong>Affinez votre recherche</strong><small>Les filtres disponibles dans Find</small></div>
+                <div><strong>Affinez votre recherche</strong><small>Aperçu des critères du catalogue</small></div>
               </div>
               <div className="home-find-fields">
                 <div className="home-find-field home-find-field--wide"><span>Localisation</span><strong>Ville et quartier</strong><MapPin size={17} aria-hidden="true" /></div>
@@ -442,7 +441,7 @@ export default async function PageAccueil() {
                 <div className="home-find-field"><span>Loyer mensuel</span><strong>Définir une fourchette</strong><span className="home-find-currency">FCFA</span></div>
                 <div className="home-find-field"><span>Chambres</span><strong>Selon vos besoins</strong><SlidersHorizontal size={17} aria-hidden="true" /></div>
               </div>
-              <div className="home-find-preview-foot"><span className="home-find-live-dot" /> Les résultats proviennent des annonces publiées</div>
+              <div className="home-find-preview-foot"><span className="home-find-live-dot" /> Aperçu illustratif : les résultats réels viennent des annonces publiées.</div>
             </div>
           </div>
         </section>
@@ -452,10 +451,10 @@ export default async function PageAccueil() {
           <div className="mx-auto max-w-[1200px]">
             <div className="home-journey-heading">
               <p className="home-section-label">Comment ça marche</p>
-              <h2 className="home-section-title">Du logement publié aux documents du locataire.</h2>
+              <h2 className="home-section-title">Chaque espace a son rôle dans la location.</h2>
               <p className="home-section-intro">
-                Chaque espace intervient à une étape précise. L’accès de Me se
-                fait sur invitation du bailleur.
+                Le bailleur peut publier un logement sur Find. Le locataire
+                accède à Me sur invitation ; une candidature ne crée pas de bail.
               </p>
             </div>
             <ol className="home-journey-list">
