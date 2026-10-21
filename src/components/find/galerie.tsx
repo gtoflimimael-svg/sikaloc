@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import { useId, useState } from 'react'
 
 import type { PhotoPublique } from '@/lib/types/database'
@@ -36,7 +36,12 @@ export function Galerie({
   const [erreur, setErreur] = useState(false)
   const aide = useId()
 
-  if (photos.length === 0) return null
+  if (photos.length === 0) return (
+    <div role="img" aria-label="Aucune photographie disponible pour ce logement" className="flex aspect-[4/3] flex-col items-center justify-center gap-sm rounded-xl border border-hairline bg-canvas-sage text-mute">
+      <ImageOff size={36} strokeWidth={1.5} aria-hidden="true" />
+      <span className="text-body-sm">Aucune photographie disponible</span>
+    </div>
+  )
 
   const total = photos.length
   // La liste peut se raccourcir après une actualisation, sans remonter le composant.

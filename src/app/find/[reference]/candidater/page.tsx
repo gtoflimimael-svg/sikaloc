@@ -102,22 +102,20 @@ export default async function PageCandidater({
     <div className="min-h-screen bg-canvas-soft">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
-      <main id="contenu" className="mx-auto max-w-[44rem] app-main">
+      <main id="contenu" className="mx-auto max-w-[48rem] app-main">
         <Link href={`/find/${reference}`} className="text-body-sm text-mute hover:text-ink">
           ← Revenir à l’annonce
         </Link>
 
-        <section className="mt-lg card card-lg">
-          <p className="text-caption font-medium text-mute">
-            Candidater à cette annonce
-          </p>
-          <h1 className="mt-xs page-title">{titre}</h1>
-          <p className="mt-xs list-copy text-body-md text-body">
+        <section className="mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+          <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre candidature · Réf. {annonce.reference}</p>
+          <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
+          <p className="mt-sm list-copy text-body-md text-on-dark-mute">
             {lieu} · {formaterFCFA(annonce.loyer)} / mois · Réf. {annonce.reference}
           </p>
         </section>
 
-        <section className="mt-xl card card-lg">
+        <section aria-label="Étape de la candidature" className="mt-lg card card-lg">
           {!utilisateur ? (
             <>
               <h2 className="section-title">Créez votre compte</h2>
@@ -158,7 +156,8 @@ export default async function PageCandidater({
               </div>
               <p className="mt-lg text-body-sm text-body">
                 Sikaloc ne garantit pas de réponse : c’est le bailleur qui décide, et quand il le
-                décide. Vous retrouverez l’état de votre candidature à tout moment.
+                décide. Vous retrouverez l’état de votre candidature à tout moment. Une acceptation
+                ne crée pas automatiquement un bail.
               </p>
               <div className="mt-lg flex flex-wrap gap-md">
                 <Link href="/me/candidatures" className="btn btn-primary">

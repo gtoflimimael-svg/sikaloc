@@ -23,9 +23,9 @@ export function EnTeteFind({ connecte }: { connecte: boolean }) {
         <div className="flex shrink-0 items-center gap-xs">
           <div className="hidden sm:block"><SelecteurTheme compact /></div>
           {connecte ? (
-            <Link href="/me/candidatures" aria-label="Mes candidatures" className="btn btn-primary btn-sm"><span className="sm:hidden">Suivi</span><span className="hidden sm:inline">Mes candidatures</span></Link>
-          ) : <Link href="/connexion?suite=%2Ffind" className="btn btn-secondary btn-sm">Connexion</Link>}
-          <MenuFind liens={[{ href: '/', libelle: 'Accueil Sikaloc' }, { href: '/#espaces', libelle: 'Les espaces' }, ...LIENS, { href: '/me/rejoindre', libelle: 'Je suis locataire' }, { href: '/pro', libelle: 'Bailleurs' }]} />
+            <Link href="/me/candidatures" aria-label="Mes candidatures" className="btn btn-primary btn-sm hidden min-[360px]:inline-flex"><span className="sm:hidden">Suivi</span><span className="hidden sm:inline">Mes candidatures</span></Link>
+          ) : <Link href="/connexion?suite=%2Ffind" className="btn btn-secondary btn-sm hidden min-[360px]:inline-flex">Connexion</Link>}
+          <MenuFind liens={[{ href: '/', libelle: 'Accueil Sikaloc' }, { href: '/#espaces', libelle: 'Les espaces' }, ...LIENS, ...(!connecte ? [{ href: '/connexion?suite=%2Ffind', libelle: 'Se connecter' }] : []), { href: '/me/rejoindre', libelle: 'Je suis locataire' }, { href: '/pro', libelle: 'Bailleurs' }]} />
         </div>
       </nav>
     </header>
@@ -42,11 +42,8 @@ export function PiedDePageFind() {
           <Link href="/me/candidatures" className="btn btn-tertiary btn-sm">Suivre mes candidatures</Link>
           <Link href="/legal/confidentialite" className="btn btn-tertiary btn-sm">Confidentialité</Link>
         </nav>
-        <details className="mt-md">
-          <summary className="min-h-11 cursor-pointer py-sm text-body-sm text-mute">Aide, informations légales et autres espaces Sikaloc</summary>
-          <PiedDePage />
-        </details>
       </div>
+      <PiedDePage />
     </div>
   )
 }

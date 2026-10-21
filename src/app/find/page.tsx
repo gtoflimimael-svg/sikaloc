@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound, redirect } from 'next/navigation'
 
 import { CarteAnnonce } from '@/components/find/carte-annonce'
@@ -113,22 +114,37 @@ export default async function PageFind({ searchParams }: { searchParams: Promise
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
       <main id="contenu" className="mx-auto max-w-[1200px] app-main">
-        <header className="max-w-[46rem]">
-          <h1 className="page-title">
-            Logements à louer au Bénin
-          </h1>
-          <p className="mt-sm text-body-md text-body">
-            Publiés par des bailleurs qui gèrent leurs biens sur Sikaloc. L’adresse exacte n’apparaît
-            jamais sur une annonce.
-          </p>
+        <header className="relative isolate overflow-hidden rounded-xl bg-surface-dark px-lg py-2xl text-on-dark sm:px-2xl lg:min-h-[250px] lg:py-3xl">
+          <div className="relative z-10 max-w-[42rem]">
+            <p className="text-body-sm font-semibold text-primary-on-dark">Sikaloc Find</p>
+            <h1 className="mt-sm text-display-md font-extrabold tracking-tight text-on-dark">
+              Trouvez un logement qui vous correspond.
+            </h1>
+            <p className="mt-md max-w-[37rem] text-body-md text-on-dark-mute">
+              Consultez les annonces publiées par les bailleurs, puis affinez selon votre ville,
+              votre budget et les caractéristiques dont vous avez besoin.
+            </p>
+          </div>
+          <Image src="/illustrations/home-04.webp" width={1200} height={900} alt="" aria-hidden="true" sizes="(min-width: 1024px) 290px, 0px" className="pointer-events-none absolute -bottom-14 -right-10 hidden w-[300px] rounded-xl opacity-90 lg:block" />
         </header>
 
-        <div className="mt-xl grid gap-lg lg:grid-cols-[18rem_minmax(0,1fr)]">
+        <div className="mt-2xl grid gap-lg lg:grid-cols-[18rem_minmax(0,1fr)]">
           <div className="lg:sticky lg:top-24 lg:self-start">
+            <div className="mb-md hidden lg:block">
+              <h2 className="text-display-sm font-bold text-ink">Affiner la recherche</h2>
+              <p className="mt-xs text-body-sm text-mute">Les filtres portent uniquement sur les annonces publiées.</p>
+            </div>
             <FiltresFind filtres={filtres} lieux={lieux.data ?? []} nbFiltresActifs={actifs.length} />
           </div>
 
           <div className="min-w-0">
+            <div className="mb-lg flex flex-wrap items-end justify-between gap-sm border-b border-hairline pb-md">
+              <div>
+                <p className="text-body-sm font-semibold text-primary">Le catalogue</p>
+                <h2 className="text-display-sm font-bold text-ink">Logements publiés</h2>
+              </div>
+              <p className="text-body-sm text-mute">L’adresse exacte n’est jamais publiée.</p>
+            </div>
             {lieux.error ? <Alerte ton="attention">Les choix de lieux ne sont pas disponibles pour le moment. Les autres critères restent utilisables.</Alerte> : null}
             {actifs.length > 0 ? (
               <div className="mb-lg">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ArrowLeft, ArrowRight, House, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 
@@ -170,20 +171,16 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
       <main id="contenu" className="mx-auto max-w-[1200px] app-main">
-        <Link href="/find" className="text-body-sm text-mute hover:text-ink">
-          ← Tous les logements
+        <Link href="/find" className="inline-flex min-h-11 items-center gap-xs text-body-sm font-medium text-mute hover:text-ink">
+          <ArrowLeft size={16} aria-hidden="true" /> Tous les logements
         </Link>
 
-        <header className="mt-lg">
-              <p className="text-caption font-medium text-mute">
-                {a.type} à louer
-              </p>
-              <h1 className="mt-xs page-title">
-                {titre}
-              </h1>
-              <p className="mt-xs text-body-lg text-body">{lieu(a)}</p>
+        <header className="mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+          <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Annonce {a.reference}</p>
+          <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
+          <p className="mt-sm flex items-center gap-xs text-body-lg text-on-dark-mute"><MapPin size={18} aria-hidden="true" /> {lieu(a)}</p>
           <div className="mt-md flex flex-wrap items-center justify-between gap-md lg:hidden">
-            <p className="text-title-lg font-semibold money text-ink">{formaterFCFA(a.loyer)} <span className="text-body-sm font-normal text-mute">/ mois</span></p>
+            <p className="text-title-lg font-semibold money text-on-dark">{formaterFCFA(a.loyer)} <span className="text-body-sm font-normal text-on-dark-mute">/ mois</span></p>
             <Link href={`/find/${a.reference}/candidater`} className="btn btn-primary">Candidater</Link>
           </div>
         </header>
@@ -200,7 +197,7 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
 
             <section aria-labelledby="titre-infos">
               <h2 id="titre-infos" className="section-title">
-                Le logement
+                <House size={23} aria-hidden="true" className="inline-block align-middle text-primary-deep" /> Le logement
               </h2>
               <dl className="card list-card mt-md grid gap-lg sm:grid-cols-2">
                 {caracteristiques.map(([terme, valeur]) => (
@@ -278,7 +275,7 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
 
             <section className="card space-y-md text-body-sm text-body">
               <Link href={`/find/${a.reference}/candidater`} className="btn btn-primary w-full">
-                Candidater
+                Candidater <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <p>
                 Le bailleur verra votre nom et votre message. Ni votre téléphone, ni votre email ne

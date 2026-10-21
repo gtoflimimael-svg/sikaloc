@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArrowUpRight, ImageOff, MapPin } from 'lucide-react'
 
 import { LIBELLES_EQUIPEMENT, libelleChambres } from '@/lib/annonces/libelles'
 import { formaterDate, formaterFCFA } from '@/lib/format'
@@ -58,7 +59,7 @@ export function CarteAnnonce({
 
   return (
     <article className="card find-card relative flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-hairline-strong has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-primary">
-      <div className="aspect-[4/3] w-full bg-canvas-soft">
+      <div className="relative aspect-[4/3] w-full bg-canvas-sage">
         {annonce.photo_position !== null ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -70,24 +71,32 @@ export function CarteAnnonce({
             decoding="async"
             className="size-full object-cover"
           />
-        ) : null}
+        ) : (
+          <div className="flex size-full flex-col items-center justify-center gap-sm text-ink-deep">
+            <ImageOff size={28} strokeWidth={1.5} aria-hidden="true" />
+            <span className="text-body-sm">Photo non disponible</span>
+          </div>
+        )}
+        <span className="absolute bottom-sm left-sm rounded-pill bg-canvas/95 px-sm py-xxs text-caption font-semibold text-ink">
+          {disponibilite(annonce.disponible_le, aujourdhui)}
+        </span>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-sm p-md">
-        <p className="text-caption font-medium text-mute">{annonce.type}</p>
+      <div className="flex min-w-0 flex-1 flex-col gap-sm p-lg">
+        <p className="text-body-sm font-semibold text-primary">{annonce.type}</p>
         <h2 className="list-copy text-body-lg font-semibold text-ink">
           <Link
             href={`/find/${annonce.reference}`}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
           >
             {logement ?? annonce.type}
-            <span className="block text-body-sm font-normal text-body">{lieu}</span>
+            <span className="mt-xs flex items-center gap-xs text-body-sm font-normal text-body"><MapPin size={15} aria-hidden="true" />{lieu}</span>
           </Link>
         </h2>
 
-        <p className="flex flex-wrap items-baseline gap-xxs text-body-md text-ink">
+        <p className="flex flex-wrap items-baseline gap-xxs border-t border-hairline pt-md text-title-lg text-ink">
           <span className="font-semibold money">{formaterFCFA(annonce.loyer)}</span>
-          <span className="text-mute"> / mois</span>
+          <span className="text-body-sm text-mute"> / mois</span>
         </p>
         <ul className="space-y-xxs text-body-sm text-body">
           {annonce.charges === 0 ? <li>Sans charges</li> : null}
@@ -95,7 +104,6 @@ export function CarteAnnonce({
             <li>+ {formaterFCFA(annonce.charges)} de charges par mois</li>
           ) : null}
           {annonce.surface_m2 !== null ? <li>{annonce.surface_m2} m²</li> : null}
-          <li>{disponibilite(annonce.disponible_le, aujourdhui)}</li>
         </ul>
 
         {equipements.length > 0 ? (
@@ -108,7 +116,9 @@ export function CarteAnnonce({
           </ul>
         ) : null}
 
-        <p className="mt-auto pt-sm text-caption text-mute">Réf. {annonce.reference}</p>
+        <p className="mt-auto flex items-center justify-between pt-sm text-caption text-mute">
+          <span>Réf. {annonce.reference}</span><ArrowUpRight size={18} aria-hidden="true" className="text-ink" />
+        </p>
       </div>
     </article>
   )
