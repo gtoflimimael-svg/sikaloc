@@ -172,9 +172,10 @@ export default async function PageFind({ searchParams }: { searchParams: Promise
             ) : null}
 
             {error ? (
-              <Alerte ton="erreur">
-                Le catalogue ne peut pas être affiché pour le moment. Réessayez dans un instant.
-              </Alerte>
+              <div className="space-y-md">
+                <Alerte ton="erreur">Le catalogue ne peut pas être affiché pour le moment. Aucun résultat n’est confirmé.</Alerte>
+                <Link href={urlRecherche(filtres, page)} className="btn btn-secondary">Réessayer la recherche</Link>
+              </div>
             ) : annonces.length === 0 ? (
               <section className="card card-lg">
                 <h2 className="section-title">
