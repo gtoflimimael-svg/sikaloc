@@ -24,3 +24,10 @@
 12. **P2 — Revue visuelle systématique.** Couverture responsive, contraste, zoom 200 %, navigation clavier et `prefers-reduced-motion` à établir page par page avant ouverture.
 
 Le défaut d'affichage du retour de paiement sans transaction et les affirmations excessives « tous les loyers réglés » ont été corrigés localement dans cette branche. Ils ne sont pas corrigés en production.
+
+## Mise à jour priorité 1 — 21 octobre 2026
+
+- **P0 maintenu** : aucune pile Supabase/PostgreSQL jetable opérationnelle dans cet environnement. Docker refuse l'accès, les binaires serveur PostgreSQL sont absents et la CLI locale ne fournit pas le mode natif. Les 57 migrations, les rôles réels et les scénarios financiers restent donc non exécutés. Un garde-fou de cible et une procédure reproductible ont été ajoutés, mais ils ne remplacent pas ces essais.
+- **P0 maintenu** : aucune sauvegarde/restauration de Production n'a été réalisée ici ; aucun feu vert de publication n'en découle.
+- **P1 maintenu** : les parcours Auth, Find, Me et l'export sous concurrence n'ont pas de preuve intégrée dans cette campagne. Les tests locaux de politique et de routes restent des preuves de code uniquement.
+- Voir `RAPPORT-SECURITE-INTEGRATION.md` et `MATRICE-TESTS-CRITIQUES.md` pour les statuts précis. Aucune vulnérabilité SQL nouvelle n'a été déclarée « corrigée » sans reproduction.
