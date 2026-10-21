@@ -170,26 +170,6 @@ const PARCOURS = [
   },
 ]
 
-/** Ce que Sikaloc_Pro apporte au bailleur. Le détail vit sur `/pro`. */
-const POUR_BAILLEURS = [
-  'Logements, locataires et baux réunis dans le même espace',
-  'Versements et soldes suivis par période de loyer',
-  'Reçus et quittances liés aux paiements enregistrés',
-]
-
-/**
- * Ce que Sikaloc_Me apporte au locataire.
- *
- * Le troisième point est le moins spectaculaire et le plus important : c'est la
- * seule ligne de cette page qui protège le locataire contre le produit
- * lui-même.
- */
-const POUR_LOCATAIRES = [
-  'Le bail et les documents disponibles dans votre espace',
-  'Les paiements et loyers présentés période par période',
-  'Un historique inconnu reste « à déterminer », pas « impayé »',
-]
-
 /**
  * Ce que la page peut affirmer à partir des parcours réellement implémentés :
  * les annonces publiées, le traitement des candidatures et l'accès de Me.
@@ -244,7 +224,7 @@ export default async function PageAccueil() {
 
       <main id="contenu">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section className="public-hero home-hero relative overflow-hidden">
+                <section className="public-hero home-hero relative overflow-hidden">
           <div className="home-hero-inner relative mx-auto max-w-[1320px]">
             <div className="home-hero-layout">
               <div className="home-hero-copy-block">
@@ -327,31 +307,39 @@ export default async function PageAccueil() {
               </h2>
             </div>
 
-            <div className="home-perspectives">
-              <article className="home-perspective home-perspective--owner">
-                <span className="home-perspective-role">
-                  <Building2 size={17} aria-hidden="true" /> Côté bailleur
-                </span>
-                <p className="home-perspective-question">« Quelle période reste à régler ? »</p>
-                <p className="home-perspective-copy">
-                  Contrat, versements et justificatifs sont plus simples à suivre
-                  lorsqu’ils sont réunis au même endroit.
-                </p>
-              </article>
-              <article className="home-perspective home-perspective--tenant">
-                <span className="home-perspective-role">
-                  <ScrollText size={17} aria-hidden="true" /> Côté locataire
-                </span>
-                <p className="home-perspective-question">« Où retrouver mon bail et mes reçus ? »</p>
-                <p className="home-perspective-copy">
-                  Un espace dédié permet de consulter les informations et les
-                  documents que le bailleur a rendus disponibles.
-                </p>
-              </article>
+            <div className="home-problem-scene">
+              <p className="home-problem-scene-caption">Quand les repères restent séparés</p>
+              <div className="home-problem-fragments" aria-hidden="true">
+                <div className="home-problem-fragment"><strong>Bail</strong><span>Conditions et période</span></div>
+                <div className="home-problem-fragment"><strong>Versement</strong><span>Suivi du règlement</span></div>
+                <div className="home-problem-fragment"><strong>Justificatif</strong><span>Document à retrouver</span></div>
+              </div>
+              <div className="home-perspectives">
+                <article className="home-perspective home-perspective--owner">
+                  <span className="home-perspective-role">
+                    <Building2 size={17} aria-hidden="true" /> Côté bailleur
+                  </span>
+                  <p className="home-perspective-question">« Quelle période reste à régler ? »</p>
+                  <p className="home-perspective-copy">
+                    Contrat, versements et justificatifs sont plus simples à suivre
+                    lorsqu’ils sont réunis au même endroit.
+                  </p>
+                </article>
+                <article className="home-perspective home-perspective--tenant">
+                  <span className="home-perspective-role">
+                    <ScrollText size={17} aria-hidden="true" /> Côté locataire
+                  </span>
+                  <p className="home-perspective-question">« Où retrouver mon bail et mes reçus ? »</p>
+                  <p className="home-perspective-copy">
+                    Un espace dédié permet de consulter les informations et les
+                    documents que le bailleur a rendus disponibles.
+                  </p>
+                </article>
+              </div>
             </div>
           </div>
           <div aria-hidden="true" className="home-problem-bridge">
-            <span>Un seul fil entre les deux</span>
+            <span>Des repères mieux organisés</span>
             <span className="home-bridge-line" />
             <span>Sikaloc</span>
           </div>
@@ -397,6 +385,19 @@ export default async function PageAccueil() {
                       </div>
                     </div>
                     <p className="home-space-description">{texte}</p>
+                    {cle === 'pro' ? (
+                      <div className="home-space-glance" role="group" aria-label="Schéma illustratif des rubriques de Sikaloc Pro">
+                        <p className="home-space-glance-title">
+                          Dans l’espace Pro <span>Schéma illustratif, sans données de compte</span>
+                        </p>
+                        <ul className="home-space-glance-list" role="list">
+                          <li>Logements</li>
+                          <li>Locataires et baux</li>
+                          <li>Loyers et paiements</li>
+                          <li>Reçus et quittances</li>
+                        </ul>
+                      </div>
+                    ) : null}
                     {disponible && lien ? (
                       <Link href={lien.href} className="home-space-link">
                         {lien.libelle}<ArrowRight size={16} aria-hidden="true" />
@@ -473,32 +474,52 @@ export default async function PageAccueil() {
 
         {/* ── Pour les bailleurs ───────────────────────────────────────── */}
         <section className="home-audiences-section">
-          <div className="home-audiences-grid mx-auto max-w-[1200px]">
-            <article className="home-audience home-audience--pro">
-              <div className="home-audience-topline"><Building2 size={19} aria-hidden="true" /> Pour les bailleurs</div>
-              <h2>Une gestion qui reste lisible, période après période.</h2>
-              <ul role="list">
-                {POUR_BAILLEURS.map((point) => (
-                  <li key={point}><FileCheck size={17} aria-hidden="true" />{point}</li>
-                ))}
-              </ul>
-              <Link href="/pro?presentation=1" className="home-audience-link">
-                Voir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-            </article>
+          <div className="mx-auto max-w-[1200px]">
+            <div className="home-audiences-heading">
+              <p className="home-section-label">Deux expériences, selon votre rôle</p>
+              <h2 className="home-section-title">La gestion côté bailleur. Le suivi côté locataire.</h2>
+              <p className="home-section-intro">
+                Pro organise le travail du bailleur ; Me rassemble, sur invitation, les informations rendues accessibles au locataire.
+              </p>
+            </div>
+            <div className="home-audiences-grid">
+              <article className="home-audience home-audience--pro">
+                <div className="home-audience-topline"><Building2 size={19} aria-hidden="true" /> Pour les bailleurs</div>
+                <h2>Une gestion qui reste lisible, période après période.</h2>
+                <div className="home-audience-scene home-audience-scene--pro" role="group" aria-label="Schéma illustratif des fonctions de Sikaloc Pro">
+                  <p className="home-audience-scene-label">Sikaloc Pro <span>Schéma illustratif</span></p>
+                  <div className="home-pro-scene-rows">
+                    <div><span>Logements</span><strong>Organiser les biens</strong></div>
+                    <div><span>Baux</span><strong>Retrouver les conditions</strong></div>
+                    <div><span>Paiements</span><strong>Suivre les versements</strong></div>
+                    <div><span>Documents</span><strong>Consulter les pièces disponibles</strong></div>
+                  </div>
+                  <p className="home-audience-scene-note">Illustration des rubriques, sans compte ni données réelles.</p>
+                </div>
+                <Link href="/pro?presentation=1" className="home-audience-link">
+                  Voir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+              </article>
 
-            <article className="home-audience home-audience--me">
-              <div className="home-audience-topline"><Home size={19} aria-hidden="true" /> Pour les locataires</div>
-              <h2>Les informations de votre location, dans votre espace.</h2>
-              <ul role="list">
-                {POUR_LOCATAIRES.map((point) => (
-                  <li key={point}><ScrollText size={17} aria-hidden="true" />{point}</li>
-                ))}
-              </ul>
-              <Link href="/me/rejoindre" className="home-audience-link">
-                Comprendre l’accès à Me <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-            </article>
+              <article className="home-audience home-audience--me">
+                <div className="home-audience-topline"><Home size={19} aria-hidden="true" /> Pour les locataires</div>
+                <h2>Les informations de votre location, dans votre espace.</h2>
+                <div className="home-audience-scene home-audience-scene--me" role="group" aria-label="Schéma illustratif des informations consultables dans Sikaloc Me">
+                  <p className="home-audience-scene-label">Sikaloc Me <span>Après invitation</span></p>
+                  <div className="home-me-scene-card">
+                    <span className="home-me-scene-mark" aria-hidden="true"><ScrollText size={19} /></span>
+                    <div><strong>Mon espace locataire</strong><small>Informations selon les accès accordés</small></div>
+                  </div>
+                  <div className="home-me-scene-items" aria-hidden="true">
+                    <span>Bail</span><span>Paiements enregistrés</span><span>Documents disponibles</span>
+                  </div>
+                  <p className="home-audience-scene-note">Schéma illustratif — aucun dossier réel affiché.</p>
+                </div>
+                <Link href="/me/rejoindre" className="home-audience-link">
+                  Comprendre l’accès à Me <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -568,36 +589,33 @@ export default async function PageAccueil() {
         <section className="home-final-section">
           <div className="home-final-cta mx-auto max-w-[1200px]">
             <div className="home-final-copy">
-              <p className="home-final-kicker">La location, avec un fil plus clair</p>
+              <p className="home-final-kicker">Choisissez votre prochain pas</p>
               <h2 className="text-display-md font-extrabold tracking-tight text-on-dark">
-              {utilisateur
-                ? 'Reprenez où vous en étiez'
-                : 'Commencez par le bout qui vous concerne'}
+                Une location. Votre manière d’avancer.
               </h2>
               <p className="home-final-description">
-                La création de compte concerne les bailleurs. Le locataire rejoint
-                Me sur invitation et n’a pas à souscrire d’abonnement.
+                Gérez avec Pro, retrouvez vos informations dans Me sur invitation,
+                ou explorez les annonces publiées avec Find.
               </p>
             </div>
 
-            <div className="home-final-actions">
-              {utilisateur ? (
-                // Le compte existe : `/entrer` aiguille selon les rôles, et ne
-                // pose la question qu'à qui porte les deux.
-                <Link href="/entrer" className="btn btn-primary">
-                  Accéder à mon espace
-                </Link>
-              ) : (
-                <>
-                  <Link href="/inscription" className="btn btn-primary">
-                    Créer un compte bailleur
-                  </Link>
-                  <Link href="/me/rejoindre" className="btn btn-secondary">
-                    Je suis locataire
-                  </Link>
-                </>
-              )}
-            </div>
+            <nav className="home-final-paths" aria-label="Choisir un espace Sikaloc">
+              <Link href={utilisateur ? '/entrer' : '/inscription'} className="home-final-path home-final-path--pro">
+                <span className="home-final-path-space">Pro</span>
+                <span className="home-final-path-label">{utilisateur ? 'Ouvrir mon espace' : 'Créer un compte bailleur'}</span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <Link href="/me/rejoindre" className="home-final-path">
+                <span className="home-final-path-space">Me</span>
+                <span className="home-final-path-label">Accéder sur invitation</span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <Link href="/find" className="home-final-path">
+                <span className="home-final-path-space">Find</span>
+                <span className="home-final-path-label">Explorer les annonces</span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            </nav>
 
           </div>
         </section>
