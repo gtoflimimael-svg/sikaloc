@@ -89,8 +89,8 @@ export function PiedDePage() {
 
         <div className="mt-3xl border-t border-white/10 pt-xl">
           <p className="text-caption">
-            © {new Date().getFullYear()} Sikaloc. Données hébergées en Europe
-            (Francfort). Les quittances sont générées sous la responsabilité du
+            © {new Date().getFullYear()} Sikaloc. Pensé pour les usages locatifs
+            au Bénin. Les quittances sont générées sous la responsabilité du
             bailleur ; Sikaloc n&apos;est pas partie au contrat de bail et ne
             fournit aucun conseil juridique.
           </p>
