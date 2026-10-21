@@ -6,6 +6,7 @@ import { Alerte, Badge } from '@/components/ui/retours'
 import { formaterDate, formaterDateCourte, formaterFCFA } from '@/lib/format'
 import { abonnementActif, LIMITE_LOGEMENTS_GRATUIT, PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { reconcilierRetourGuichet } from '@/lib/reglement-abonnement'
+import { retourAbonnementConfirme } from '@/lib/retour-abonnement'
 import { bailleurCourant, bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -42,7 +43,7 @@ export default async function PageAbonnement({
   // bailleur vient de payer et ne sait pas si son argent est arrivé.
   const messageRetour = !etatRetour
     ? null
-    : etatRetour === 'credite' || (etatRetour === 'deja_regle' && standard)
+    : retourAbonnementConfirme(etatRetour, standard)
       ? {
           ton: 'succes' as const,
           texte:
@@ -55,9 +56,15 @@ export default async function PageAbonnement({
         ? {
             ton: 'attention' as const,
             texte:
-              "Le paiement n'a pas abouti. Aucun montant n'a été prélevé — vous " +
-              'pouvez relancer la souscription ci-dessous.',
+              "L'opérateur indique que cette transaction n'a pas abouti. " +
+              'Vérifiez votre historique Mobile Money avant de réessayer.',
           }
+        : etatRetour === 'inconnu' || etatRetour === 'a_reconcilier'
+          ? {
+              ton: 'attention' as const,
+              texte: 'Nous ne pouvons pas confirmer ce paiement pour le moment. ' +
+                'Vérifiez votre historique de facturation et contactez le support si un débit apparaît sans crédit.',
+            }
         : etatRetour === 'indisponible'
           ? {
               ton: 'info' as const,

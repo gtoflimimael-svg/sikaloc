@@ -4,6 +4,7 @@ import { finaliserAbonnement } from '@/lib/abonnement'
 import { identifiantTransactionValide, verifierTransaction } from '@/lib/fedapay'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import { etatSansTransaction, type EtatReglement } from '@/lib/retour-abonnement'
 
 /**
  * Règlement d'une transaction d'abonnement FedaPay.
@@ -21,22 +22,6 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  * D'où le point unique de passage : deux implémentations parallèles de la même
  * règle finiraient par diverger, et c'est de l'argent réel.
  */
-
-export type EtatReglement =
-  /** Le paiement vient d'être porté au crédit du bailleur. */
-  | 'credite'
-  /** Une autre exécution a crédité avant nous. Rien à faire, et surtout pas deux fois. */
-  | 'deja_regle'
-  /** L'opérateur n'a pas encore tranché. */
-  | 'en_attente'
-  /** Refusé, annulé ou échoué. */
-  | 'echec'
-  /** Transaction sans bailleur rattachable — on ne devine pas. */
-  | 'inconnu'
-  /** FedaPay injoignable : ne rien conclure, réessayer plus tard. */
-  | 'indisponible'
-  /** Historique REGLEE sans journal de crédit : pas de recrédit aveugle. */
-  | 'a_reconcilier'
 
 /**
  * Confronte une transaction à ce que FedaPay en dit, puis en tire les
@@ -99,9 +84,9 @@ export async function reconcilierRetourGuichet(
 
     if (erreurLecture) return 'indisponible'
 
-    // Rien en attente : le webhook est passé avant nous, ou il n'y a jamais eu
-    // de paiement à réconcilier.
-    if (!enCours) return 'deja_regle'
+    // Sans transaction rattachée, un simple `?retour=1` ne prouve aucun
+    // règlement. Le plan éventuellement déjà actif ne change pas ce constat.
+    if (!enCours) return etatSansTransaction()
 
     return await reglerTransaction(enCours.transaction_id)
   } catch {

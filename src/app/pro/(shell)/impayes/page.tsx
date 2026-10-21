@@ -52,7 +52,8 @@ export default async function PageImpayes() {
             Aucun loyer en retard
           </p>
           <p className="mt-sm text-body-md text-body">
-            Tous les loyers échus ont été réglés. Rien à relancer aujourd&apos;hui.
+            Aucun retard confirmé n&apos;apparaît aujourd&apos;hui. Les périodes dont
+            l&apos;historique est incomplet ne sont pas qualifiées d&apos;impayées.
           </p>
           <Link href="/pro/paiements/nouveau" className="btn btn-primary mt-lg">
             Enregistrer un paiement

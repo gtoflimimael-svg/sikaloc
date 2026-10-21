@@ -212,7 +212,8 @@ export default async function PageTableauDeBord({
               Aucun loyer en retard.
             </p>
             <p className="mt-xs text-body-sm text-body">
-              Tous les loyers échus ont été réglés, tolérance comprise.
+              Aucun retard confirmé n&apos;apparaît, tolérance comprise. Les périodes
+              historiques indéterminées ne sont pas comptées comme impayées.
             </p>
           </div>
         ) : (
