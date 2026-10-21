@@ -704,7 +704,19 @@
   .empty-state-icon :where(img, svg) { max-width: 136px; max-height: 120px; }
   .data-table tbody td:last-child { white-space: nowrap; }
   .data-table tbody tr:last-child td { border-bottom: 0; }
-  .table-defilante { background-color: var(--color-canvas); }
+  .table-defilante {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas);
+  }
+  .table-defilante:focus-visible {
+    outline: 3px solid var(--color-accent-teal);
+    outline-offset: 3px;
+  }
+  .page-header-actions { width: 100%; }
+  .page-header-actions > :where(a, button) { width: 100%; justify-content: center; }
   .skip-link {
     position: fixed;
     top: 8px;
@@ -735,6 +747,8 @@
     .app-main { padding: 32px; }
     .card { padding: 24px; }
     .card-lg { padding: 32px; }
+    .page-header-actions { width: auto; }
+    .page-header-actions > :where(a, button) { width: auto; }
   }
   @media (pointer: coarse) {
     .btn-sm { min-height: var(--control-height); }

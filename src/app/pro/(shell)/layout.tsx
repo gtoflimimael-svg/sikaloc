@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
 import { BandeauPhoto } from '@/components/app/bandeau-photo'
 import { MenuCompte } from '@/components/app/menu-compte'
-import { BarreLaterale, EnTeteMobile } from '@/components/app/navigation'
+import { BarreLaterale, ContextePro, EnTeteMobile } from '@/components/app/navigation'
 import { VisiteGuidee } from '@/components/app/visite-guidee'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { abonnementActif } from '@/lib/plan'
@@ -85,7 +85,8 @@ export default async function LayoutApplication({
         <BandeauAbonnement bailleur={bailleur} />
         <BandeauPhoto bailleur={bailleur} />
 
-        <header className="hidden h-16 shrink-0 items-center justify-end gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
+        <header className="hidden h-16 shrink-0 items-center justify-between gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
+          <ContextePro />
           <Link
             href="/pro/paiements/nouveau"
             // Repère de la visite guidée. Le bouton équivalent de l'en-tête

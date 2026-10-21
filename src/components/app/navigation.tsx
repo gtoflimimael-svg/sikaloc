@@ -28,6 +28,7 @@ export interface LienNav {
   href: string
   libelle: string
   icone: keyof typeof ICONES
+  groupe: 'pilotage' | 'gestion' | 'commercialisation' | 'compte'
   pastille?: number
 }
 
@@ -43,14 +44,21 @@ const ICONES = {
 } as const
 
 export const LIENS_NAV: LienNav[] = [
-  { href: ESPACE_PRO.tableauDeBord, libelle: 'Tableau de bord', icone: 'tableau' },
-  { href: '/pro/impayes', libelle: 'Impayés', icone: 'impayes' },
-  { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements' },
-  { href: '/pro/baux', libelle: 'Baux', icone: 'baux' },
-  { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires' },
-  { href: '/pro/logements', libelle: 'Logements', icone: 'logements' },
-  { href: '/pro/annonces', libelle: 'Annonces', icone: 'annonces' },
-  { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres' },
+  { href: ESPACE_PRO.tableauDeBord, libelle: 'Tableau de bord', icone: 'tableau', groupe: 'pilotage' },
+  { href: '/pro/impayes', libelle: 'Impayés', icone: 'impayes', groupe: 'pilotage' },
+  { href: '/pro/logements', libelle: 'Logements', icone: 'logements', groupe: 'gestion' },
+  { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires', groupe: 'gestion' },
+  { href: '/pro/baux', libelle: 'Baux', icone: 'baux', groupe: 'gestion' },
+  { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements', groupe: 'gestion' },
+  { href: '/pro/annonces', libelle: 'Annonces', icone: 'annonces', groupe: 'commercialisation' },
+  { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres', groupe: 'compte' },
+]
+
+const GROUPES_NAV: { id: LienNav['groupe']; titre: string }[] = [
+  { id: 'pilotage', titre: 'Pilotage' },
+  { id: 'gestion', titre: 'Gestion locative' },
+  { id: 'commercialisation', titre: 'Commercialisation' },
+  { id: 'compte', titre: 'Compte' },
 ]
 
 function Icone({ nom }: { nom: keyof typeof ICONES }) {
@@ -80,35 +88,86 @@ function LiensNavigation({
   onNavigation?: () => void
 }) {
   return (
-    <nav aria-label="Navigation Sikaloc Pro" className="space-y-xxs">
-      {LIENS_NAV.map((lien) => {
-        const actif = estActif(lien.href, chemin)
-        const pastille = lien.href === '/pro/impayes' ? impayes : 0
+    <nav aria-label="Navigation Sikaloc Pro" className="space-y-md">
+      {GROUPES_NAV.map((groupe) => (
+        <section key={groupe.id} aria-labelledby={`nav-pro-${groupe.id}`}>
+          <h2 id={`nav-pro-${groupe.id}`} className="px-md pb-xs text-caption font-semibold uppercase tracking-wide text-mute-soft">
+            {groupe.titre}
+          </h2>
+          <ul className="space-y-xxs">
+            {LIENS_NAV.filter((lien) => lien.groupe === groupe.id).map((lien) => {
+              const actif = estActif(lien.href, chemin)
+              const pastille = lien.href === '/pro/impayes' ? impayes : 0
+              const courant = chemin === lien.href ? 'page' : actif ? 'location' : undefined
 
-        return (
-          <Link
-            key={lien.href}
-            href={lien.href}
-            prefetch
-            onClick={onNavigation}
-            aria-current={actif ? 'page' : undefined}
-            // Repère de la visite guidée. Il désigne un élément RÉEL de
-            // l'interface : c'est ce qui distingue une visite d'une boîte de
-            // dialogue posée au milieu de l'écran.
-            data-visite={`nav-${lien.icone}`}
-            className={`sidebar-row ${actif ? 'sidebar-row-active' : ''}`}
-          >
-            <Icone nom={lien.icone} />
-            <span className="flex-1">{lien.libelle}</span>
-            {pastille > 0 ? (
-              <span className="inline-flex min-w-[20px] items-center justify-center rounded-pill bg-negative px-xs text-caption font-semibold text-on-primary">
-                {pastille}
-              </span>
-            ) : null}
-          </Link>
-        )
-      })}
+              return (
+                <li key={lien.href}>
+                  <Link
+                    href={lien.href}
+                    prefetch
+                    onClick={onNavigation}
+                    aria-current={courant}
+                    data-visite={`nav-${lien.icone}`}
+                    className={`sidebar-row ${actif ? 'sidebar-row-active' : ''}`}
+                  >
+                    <Icone nom={lien.icone} />
+                    <span className="flex-1">{lien.libelle}</span>
+                    {pastille > 0 ? (
+                      <span className="inline-flex min-w-[20px] items-center justify-center rounded-pill bg-negative px-xs text-caption font-semibold text-on-primary" aria-label={`${pastille} loyers en retard`}>
+                        {pastille}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
     </nav>
+  )
+}
+
+function titreContexte(chemin: string): { groupe: string; page: string } {
+  if (chemin === '/pro/tableau-de-bord') return { groupe: 'Pilotage', page: 'Tableau de bord' }
+  if (chemin.startsWith('/pro/impayes')) return { groupe: 'Pilotage', page: 'Loyers en retard' }
+  if (chemin.startsWith('/pro/logements')) {
+    return { groupe: 'Gestion locative', page: chemin.endsWith('/nouveau') ? 'Nouveau logement' : chemin.endsWith('/modifier') ? 'Modifier un logement' : 'Logements' }
+  }
+  if (chemin.startsWith('/pro/locataires')) {
+    return { groupe: 'Gestion locative', page: chemin.endsWith('/nouveau') ? 'Nouveau locataire' : chemin.endsWith('/modifier') ? 'Modifier un locataire' : 'Locataires' }
+  }
+  if (chemin.startsWith('/pro/baux')) {
+    const page = chemin.endsWith('/historique') ? 'Historique des loyers' : chemin.endsWith('/modifier') ? 'Modifier le bail' : chemin.endsWith('/nouveau') ? 'Nouveau bail' : chemin === '/pro/baux' ? 'Baux' : 'Détail du bail'
+    return { groupe: 'Gestion locative', page }
+  }
+  if (chemin.startsWith('/pro/paiements')) {
+    const page = chemin.endsWith('/confirmer') ? 'Confirmation du paiement' : chemin.endsWith('/modifier') ? 'Corriger le paiement' : chemin.endsWith('/nouveau') ? 'Nouveau paiement' : 'Paiements'
+    return { groupe: 'Gestion locative', page }
+  }
+  if (chemin.startsWith('/pro/annonces')) {
+    const page = chemin.endsWith('/candidatures') ? 'Candidatures reçues' : chemin.endsWith('/nouvelle') ? 'Nouvelle annonce' : chemin === '/pro/annonces' ? 'Annonces' : 'Détail de l’annonce'
+    return { groupe: 'Commercialisation', page }
+  }
+  if (chemin.startsWith('/pro/quittances')) return { groupe: 'Gestion locative', page: 'Document locatif' }
+  if (chemin.startsWith('/pro/parametres/abonnement')) return { groupe: 'Compte', page: 'Abonnement' }
+  if (chemin.startsWith('/pro/parametres/preferences')) return { groupe: 'Compte', page: 'Préférences' }
+  if (chemin.startsWith('/pro/parametres/profil')) return { groupe: 'Compte', page: 'Profil' }
+  if (chemin.startsWith('/pro/parametres/signature')) return { groupe: 'Compte', page: 'Signature' }
+  if (chemin.startsWith('/pro/parametres/parrainage')) return { groupe: 'Compte', page: 'Parrainage' }
+  if (chemin.startsWith('/pro/parametres/donnees')) return { groupe: 'Compte', page: 'Données personnelles' }
+  return { groupe: 'Compte', page: 'Paramètres' }
+}
+
+export function ContextePro() {
+  const chemin = usePathname()
+  const contexte = titreContexte(chemin)
+
+  return (
+    <div className="mr-auto hidden min-w-0 lg:block" aria-live="polite">
+      <p className="text-caption text-mute">Sikaloc Pro · {contexte.groupe}</p>
+      <p className="truncate text-body-sm font-semibold text-ink">{contexte.page}</p>
+    </div>
   )
 }
 

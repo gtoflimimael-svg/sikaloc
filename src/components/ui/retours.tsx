@@ -95,14 +95,14 @@ export function EnTetePage({
   action?: ReactNode
 }) {
   return (
-    <div className="mb-xl flex flex-wrap items-start justify-between gap-lg">
+    <div className="page-header mb-xl flex flex-wrap items-start justify-between gap-lg">
       <div className="min-w-0">
         <h1 className="page-title">{titre}</h1>
         {description ? (
           <p className="mt-xs max-w-[42rem] text-body-md text-mute">{description}</p>
         ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="page-header-actions shrink-0">{action}</div> : null}
     </div>
   )
 }

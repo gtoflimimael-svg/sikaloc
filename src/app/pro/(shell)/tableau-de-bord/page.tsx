@@ -7,6 +7,7 @@ import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { CarteMetrique } from '@/components/app/carte-metrique'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { TableauListe } from '@/components/ui/listes'
 import {
   formaterDateCourte,
   formaterFCFA,
@@ -180,7 +181,7 @@ export default async function PageTableauDeBord({
           Nouveau bail
         </Link>
         <Link href="/pro/impayes" className="btn btn-tertiary">
-          Envoyer une relance
+          Consulter les impayés
         </Link>
       </section>
 
@@ -271,7 +272,7 @@ export default async function PageTableauDeBord({
             }
           />
         ) : (
-          <div className="table-defilante" role="region" aria-label="Derniers paiements" tabIndex={0}>
+          <TableauListe id="derniers-paiements" libelle="Derniers paiements">
             <table className="data-table">
               <thead>
                 <tr>
@@ -313,7 +314,7 @@ export default async function PageTableauDeBord({
                 })}
               </tbody>
             </table>
-          </div>
+          </TableauListe>
         )}
       </section>
     </div>

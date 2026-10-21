@@ -6,6 +6,7 @@ import { Illustration } from '@/components/ui/illustration'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
+import { TableauListe } from '@/components/ui/listes'
 import { reactiverBail, resilierBail, supprimerBail } from '@/lib/actions/baux'
 import {
   formaterDate,
@@ -238,7 +239,7 @@ export default async function PageDetailBail({
             }
           />
         ) : (
-          <div className="table-defilante">
+          <TableauListe id="paiements-bail" libelle="Historique des paiements du bail">
             <table className="data-table">
               <thead>
                 <tr>
@@ -311,7 +312,7 @@ export default async function PageDetailBail({
                 })}
               </tbody>
             </table>
-          </div>
+          </TableauListe>
         )}
       </section>
 
