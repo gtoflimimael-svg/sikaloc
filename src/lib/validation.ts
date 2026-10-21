@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { LONGUEUR_MAXIMALE, messageRefus } from '@/lib/mot-de-passe'
 import { MESSAGES_TELEPHONE, validerTelephone } from '@/lib/telephone'
 import { evaluerMotDePasse } from '@/lib/mot-de-passe-evaluation'
+import { EQUIPEMENTS_ANNONCE } from '@/lib/types/database'
 
 /**
  * Schémas de validation partagés.
@@ -208,6 +209,62 @@ export const schemaLogement = z.object({
   ville: texteObligatoire('La ville', 2, 120),
   pays: z.string().trim().min(2).max(80).default('Bénin'),
 })
+
+/*
+ * ─── Annonce Sikaloc_Find ─────────────────────────────────────────────────
+ *
+ * Un brouillon s'enregistre incomplet : seuls la ville et les bornes sont
+ * vérifiées ici. Ce qu'exige la PUBLICATION — quartier, chambres, loyer,
+ * description, une photo, pas de bail en travers — c'est la base qui le juge
+ * (contrainte `annonces_complete_hors_brouillon` et déclencheurs de S1). Le
+ * refaire ici créerait deux définitions de « publiable ».
+ *
+ * Les montants sont des entiers FCFA : `12,5` est refusé, pas arrondi.
+ */
+const vide = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v)
+
+const entierOptionnel = (champ: string, min: number, max: number) =>
+  z.preprocess(
+    vide,
+    z.coerce
+      .number({ error: `${champ} : saisissez un nombre.` })
+      .int(`${champ} : saisissez un nombre entier.`)
+      .min(min, `${champ} : ${min} au minimum.`)
+      .max(max, `${champ} : ${max.toLocaleString('fr-FR')} au maximum.`)
+      .optional(),
+  )
+
+export const schemaAnnonce = z.object({
+  ville: texteObligatoire('La ville', 2, 120),
+  quartier: z.preprocess(
+    vide,
+    z
+      .string()
+      .trim()
+      .min(2, 'Le quartier doit contenir au moins 2 caractères.')
+      .max(120, 'Le quartier ne peut pas dépasser 120 caractères.')
+      .optional(),
+  ),
+  chambres: entierOptionnel('Chambres', 0, 20),
+  surfaceM2: entierOptionnel('Surface', 5, 2000),
+  loyer: entierOptionnel('Loyer', 1, 999_999_999),
+  charges: entierOptionnel('Charges', 0, 999_999_999),
+  depotGarantie: entierOptionnel('Caution', 0, 999_999_999),
+  avanceMois: entierOptionnel('Avance', 0, 24),
+  equipements: z.array(z.enum(EQUIPEMENTS_ANNONCE, { error: 'Équipement inconnu.' })).default([]),
+  description: z.preprocess(
+    vide,
+    z
+      .string()
+      .trim()
+      .min(20, 'La description doit contenir au moins 20 caractères.')
+      .max(3000, 'La description ne peut pas dépasser 3 000 caractères.')
+      .optional(),
+  ),
+  disponibleLe: z.preprocess(vide, dateISO.optional()),
+})
+
+export type ChampsAnnonce = z.infer<typeof schemaAnnonce>
 
 export const schemaBail = z
   .object({

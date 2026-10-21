@@ -11,18 +11,20 @@ export default async function PageSignature() {
   const bailleur = await bailleurOnboarde()
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-signature-page max-w-[46rem]">
       <EnteteParametre cle="signature" />
 
       <div className="space-y-lg">
-        <div className="card-sage">
+        <div className="signature-explainer card-sage">
           <p className="text-body-md font-semibold text-ink-deep">
             Pourquoi une signature ?
           </p>
           <p className="mt-sm text-body-md text-body">
-            Elle est incrustée sur chaque quittance PDF. Il s&apos;agit d&apos;une
-            signature électronique simple, suffisante entre particuliers — pas
-            d&apos;une signature électronique qualifiée.
+            L&apos;image enregistrée est apposée visuellement sur les quittances
+            PDF. Sikaloc ne certifie pas l&apos;identité du signataire et ne
+            fournit pas de signature électronique qualifiée. Vérifiez les
+            exigences applicables à votre situation avant de vous appuyer sur
+            un document signé.
           </p>
         </div>
 

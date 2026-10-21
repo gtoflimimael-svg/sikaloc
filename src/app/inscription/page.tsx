@@ -16,9 +16,8 @@ export default async function PageInscription({
   return (
     <CarteAuth
       titre="Créer votre compte"
-      description="Deux minutes pour votre première quittance conforme."
-      illustrationGauche="joie"
-      illustrationDroite="plante"
+      description="Créez votre espace bailleur pour gérer vos logements, vos baux et vos documents."
+      ambiance
       bas={
         <>
           Vous avez déjà un compte ?{' '}

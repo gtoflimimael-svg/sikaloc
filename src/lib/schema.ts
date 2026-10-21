@@ -39,6 +39,8 @@ const TABLES: Record<string, string> = {
   recompenses_parrainage: 'RecompenseParrainage',
   tentatives_connexion: 'TentativeConnexion',
   emails_a_envoyer: 'EmailAEnvoyer',
+  notifications_candidature: 'NotificationCandidature',
+  notifications_whatsapp: 'NotificationWhatsApp',
   journal_purges: 'JournalPurge',
   compteurs_documents: 'CompteurDocuments',
   inscriptions_guide: 'InscriptionGuide',
@@ -48,6 +50,10 @@ const TABLES: Record<string, string> = {
   codes_verification: 'CodeVerification',
   v_echeances: 'Echeance',
   invitations_locataire: 'InvitationLocataire',
+  annonces: 'Annonce',
+  annonce_photos: 'AnnoncePhoto',
+  candidats: 'Candidat',
+  candidatures: 'Candidature',
 }
 
 export interface EcartSchema {

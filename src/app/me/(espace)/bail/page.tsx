@@ -1,10 +1,11 @@
-import { Phone } from 'lucide-react'
+import { FileText, Phone } from 'lucide-react'
 import type { Metadata } from 'next'
 
-import { Badge, EnTetePage } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import { Badge } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { mesBaux } from '@/lib/locataire'
-import { formaterTelephone } from '@/lib/telephone'
+import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
 import type { BailLocataire } from '@/lib/types/database'
 
 export const metadata: Metadata = { title: 'Mon bail' }
@@ -30,9 +31,10 @@ export default async function PageBail() {
 
   return (
     <div className="space-y-xl">
-      <EnTetePage
+      <IntroPageMe
         titre={baux.length > 1 ? 'Mes baux' : 'Mon bail'}
         description="Les termes enregistrés par votre bailleur."
+        icone={<FileText size={24} />}
       />
 
       {baux.map((bail) => (
@@ -49,11 +51,12 @@ export default async function PageBail() {
 }
 
 function CarteDetail({ bail }: { bail: BailLocataire }) {
+  const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   return (
-    <section className="overflow-hidden rounded-xl border border-hairline bg-canvas">
-      <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline p-xl">
+    <section className="me-contract-card overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
+      <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline bg-canvas-sage p-lg">
         <div className="min-w-0">
-          <p className="text-display-xs font-semibold text-ink">{bail.logement_adresse}</p>
+          <p className="section-title list-copy">{bail.logement_adresse}</p>
           <p className="text-body-sm text-mute">
             {bail.logement_type} · {bail.logement_ville}, {bail.logement_pays}
           </p>
@@ -63,7 +66,7 @@ function CarteDetail({ bail }: { bail: BailLocataire }) {
 
       <dl className="divide-y divide-hairline-soft">
         <Ligne terme="Locataire" definition={bail.locataire_nom} />
-        <Ligne terme="Loyer mensuel" definition={formaterFCFA(bail.loyer_mensuel)} />
+        <Ligne terme="Loyer mensuel" definition={formaterFCFA(bail.loyer_mensuel)} montant />
         <Ligne
           terme="Jour d’échéance"
           definition={`Le ${bail.jour_echeance} de chaque mois`}
@@ -84,29 +87,31 @@ function CarteDetail({ bail }: { bail: BailLocataire }) {
           definition={bail.date_fin ? formaterDate(bail.date_fin) : 'Non précisée'}
         />
         {bail.depot_garantie ? (
-          <Ligne terme="Dépôt de garantie" definition={formaterFCFA(bail.depot_garantie)} />
+          <Ligne terme="Dépôt de garantie" definition={formaterFCFA(bail.depot_garantie)} montant />
         ) : null}
       </dl>
 
-      <footer className="flex flex-wrap items-center justify-between gap-md border-t border-hairline bg-canvas-soft p-xl">
+      <footer className="flex flex-wrap items-center justify-between gap-md border-t border-hairline bg-canvas-soft p-lg">
         <div>
-          <p className="text-caption uppercase tracking-wide text-mute">Votre bailleur</p>
+          <p className="text-caption text-mute">Votre bailleur</p>
           <p className="mt-xxs text-body-md font-semibold text-ink">{bail.bailleur_nom}</p>
         </div>
-        <a href={`tel:${bail.bailleur_telephone}`} className="btn btn-secondary btn-sm">
-          <Phone size={15} strokeWidth={2} aria-hidden="true" />
-          {formaterTelephone(bail.bailleur_telephone)}
-        </a>
+        {numeroBailleur ? (
+          <a href={`tel:${numeroBailleur}`} className="btn btn-secondary btn-sm">
+            <Phone size={15} strokeWidth={2} aria-hidden="true" />
+            {formaterTelephone(numeroBailleur)}
+          </a>
+        ) : <span className="text-body-sm text-mute">Téléphone non renseigné</span>}
       </footer>
     </section>
   )
 }
 
-function Ligne({ terme, definition }: { terme: string; definition: string }) {
+function Ligne({ terme, definition, montant = false }: { terme: string; definition: string; montant?: boolean }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-md px-xl py-md">
+    <div className="me-detail-row">
       <dt className="text-body-sm text-mute">{terme}</dt>
-      <dd className="text-right text-body-md font-semibold tabular text-ink">{definition}</dd>
+      <dd className={`min-w-0 text-body-md font-medium text-ink sm:text-right ${montant ? 'money' : 'list-copy'}`}>{definition}</dd>
     </div>
   )
 }

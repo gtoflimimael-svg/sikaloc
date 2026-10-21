@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { debutDeMois, finDeMois } from '@/lib/format'
+import { debutDeMois } from '@/lib/format'
 import { empreinte, genererEtStocker } from '@/lib/quittance'
 import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientAdmin } from '@/lib/supabase/admin'
@@ -22,49 +22,6 @@ function lireFormulaire(donnees: FormData) {
   })
 }
 
-/**
- * Détermine si la période reste incomplète après ce versement.
- *
- * On compare la somme des versements de la période — et non le seul montant
- * saisi : deux acomptes qui totalisent le loyer soldent le mois, et le document
- * émis doit alors être une quittance, pas un reçu.
- */
-async function calculerEstPartiel(
-  bailId: string,
-  periodeDebut: string,
-  montant: number,
-  typePaiement: string,
-  paiementExclu?: string,
-): Promise<boolean> {
-  if (typePaiement !== 'Loyer') return false
-
-  const supabase = await creerClientServeur()
-
-  const { data: bail } = await supabase
-    .from('baux')
-    .select('loyer_mensuel')
-    .eq('id', bailId)
-    .single()
-
-  if (!bail) return false
-
-  let requete = supabase
-    .from('paiements')
-    .select('montant')
-    .eq('bail_id', bailId)
-    .eq('periode_debut', periodeDebut)
-    .eq('type_paiement', 'Loyer')
-    .eq('statut', 'Validé')
-
-  if (paiementExclu) requete = requete.neq('id', paiementExclu)
-
-  const { data: autres } = await requete
-
-  const dejaPaye = (autres ?? []).reduce((somme, p) => somme + Number(p.montant), 0)
-
-  return dejaPaye + montant < Number(bail.loyer_mensuel)
-}
-
 // ─── Étape 1 — saisie (statut « Brouillon ») ────────────────────────────────
 
 export async function enregistrerPaiement(
@@ -76,86 +33,43 @@ export async function enregistrerPaiement(
 
   const acces = await bailleurAvecEcriture()
   if (!acces.ok) return acces.etat
-  const bailleur = acces.bailleur
   const supabase = await creerClientServeur()
 
-  const periodeDebut = debutDeMois(analyse.data.periodeDebut)
-  const periodeFin = finDeMois(periodeDebut)
-
-  const estPartiel = await calculerEstPartiel(
-    analyse.data.bailId,
-    periodeDebut,
-    analyse.data.montant,
-    analyse.data.typePaiement,
-  )
-
-  const { data, error } = await supabase
-    .from('paiements')
-    .insert({
-      bailleur_id: bailleur.id,
-      bail_id: analyse.data.bailId,
-      date_paiement: analyse.data.datePaiement,
-      montant: analyse.data.montant,
-      periode_debut: periodeDebut,
-      periode_fin: periodeFin,
-      mode_paiement: analyse.data.modePaiement,
-      type_paiement: analyse.data.typePaiement,
-      est_partiel: estPartiel,
-      statut: 'Brouillon',
-    })
-    .select('id')
-    .single()
+  const { data: paiementId, error } = await supabase.rpc('creer_paiement_brouillon', {
+    p_bail_id: analyse.data.bailId,
+    p_date_paiement: analyse.data.datePaiement,
+    p_montant: analyse.data.montant,
+    p_periode_debut: debutDeMois(analyse.data.periodeDebut),
+    p_mode_paiement: analyse.data.modePaiement,
+    p_type_paiement: analyse.data.typePaiement,
+  })
 
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (!paiementId) return { erreur: 'Enregistrement impossible. Réessayez.' }
 
   // Écran de récapitulatif avant validation (§6.1.7, étape 4).
-  redirect(`/pro/paiements/${data.id}/confirmer`)
+  redirect(`/pro/paiements/${paiementId}/confirmer`)
 }
 
 // ─── Étape 2 — confirmation, validation et émission du document ─────────────
 
 export async function validerPaiement(id: string): Promise<EtatFormulaire> {
-  const supabase = await creerClientServeur()
-
-  // `genererEtStocker` relit le paiement par id et n'utilise jamais son
-  // `statut` pour composer le document (voir `DonneesQuittance`) : rien
-  // n'oblige donc à attendre que l'écriture du statut soit passée avant de
-  // lancer la génération. C'est le point de la confirmation de paiement où la
-  // latence se sent le plus — les deux partent en parallèle plutôt que bout à
-  // bout.
-  const [ecriture, quittance] = await Promise.allSettled([
-    supabase
-      .from('paiements')
-      .update({ statut: 'Validé', valide_le: new Date().toISOString() })
-      .eq('id', id),
-    genererEtStocker(id),
-  ])
-
-  if (ecriture.status === 'rejected' || ecriture.value.error) {
-    const message =
-      ecriture.status === 'rejected'
-        ? String(ecriture.reason)
-        : ecriture.value.error?.message
-    return { erreur: `Validation impossible : ${message}` }
-  }
-
-  if (quittance.status === 'rejected') {
-    // Le paiement reste validé : c'est un fait comptable. Seul le document a
-    // échoué, et il est régénérable depuis la fiche du paiement.
-    const erreur = quittance.reason
-    return {
-      erreur:
-        erreur instanceof Error
-          ? `Paiement validé, mais le document n'a pas pu être produit : ${erreur.message}`
-          : 'Paiement validé, mais le document n’a pas pu être produit.',
-    }
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
+  let quittance
+  try {
+    // Le générateur authentifie lui-même l'appelant; la RPC valide et autorise
+    // avant tout effet PDF/Storage. Aucune opération lancée en parallèle.
+    quittance = await genererEtStocker(id, true)
+  } catch {
+    return { erreur: 'Validation ou émission impossible. Le paiement peut déjà être validé : consultez sa fiche puis relancez la génération si nécessaire.' }
   }
 
   revalidatePath(ESPACE_PRO.tableauDeBord)
   revalidatePath('/pro/paiements')
   revalidatePath('/pro/impayes')
 
-  redirect(`/pro/quittances/${quittance.value.id}`)
+  redirect(`/pro/quittances/${quittance.id}`)
 }
 
 /** Régénère le document d'un paiement déjà validé. */
@@ -171,6 +85,8 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
  */
 export async function regenererQuittance(paiementId: string): Promise<EtatFormulaire> {
   try {
+    const acces = await bailleurAvecEcriture()
+    if (!acces.ok) return acces.etat
     const quittance = await genererEtStocker(paiementId)
     revalidatePath('/pro/paiements')
     redirect(`/pro/quittances/${quittance.id}`)
@@ -195,49 +111,40 @@ export async function corrigerPaiement(
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
   const periodeDebut = debutDeMois(analyse.data.periodeDebut)
 
-  const estPartiel = await calculerEstPartiel(
-    analyse.data.bailId,
-    periodeDebut,
-    analyse.data.montant,
-    analyse.data.typePaiement,
-    id,
-  )
-
-  const { error } = await supabase
-    .from('paiements')
-    .update({
-      bail_id: analyse.data.bailId,
-      date_paiement: analyse.data.datePaiement,
-      montant: analyse.data.montant,
-      periode_debut: periodeDebut,
-      periode_fin: finDeMois(periodeDebut),
-      mode_paiement: analyse.data.modePaiement,
-      type_paiement: analyse.data.typePaiement,
-      est_partiel: estPartiel,
-      // Retour en brouillon : la correction annule la validation précédente,
-      // le bailleur doit reconfirmer pour réémettre le document.
-      statut: 'Brouillon',
-      valide_le: null,
-    })
-    .eq('id', id)
+  const { data: corrige, error } = await supabase.rpc('corriger_paiement', {
+    p_paiement_id: id,
+    p_bail_id: analyse.data.bailId,
+    p_date_paiement: analyse.data.datePaiement,
+    p_montant: analyse.data.montant,
+    p_periode_debut: periodeDebut,
+    p_mode_paiement: analyse.data.modePaiement,
+    p_type_paiement: analyse.data.typePaiement,
+  })
 
   if (error) {
     // Le trigger `proteger_paiement_fige` remonte ici passé les 5 minutes.
     return { erreur: error.message.replace(/^.*?:\s*/, '') }
   }
 
+  if (!corrige) return { erreur: 'Paiement impossible ou non autorisé.' }
   revalidatePath('/pro/paiements')
   redirect(`/pro/paiements/${id}/confirmer`)
 }
 
 export async function supprimerPaiement(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase.from('paiements').delete().eq('id', id)
+  const { data: supprime, error } = await supabase.rpc('supprimer_paiement', {
+    p_paiement_id: id,
+  })
 
-  if (error) return { erreur: error.message.replace(/^.*?:\s*/, '') }
+  if (error || !supprime) return { erreur: 'Paiement impossible ou non autorisé.' }
 
   revalidatePath('/pro/paiements')
   revalidatePath(ESPACE_PRO.tableauDeBord)

@@ -3,10 +3,11 @@ import type { Metadata } from 'next'
 import { ESPACE_PRO } from '@/lib/roles'
 import Link from 'next/link'
 
-import { Illustration } from '@/components/ui/illustration'
+import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { CarteMetrique } from '@/components/app/carte-metrique'
-import { Badge, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { TableauListe } from '@/components/ui/listes'
 import {
   formaterDateCourte,
   formaterFCFA,
@@ -91,10 +92,10 @@ export default async function PageTableauDeBord({
       ? Math.round(
           (Number(metriques.loyers_percus_mois) / Number(metriques.loyers_attendus_mois)) * 100,
         )
-      : 0
+      : null
 
   return (
-    <div className="space-y-2xl">
+    <div className="dashboard-home space-y-2xl">
       {/*
         Le message d'accueil ne peut plus annoncer « votre premier bail est
         enregistré » : l'onboarding n'en exige plus. Il invite désormais à la
@@ -106,8 +107,8 @@ export default async function PageTableauDeBord({
             Bienvenue sur Sikaloc, {bailleur.nom.split(' ')[0]} 👋
           </p>
           <p className="mt-sm text-body-md text-body">
-            Votre tableau de bord est encore vide. Commencez par enregistrer un
-            logement : tout le reste s&apos;y rattache.
+            Retrouvez ici le suivi de votre parc, des baux et des paiements.
+            Vous pouvez ajouter un logement à tout moment.
           </p>
           <div className="mt-lg flex flex-wrap items-center gap-lg">
             <Link href="/pro/logements/nouveau" className="btn btn-primary">
@@ -124,20 +125,11 @@ export default async function PageTableauDeBord({
         reprise, et seulement quand elle est close — sinon elle est déjà à
         l'écran et « reprendre » n'aurait aucun sens.
       */}
-      {visiteClose && !bienvenue ? (
-        <div className="flex justify-end">
-          <ReprendreVisite terminee={Boolean(bailleur.tutoriel_vu_le)} />
-        </div>
-      ) : null}
-
-      <div>
-        <h1 className="text-display-md font-extrabold tracking-tight text-ink">
-          Tableau de bord
-        </h1>
-        <p className="mt-xs text-body-md text-mute">
-          Votre activité locative en temps réel.
-        </p>
-      </div>
+      <EnTetePage
+        titre="Tableau de bord"
+        description="Votre activité locative en temps réel."
+        action={visiteClose && !bienvenue ? <ReprendreVisite terminee={Boolean(bailleur.tutoriel_vu_le)} /> : undefined}
+      />
 
       {/* ── Métriques (§6.1.3) ─────────────────────────────────────────── */}
       {/*
@@ -149,7 +141,11 @@ export default async function PageTableauDeBord({
         police ne ferait que repousser la casse au prochain bailleur au parc
         plus important.
       */}
-      <section data-visite="metriques" className="grid gap-lg sm:grid-cols-2">
+      {metriquesReponse.error ? (
+        <Alerte ton="erreur">Les indicateurs ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+      ) : !metriques ? (
+        <Alerte ton="attention">Les indicateurs ne sont pas disponibles pour le moment.</Alerte>
+      ) : <section data-visite="metriques" className="grid gap-md sm:grid-cols-2">
         <CarteMetrique
           label="Taux d'occupation"
           valeur={`${Number(metriques?.taux_occupation ?? 0).toLocaleString('fr-FR')} %`}
@@ -157,8 +153,12 @@ export default async function PageTableauDeBord({
         />
         <CarteMetrique
           label="Taux de recouvrement"
-          valeur={`${tauxRecouvrement} %`}
-          detail={`${formaterFCFA(metriques?.loyers_percus_mois ?? 0)} sur ${formaterFCFA(metriques?.loyers_attendus_mois ?? 0)} attendus`}
+          valeur={tauxRecouvrement === null ? '—' : `${tauxRecouvrement} %`}
+          detail={
+            Number(metriques.loyers_attendus_mois) > 0
+              ? `${formaterFCFA(metriques.loyers_percus_mois)} sur ${formaterFCFA(metriques.loyers_attendus_mois)} attendus`
+              : 'Aucun loyer exigible ce mois-ci'
+          }
         />
         <CarteMetrique
           label="Impayés"
@@ -176,25 +176,26 @@ export default async function PageTableauDeBord({
           ton="primary"
           detail="Paiements encaissés ce mois-ci"
         />
-      </section>
+      </section>}
 
       {/* ── Accès rapides (§6.1.3) ─────────────────────────────────────── */}
-      <section className="flex flex-wrap gap-md">
-        <Link href="/pro/paiements/nouveau" className="btn btn-primary">
-          Nouveau paiement
-        </Link>
-        <Link href="/pro/baux/nouveau" className="btn btn-tertiary">
-          Nouveau bail
-        </Link>
-        <Link href="/pro/impayes" className="btn btn-tertiary">
-          Envoyer une relance
-        </Link>
+      <section className="dashboard-actions" aria-labelledby="actions-rapides">
+        <div className="dashboard-actions-copy">
+          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-ink-deep">À portée de main</p>
+          <h2 id="actions-rapides" className="mt-xs text-title-lg font-semibold text-ink">Actions rapides</h2>
+          <p className="mt-xs text-body-sm text-mute">Accédez directement aux opérations fréquentes.</p>
+        </div>
+        <div className="dashboard-actions-links">
+          <Link href="/pro/paiements/nouveau" className="btn btn-primary">Nouveau paiement</Link>
+          <Link href="/pro/baux/nouveau" className="btn btn-secondary">Créer un bail</Link>
+          <Link href="/pro/impayes" className="btn btn-tertiary">Suivre les retards</Link>
+        </div>
       </section>
 
       {/* ── Impayés ────────────────────────────────────────────────────── */}
       <section>
-        <div className="mb-lg flex items-center justify-between gap-md">
-          <h2 className="text-display-sm font-semibold tracking-tight text-ink">
+        <div className="mb-md flex flex-wrap items-center justify-between gap-sm">
+          <h2 className="section-title">
             Loyers en retard
           </h2>
           {impayes.length > 0 ? (
@@ -204,13 +205,16 @@ export default async function PageTableauDeBord({
           ) : null}
         </div>
 
-        {impayes.length === 0 ? (
+        {impayesReponse.error ? (
+          <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+        ) : impayes.length === 0 ? (
           <div className="rounded-lg bg-positive-pale p-xl">
             <p className="text-body-md font-semibold text-positive-deep">
               Aucun loyer en retard.
             </p>
             <p className="mt-xs text-body-sm text-body">
-              Tous les loyers échus ont été réglés, tolérance comprise.
+              Aucun retard confirmé n&apos;apparaît, tolérance comprise. Les périodes
+              historiques indéterminées ne sont pas comptées comme impayées.
             </p>
           </div>
         ) : (
@@ -248,8 +252,8 @@ export default async function PageTableauDeBord({
 
       {/* ── Derniers paiements ─────────────────────────────────────────── */}
       <section>
-        <div className="mb-lg flex items-center justify-between gap-md">
-          <h2 className="text-display-sm font-semibold tracking-tight text-ink">
+        <div className="mb-md flex flex-wrap items-center justify-between gap-sm">
+          <h2 className="section-title">
             Derniers paiements
           </h2>
           {paiements.length > 0 ? (
@@ -262,11 +266,13 @@ export default async function PageTableauDeBord({
           ) : null}
         </div>
 
-        {paiements.length === 0 ? (
+        {paiementsReponse.error ? (
+          <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+        ) : paiements.length === 0 ? (
           <EtatVide
-            icone={<Illustration nom="joie" taille={200} decorative />}
+            icone={<IllustrationMarque variante="ecosysteme" />}
             titre="Aucun paiement enregistré"
-            description="Dès votre premier paiement saisi, la quittance est générée automatiquement et apparaît ici."
+            description="Après validation d’un paiement, Sikaloc produit le reçu ou la quittance correspondant à sa nature et au solde de la période."
             action={
               <Link href="/pro/paiements/nouveau" className="btn btn-primary">
                 Enregistrer un paiement
@@ -274,7 +280,7 @@ export default async function PageTableauDeBord({
             }
           />
         ) : (
-          <div className="table-defilante">
+          <TableauListe id="derniers-paiements" libelle="Derniers paiements">
             <table className="data-table">
               <thead>
                 <tr>
@@ -316,7 +322,7 @@ export default async function PageTableauDeBord({
                 })}
               </tbody>
             </table>
-          </div>
+          </TableauListe>
         )}
       </section>
     </div>

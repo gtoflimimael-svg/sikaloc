@@ -39,13 +39,12 @@ const colonnes = [
       // Le pied de page est commun à tout le site : « comment ça marche » y
       // désigne l'écosystème, que la page d'accueil explique en `#parcours`.
       { libelle: 'Comment ça marche', href: '/#parcours' },
+      { libelle: 'Trouver un logement', href: '/find' },
       // Le pied de page est là où l'on cherche quand on ne sait pas où aller —
       // et c'est souvent le cas d'un locataire arrivé ici sans rien demander.
       { libelle: 'Je suis locataire', href: '/me/rejoindre' },
       { libelle: 'Le blog', href: '/blog' },
-      // La FAQ n'existe que sur `/pro`, où elle a été déplacée avec le reste
-      // du contenu bailleur — ses trois questions de locataire comprises.
-      { libelle: 'Questions fréquentes', href: '/pro?presentation=1#faq' },
+      { libelle: 'Questions fréquentes', href: '/#faq' },
       { libelle: 'Nous écrire', href: 'mailto:bonjour@sikaloc.com' },
     ],
   },
@@ -62,8 +61,8 @@ export function PiedDePage() {
                 mention légale ci-dessous, où il est porteur : c'est lui qui
                 établit que Sikaloc n'est pas partie au contrat de bail. */}
             <p className="mt-md max-w-[20rem] text-body-sm">
-              Les quittances des bailleurs au Bénin. Numérotées, horodatées,
-              envoyées par le bailleur au locataire sur WhatsApp.
+              Gestion locative, documents et recherche de logements au Bénin.
+              Trois espaces pour les bailleurs, les locataires et les candidats.
             </p>
           </div>
 

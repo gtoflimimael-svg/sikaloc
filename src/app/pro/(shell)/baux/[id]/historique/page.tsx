@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { FormulaireHistorique } from '@/components/app/formulaire-historique'
-import { EnTetePage } from '@/components/ui/retours'
+import { Alerte, EnTetePage } from '@/components/ui/retours'
 import { echeancesADeclarer, echeancesAnterieuresReglees } from '@/lib/echeances'
 import { formaterDate, formaterPeriode } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
@@ -37,7 +37,7 @@ export default async function PageHistorique({
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const [, { data: bail }, { data: lignes }] = await Promise.all([
+  const [, reponseBail, reponseEcheances] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('baux')
@@ -49,7 +49,25 @@ export default async function PageHistorique({
     supabase.from('v_echeances').select('*').eq('bail_id', id),
   ])
 
+  const { data: bail, error: erreurBail } = reponseBail
+  const { data: lignes, error: erreurEcheances } = reponseEcheances
+
+  if (erreurBail) {
+    return <Alerte ton="erreur">Le bail n’a pas pu être chargé. Actualisez la page pour réessayer.</Alerte>
+  }
   if (!bail) redirect('/pro/baux')
+  if (erreurEcheances) {
+    return (
+      <div className="space-y-md">
+        <Alerte ton="erreur">
+          L’historique des échéances n’a pas pu être chargé. Aucune donnée n’a été modifiée.
+        </Alerte>
+        <Link href={`/pro/baux/${id}`} className="btn btn-secondary">
+          Retour au bail
+        </Link>
+      </div>
+    )
+  }
 
   const echeances = (lignes ?? []) as Echeance[]
   const aDeclarer = echeancesADeclarer(echeances)
@@ -71,7 +89,7 @@ export default async function PageHistorique({
   const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
 
   return (
-    <div>
+    <div className="lease-history-page">
       <EnTetePage
         titre={correction ? 'Corriger l’historique' : 'Historique des loyers'}
         description={
@@ -81,7 +99,7 @@ export default async function PageHistorique({
         }
       />
 
-      <div className="card mb-xl">
+      <div className="lease-history-context card mb-xl">
         <dl className="grid gap-md sm:grid-cols-3">
           <div>
             <dt className="text-caption text-mute">Locataire</dt>
@@ -119,7 +137,7 @@ export default async function PageHistorique({
         ) : null}
       </div>
 
-      <div className="card">
+      <div className="lease-history-editor card">
         <FormulaireHistorique
           bailId={id}
           echeances={aDeclarer}

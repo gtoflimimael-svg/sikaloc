@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { bailleurCourant } from '@/lib/session'
+import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
 import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
@@ -135,7 +135,9 @@ export async function televerserSignature(
 
   const { type: typeReel, extension } = DESCRIPTION_FORMAT[format]
 
-  const bailleur = await bailleurCourant()
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
+  const bailleur = acces.bailleur
   const supabase = await creerClientServeur()
 
   const chemin = `${bailleur.id}/signature.${extension}`
@@ -146,36 +148,37 @@ export async function televerserSignature(
 
   if (erreurUpload) return { erreur: `Téléversement impossible : ${erreurUpload.message}` }
 
+  const { error } = await supabase.rpc('definir_signature_bailleur', { p_chemin: chemin })
+
+  if (error) {
+    if (bailleur.signature_chemin !== chemin) {
+      await supabase.storage.from('signatures').remove([chemin])
+    }
+    return { erreur: `Enregistrement impossible : ${error.message}` }
+  }
+
   // Un changement d'extension laisserait l'ancien fichier derrière lui.
   if (bailleur.signature_chemin && bailleur.signature_chemin !== chemin) {
     await supabase.storage.from('signatures').remove([bailleur.signature_chemin])
   }
-
-  const { error } = await supabase
-    .from('bailleurs')
-    .update({ signature_chemin: chemin })
-    .eq('id', bailleur.id)
-
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
 
   revalidatePath('/pro/parametres')
   return { succes: 'Signature enregistrée. Elle apparaîtra sur vos prochaines quittances.' }
 }
 
 export async function supprimerSignature(): Promise<EtatFormulaire> {
-  const bailleur = await bailleurCourant()
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
+  const bailleur = acces.bailleur
   const supabase = await creerClientServeur()
+
+  const { error } = await supabase.rpc('definir_signature_bailleur', { p_chemin: null })
+
+  if (error) return { erreur: `Suppression impossible : ${error.message}` }
 
   if (bailleur.signature_chemin) {
     await supabase.storage.from('signatures').remove([bailleur.signature_chemin])
   }
-
-  const { error } = await supabase
-    .from('bailleurs')
-    .update({ signature_chemin: null })
-    .eq('id', bailleur.id)
-
-  if (error) return { erreur: `Suppression impossible : ${error.message}` }
 
   revalidatePath('/pro/parametres')
   return { succes: 'Signature supprimée.' }

@@ -18,6 +18,12 @@ import { chiffresNationaux } from '@/lib/telephone'
 export const DEVISE = 'XOF'
 
 export const MONTANT_ABONNEMENT = PRIX_STANDARD_FCFA
+export const DESCRIPTION_ABONNEMENT = 'Abonnement Sikaloc — plan Standard (1 mois)'
+export const FORMULE_ABONNEMENT = 'Standard'
+
+export function identifiantTransactionValide(id: string): boolean {
+  return /^[1-9][0-9]{0,19}$/.test(id)
+}
 
 interface ConfigFedaPay {
   cleSecrete: string
@@ -55,6 +61,9 @@ async function appeler<T>(
   try {
     const reponse = await fetch(`${config.base}${chemin}`, {
       method: options.methode ?? 'GET',
+      cache: 'no-store',
+      redirect: 'error',
+      signal: AbortSignal.timeout(10_000),
       headers: {
         Authorization: `Bearer ${config.cleSecrete}`,
         'Content-Type': 'application/json',
@@ -132,6 +141,7 @@ function numeroLocal(telephone: string): string {
  */
 export async function initierPaiement(
   demande: DemandePaiement,
+  enregistrer: (transaction: { id: string; reference: string; environnement: 'sandbox' | 'live' }) => Promise<void>,
 ): Promise<ResultatInitiation> {
   const config = configFedaPay()
 
@@ -143,9 +153,13 @@ export async function initierPaiement(
     }
   }
 
+  if (demande.montant !== MONTANT_ABONNEMENT || demande.description !== DESCRIPTION_ABONNEMENT) {
+    return { ok: false, message: 'Contrat d’abonnement invalide.' }
+  }
+
   const { prenom, nom } = decouperNom(demande.clientNom)
 
-  const creation = await appeler<{ 'v1/transaction'?: { id: number }; id?: number }>(
+  const creation = await appeler<{ 'v1/transaction'?: { id: number; reference: string }; id?: number; reference?: string }>(
     config,
     '/transactions',
     {
@@ -155,7 +169,7 @@ export async function initierPaiement(
         amount: Math.round(demande.montant),
         currency: { iso: DEVISE },
         callback_url: demande.urlRetour,
-        custom_metadata: { bailleur_id: demande.bailleurId },
+        custom_metadata: { bailleur_id: demande.bailleurId, produit: 'sikaloc_abonnement', formule: FORMULE_ABONNEMENT, mois: 1 },
         customer: {
           firstname: prenom,
           lastname: nom,
@@ -172,8 +186,17 @@ export async function initierPaiement(
   const transaction = creation.donnees['v1/transaction'] ?? creation.donnees
   const transactionId = transaction?.id
 
-  if (!transactionId) {
-    return { ok: false, message: 'FedaPay n’a pas renvoyé d’identifiant de transaction.' }
+  if (!transactionId || !identifiantTransactionValide(String(transactionId)) ||
+      typeof transaction.reference !== 'string' || !transaction.reference || transaction.reference.length > 200) {
+    return { ok: false, message: 'Référence de transaction FedaPay invalide.' }
+  }
+
+  // La référence et le contrat commercial sont persistés AVANT de délivrer
+  // un lien de paiement. Un webhook arrivé après peut toujours les retrouver.
+  try {
+    await enregistrer({ id: String(transactionId), reference: transaction.reference, environnement: config.environnement })
+  } catch {
+    return { ok: false, message: 'Initialisation indisponible. Réessayez ultérieurement.' }
   }
 
   const jeton = await appeler<{ token?: string; url?: string }>(
@@ -195,45 +218,72 @@ export async function initierPaiement(
 }
 
 export interface StatutTransaction {
+  transactionId: string
+  reference: string
   reglee: boolean
   statut: string
   montant: number
-  bailleurId: string | null
-  brut: unknown
+  devise: string
+  bailleurId: string
+  formule: 'Standard'
+  environnement: 'sandbox' | 'live'
+  /** Compatibilité avec les transactions créées avant les métadonnées C1. */
+  contratHistorique: boolean
 }
 
-/**
- * Interroge FedaPay sur l'état réel d'une transaction.
- *
- * C'est cette réponse — et elle seule — qui autorise à créditer un abonnement.
- * Le corps d'un webhook, même signé, reste une donnée reçue de l'extérieur.
- */
-export async function verifierTransaction(
-  transactionId: string,
-): Promise<StatutTransaction | null> {
+function objet(valeur: unknown): Record<string, unknown> {
+  return valeur !== null && typeof valeur === 'object' && !Array.isArray(valeur)
+    ? valeur as Record<string, unknown> : {}
+}
+
+/** GET avec la clé secrète du compte marchand, jamais la preuve du webhook. */
+export async function verifierTransaction(transactionId: string): Promise<StatutTransaction | null> {
+  if (!identifiantTransactionValide(transactionId)) return null
   const config = configFedaPay()
   if (!config) return null
-
-  const reponse = await appeler<Record<string, unknown>>(
-    config,
-    `/transactions/${transactionId}`,
-  )
-
+  const reponse = await appeler<Record<string, unknown>>(config, `/transactions/${transactionId}`)
   if (!reponse.ok) return null
+  const enveloppe = objet(reponse.donnees)
+  const transaction = objet(enveloppe['v1/transaction'] ?? enveloppe)
+  if (String(transaction.id) !== transactionId ||
+      typeof transaction.reference !== 'string' || !transaction.reference || transaction.reference.length > 200) return null
+  if (transaction.deleted_at != null || transaction.refunded_at != null ||
+      (transaction.operation !== undefined && transaction.operation !== 'payment')) return null
+  const montant = typeof transaction.amount === 'number' ? transaction.amount
+    : typeof transaction.amount === 'string' && /^\d+(?:\.0+)?$/.test(transaction.amount)
+      ? Number(transaction.amount) : NaN
+  if (!Number.isSafeInteger(montant) || montant !== MONTANT_ABONNEMENT) return null
+  if (typeof transaction.status !== 'string') return null
+  const statut = transaction.status
+  if (!['approved', 'transferred', 'pending', 'started', 'declined', 'canceled', 'failed'].includes(statut)) return null
+  const meta = objet(transaction.custom_metadata)
+  if (typeof meta.bailleur_id !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(meta.bailleur_id)) return null
+  const contratHistorique = meta.produit === undefined && meta.formule === undefined && meta.mois === undefined
+  if (contratHistorique) {
+    // Seule l'ancienne description EXACTE permet de reconnaître le produit.
+    // Le règlement exige aussi une ligne locale historique préexistante.
+    if (transaction.description !== DESCRIPTION_ABONNEMENT) return null
+  } else if (meta.produit !== 'sikaloc_abonnement' || meta.formule !== FORMULE_ABONNEMENT ||
+      (meta.mois !== 1 && meta.mois !== '1')) return null
 
-  const enveloppe = reponse.donnees as Record<string, unknown>
-  const transaction = (enveloppe['v1/transaction'] ?? enveloppe) as Record<string, unknown>
-
-  const statut = String(transaction.status ?? 'inconnu')
-  const metadonnees = (transaction.custom_metadata ?? {}) as Record<string, unknown>
-
-  return {
-    reglee: statut === 'approved' || statut === 'transferred',
-    statut,
-    montant: Number(transaction.amount ?? 0),
-    bailleurId: (metadonnees.bailleur_id as string) ?? null,
-    brut: reponse.donnees,
+  // Selon la réponse, FedaPay renvoie currency.iso ou seulement currency_id.
+  // Ne jamais déduire XOF d'un montant ni d'un identifiant de devise codé en dur.
+  let devise = objet(transaction.currency).iso
+  if (devise === undefined && transaction.currency_id !== undefined) {
+    const id = String(transaction.currency_id)
+    if (!identifiantTransactionValide(id)) return null
+    const monnaie = await appeler<Record<string, unknown>>(config, `/currencies/${id}`)
+    if (!monnaie.ok) return null
+    const e = objet(monnaie.donnees)
+    const c = objet(e['v1/currency'] ?? e)
+    if (String(c.id) !== id) return null
+    devise = c.iso
   }
+  if (devise !== DEVISE) return null
+  return { transactionId, reference: transaction.reference, reglee: statut === 'approved' || statut === 'transferred',
+    statut, montant, devise, bailleurId: meta.bailleur_id, formule: FORMULE_ABONNEMENT,
+    environnement: config.environnement, contratHistorique }
 }
 
 /** Fenêtre de rejeu, alignée sur `Webhook.DEFAULT_TOLERANCE` du SDK officiel. */

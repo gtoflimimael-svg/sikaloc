@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 
-import { BoutonSoumettre } from '@/components/ui/boutons'
+import { ActionsFormulaire, FormulaireMetier, SectionFormulaire } from '@/components/ui/formulaire-metier'
 import { ChampMontant, ChampSelection, ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
 import { aujourdhuiISO, formaterFCFA, periodesRecentes } from '@/lib/format'
@@ -54,9 +54,10 @@ export function FormulairePaiement({
   }
 
   return (
-    <form
+    <FormulaireMetier
       action={envoyer}
-      className="card card-lg space-y-lg"
+      etat={etat}
+      titre="Informations du paiement"
       // Les champs restent non contrôlés (leur valeur vit dans le DOM) ; on
       // écoute la délégation d'événement au niveau du formulaire uniquement
       // pour rafraîchir le rappel de loyer quand le bail change.
@@ -65,77 +66,75 @@ export function FormulairePaiement({
         if (cible.name === 'bailId') setBailChoisi(cible.value)
       }}
     >
-      {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
+      <SectionFormulaire titre="Bail et montant reçu">
 
-      <ChampSelection
-        nom="bailId"
-        libelle="Bail concerné"
-        options={baux.map(({ valeur, libelle }) => ({ valeur, libelle }))}
-        valeurDefaut={bailChoisi}
-        requis
-        erreur={etat.erreursChamps?.bailId}
-      />
-
-      <ChampMontant
-        // Le champ est non contrôlé : changer de bail doit le remonter pour
-        // que le nouveau loyer devienne la valeur pré-remplie.
-        key={`montant-${bailChoisi}`}
-        nom="montant"
-        libelle="Montant reçu"
-        valeurDefaut={paiement?.montant ?? bail?.loyerMensuel}
-        aide={
-          bail
-            ? `Loyer mensuel de ce bail : ${formaterFCFA(bail.loyerMensuel)}. Un montant inférieur produira un reçu et non une quittance.`
-            : undefined
-        }
-        requis
-        erreur={etat.erreursChamps?.montant}
-      />
-
-      <div className="grid gap-lg sm:grid-cols-2">
         <ChampSelection
-          nom="periodeDebut"
-          libelle="Mois de loyer concerné"
-          options={periodes.map((p) => ({ valeur: p.valeur, libelle: p.libelle }))}
-          valeurDefaut={paiement?.periode_debut ?? periodes[1]?.valeur ?? periodes[0]?.valeur}
+          nom="bailId"
+          libelle="Bail concerné"
+          options={baux.map(({ valeur, libelle }) => ({ valeur, libelle }))}
+          valeurDefaut={bailChoisi}
           requis
-          erreur={etat.erreursChamps?.periodeDebut}
+          erreur={etat.erreursChamps?.bailId}
         />
-        <ChampTexte
-          nom="datePaiement"
-          libelle="Date du paiement"
-          type="date"
-          valeurDefaut={paiement?.date_paiement ?? aujourdhuiISO()}
-          requis
-          erreur={etat.erreursChamps?.datePaiement}
-        />
-      </div>
 
-      <div className="grid gap-lg sm:grid-cols-2">
-        <ChampSelection
-          nom="modePaiement"
-          libelle="Mode de paiement"
-          options={MODES_PAIEMENT.map((m) => ({ valeur: m, libelle: m }))}
-          valeurDefaut={paiement?.mode_paiement ?? 'Mobile Money'}
+        <ChampMontant
+          // Le champ est non contrôlé : changer de bail doit le remonter pour
+          // que le nouveau loyer devienne la valeur pré-remplie.
+          key={`montant-${bailChoisi}`}
+          nom="montant"
+          libelle="Montant reçu"
+          valeurDefaut={paiement?.montant ?? bail?.loyerMensuel}
+          aide={
+            bail
+              ? `Loyer mensuel de ce bail : ${formaterFCFA(bail.loyerMensuel)}. Le document dépend du cumul des versements validés de la période, vérifié à la confirmation.`
+              : undefined
+          }
           requis
-          erreur={etat.erreursChamps?.modePaiement}
+          erreur={etat.erreursChamps?.montant}
         />
-        <ChampSelection
-          nom="typePaiement"
-          libelle="Nature du paiement"
-          options={TYPES_PAIEMENT.map((t) => ({ valeur: t, libelle: t }))}
-          valeurDefaut={paiement?.type_paiement ?? 'Loyer'}
-          requis
-          erreur={etat.erreursChamps?.typePaiement}
-        />
-      </div>
 
-      <div className="flex flex-wrap gap-md pt-sm">
-        <BoutonSoumettre libelleEnCours="Enregistrement…">{libelleSoumission}</BoutonSoumettre>
-        <Link href="/pro/paiements" className="btn btn-secondary">
-          Annuler
-        </Link>
-      </div>
-    </form>
+      </SectionFormulaire>
+      <SectionFormulaire titre="Période et règlement">
+        <div className="grid gap-lg sm:grid-cols-2">
+          <ChampSelection
+            nom="periodeDebut"
+            libelle="Mois de loyer concerné"
+            options={periodes.map((p) => ({ valeur: p.valeur, libelle: p.libelle }))}
+            valeurDefaut={paiement?.periode_debut ?? periodes[1]?.valeur ?? periodes[0]?.valeur}
+            requis
+            erreur={etat.erreursChamps?.periodeDebut}
+          />
+          <ChampTexte
+            nom="datePaiement"
+            libelle="Date du paiement"
+            type="date"
+            valeurDefaut={paiement?.date_paiement ?? aujourdhuiISO()}
+            requis
+            erreur={etat.erreursChamps?.datePaiement}
+          />
+        </div>
+
+        <div className="grid gap-lg sm:grid-cols-2">
+          <ChampSelection
+            nom="modePaiement"
+            libelle="Mode de paiement"
+            options={MODES_PAIEMENT.map((m) => ({ valeur: m, libelle: m }))}
+            valeurDefaut={paiement?.mode_paiement ?? 'Mobile Money'}
+            requis
+            erreur={etat.erreursChamps?.modePaiement}
+          />
+          <ChampSelection
+            nom="typePaiement"
+            libelle="Nature du paiement"
+            options={TYPES_PAIEMENT.map((t) => ({ valeur: t, libelle: t }))}
+            valeurDefaut={paiement?.type_paiement ?? 'Loyer'}
+            requis
+            erreur={etat.erreursChamps?.typePaiement}
+          />
+        </div>
+
+      </SectionFormulaire>
+      <ActionsFormulaire annulerVers="/pro/paiements">{libelleSoumission}</ActionsFormulaire>
+    </FormulaireMetier>
   )
 }

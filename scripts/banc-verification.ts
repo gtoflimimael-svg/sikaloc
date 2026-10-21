@@ -19,6 +19,7 @@
  * un test.
  */
 
+import { createRequire } from 'node:module'
 import { createHmac } from 'node:crypto'
 import Module from 'node:module'
 
@@ -190,8 +191,10 @@ verifier('et ceux du début restent', masque.includes('01'), true)
 
 // ═══ 4. L'OTP en base ════════════════════════════════════════════════════════
 
+const { examinerPileLocale } = createRequire(import.meta.url)('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const LOCAL = /127\.0\.0\.1|localhost/.test(SUPABASE)
+const LOCAL = examinerPileLocale().locale
 const SECRET = process.env.OTP_SECRET ?? ''
 
 // `await` au premier niveau n'est pas disponible ici (tsx transpile vers CJS) :
@@ -267,7 +270,7 @@ async function bancOtp() {
   const { data: ligne } = await admin
     .from('codes_verification')
     .select('*')
-    .eq('bailleur_id', neuf)
+    .eq('compte_id', neuf)
     .order('cree_le', { ascending: false })
     .limit(1)
     .single()
@@ -315,7 +318,7 @@ async function bancOtp() {
   // donc directement, comme le ferait `preparerCodeTelephone`.
   const codeConnu = '424242'
   await admin.from('codes_verification').insert({
-    bailleur_id: cobaye,
+    compte_id: cobaye,
     type: 'PHONE_VERIFICATION',
     canal: 'SMS',
     destination: TELEPHONE,
@@ -343,7 +346,7 @@ async function bancOtp() {
 
   const expire = await creerBailleur('expire')
   await admin.from('codes_verification').insert({
-    bailleur_id: expire,
+    compte_id: expire,
     type: 'PHONE_VERIFICATION',
     canal: 'WHATSAPP',
     destination: TELEPHONE,
@@ -367,7 +370,7 @@ async function bancOtp() {
   await admin
     .from('codes_verification')
     .update({ cree_le: new Date(Date.now() - 120_000).toISOString() })
-    .eq('bailleur_id', renvoi)
+    .eq('compte_id', renvoi)
 
   const second = await preparerCodeTelephone(renvoi, TELEPHONE, 'SMS', null)
   verifier('second code produit', second.ok, true)
@@ -400,7 +403,7 @@ async function bancOtp() {
     await admin
       .from('codes_verification')
       .update({ cree_le: new Date(Date.now() - (i + 1) * 120_000).toISOString() })
-      .eq('bailleur_id', abus)
+      .eq('compte_id', abus)
       .is('invalide_le', null)
       .is('utilise_le', null)
   }
@@ -418,7 +421,7 @@ async function bancOtp() {
   const cloison = await creerBailleur('cloison')
   const codeEmail = '505050'
   await admin.from('codes_verification').insert({
-    bailleur_id: cloison,
+    compte_id: cloison,
     type: 'EMAIL_VERIFICATION', // ← contexte email
     canal: 'EMAIL',
     destination: 'quelquun@exemple.test',
@@ -433,7 +436,7 @@ async function bancOtp() {
   const { data: intact } = await admin
     .from('codes_verification')
     .select('utilise_le, tentatives')
-    .eq('bailleur_id', cloison)
+    .eq('compte_id', cloison)
     .single()
   verifier('et il n’a même pas été touché', [intact!.utilise_le, intact!.tentatives], [null, 0])
 

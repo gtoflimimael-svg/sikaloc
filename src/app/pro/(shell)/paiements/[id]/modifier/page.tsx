@@ -23,7 +23,7 @@ export default async function PageCorrigerPaiement({
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const [, { data: paiement }, { data: baux }] = await Promise.all([
+  const [, reponsePaiement, reponseBaux] = await Promise.all([
     bailleurOnboarde(),
     supabase.from('paiements').select('*').eq('id', id).maybeSingle(),
     supabase
@@ -32,8 +32,16 @@ export default async function PageCorrigerPaiement({
       .eq('statut', 'Actif')
       .order('created_at', { ascending: false }),
   ])
+  const { data: paiement, error: erreurPaiement } = reponsePaiement
+  const { data: baux, error: erreurBaux } = reponseBaux
 
+  if (erreurPaiement) {
+    return <Alerte ton="erreur">Le paiement n’a pas pu être chargé. Actualisez la page pour réessayer.</Alerte>
+  }
   if (!paiement) notFound()
+  if (erreurBaux) {
+    return <Alerte ton="erreur">Les baux actifs n’ont pas pu être chargés ; la correction est indisponible.</Alerte>
+  }
 
   const corrigeable = estCorrigeable(paiement.valide_le, paiement.statut)
 
@@ -50,7 +58,7 @@ export default async function PageCorrigerPaiement({
 
   if (!corrigeable) {
     return (
-      <div className="mx-auto max-w-[42rem] space-y-lg">
+      <div className="payment-form-page mx-auto max-w-[42rem] space-y-lg">
         <EnTetePage titre="Paiement figé" />
         <Alerte ton="attention">
           La fenêtre de correction de 5 minutes est écoulée. Ce paiement ne peut
@@ -71,7 +79,7 @@ export default async function PageCorrigerPaiement({
   }
 
   return (
-    <div className="mx-auto max-w-[42rem] space-y-lg">
+    <div className="payment-form-page mx-auto max-w-[42rem] space-y-lg">
       <EnTetePage
         titre="Corriger le paiement"
         description="La correction repasse le paiement en brouillon : vous devrez le confirmer à nouveau pour réémettre le document."

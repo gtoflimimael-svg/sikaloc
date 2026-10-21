@@ -2,121 +2,119 @@
 
 /* ============================================================================
    Sikaloc — Design System
-   Traduction directe de « new_design_sikaloc/DESIGN-Sikaloc.md » (alpha).
-   Identité indigo, canvas lavande, display serif Copernicus.
+   Identité Sikaloc : vert signature, encre, sauge et blanc.
    Règle d'or : aucun hex inline dans les composants, uniquement ces tokens.
    ========================================================================= */
 
 @theme {
   /* ── Couleurs : marque ────────────────────────────────────────────────── */
-  --color-primary: #5555bc;
-  --color-on-primary: #ffffff;
-  --color-primary-active: #3e3ea9;
-  --color-primary-disabled: #d8d8e6;
-  --color-primary-neutral: #8f8fdd;
-  --color-primary-pale: #dedeef;
-  --color-primary-on-dark: #9a9aef;
+  --color-primary: #b8f36d;
+  --color-on-primary: #111810;
+  --color-primary-active: #a4e951;
+  --color-primary-disabled: #dce8d4;
+  --color-primary-neutral: #d5f5b2;
+  --color-primary-pale: #f0fbe4;
+  --color-primary-on-dark: #b8f36d;
 
   /* ── Couleurs : accents ───────────────────────────────────────────────── */
-  --color-accent-teal: #5d5db8;
-  --color-accent-amber: #5a5ae8;
+  --color-accent-teal: #397748;
+  --color-accent-amber: #b66c25;
 
   /* ── Couleurs : texte ─────────────────────────────────────────────────── */
-  --color-ink: #131314;
-  --color-ink-deep: #3e3ea9;
-  --color-body-strong: #232325;
-  --color-body: #3a3a3d;
-  --color-mute: #616169;
-  --color-muted: #616169;
-  --color-mute-soft: #82828e;
-  --color-muted-soft: #82828e;
-  --color-on-dark: #e8e8f5;
-  --color-on-dark-mute: #9696a0;
-  --color-on-dark-soft: #9696a0;
+  --color-ink: #111810;
+  --color-ink-deep: #17311c;
+  --color-body-strong: #223125;
+  --color-body: #424940;
+  --color-mute: #636d63;
+  --color-muted: #636d63;
+  --color-mute-soft: #637267;
+  --color-muted-soft: #637267;
+  --color-on-dark: #f7fcf3;
+  --color-on-dark-mute: #c8d8c5;
+  --color-on-dark-soft: #c8d8c5;
+  /* Le papier de signature reste blanc dans les deux thèmes. */
+  --color-on-paper-mute: #526254;
 
   /* ── Couleurs : surfaces ──────────────────────────────────────────────── */
-  /* `canvas` est la surface haute (cartes, champs) ; `canvas-soft` le sol de
-     page. Le blanc pur n'existe pas dans ce système. */
-  --color-canvas: #f4f4fb;
-  --color-canvas-soft: #e8e8f5;
-  --color-canvas-sage: #d2d2e8;
-  --color-surface-soft: #e8e8f5;
-  --color-surface-card: #dedeef;
-  --color-surface-cream-strong: #d2d2e8;
-  --color-surface-elevated: #dedeef;
-  --color-surface-dark: #151518;
-  --color-surface-dark-elevated: #202025;
-  --color-surface-dark-soft: #1b1b1f;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #eaf1e7;
+  --color-canvas-sage: #eaf1e7;
+  --color-surface-soft: #eaf1e7;
+  --color-surface-card: #ffffff;
+  --color-surface-cream-strong: #dce8d4;
+  --color-surface-elevated: #eef5e9;
+  --color-surface-dark: #17311c;
+  --color-surface-dark-elevated: #23452a;
+  --color-surface-dark-soft: #1b3921;
 
   /* ── Couleurs : sémantique ────────────────────────────────────────────── */
-  /* Inchangées par le rebrand : le vert de succès n'est plus la couleur de
-     marque, il redevient purement sémantique. */
-  --color-positive: #5db872;
-  --color-success: #5db872;
-  --color-positive-pale: #e3f3e7;
-  --color-positive-deep: #2f6b3f;
-  --color-warning: #d4a017;
-  --color-warning-deep: #a37b12;
-  --color-warning-content: #6b5210;
-  --color-warning-pale: #faf0d4;
-  --color-negative: #a63a3a;
-  --color-error: #c64545;
-  --color-negative-pale: #f7e3e3;
-  --color-negative-deep: #a63a3a;
-  --color-negative-darkest: #8f2f2f;
+  /* Les états métier restent distincts du vert signature des actions. */
+  --color-positive: #1d874a;
+  --color-success: #1d874a;
+  --color-positive-pale: #e4f5e8;
+  --color-positive-deep: #125b32;
+  --color-warning: #f1ba39;
+  --color-warning-deep: #755000;
+  --color-warning-content: #3e2d0a;
+  --color-warning-pale: #fff3d8;
+  --color-negative: #c63842;
+  --color-error: #c63842;
+  --color-negative-pale: #fff0ef;
+  --color-negative-deep: #8f1e27;
+  --color-negative-darkest: #8f1e27;
   --color-negative-bg: #3a1414;
 
   /* ── Couleurs : filets ────────────────────────────────────────────────── */
-  --color-hairline: #d8d8e6;
-  --color-hairline-soft: #dfdfeb;
-  --color-hairline-strong: #c9c9dc;
+  --color-hairline: #d6e0d2;
+  --color-hairline-soft: #e2ebe0;
+  --color-hairline-strong: #b5c8b1;
+  --color-control-border: #758a77;
+  --color-on-negative: #ffffff;
 
   /* ── Typographie ──────────────────────────────────────────────────────── */
-  /* StyreneB pour l'interface, Copernicus pour le display, JetBrains Mono pour
-     le technique — chargées par next/font dans layout.tsx.
-     Inter suit StyreneB dans la pile : les fichiers de marque ne contiennent
-     pas les caractères accentués (voir le commentaire de layout.tsx). */
+  /* Inter locale ; Manrope devient prioritaire dès qu'un fichier officiel et
+     sa licence peuvent être intégrés sans dépendance réseau au build. */
   --font-sans:
-    var(--font-styrene), var(--font-inter), 'Inter', system-ui, -apple-system,
+    var(--font-inter), 'Inter', system-ui, -apple-system,
     BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: var(--font-copernicus), Georgia, 'Times New Roman', serif;
-  --font-serif: var(--font-copernicus), Georgia, 'Times New Roman', serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-manrope, var(--font-inter)), 'Inter', system-ui, sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Display — Copernicus, graisse 400, approches négatives. */
-  --text-display-mega: 80px;
+  /* Display — Manrope/Inter, graisse forte, approches négatives. */
+  --text-display-mega: clamp(40px, 6vw, 96px);
   --text-display-mega--line-height: 1.05;
   --text-display-mega--letter-spacing: -2px;
-  --text-display-mega--font-weight: 400;
+  --text-display-mega--font-weight: 800;
 
-  --text-display-xxl: 64px;
+  --text-display-xxl: clamp(36px, 5.5vw, 80px);
   --text-display-xxl--line-height: 1.05;
   --text-display-xxl--letter-spacing: -1.5px;
-  --text-display-xxl--font-weight: 400;
+  --text-display-xxl--font-weight: 800;
 
-  --text-display-xl: 48px;
+  --text-display-xl: clamp(32px, 4.5vw, 64px);
   --text-display-xl--line-height: 1.1;
   --text-display-xl--letter-spacing: -1px;
-  --text-display-xl--font-weight: 400;
+  --text-display-xl--font-weight: 800;
 
-  --text-display-lg: 36px;
+  --text-display-lg: clamp(30px, 3.5vw, 48px);
   --text-display-lg--line-height: 1.15;
   --text-display-lg--letter-spacing: -0.5px;
-  --text-display-lg--font-weight: 400;
+  --text-display-lg--font-weight: 800;
 
-  --text-display-md: 36px;
+  --text-display-md: clamp(28px, 3vw, 40px);
   --text-display-md--line-height: 1.15;
   --text-display-md--letter-spacing: -0.5px;
-  --text-display-md--font-weight: 400;
+  --text-display-md--font-weight: 800;
 
-  --text-display-sm: 28px;
-  --text-display-sm--line-height: 1.2;
+  --text-display-sm: 32px;
+  --text-display-sm--line-height: 1.25;
   --text-display-sm--letter-spacing: -0.3px;
-  --text-display-sm--font-weight: 400;
+  --text-display-sm--font-weight: 700;
 
-  --text-display-xs: 22px;
+  --text-display-xs: 24px;
   --text-display-xs--line-height: 1.3;
-  --text-display-xs--font-weight: 500;
+  --text-display-xs--font-weight: 700;
 
   /* Titres et corps — StyreneB. */
   --text-title-lg: 22px;
@@ -153,39 +151,41 @@
   --text-code--line-height: 1.6;
 
   /* ── Rayons ───────────────────────────────────────────────────────────── */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xs: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-pill: 9999px;
 
   /* ── Espacements (base 4px) ───────────────────────────────────────────── */
-  --spacing-xxs: 4px;
-  --spacing-xs: 8px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
   --spacing-2xl: 32px;
   --spacing-xxl: 48px;
   --spacing-3xl: 48px;
   --spacing-4xl: 64px;
-  --spacing-5xl: 96px;
-  --spacing-section: 96px;
+  --spacing-5xl: 64px;
+  --spacing-section: 48px;
 
   /* ── Élévation ────────────────────────────────────────────────────────── */
   /* Philosophie : la profondeur vient du contraste de surface, l'ombre est rare. */
-  --shadow-elevated: 0 2px 12px rgb(19 19 20 / 0.05);
-  --shadow-modal: 0 24px 48px rgb(19 19 20 / 0.14);
+  --shadow-elevated: 0 8px 24px rgb(17 24 16 / 0.12);
+  --shadow-modal: 0 24px 64px rgb(17 24 16 / 0.18);
 
-  /* Philosophie : surface d'abord, ombre rare. */
-  --shadow-elevated: 0 4px 24px rgb(0 0 0 / 0.06);
-  --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.12);
 
   /* ── Conteneurs ───────────────────────────────────────────────────────── */
   --container-marketing: 1200px;
-  --container-app: 1024px;
+  --container-app: 1100px;
+
+  /* Dimensions partagées — pas de contrôle isolé à une hauteur différente. */
+  --control-height: 48px;
+  --control-height-compact: 40px;
+  --card-padding: 20px;
 
   /* ── Mouvement ────────────────────────────────────────────────────────── */
   /* Une seule famille de courbes pour tout le site : `doux` pour ce qui entre
@@ -228,7 +228,7 @@
   }
 
   body {
-    /* Le canvas lavande est le sol de Sikaloc — jamais le blanc pur en fond de page. */
+    /* Sol sauge très clair, surfaces de lecture blanches. */
     background-color: var(--color-canvas-soft);
     color: var(--color-body);
     font-family: var(--font-sans);
@@ -238,16 +238,17 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Tailwind n'attache pas de famille aux utilitaires `text-*` : les titres
-     display sont rattachés ici à Copernicus. */
+  /* Tailwind n'attache pas de famille aux utilitaires `text-*`. */
   .text-display-mega,
   .text-display-xxl,
   .text-display-xl,
   .text-display-lg,
-  .text-display-md,
-  .text-display-sm {
+  .text-display-md {
     font-family: var(--font-display);
   }
+  .text-display-sm,
+  .text-display-xs,
+  .page-title { font-family: var(--font-sans); }
 
   /* Les montants FCFA s'alignent en colonne : chiffres tabulaires partout. */
   .tabular,
@@ -257,7 +258,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--color-ink-deep);
     outline-offset: 2px;
   }
 
@@ -272,20 +273,22 @@
    ========================================================================= */
 
 @layer components {
-  /* ── Boutons — 40px, rayon md, StyreneB 14/500 ──────────────────────────── */
+  /* ── Boutons — 44px, rayon md, StyreneB 14/500 ──────────────────────────── */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--spacing-xs);
-    height: 40px;
-    padding: 12px 20px;
+    min-height: var(--control-height);
+    max-width: 100%;
+    padding: 10px 18px;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     font-size: var(--text-button);
     font-weight: 500;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
     cursor: pointer;
     transition:
       background-color 150ms ease,
@@ -301,8 +304,8 @@
   }
 
   .btn-sm {
-    height: 32px;
-    padding: 8px 14px;
+    min-height: var(--control-height-compact);
+    padding: 7px 12px;
     font-size: var(--text-caption);
   }
 
@@ -337,19 +340,20 @@
 
   .btn-danger {
     background-color: var(--color-negative);
-    color: #ffffff;
+    color: var(--color-on-negative);
   }
 
   .btn-danger:hover:not(:disabled) {
-    background-color: var(--color-negative-deep);
+    background-color: var(--color-negative-darkest);
   }
 
   .btn-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
     padding: 0;
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-pill);
@@ -358,7 +362,7 @@
     cursor: pointer;
   }
 
-  /* ── Champs — 40px, rayon md ────────────────────────────────────────────── */
+  /* ── Champs — 44px, rayon md ────────────────────────────────────────────── */
   .field-label {
     display: block;
     margin-bottom: var(--spacing-xs);
@@ -375,7 +379,7 @@
 
   .field-error {
     margin-top: var(--spacing-xs);
-    color: var(--color-negative);
+    color: var(--color-negative-darkest);
     font-size: var(--text-caption);
     font-weight: 500;
   }
@@ -383,9 +387,9 @@
   .input {
     display: block;
     width: 100%;
-    height: 40px;
+    height: var(--control-height);
     padding: 10px 14px;
-    border: 1px solid var(--color-hairline);
+    border: 1px solid var(--color-control-border);
     border-radius: var(--radius-md);
     background-color: var(--color-canvas);
     color: var(--color-ink);
@@ -409,15 +413,58 @@
     appearance: auto;
   }
 
+  /* Find : cartes photographiques et critères de recherche. */
+  .card.find-card { padding: 0; }
+  .find-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); }
+  @media (min-width: 1024px) { .find-range { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Me : détails lisibles et montants sans compression au mobile. */
+  .me-detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+  .me-amounts { display: grid; gap: var(--spacing-xs); font-size: var(--text-body-sm); }
+  .me-amounts > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-xs) var(--spacing-sm); }
+  .me-amounts dt { color: var(--color-mute); }
+  .me-amounts dd { color: var(--color-ink); font-weight: 500; }
+  @media (min-width: 640px) {
+    .me-detail-row { flex-direction: row; justify-content: space-between; gap: var(--spacing-lg); }
+    .me-amounts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-md); }
+    .me-amounts > div { display: block; }
+    .me-amounts dd { margin-top: var(--spacing-xs); }
+  }
+
+  /* Formulaires métier : sections sobres et actions constantes. */
+  .form-section + .form-section {
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    border-top: 1px solid var(--color-hairline);
+    padding-top: var(--spacing-lg);
+  }
+
+  .form-actions > .btn { min-width: 0; }
+
+  @media (max-width: 479px) {
+    .form-actions > .btn { width: 100%; }
+  }
+
   /* ── Cartes — la profondeur vient du contraste de surface ───────────────── */
   .card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    border: 1px solid var(--color-hairline);
+    padding: var(--card-padding);
   }
 
   .card-lg {
-    padding: var(--spacing-xl);
+    padding: var(--card-padding);
   }
 
   .card-sage {
@@ -470,6 +517,7 @@
 
   /* ── Tableaux ───────────────────────────────────────────────────────────── */
   .data-table {
+    background-color: var(--color-canvas);
     width: 100%;
     border-collapse: collapse;
   }
@@ -478,11 +526,11 @@
     padding: var(--spacing-sm) var(--spacing-md);
     border-bottom: 1px solid var(--color-hairline);
     color: var(--color-mute);
-    font-size: var(--text-caption-uppercase);
+    font-size: var(--text-caption);
     font-weight: 500;
-    letter-spacing: 1.5px;
+    background-color: var(--color-canvas-soft);
+    letter-spacing: 0;
     text-align: left;
-    text-transform: uppercase;
   }
 
   .data-table tbody td {
@@ -501,7 +549,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: 8px 14px;
+    min-height: 44px;
+    padding: 10px 14px;
     border-radius: var(--radius-md);
     background-color: transparent;
     color: var(--color-mute);
@@ -516,8 +565,202 @@
 
   .sidebar-row-active,
   .sidebar-row-active:hover {
-    background-color: var(--color-surface-card);
+    background-color: var(--color-primary-pale);
+    color: var(--color-ink-deep);
+  }
+}
+
+/* Listes Pro — mêmes surfaces et contrôles que les fondations E. */
+@layer components {
+  .list-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    color: var(--color-mute);
+    font-size: var(--text-body-sm);
+  }
+  .card.list-card { min-width: 0; padding: 20px; }
+  .list-row { display: grid; gap: 16px; }
+  .list-title {
     color: var(--color-ink);
+    font-size: var(--text-title-sm);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .list-copy { min-width: 0; overflow-wrap: anywhere; }
+  .list-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-hairline-soft);
+  }
+  .list-aside { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .filter-bar {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-canvas);
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--control-height);
+    padding: 8px 16px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas);
+    color: var(--color-mute);
+    font-size: var(--text-body-sm);
+    font-weight: 500;
+  }
+  .filter-chip:hover { color: var(--color-ink); border-color: var(--color-hairline-strong); }
+  .filter-chip-active { background-color: var(--color-primary-pale); border-color: var(--color-primary); color: var(--color-ink-deep); }
+  .table-paiements { min-width: 780px; }
+  @media (min-width: 768px) {
+    .filter-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .filter-bar > :last-child { grid-column: 1 / -1; }
+    .list-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+    .list-row > .list-actions { max-width: 26rem; justify-content: flex-end; border: 0; margin: 0; padding: 0; }
+    .list-aside { flex-direction: column; align-items: flex-end; }
+  }
+  @media (min-width: 1280px) {
+    .filter-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+    .filter-bar > :last-child { grid-column: auto; }
+  }
+}
+
+/* Fondations d’application : pilotes E et composants partagés, voir design.md. */
+@layer components {
+  .app-main { padding: 24px 16px; }
+  .page-title {
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: clamp(26px, 2vw, 28px);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+    overflow-wrap: anywhere;
+  }
+  .section-title {
+    color: var(--color-ink);
+    font-size: var(--text-title-md);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .metric-card {
+    position: relative;
+    min-width: 0;
+    padding: var(--card-padding);
+    border: 0;
+    border-top: 3px solid var(--color-hairline-strong);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-card);
+    box-shadow: 0 1px 0 var(--color-hairline);
+  }
+  .metric-label { color: var(--color-mute); font-size: var(--text-caption); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .metric-card-primary {
+    border-top-color: var(--color-primary);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .metric-card-primary .metric-label { color: var(--color-ink-deep); }
+  .metric-card-alert { border-top-color: var(--color-negative); }
+  .metric-value {
+    margin-top: 8px;
+    font-family: var(--font-sans);
+    font-size: clamp(28px, 2.3vw, 32px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .input[aria-invalid='true'] { border-color: var(--color-negative); }
+  .input:disabled { cursor: not-allowed; opacity: 0.65; }
+  .feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-body-sm);
+    line-height: 1.55;
+  }
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px;
+    border: 1px dashed var(--color-hairline-strong);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-canvas);
+    text-align: center;
+  }
+  .empty-state-icon :where(img, svg) { max-width: 136px; max-height: 120px; }
+  .data-table tbody td:last-child { white-space: nowrap; }
+  .data-table tbody tr:last-child td { border-bottom: 0; }
+  .table-defilante {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas);
+  }
+  .table-defilante:focus-visible {
+    outline: 3px solid var(--color-accent-teal);
+    outline-offset: 3px;
+  }
+  .page-header-actions { width: 100%; }
+  .page-header-actions > :where(a, button) { width: 100%; justify-content: center; }
+  .skip-link {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 100;
+    transform: translateY(-200%);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .skip-link:focus { transform: none; }
+  .nav-dialog {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-body);
+  }
+  .nav-dialog::backdrop { background-color: rgb(14 14 17 / 0.6); }
+  @media (min-width: 640px) {
+    .app-main { padding: 32px; }
+    .card { padding: 24px; }
+    .card-lg { padding: 32px; }
+    .page-header-actions { width: auto; }
+    .page-header-actions > :where(a, button) { width: auto; }
+  }
+  @media (pointer: coarse) {
+    .btn-sm { min-height: var(--control-height); }
+    .btn-icon { width: 44px; height: 44px; }
   }
 }
 
@@ -796,13 +1039,9 @@
   .sidebar-row {
     transition:
       background-color var(--duree-rapide) var(--ease-net),
-      color var(--duree-rapide) var(--ease-net),
-      padding-left var(--duree-moyenne) var(--ease-doux);
+      color var(--duree-rapide) var(--ease-net);
   }
 
-  .sidebar-row:hover {
-    padding-left: 18px;
-  }
 
   .data-table tbody tr {
     transition: background-color var(--duree-rapide) var(--ease-net);
@@ -889,6 +1128,8 @@
    passe sous le seuil AA pour du texte.
    ========================================================================= */
 
+:root { color-scheme: light; }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='clair']) {
   --color-primary: #8f8fe8;
@@ -906,10 +1147,10 @@
   --color-ink-deep: #c9c9f2;
   --color-body-strong: #e4e4ec;
   --color-body: #c8c8d2;
-  --color-mute: #9696a4;
-  --color-muted: #9696a4;
-  --color-mute-soft: #75757f;
-  --color-muted-soft: #75757f;
+  --color-mute: #aaaaba;
+  --color-muted: #aaaaba;
+  --color-mute-soft: #aaaaba;
+  --color-muted-soft: #aaaaba;
   --color-on-dark: #f2f2f7;
   --color-on-dark-mute: #9696a4;
   --color-on-dark-soft: #9696a4;
@@ -943,6 +1184,8 @@
   --color-hairline: #33333d;
   --color-hairline-soft: #2a2a33;
   --color-hairline-strong: #454552;
+  --color-control-border: #747485;
+  --color-on-negative: #211013;
 
   --shadow-elevated: 0 2px 12px rgb(0 0 0 / 0.4);
   --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.55);
@@ -966,10 +1209,10 @@
   --color-ink-deep: #c9c9f2;
   --color-body-strong: #e4e4ec;
   --color-body: #c8c8d2;
-  --color-mute: #9696a4;
-  --color-muted: #9696a4;
-  --color-mute-soft: #75757f;
-  --color-muted-soft: #75757f;
+  --color-mute: #aaaaba;
+  --color-muted: #aaaaba;
+  --color-mute-soft: #aaaaba;
+  --color-muted-soft: #aaaaba;
   --color-on-dark: #f2f2f7;
   --color-on-dark-mute: #9696a4;
   --color-on-dark-soft: #9696a4;
@@ -1003,11 +1246,352 @@
   --color-hairline: #33333d;
   --color-hairline-soft: #2a2a33;
   --color-hairline-strong: #454552;
+  --color-control-border: #747485;
+  --color-on-negative: #211013;
 
   --shadow-elevated: 0 2px 12px rgb(0 0 0 / 0.4);
   --shadow-modal: 0 24px 48px rgb(0 0 0 / 0.55);
   color-scheme: dark;
 }
 
-:root { color-scheme: light; }
 :root[data-theme='clair'] { color-scheme: light; }
+
+/* Refonte publique : les variantes sombres suivent la même identité verte.
+   Ces règles tardives remplacent les anciennes variantes indigo conservées
+   plus haut le temps de migrer les écrans applicatifs des prochains lots. */
+:root[data-theme='sombre'] {
+  --color-primary: #b8f36d;
+  --color-on-primary: #111810;
+  --color-primary-active: #a4e951;
+  --color-primary-neutral: #345736;
+  --color-primary-pale: #24412a;
+  --color-primary-on-dark: #b8f36d;
+  --color-accent-teal: #b8f36d;
+  --color-accent-amber: #f1ba39;
+  --color-ink-deep: #d5f5b2;
+  --color-canvas: #1b2e20;
+  --color-canvas-soft: #111810;
+  --color-canvas-sage: #24412a;
+  --color-surface-soft: #203726;
+  --color-surface-card: #203726;
+  --color-surface-cream-strong: #345736;
+  --color-surface-elevated: #294630;
+  --color-surface-dark: #111810;
+  --color-surface-dark-elevated: #24412a;
+  --color-surface-dark-soft: #17311c;
+  --color-hairline: #36523a;
+  --color-hairline-soft: #294630;
+  --color-hairline-strong: #527459;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='clair']) {
+    --color-primary: #b8f36d;
+    --color-on-primary: #111810;
+    --color-primary-active: #a4e951;
+    --color-primary-neutral: #345736;
+    --color-primary-pale: #24412a;
+    --color-primary-on-dark: #b8f36d;
+    --color-accent-teal: #b8f36d;
+    --color-accent-amber: #f1ba39;
+    --color-ink-deep: #d5f5b2;
+    --color-canvas: #1b2e20;
+    --color-canvas-soft: #111810;
+    --color-canvas-sage: #24412a;
+    --color-surface-soft: #203726;
+    --color-surface-card: #203726;
+    --color-surface-cream-strong: #345736;
+    --color-surface-elevated: #294630;
+    --color-surface-dark: #111810;
+    --color-surface-dark-elevated: #24412a;
+    --color-surface-dark-soft: #17311c;
+    --color-hairline: #36523a;
+    --color-hairline-soft: #294630;
+    --color-hairline-strong: #527459;
+  }
+}
+
+@layer components {
+  /* Pro : pages de travail à forte hiérarchie, sans décor marketing. */
+  .page-header-workspace {
+    position: relative;
+    padding: 4px 0 20px 18px;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .pro-sidebar { box-shadow: 1px 0 0 color-mix(in srgb, var(--color-hairline) 55%, transparent); }
+  .pro-sidebar > div > div:first-child { min-height: 64px; border-bottom: 1px solid var(--color-hairline-soft); }
+  .pro-sidebar .sidebar-row { position: relative; min-height: 46px; }
+  .pro-sidebar .sidebar-row-active::before { position: absolute; inset: 9px auto 9px 0; width: 3px; border-radius: var(--radius-pill); background: var(--color-primary); content: ''; }
+  .me-navigation { box-shadow: 0 1px 0 color-mix(in srgb, var(--color-hairline) 55%, transparent); }
+  .me-navigation nav { scrollbar-width: thin; scrollbar-color: var(--color-hairline-strong) transparent; }
+  .public-navigation { box-shadow: 0 1px 0 color-mix(in srgb, var(--color-hairline) 45%, transparent); }
+  .auth-form-card { border-top: 4px solid var(--color-primary); }
+  .auth-form-card h1 { font-family: var(--font-sans); font-size: clamp(26px, 4vw, 32px); font-weight: 700; line-height: 1.25; letter-spacing: -0.03em; }
+  .blog-article-card { border-top: 3px solid var(--color-primary); transition: background-color var(--duree-rapide) var(--ease-net); }
+  .blog-article-card:hover { background: var(--color-primary-pale); }
+  .legal-reading-surface { border-top: 3px solid var(--color-ink-deep); line-height: 1.7; }
+  .page-header-workspace::before {
+    position: absolute;
+    inset: 3px auto 20px 0;
+    width: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    content: '';
+  }
+  .page-header-kicker {
+    margin-bottom: 6px;
+    color: var(--color-accent-teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+  }
+  .settings-page-header {
+    padding-left: 18px;
+    border-left: 4px solid var(--color-primary);
+  }
+  .page-header-workspace .page-title {
+    font-size: clamp(26px, 2vw, 28px);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+  .page-header-workspace .page-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  /* Les formulaires métier prennent la forme de dossiers structurés. */
+  .formulaire-metier {
+    overflow: hidden;
+    padding: 0;
+  }
+  .formulaire-metier-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    border-bottom: 1px solid var(--color-hairline);
+    background: linear-gradient(110deg, var(--color-primary-pale), var(--color-canvas) 72%);
+  }
+  .formulaire-metier-intro h2 {
+    color: var(--color-ink);
+    font-size: var(--text-title-lg);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .formulaire-metier-corps { padding: var(--spacing-xl); }
+  .form-section {
+    position: relative;
+    padding-top: var(--spacing-lg);
+  }
+  .form-section legend {
+    padding-right: var(--spacing-md);
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .form-section + .form-section { margin-top: var(--spacing-lg); }
+  .form-actions { margin-top: var(--spacing-lg); }
+
+  /* Les listes donnent la priorité à l'entité, puis à son état et à son action. */
+  .list-summary {
+    padding: 12px 16px;
+    border-left: 3px solid var(--color-primary);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--color-canvas);
+  }
+  .card.list-card {
+    border-color: transparent;
+    background: var(--color-canvas);
+    box-shadow: 0 1px 0 var(--color-hairline);
+  }
+  .card.list-card:hover {
+    border-color: var(--color-hairline);
+    background: color-mix(in srgb, var(--color-canvas) 82%, var(--color-canvas-soft));
+  }
+  .list-actions { row-gap: 10px; }
+  .property-list-card { gap: 4px; }
+  .property-list-heading { min-height: 76px; align-items: center; }
+  .property-list-mark {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-primary-pale);
+    color: var(--color-ink-deep);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .property-list-tenancy { min-height: 58px; }
+  .tenant-list-card { border-left: 3px solid var(--color-primary) !important; }
+  .tenant-list-row { align-items: flex-start; }
+  .lease-list-card { border-left: 3px solid var(--color-primary) !important; }
+  .listing-management-card { display: flex; flex-direction: column; gap: var(--spacing-md); padding: 0 !important; overflow: hidden; }
+  .listing-management-photo { width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0 !important; border-radius: 0; }
+  .listing-management-card > :not(.listing-management-photo) { margin-inline: var(--spacing-lg); }
+  .listing-management-card > :last-child { margin-bottom: var(--spacing-lg); }
+  .listing-candidate-shortcut { border-left: 4px solid var(--color-accent-teal); }
+  .listing-detail-controls { border-top: 3px solid var(--color-primary); }
+  .listing-candidate-card { border-left: 3px solid var(--color-primary); }
+  .listing-candidates-page .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+  .properties-page .list-summary, .tenants-page .list-summary, .leases-page .list-summary,
+  .listings-page .list-summary, .payment-history-page .list-summary { margin-top: var(--spacing-md); }
+  .arrears-page .list-summary { margin-top: var(--spacing-lg); background: var(--color-negative-pale); border-left-color: var(--color-negative); color: var(--color-negative-deep); }
+  .dashboard-home > section[data-visite='metriques'] { gap: var(--spacing-md); }
+  .settings-index-page .settings-section-list { border-top: 1px solid var(--color-hairline); }
+  .lease-history-page .formulaire-metier { border-top: 3px solid var(--color-ink-deep); }
+  .arrears-card { border-left-width: 4px !important; }
+  .arrears-card .money { font-size: clamp(18px, 3vw, 23px); }
+  .arrears-empty-card { border-left: 4px solid var(--color-positive); }
+  .arrears-list { display: grid; gap: var(--spacing-md); }
+  .lease-detail-heading {
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    background: var(--color-canvas);
+    box-shadow: inset 0 0 0 1px var(--color-hairline);
+  }
+  .lease-facts-grid > * { min-width: 0; border-top: 2px solid var(--color-primary); }
+  .document-detail-heading { padding-bottom: var(--spacing-lg); border-bottom: 1px solid var(--color-hairline); }
+  .document-title-row { padding: var(--spacing-xl); border-radius: var(--radius-xl); background: var(--color-canvas); }
+  .document-detail-page > .print-hidden:has(.btn) { padding: var(--spacing-md) 0; }
+  .onboarding-page { background-image: radial-gradient(circle at 50% 7rem, var(--color-primary-pale), transparent 30rem); }
+  .onboarding-page-header { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); background: color-mix(in srgb, var(--color-canvas) 92%, transparent); }
+  .onboarding-page-main { padding-top: clamp(32px, 7vw, 72px); }
+  .subscription-current-card { border-top: 3px solid var(--color-primary); }
+  .subscription-offer-card { position: relative; overflow: hidden; border-radius: var(--radius-xl); }
+  .subscription-offer-card::after { position: absolute; top: -56px; right: -56px; width: 160px; height: 160px; border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent); border-radius: 50%; content: ''; pointer-events: none; }
+  .referral-intro { border-left: 4px solid var(--color-primary); }
+  .referral-code-card { display: grid; gap: var(--spacing-lg); }
+  .data-export-card { border-top: 3px solid var(--color-primary); }
+  .data-integrity-note { border-left: 4px solid var(--color-ink-deep); }
+  .signature-explainer { border-left: 4px solid var(--color-primary); }
+  .find-catalog-hero { border-radius: 32px; }
+  .find-catalog-page .filter-bar { position: relative; top: 0; }
+  .find-listing-hero { border-radius: 24px; border-bottom: 4px solid var(--color-primary); }
+  .find-application-context { border-left: 4px solid var(--color-primary); }
+  .me-dashboard-hero { position: relative; overflow: hidden; border-radius: 28px; }
+  .me-dashboard-hero::after { position: absolute; top: -58px; right: -48px; width: 180px; height: 180px; border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent); border-radius: 50%; content: ''; pointer-events: none; }
+  .me-contract-card { box-shadow: none !important; border-top: 3px solid var(--color-primary) !important; }
+  .me-payment-card { border-left: 3px solid var(--color-primary) !important; }
+  .me-preferences-privacy { border-left-width: 3px; border-left-color: var(--color-ink-deep); }
+  .me-space-page .section-title { text-wrap: balance; }
+  .me-space-page .card { box-shadow: none; }
+  .me-candidatures-page li.card { border-left: 3px solid var(--color-primary); }
+  .me-rejoindre-page ol > li { padding: var(--spacing-md); border-radius: var(--radius-md); background: var(--color-canvas); }
+  .me-invitation-page dl > div { padding-block: var(--spacing-xs); border-bottom: 1px solid var(--color-hairline-soft); }
+  .property-form-page .formulaire-metier { border-top: 4px solid var(--color-primary); }
+  .tenant-form-page .formulaire-metier { border-top: 4px solid var(--color-accent-teal); }
+  .lease-form-page .formulaire-metier { border-top: 4px solid var(--color-ink-deep); }
+  .listing-form-page .form-section:first-of-type { border-top: 0; padding-top: 0; }
+  .payment-form-page .formulaire-metier { border-top: 4px solid var(--color-warning); }
+  .payment-form-page .input[name*='montant'], .payment-form-page input[inputmode='decimal'] { font-variant-numeric: tabular-nums; }
+  .settings-profile-page > .space-y-xl > * { border-radius: var(--radius-lg); }
+  .settings-preferences-page .card { padding: var(--spacing-xl); }
+  .settings-signature-page .card-sage { line-height: 1.65; }
+  .settings-subscription-page .data-table { border-radius: var(--radius-md); overflow: hidden; }
+  .settings-referral-page .badge { max-width: 100%; white-space: normal; text-align: center; }
+  .settings-data-page .btn { min-height: 48px; }
+  .payment-confirmation-summary { border-top: 4px solid var(--color-primary); }
+  .payment-confirmation-summary > p.text-body-lg { font-size: clamp(18px, 2.4vw, 22px); line-height: 1.5; }
+  .payment-confirmation-summary dl > div { padding-block: var(--spacing-xs); }
+  .candidate-privacy-note { padding: var(--spacing-md) var(--spacing-lg); border-left: 3px solid var(--color-accent-teal); background: var(--color-canvas); }
+  .lease-history-context { border-top: 3px solid var(--color-primary); }
+  .lease-history-editor { padding: 0; overflow: hidden; }
+  .data-table thead th { background: var(--color-primary-pale); color: var(--color-ink-deep); }
+  .data-table tbody tr:last-child td { border-bottom-color: transparent; }
+  .filter-bar { border-color: transparent; box-shadow: 0 1px 0 var(--color-hairline); }
+  .settings-link-card {
+    position: relative;
+    min-height: 190px;
+    border: 0;
+    border-bottom: 1px solid var(--color-hairline);
+    border-radius: 0;
+    background: transparent;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    transition: background-color var(--duree-rapide) var(--ease-net);
+  }
+  .settings-link-card:hover { background: var(--color-canvas); box-shadow: none; transform: none; }
+  .settings-link-card .settings-link-icon { width: 44px; height: 44px; border-radius: var(--radius-md); }
+  .dashboard-actions {
+    display: grid;
+    gap: var(--spacing-lg);
+    align-items: center;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
+  }
+  .dashboard-actions-copy .text-caption { color: var(--color-primary-on-dark); }
+  .dashboard-actions-copy h2 { color: var(--color-on-dark); }
+  .dashboard-actions-copy p:last-child { color: var(--color-on-dark-mute); }
+  .dashboard-actions-links { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+  .dashboard-actions .btn-secondary { background: var(--color-surface-dark-elevated); color: var(--color-on-dark); }
+  .dashboard-actions .btn-tertiary { border-color: var(--color-hairline-strong); background: transparent; color: var(--color-on-dark); }
+
+  @media (max-width: 639px) {
+    .page-header-workspace { align-items: stretch; padding-left: 14px; }
+    .settings-page-header { padding-left: 14px; }
+    .page-header-workspace .page-header-actions { width: 100%; }
+    .page-header-workspace .page-header-actions > .btn { flex: 1 1 100%; }
+    .formulaire-metier-intro { align-items: flex-start; padding: var(--spacing-lg); }
+    .formulaire-metier-corps { padding: var(--spacing-lg); }
+    .card.list-card { padding: var(--spacing-lg); }
+    .dashboard-actions { padding: var(--spacing-lg); }
+    .dashboard-actions-links { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .property-list-mark { width: 44px; height: 44px; flex-basis: 44px; font-size: 18px; }
+    .listing-management-card > :not(.listing-management-photo) { margin-inline: var(--spacing-md); }
+    .listing-management-card > :last-child { margin-bottom: var(--spacing-md); }
+    .lease-detail-heading { padding: var(--spacing-lg); }
+    .document-title-row { padding: var(--spacing-lg); }
+    .payment-confirmation-summary { padding: var(--spacing-lg); }
+    .find-catalog-hero { border-radius: var(--radius-xl); }
+    .me-dashboard-hero { border-radius: var(--radius-xl); }
+    .me-dashboard-hero::after { width: 118px; height: 118px; top: -40px; right: -36px; }
+  }
+  @media (min-width: 900px) {
+    .dashboard-actions { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+    .dashboard-actions-links { justify-content: flex-end; }
+  }
+
+  .btn { border-radius: var(--radius-xl); font-size: 16px; font-weight: 600; }
+  .btn-secondary { background-color: var(--color-canvas-soft); }
+  .card { border-radius: var(--radius-xl); }
+  .public-hero {
+    background: var(--color-ink);
+    color: #ffffff;
+  }
+  .public-hero .public-hero-copy { color: #eaf1e7; }
+  .public-hero .public-hero-accent { color: #b8f36d; }
+  .public-hero .btn-secondary { background: transparent; color: #ffffff; border-color: #ffffff; }
+  .public-hero .btn-secondary:hover { background: rgb(255 255 255 / 0.12); }
+  .public-space-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    background: var(--color-canvas);
+  }
+  .public-space-card img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+  .public-space-card-content { display: flex; flex: 1; flex-direction: column; padding: 24px; }
+  .legal-copy { max-width: 52rem; }
+  .legal-copy h1 { text-wrap: balance; }
+  .legal-copy :is(h2, h3) { scroll-margin-top: 6rem; }
+  .marque-officielle { max-width: 100%; }
+}
+
+/* Le vert signature ne porte pas du texte fin sur fond blanc : les légendes
+   utilisent le vert encre, tandis que les boutons gardent le vert vif. */
+@layer utilities {
+  .text-primary { color: var(--color-ink-deep); }
+  .public-hero .text-primary { color: #b8f36d; }
+}
+
+:root[data-theme='sombre'] .marque-officielle { filter: brightness(0) invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='clair']) .marque-officielle { filter: brightness(0) invert(1); }
+}

@@ -1,7 +1,13 @@
 import 'server-only'
 
 import { formaterTelephone } from '@/lib/telephone'
-import { LIBELLE_CANAL, type CanalTelephone } from '@/lib/verification/regles'
+import {
+  CANAUX_TELEPHONE,
+  LIBELLE_CANAL,
+  etatCanalDepuisConfiguration,
+  telephoneExigiblePourActivation,
+  type CanalTelephone,
+} from '@/lib/verification/regles'
 
 /**
  * Les canaux par lesquels un code peut atteindre un téléphone.
@@ -87,16 +93,33 @@ function trappeDeveloppement(): boolean {
   return process.env.NODE_ENV !== 'production' && process.env.OTP_CANAL_DEV === '1'
 }
 
-/** Le canal est-il réellement en état d'envoyer ? */
-export function canalDisponible(canal: CanalTelephone): boolean {
-  if (trappeDeveloppement()) return true
+export type EtatCanal = 'desactive' | 'indisponible' | 'configure' | 'operationnel'
 
-  switch (canal) {
-    case 'SMS':
-      return Boolean(process.env.SMS_FOURNISSEUR && process.env.SMS_JETON)
-    case 'WHATSAPP':
-      return Boolean(process.env.WHATSAPP_ID_TELEPHONE && process.env.WHATSAPP_JETON)
-  }
+/** Configuré ne signifie pas opérationnel : aucun transport fournisseur n'est implémenté. */
+export function etatCanal(canal: CanalTelephone): EtatCanal {
+  if (trappeDeveloppement()) return 'operationnel'
+  const cles = canal === 'SMS'
+    ? ['SMS_FOURNISSEUR', 'SMS_IDENTIFIANT', 'SMS_JETON', 'SMS_EXPEDITEUR']
+    : ['WHATSAPP_ID_TELEPHONE', 'WHATSAPP_JETON']
+  const nombrePresentes = cles.filter((cle) => Boolean(process.env[cle])).length
+  return etatCanalDepuisConfiguration(cles.length, nombrePresentes)
+}
+
+export function canalDisponible(canal: CanalTelephone): boolean {
+  return etatCanal(canal) === 'operationnel'
+}
+
+/**
+ * Le téléphone n'est exigible que si le code déclare au moins un transport
+ * fournisseur réellement opérationnel. Des clés présentes mais un adaptateur
+ * absent donnent `configure`, pas `operationnel`. La trappe console est utile
+ * aux tests locaux, mais ne constitue pas un fournisseur validé.
+ */
+export function verificationTelephoneExigible(): boolean {
+  return telephoneExigiblePourActivation(
+    CANAUX_TELEPHONE.map(etatCanal),
+    { trappeDeveloppement: trappeDeveloppement() },
+  )
 }
 
 /**

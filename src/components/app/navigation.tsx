@@ -5,6 +5,7 @@ import {
   House,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   Plus,
   ScrollText,
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 
 import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
@@ -27,6 +28,7 @@ export interface LienNav {
   href: string
   libelle: string
   icone: keyof typeof ICONES
+  groupe: 'pilotage' | 'gestion' | 'commercialisation' | 'compte'
   pastille?: number
 }
 
@@ -35,19 +37,28 @@ const ICONES = {
   baux: ScrollText,
   locataires: Users,
   logements: House,
+  annonces: Megaphone,
   paiements: Banknote,
   impayes: TriangleAlert,
   parametres: Settings,
 } as const
 
 export const LIENS_NAV: LienNav[] = [
-  { href: ESPACE_PRO.tableauDeBord, libelle: 'Tableau de bord', icone: 'tableau' },
-  { href: '/pro/impayes', libelle: 'Impayés', icone: 'impayes' },
-  { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements' },
-  { href: '/pro/baux', libelle: 'Baux', icone: 'baux' },
-  { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires' },
-  { href: '/pro/logements', libelle: 'Logements', icone: 'logements' },
-  { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres' },
+  { href: ESPACE_PRO.tableauDeBord, libelle: 'Tableau de bord', icone: 'tableau', groupe: 'pilotage' },
+  { href: '/pro/impayes', libelle: 'Impayés', icone: 'impayes', groupe: 'pilotage' },
+  { href: '/pro/logements', libelle: 'Logements', icone: 'logements', groupe: 'gestion' },
+  { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires', groupe: 'gestion' },
+  { href: '/pro/baux', libelle: 'Baux', icone: 'baux', groupe: 'gestion' },
+  { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements', groupe: 'gestion' },
+  { href: '/pro/annonces', libelle: 'Annonces', icone: 'annonces', groupe: 'commercialisation' },
+  { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres', groupe: 'compte' },
+]
+
+const GROUPES_NAV: { id: LienNav['groupe']; titre: string }[] = [
+  { id: 'pilotage', titre: 'Pilotage' },
+  { id: 'gestion', titre: 'Gestion locative' },
+  { id: 'commercialisation', titre: 'Commercialisation' },
+  { id: 'compte', titre: 'Compte' },
 ]
 
 function Icone({ nom }: { nom: keyof typeof ICONES }) {
@@ -77,35 +88,86 @@ function LiensNavigation({
   onNavigation?: () => void
 }) {
   return (
-    <nav className="space-y-xxs">
-      {LIENS_NAV.map((lien) => {
-        const actif = estActif(lien.href, chemin)
-        const pastille = lien.href === '/pro/impayes' ? impayes : 0
+    <nav aria-label="Navigation Sikaloc Pro" className="space-y-md">
+      {GROUPES_NAV.map((groupe) => (
+        <section key={groupe.id} aria-labelledby={`nav-pro-${groupe.id}`}>
+          <h2 id={`nav-pro-${groupe.id}`} className="px-md pb-xs text-caption font-semibold uppercase tracking-wide text-mute-soft">
+            {groupe.titre}
+          </h2>
+          <ul className="space-y-xxs">
+            {LIENS_NAV.filter((lien) => lien.groupe === groupe.id).map((lien) => {
+              const actif = estActif(lien.href, chemin)
+              const pastille = lien.href === '/pro/impayes' ? impayes : 0
+              const courant = chemin === lien.href ? 'page' : actif ? 'location' : undefined
 
-        return (
-          <Link
-            key={lien.href}
-            href={lien.href}
-            prefetch
-            onClick={onNavigation}
-            aria-current={actif ? 'page' : undefined}
-            // Repère de la visite guidée. Il désigne un élément RÉEL de
-            // l'interface : c'est ce qui distingue une visite d'une boîte de
-            // dialogue posée au milieu de l'écran.
-            data-visite={`nav-${lien.icone}`}
-            className={`sidebar-row ${actif ? 'sidebar-row-active' : ''}`}
-          >
-            <Icone nom={lien.icone} />
-            <span className="flex-1">{lien.libelle}</span>
-            {pastille > 0 ? (
-              <span className="inline-flex min-w-[20px] items-center justify-center rounded-pill bg-negative px-xs text-caption font-semibold text-on-primary">
-                {pastille}
-              </span>
-            ) : null}
-          </Link>
-        )
-      })}
+              return (
+                <li key={lien.href}>
+                  <Link
+                    href={lien.href}
+                    prefetch
+                    onClick={onNavigation}
+                    aria-current={courant}
+                    data-visite={`nav-${lien.icone}`}
+                    className={`sidebar-row ${actif ? 'sidebar-row-active' : ''}`}
+                  >
+                    <Icone nom={lien.icone} />
+                    <span className="flex-1">{lien.libelle}</span>
+                    {pastille > 0 ? (
+                      <span className="inline-flex min-w-[20px] items-center justify-center rounded-pill bg-negative px-xs text-caption font-semibold text-on-primary" aria-label={`${pastille} loyers en retard`}>
+                        {pastille}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
     </nav>
+  )
+}
+
+function titreContexte(chemin: string): { groupe: string; page: string } {
+  if (chemin === '/pro/tableau-de-bord') return { groupe: 'Pilotage', page: 'Tableau de bord' }
+  if (chemin.startsWith('/pro/impayes')) return { groupe: 'Pilotage', page: 'Loyers en retard' }
+  if (chemin.startsWith('/pro/logements')) {
+    return { groupe: 'Gestion locative', page: chemin.endsWith('/nouveau') ? 'Nouveau logement' : chemin.endsWith('/modifier') ? 'Modifier un logement' : 'Logements' }
+  }
+  if (chemin.startsWith('/pro/locataires')) {
+    return { groupe: 'Gestion locative', page: chemin.endsWith('/nouveau') ? 'Nouveau locataire' : chemin.endsWith('/modifier') ? 'Modifier un locataire' : 'Locataires' }
+  }
+  if (chemin.startsWith('/pro/baux')) {
+    const page = chemin.endsWith('/historique') ? 'Historique des loyers' : chemin.endsWith('/modifier') ? 'Modifier le bail' : chemin.endsWith('/nouveau') ? 'Nouveau bail' : chemin === '/pro/baux' ? 'Baux' : 'Détail du bail'
+    return { groupe: 'Gestion locative', page }
+  }
+  if (chemin.startsWith('/pro/paiements')) {
+    const page = chemin.endsWith('/confirmer') ? 'Confirmation du paiement' : chemin.endsWith('/modifier') ? 'Corriger le paiement' : chemin.endsWith('/nouveau') ? 'Nouveau paiement' : 'Paiements'
+    return { groupe: 'Gestion locative', page }
+  }
+  if (chemin.startsWith('/pro/annonces')) {
+    const page = chemin.endsWith('/candidatures') ? 'Candidatures reçues' : chemin.endsWith('/nouvelle') ? 'Nouvelle annonce' : chemin === '/pro/annonces' ? 'Annonces' : 'Détail de l’annonce'
+    return { groupe: 'Commercialisation', page }
+  }
+  if (chemin.startsWith('/pro/quittances')) return { groupe: 'Gestion locative', page: 'Document locatif' }
+  if (chemin.startsWith('/pro/parametres/abonnement')) return { groupe: 'Compte', page: 'Abonnement' }
+  if (chemin.startsWith('/pro/parametres/preferences')) return { groupe: 'Compte', page: 'Préférences' }
+  if (chemin.startsWith('/pro/parametres/profil')) return { groupe: 'Compte', page: 'Profil' }
+  if (chemin.startsWith('/pro/parametres/signature')) return { groupe: 'Compte', page: 'Signature' }
+  if (chemin.startsWith('/pro/parametres/parrainage')) return { groupe: 'Compte', page: 'Parrainage' }
+  if (chemin.startsWith('/pro/parametres/donnees')) return { groupe: 'Compte', page: 'Données personnelles' }
+  return { groupe: 'Compte', page: 'Paramètres' }
+}
+
+export function ContextePro() {
+  const chemin = usePathname()
+  const contexte = titreContexte(chemin)
+
+  return (
+    <div className="mr-auto hidden min-w-0 lg:block" aria-live="polite">
+      <p className="text-caption text-mute">Sikaloc Pro · {contexte.groupe}</p>
+      <p className="truncate text-body-sm font-semibold text-ink">{contexte.page}</p>
+    </div>
   )
 }
 
@@ -113,8 +175,8 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
   const chemin = usePathname()
 
   return (
-    <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
-      <div className="sticky top-0 flex h-screen flex-col p-lg">
+    <aside className="pro-sidebar hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
+      <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto p-md">
         <div className="mb-xl px-md pt-sm">
           <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
         </div>
@@ -164,6 +226,23 @@ export function EnTeteMobile({
 }) {
   const chemin = usePathname()
   const [ouvert, setOuvert] = useState(false)
+  const tiroir = useRef<HTMLDialogElement>(null)
+  const idTiroir = useId()
+
+  function contenirFocus(evenement: KeyboardEvent<HTMLDialogElement>) {
+    if (evenement.key !== 'Tab') return
+    const elements = Array.from(tiroir.current?.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), [tabindex="0"]') ?? [])
+      .filter((element) => element.getClientRects().length > 0)
+    const premier = elements[0]
+    const dernier = elements.at(-1)
+    if (evenement.shiftKey && document.activeElement === premier) {
+      evenement.preventDefault()
+      dernier?.focus()
+    } else if (!evenement.shiftKey && document.activeElement === dernier) {
+      evenement.preventDefault()
+      premier?.focus()
+    }
+  }
 
   // Une navigation depuis le tiroir doit le refermer. Le faire pendant le
   // rendu escamoterait l'animation de fermeture.
@@ -172,31 +251,44 @@ export function EnTeteMobile({
 
   // Un tiroir ouvert ne doit pas laisser la page défiler derrière lui.
   useEffect(() => {
-    document.body.style.overflow = ouvert ? 'hidden' : ''
+    if (!ouvert) return
+    const precedent = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = precedent
     }
   }, [ouvert])
 
-  // Échap referme, comme partout ailleurs dans l'application.
+  // Le dialogue natif isole le fond, contient Tab et restaure le focus.
   useEffect(() => {
-    if (!ouvert) return
-    function surEchap(evenement: KeyboardEvent) {
-      if (evenement.key === 'Escape') setOuvert(false)
+    const dialogue = tiroir.current
+    if (!dialogue) return
+    if (ouvert && !dialogue.open) {
+      dialogue.showModal()
+      dialogue.querySelector<HTMLButtonElement>('[data-fermer]')?.focus()
+    } else if (!ouvert && dialogue.open) {
+      dialogue.close()
     }
-    document.addEventListener('keydown', surEchap)
-    return () => document.removeEventListener('keydown', surEchap)
   }, [ouvert])
+
+  useEffect(() => {
+    const bureau = window.matchMedia('(min-width: 1024px)')
+    const fermerSurBureau = () => { if (bureau.matches) setOuvert(false) }
+    bureau.addEventListener('change', fermerSurBureau)
+    return () => bureau.removeEventListener('change', fermerSurBureau)
+  }, [])
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-sm border-b border-hairline bg-canvas/95 px-lg backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-xs border-b border-hairline bg-canvas/95 px-md backdrop-blur lg:hidden">
         <button
           type="button"
           onClick={() => setOuvert(true)}
           className="btn-icon"
           aria-label="Ouvrir le menu"
           aria-expanded={ouvert}
+          aria-controls={idTiroir}
+          aria-haspopup="dialog"
         >
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
@@ -218,6 +310,9 @@ export function EnTeteMobile({
             type="button"
             onClick={() => setOuvert(true)}
             aria-label="Ouvrir le menu du compte"
+            aria-expanded={ouvert}
+            aria-controls={idTiroir}
+            aria-haspopup="dialog"
             className="inline-flex items-center rounded-pill"
           >
             <PhotoProfil
@@ -231,16 +326,17 @@ export function EnTeteMobile({
         </div>
       </header>
 
-      {ouvert ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label="Fermer le menu"
-            onClick={() => setOuvert(false)}
-            className="anim-apparait absolute inset-0 bg-surface-dark/60"
-          />
-
-          <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-lg">
+      <dialog
+        ref={tiroir}
+        id={idTiroir}
+        aria-label="Menu Sikaloc Pro"
+        className="nav-dialog"
+        onKeyDown={contenirFocus}
+        onCancel={() => setOuvert(false)}
+        onClose={() => setOuvert(false)}
+        onClick={(evenement) => { if (evenement.target === evenement.currentTarget) setOuvert(false) }}
+      >
+          <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-md shadow-modal">
             <div className="mb-lg flex items-center justify-between px-md pt-sm">
               <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
               <button
@@ -248,6 +344,7 @@ export function EnTeteMobile({
                 onClick={() => setOuvert(false)}
                 className="btn-icon"
                 aria-label="Fermer le menu"
+                data-fermer
               >
                 <X size={18} strokeWidth={2} aria-hidden="true" />
               </button>
@@ -301,8 +398,7 @@ export function EnTeteMobile({
               </form>
             </div>
           </div>
-        </div>
-      ) : null}
+      </dialog>
     </>
   )
 }

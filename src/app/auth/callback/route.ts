@@ -29,8 +29,20 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  */
 const ROUTES_AUTORISEES = ['/reinitialiser-mot-de-passe']
 
+function redirectionPrivee(url: string) {
+  return NextResponse.redirect(url, { headers: {
+    'Cache-Control': 'private, no-cache, no-store, must-revalidate, max-age=0',
+    Expires: '0', Pragma: 'no-cache',
+  } })
+}
+
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl
+  const { searchParams } = request.nextUrl
+  // NextURL normalise 127.0.0.1 en localhost : changer d’hôte perd les cookies
+  // PKCE/session. Le site configuré garde la même origine après l’échange.
+  const origin = process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL).origin
+    : request.nextUrl.origin
   const code = searchParams.get('code')
   const demande = searchParams.get('next')
 
@@ -38,21 +50,21 @@ export async function GET(request: NextRequest) {
   // usage — dont un ancien lien de confirmation d'inscription — est renvoyé
   // vers la saisie du code, sans qu'aucune session ne soit ouverte.
   if (!demande || !ROUTES_AUTORISEES.includes(demande)) {
-    return NextResponse.redirect(`${origin}/verification`)
+    return redirectionPrivee(`${origin}/verification`)
   }
 
   const suite = demande
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/connexion?erreur=lien_invalide`)
+    return redirectionPrivee(`${origin}/connexion?erreur=lien_invalide`)
   }
 
   const supabase = await creerClientServeur()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(`${origin}/connexion?erreur=lien_expire`)
+    return redirectionPrivee(`${origin}/connexion?erreur=lien_expire`)
   }
 
-  return NextResponse.redirect(`${origin}${suite}`)
+  return redirectionPrivee(`${origin}${suite}`)
 }

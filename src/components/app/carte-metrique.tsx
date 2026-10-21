@@ -18,19 +18,19 @@ export function CarteMetrique({
 }) {
   if (ton === 'primary') {
     return (
-      <div className="rounded-xl bg-primary p-xl text-on-primary">
-        <p className="text-body-sm font-semibold opacity-90">{label}</p>
-        <p className="mt-sm text-display-md font-extrabold tracking-tight tabular">{valeur}</p>
+      <div className="metric-card metric-card-primary">
+        <p className="metric-label font-semibold">{label}</p>
+        <p className="metric-value">{valeur}</p>
         {detail ? <p className="mt-xs text-caption opacity-90">{detail}</p> : null}
       </div>
     )
   }
 
   return (
-    <div className="card">
-      <p className="text-body-sm text-mute">{label}</p>
+    <div className={`metric-card ${ton === 'alerte' ? 'metric-card-alert' : ''}`}>
+      <p className="metric-label">{label}</p>
       <p
-        className={`mt-sm text-display-md font-extrabold tracking-tight tabular ${
+        className={`metric-value ${
           ton === 'alerte' ? 'text-negative' : 'text-ink'
         }`}
       >

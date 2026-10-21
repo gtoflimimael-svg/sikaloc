@@ -13,15 +13,14 @@
 const { createClient } = require('@supabase/supabase-js')
 const { createHmac, randomBytes } = require('crypto')
 
+const { exigerPileLocale } = require('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const SECRET = process.env.OTP_SECRET || ''
 
-if (!/127\.0\.0\.1|localhost/.test(SUPABASE || '')) {
-  console.error(`Refus : ${SUPABASE || '(aucune URL)'} n'est pas une pile locale.`)
-  process.exit(1)
-}
+exigerPileLocale('Ce banc')
 if (SECRET.length < 32) {
   console.error('OTP_SECRET absente ou trop courte (32 caractères minimum).')
   process.exit(1)

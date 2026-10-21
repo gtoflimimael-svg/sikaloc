@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { MarqueSikaloc } from '@/components/ui/logo'
+import { mentionsCompletes } from '@/lib/mentions-legales'
 
 export default function LayoutLegal({ children }: { children: React.ReactNode }) {
   return (
@@ -15,8 +16,15 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      <main className="mx-auto max-w-[48rem] px-xl py-4xl">
-        <article className="card card-lg">{children}</article>
+      <main className="mx-auto max-w-[1200px] px-xl py-4xl">
+        <div className="grid items-start gap-xl lg:grid-cols-[14rem_minmax(0,1fr)]">
+          <nav aria-label="Documents juridiques" className="card flex flex-wrap gap-md text-body-sm lg:sticky lg:top-24 lg:flex-col">
+            <Link href="/legal/conditions" className="font-medium text-ink hover:underline">Conditions d’utilisation</Link>
+            <Link href="/legal/confidentialite" className="font-medium text-ink hover:underline">Confidentialité</Link>
+            {mentionsCompletes() ? <Link href="/legal/mentions" className="font-medium text-ink hover:underline">Mentions légales</Link> : null}
+          </nav>
+          <article className="legal-copy legal-reading-surface card card-lg min-w-0">{children}</article>
+        </div>
       </main>
 
       <PiedDePage />

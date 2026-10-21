@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
-import { ESPACE_ME, ESPACE_PRO, type Espace } from '@/lib/roles'
+import { destinationApresConnexion, ESPACE_ME, ESPACE_PRO, type Espace } from '@/lib/roles'
 import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -50,9 +50,11 @@ export default async function PageEntrer({
   // est alors posée même quand un seul rôle répondrait — sinon le bouton ne
   // ferait rien de visible.
   if (user && choix !== '1') {
-    const roles = await rolesDuCompte()
-    if (roles.estBailleur && !roles.estLocataire) redirect(ESPACE_PRO.tableauDeBord)
-    if (roles.estLocataire && !roles.estBailleur) redirect(ESPACE_ME.racine)
+    // La règle d'aiguillage est écrite une seule fois, dans `roles.ts`, et un
+    // banc l'exerce. La redire ici a déjà coûté un oubli : un candidat sans
+    // autre rôle se voyait offrir deux espaces où il n'a rien à faire.
+    const destination = destinationApresConnexion(await rolesDuCompte())
+    if (destination !== '/entrer') redirect(destination)
   }
 
   return (

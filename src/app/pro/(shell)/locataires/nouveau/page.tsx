@@ -11,10 +11,10 @@ export default async function PageNouveauLocataire() {
   await bailleurOnboarde()
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="tenant-form-page mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Nouveau locataire"
-        description="Le locataire recevra ses quittances par WhatsApp, sans créer de compte."
+        description="Ces coordonnées servent à rattacher le locataire à ses baux et à préparer les moyens de partage disponibles."
       />
       <FormulaireLocataire action={creerLocataire} />
     </div>

@@ -136,7 +136,11 @@ async function journaliser(
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   if (!fichier || !/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(base)) return false
 
-  const { appendFile } = await import('node:fs/promises')
+  // Le dossier peut ne pas exister (un banc voisin l'efface en fin de course).
+  // Le journal local doit être autosuffisant : on le recrée au besoin.
+  const { appendFile, mkdir } = await import('node:fs/promises')
+  const { dirname } = await import('node:path')
+  await mkdir(dirname(fichier), { recursive: true })
   await appendFile(
     fichier,
     JSON.stringify({

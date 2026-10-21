@@ -98,7 +98,7 @@ export interface DemandeCode {
  * transport est indisponible.
  */
 export async function preparerCodeTelephone(
-  bailleurId: string,
+  compteId: string,
   telephoneCanonique: string,
   canal: CanalTelephone,
   ip?: string | null,
@@ -111,7 +111,7 @@ export async function preparerCodeTelephone(
   const { count: demandesRecentes } = await admin
     .from('codes_verification')
     .select('id', { count: 'exact', head: true })
-    .eq('bailleur_id', bailleurId)
+    .eq('compte_id', compteId)
     .eq('type', TYPE_TELEPHONE)
     .gte('cree_le', ilYAUneHeure)
 
@@ -123,7 +123,7 @@ export async function preparerCodeTelephone(
   const { data: dernier } = await admin
     .from('codes_verification')
     .select('cree_le')
-    .eq('bailleur_id', bailleurId)
+    .eq('compte_id', compteId)
     .eq('type', TYPE_TELEPHONE)
     .order('cree_le', { ascending: false })
     .limit(1)
@@ -157,13 +157,13 @@ export async function preparerCodeTelephone(
   await admin
     .from('codes_verification')
     .update({ invalide_le: new Date(maintenant).toISOString() })
-    .eq('bailleur_id', bailleurId)
+    .eq('compte_id', compteId)
     .eq('type', TYPE_TELEPHONE)
     .is('utilise_le', null)
     .is('invalide_le', null)
 
   const { error } = await admin.from('codes_verification').insert({
-    bailleur_id: bailleurId,
+    compte_id: compteId,
     type: TYPE_TELEPHONE,
     canal,
     destination: telephoneCanonique,
@@ -183,12 +183,12 @@ export async function preparerCodeTelephone(
  * Appelé quand l'envoi échoue : un code enregistré mais jamais reçu occuperait
  * la place du suivant et consommerait un quota horaire pour rien.
  */
-export async function annulerCodeCourant(bailleurId: string): Promise<void> {
+export async function annulerCodeCourant(compteId: string): Promise<void> {
   const admin = creerClientAdmin()
   await admin
     .from('codes_verification')
     .update({ invalide_le: new Date().toISOString() })
-    .eq('bailleur_id', bailleurId)
+    .eq('compte_id', compteId)
     .eq('type', TYPE_TELEPHONE)
     .is('utilise_le', null)
     .is('invalide_le', null)
@@ -204,7 +204,7 @@ export interface VerdictCode {
 }
 
 /**
- * Valide un code saisi contre le code courant du bailleur.
+ * Valide un code saisi contre le code courant du compte.
  *
  * L'ordre des contrôles n'est pas indifférent :
  *
@@ -218,7 +218,7 @@ export interface VerdictCode {
  * intact, et cinq essais deviendraient illimités.
  */
 export async function verifierCodeTelephone(
-  bailleurId: string,
+  compteId: string,
   telephoneCanonique: string,
   saisie: string,
 ): Promise<VerdictCode> {
@@ -228,7 +228,7 @@ export async function verifierCodeTelephone(
   const { data: courant } = await admin
     .from('codes_verification')
     .select('id, empreinte, expire_le, tentatives, canal, destination')
-    .eq('bailleur_id', bailleurId)
+    .eq('compte_id', compteId)
     .eq('type', TYPE_TELEPHONE)
     .is('utilise_le', null)
     .is('invalide_le', null)
@@ -238,7 +238,7 @@ export async function verifierCodeTelephone(
 
   if (!courant) return { ok: false, motif: 'code_absent' }
 
-  // Le code avait été envoyé à un autre numéro : le bailleur a changé de numéro
+  // Le code avait été envoyé à un autre numéro : le compte a changé de numéro
   // entre la demande et la saisie. Le code ne prouve rien sur le nouveau.
   if (courant.destination !== telephoneCanonique) {
     await admin
@@ -315,13 +315,13 @@ export async function verifierCodeTelephone(
  * Secondes restantes avant qu'un renvoi soit permis, pour amorcer le compte à
  * rebours de l'écran sur la valeur que le serveur appliquera vraiment.
  */
-export async function attenteAvantRenvoi(bailleurId: string): Promise<number> {
+export async function attenteAvantRenvoi(compteId: string): Promise<number> {
   const admin = creerClientAdmin()
 
   const { data: dernier } = await admin
     .from('codes_verification')
     .select('cree_le')
-    .eq('bailleur_id', bailleurId)
+    .eq('compte_id', compteId)
     .eq('type', TYPE_TELEPHONE)
     .order('cree_le', { ascending: false })
     .limit(1)

@@ -148,7 +148,7 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
         <ChampTelephone
           nom="telephone"
           libelle="Téléphone"
-          aide="Utilisé sur vos quittances et pour vous joindre."
+          aide="Utilisé sur vos quittances et pour vous joindre. Sa saisie ne le marque pas comme vérifié."
           requis
           erreur={etat.erreursChamps?.telephone}
         />

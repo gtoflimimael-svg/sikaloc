@@ -1,4 +1,6 @@
 import type { NextConfig } from 'next'
+import { isMaintenanceEnabled } from './src/lib/maintenance-policy.mjs'
+import { getSupabaseCspOrigins } from './src/lib/supabase-csp.mjs'
 
 /**
  * Politique de sécurité du contenu (CSP) — spec §9 « protéger le site contre
@@ -17,20 +19,22 @@ import type { NextConfig } from 'next'
  * (`form-action 'self'`).
  *
  * `'unsafe-inline'` reste un compromis assumé plutôt qu'un oubli : l'audit du
- * code n'a trouvé que deux `dangerouslySetInnerHTML`
- * (`src/components/ui/illustration.tsx`, `src/app/layout.tsx`), tous deux sur
- * du contenu statique écrit par l'équipe, jamais sur une entrée utilisateur —
- * la surface XSS réelle que ce relâchement expose est donc quasi nulle.
+ * code ne repose plus sur l'injection SVG d'illustrations ; les usages
+ * conservés dans `src/app/layout.tsx` sont du balisage statique, jamais une
+ * entrée utilisateur.
  */
 const isDev = process.env.NODE_ENV === 'development'
+const maintenanceActive = isMaintenanceEnabled(process.env.SIKALOC_MAINTENANCE_MODE)
+const { httpOrigin: supabaseHttpOrigin, websocketOrigin: supabaseWebsocketOrigin } =
+  getSupabaseCspOrigins(process.env.NEXT_PUBLIC_SUPABASE_URL)
 
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data:;
+  img-src 'self' blob: data: ${supabaseHttpOrigin};
   font-src 'self';
-  connect-src 'self';
+  connect-src 'self' ${supabaseHttpOrigin} ${supabaseWebsocketOrigin};
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -107,6 +111,11 @@ const nextConfig: NextConfig = {
    * `/app` lui-même ET tous ses descendants.
    */
   async redirects() {
+    // Les redirects du fichier de configuration sont exécutées avant Proxy.
+    // Les suspendre en maintenance garantit notamment un 503 direct sur les
+    // anciennes URL `/app/*`, sans détour ni redirection.
+    if (maintenanceActive) return []
+
     return [
       {
         source: '/app/:chemin*',

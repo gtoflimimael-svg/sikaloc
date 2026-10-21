@@ -1,0 +1,41 @@
+name: Quality gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-not-a-real-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-not-a-real-secret
+      CRON_SECRET: ci-placeholder-cron-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verifier:migrations
+      - run: npm run test:maintenance
+      - run: npm run test:security-mutations
+      - run: npm run test:verification
+      - run: npm run test:email-otp
+      - run: npm run test:loyers
+      - run: npm run test:lot2b
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build

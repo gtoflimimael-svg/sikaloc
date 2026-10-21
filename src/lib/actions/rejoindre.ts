@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { accepterInvitation } from '@/lib/actions/invitations'
-import { MESSAGES_INVITATION } from '@/lib/invitations'
+import { empreinteJeton, MESSAGES_INVITATION, secretPresent } from '@/lib/invitations'
+import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import {
   erreursChamps,
@@ -70,13 +71,38 @@ export async function rejoindreAvecInvitation(
   _etat: EtatFormulaire,
   donnees: FormData,
 ): Promise<EtatFormulaire> {
-  // L'adresse vient de l'invitation, pas du formulaire. Le champ affiché est
-  // en lecture seule, mais un formulaire se rejoue : on ne s'y fie pas.
+  // Un champ readOnly se falsifie par un POST direct. L'adresse et la validité
+  // du lien sont relues avant toute création de compte Auth.
+  if (!secretPresent() || !/^[A-Za-z0-9_-]{43}$/.test(jeton)) {
+    return { erreur: MESSAGES_INVITATION.introuvable }
+  }
+
+  const admin = creerClientAdmin()
+  const { data: invitation, error: erreurInvitation } = await admin
+    .from('invitations_locataire')
+    .select('email, expire_le, utilisee_le, annulee_le, locataire_id')
+    .eq('empreinte', empreinteJeton(jeton))
+    .maybeSingle()
+
+  if (erreurInvitation || !invitation || invitation.utilisee_le || invitation.annulee_le ||
+    new Date(invitation.expire_le).getTime() <= Date.now()) {
+    return { erreur: MESSAGES_INVITATION.introuvable }
+  }
+
+  const { data: locataire, error: erreurLocataire } = await admin
+    .from('locataires')
+    .select('compte_id')
+    .eq('id', invitation.locataire_id)
+    .maybeSingle()
+  if (erreurLocataire || !locataire || locataire.compte_id) {
+    return { erreur: MESSAGES_INVITATION.introuvable }
+  }
+
   const supabase = await creerClientServeur()
 
   const analyse = schemaInscription.safeParse({
     nom: donnees.get('nom'),
-    email: donnees.get('email'),
+    email: invitation.email,
     telephone: donnees.get('telephone'),
     motDePasse: donnees.get('motDePasse'),
     codeParrain: '',

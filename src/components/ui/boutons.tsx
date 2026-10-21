@@ -29,6 +29,7 @@ export function BoutonSoumettre({
     <button
       type="submit"
       disabled={pending}
+      aria-busy={pending}
       className={[
         'btn',
         `btn-${variante}`,

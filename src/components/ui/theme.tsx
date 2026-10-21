@@ -74,7 +74,8 @@ export function SelecteurTheme({ compact = false }: { compact?: boolean }) {
             onClick={() => choisir(valeur)}
             aria-pressed={actif}
             title={libelle}
-            className={`inline-flex items-center gap-xs rounded-pill px-sm py-xxs text-caption font-medium transition-colors ${
+            aria-label={libelle}
+            className={`inline-flex min-h-8 min-w-8 items-center justify-center gap-xs rounded-pill px-sm py-xxs text-caption font-medium transition-colors ${
               actif ? 'bg-surface-card text-ink' : 'text-mute hover:text-ink'
             }`}
           >

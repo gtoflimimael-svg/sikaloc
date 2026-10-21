@@ -76,7 +76,7 @@ export function CaptureSignature({
         tabIndex={-1}
       />
 
-      <div role="tablist" aria-label="Méthode de signature" className="flex gap-xs">
+      <div role="group" aria-label="Méthode de signature" className="flex gap-xs">
         <BoutonMode
           actif={mode === 'dessiner'}
           onClick={() => changerMode('dessiner')}
@@ -151,8 +151,7 @@ function BoutonMode({
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={actif}
+      aria-pressed={actif}
       onClick={onClick}
       className={`inline-flex flex-1 items-center justify-center gap-xs rounded-md px-md py-sm text-body-sm font-medium transition-colors duration-150 sm:flex-none ${
         actif

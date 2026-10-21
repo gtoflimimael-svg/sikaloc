@@ -22,14 +22,13 @@ const { createServerClient } = require('@supabase/ssr')
 const { chromium } = require('playwright-core')
 
 const BASE = process.env.BASE_ONBOARDING || 'http://localhost:3000'
+const { exigerPileLocale } = require('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!/127\.0\.0\.1|localhost/.test(SUPABASE || '')) {
-  console.error(`Refus : ${SUPABASE} n'est pas une pile locale.`)
-  process.exit(1)
-}
+exigerPileLocale('Ce banc')
 
 const entetes = { apikey: SERVICE, Authorization: `Bearer ${SERVICE}` }
 

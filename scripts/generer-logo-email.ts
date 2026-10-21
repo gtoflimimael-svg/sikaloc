@@ -15,29 +15,26 @@
  * changent.
  */
 
-import { mkdir } from 'node:fs/promises'
+import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 import sharp from 'sharp'
 
-import { COULEUR_MARQUE, RATIO_MARQUE, svgMarque } from '../src/lib/marque'
-
 const HAUTEUR_AFFICHAGE = 28
 const ECHELLE = 3
+const RATIO_MARQUE = 883 / 206
 
 async function main() {
   const hauteur = HAUTEUR_AFFICHAGE * ECHELLE
   const largeur = Math.round(hauteur * RATIO_MARQUE)
 
-  // La teinte vient du jeton, jamais d'une copie : écrite en dur ici, elle a
-  // survécu à un changement de couleur de marque et le PNG des emails est
-  // resté sur l'ancienne valeur sans que rien ne le signale.
-  const svg = svgMarque({ couleur: COULEUR_MARQUE })
+  // Source unique : tracés validés du kit officiel, jamais reconstitués en police.
+  const svg = await readFile(join(process.cwd(), 'public/marque/sikaloc-officiel-noir.svg'))
   const destination = join(process.cwd(), 'public/marque/logo-email.png')
 
   await mkdir(dirname(destination), { recursive: true })
 
-  await sharp(Buffer.from(svg), { density: 300 })
+  await sharp(svg, { density: 300 })
     .resize(largeur, hauteur)
     .png({ compressionLevel: 9 })
     .toFile(destination)

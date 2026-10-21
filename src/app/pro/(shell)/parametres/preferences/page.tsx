@@ -10,7 +10,7 @@ export default async function PagePreferences() {
   const bailleur = await bailleurOnboarde()
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-preferences-page max-w-[46rem]">
       <EnteteParametre cle="preferences" />
       <FormulairePreferences bailleur={bailleur} />
     </div>

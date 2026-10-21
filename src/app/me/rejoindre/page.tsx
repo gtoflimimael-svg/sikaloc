@@ -41,18 +41,21 @@ export default function PageRejoindre() {
       }
     >
       <div className="space-y-xl">
-        <ol className="space-y-lg">
+        <p className="rounded-lg border border-hairline bg-canvas-sage p-md text-body-sm text-body">
+          Vous êtes locataire ? Demandez à votre bailleur son invitation personnelle. Elle seule relie votre compte au bon logement.
+        </p>
+        <ol className="space-y-lg" aria-label="Étapes pour rejoindre votre logement">
           <Etape
             numero={1}
             icone={<MessageCircle size={18} strokeWidth={2} aria-hidden="true" />}
             titre="Votre bailleur vous invite"
-            texte="Il vous envoie un lien par WhatsApp ou par email, depuis votre fiche dans Sikaloc_Pro."
+            texte="Il vous envoie un lien par email, depuis votre fiche dans Sikaloc_Pro."
           />
           <Etape
             numero={2}
             icone={<ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />}
             titre="Vous confirmez que c’est bien vous"
-            texte="Un code vous est envoyé. Il vérifie votre adresse et votre numéro avant tout accès."
+            texte="Créez votre compte ou connectez-vous avec l’adresse email destinataire de l’invitation."
           />
           <Etape
             numero={3}
@@ -62,7 +65,7 @@ export default function PageRejoindre() {
           />
         </ol>
 
-        <div className="rounded-md border border-hairline bg-canvas-soft p-lg">
+        <div className="rounded-lg border border-hairline bg-canvas p-lg">
           <p className="text-body-sm text-body">
             <strong className="text-ink">Vous avez déjà reçu une invitation ?</strong>{' '}
             Ouvrez le lien qu’elle contient : c’est lui qui vous rattache à votre

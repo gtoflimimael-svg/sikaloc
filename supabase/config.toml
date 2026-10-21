@@ -262,13 +262,9 @@ secure_password_change = false
 max_frequency = "1m0s"
 # Number of characters used in the email OTP.
 #
-# Six, et non huit. Depuis Sikaloc 8.2, ce n'est plus un repli mais LE
-# mécanisme de vérification : le gabarit `confirmation.html` envoie
-# `{{ .Token }}` et l'écran `/verification` le fait saisir. Six chiffres, c'est
-# ce qu'on retient le temps de passer d'une application à l'autre, et c'est la
-# même longueur que le code téléphone (`LONGUEUR_CODE`, src/lib/verification/
-# regles.ts) — un utilisateur n'a pas à deviner combien de cases remplir selon
-# l'étape.
+# Cette valeur s'applique à l'instance Supabase locale. La longueur de l'email
+# est indépendante du téléphone ; configurer NEXT_PUBLIC_EMAIL_OTP_LENGTH dans
+# l'application avec la même valeur que le projet Supabase associé.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 #

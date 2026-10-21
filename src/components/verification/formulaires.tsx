@@ -20,6 +20,7 @@ import {
   VALIDITE_MINUTES,
   type CanalTelephone,
 } from '@/lib/verification/regles'
+import { LONGUEUR_CODE_EMAIL } from '@/lib/verification/email-otp'
 import type { EtatFormulaire } from '@/lib/validation'
 
 const ETAT_INITIAL: EtatFormulaire = {}
@@ -113,9 +114,11 @@ export function FormulaireCodeEmail({
         <input type="hidden" name="email" value={email} />
 
         <ChampCode
-          libelle="Entrez le code reçu"
+          libelle={`Entrez le code reçu (${LONGUEUR_CODE_EMAIL} chiffres)`}
           erreur={etat.erreursChamps?.code}
           autoFocus
+          longueur={LONGUEUR_CODE_EMAIL}
+          strictFormat
         />
 
         <BoutonSoumettre pleineLargeur libelleEnCours="Vérification…">

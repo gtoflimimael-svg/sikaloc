@@ -14,13 +14,12 @@
 const { createClient } = require('@supabase/supabase-js')
 const { createHash } = require('crypto')
 
+const { exigerPileLocale } = require('./garde-locale.cjs')
+
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!/127\.0\.0\.1|localhost/.test(SUPABASE || '')) {
-  console.error(`Refus : ${SUPABASE} n'est pas une pile locale.`)
-  process.exit(1)
-}
+exigerPileLocale('Ce banc')
 
 const admin = createClient(SUPABASE, SERVICE, { auth: { persistSession: false } })
 const etapes = []

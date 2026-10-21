@@ -137,12 +137,12 @@ export function ChampTelephone({
         atteignable au clavier ni à la souris.
       */}
       <div
-        className="input flex items-center gap-xs p-0 focus-within:outline focus-within:outline-2 focus-within:outline-primary"
+        className={`input flex items-center gap-xs p-0 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${erreur ? 'border-negative' : ''}`}
         onClick={() => champ.current?.focus()}
       >
         <span
           aria-hidden="true"
-          className="select-none border-r border-hairline py-sm pl-md pr-sm text-body-md text-mute"
+          className="select-none border-r border-hairline py-xs pl-md pr-sm text-body-md text-mute"
         >
           {INDICATIF_AFFICHE}
         </span>
@@ -159,11 +159,11 @@ export function ChampTelephone({
           onKeyDown={surTouche}
           required={requis}
           aria-invalid={erreur ? true : undefined}
-          aria-describedby={aide ? idAide : undefined}
+          aria-describedby={erreur ? `${idAide}-erreur` : aide ? idAide : undefined}
           // L'indicatif est décoratif : les lecteurs d'écran le liraient comme
           // du texte détaché du champ. On le remet dans le nom accessible.
           aria-label={`${libelle}, indicatif ${INDICATIF_AFFICHE}`}
-          className="min-w-0 flex-1 border-0 bg-transparent py-sm pr-md text-body-md text-ink outline-none placeholder:text-mute-soft"
+          className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 pr-md text-body-md text-ink outline-none placeholder:text-mute-soft"
         />
       </div>
 
@@ -183,7 +183,7 @@ export function ChampTelephone({
         </p>
       ) : null}
       {erreur ? (
-        <p className="field-error" role="alert">
+        <p id={`${idAide}-erreur`} className="field-error" role="alert">
           {erreur}
         </p>
       ) : null}

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { ARTICLES } from '@/lib/articles'
+import { creerClientPublic } from '@/lib/supabase/public'
 
 /**
  * Plan du site.
@@ -10,9 +11,13 @@ import { ARTICLES } from '@/lib/articles'
  * explorer des URL qui répondront par une redirection vers la connexion. Les
  * routes d'API n'ont rien à y faire non plus.
  *
- * Absents à dessein : `/find`, qui n'existe pas encore ; `/me`, qui exige une
- * session ; et les anciennes adresses `/app/...`, qui ne sont plus que des
- * redirections.
+ * `/find` y figure depuis S5 — le catalogue, sa première page seulement ; les
+ * pages `?page=2…` ne s'indexent pas (`noindex`). Depuis S6, chaque annonce
+ * PUBLIÉE y figure aussi, par sa fiche `/find/<référence>` : une seule lecture,
+ * `annonces_publiees_sitemap`, qui ne rend que des annonces publiées.
+ *
+ * Absents à dessein : `/me`, qui exige une session ; et les anciennes adresses
+ * `/app/...`, qui ne sont plus que des redirections.
  *
  * `/connexion` est volontairement absente : elle n'apporte rien en recherche et
  * dilue le budget d'exploration. `/inscription` y figure, elle : c'est une page
@@ -25,7 +30,30 @@ import { ARTICLES } from '@/lib/articles'
 
 const BASE = 'https://sikaloc.com'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+/*
+ * Recalculé à chaque demande, jamais figé au build : une annonce suspendue ou
+ * clôturée ne doit pas rester annoncée aux moteurs pendant des heures. Les
+ * robots lisent ce fichier rarement ; une lecture de base par visite est un
+ * coût négligeable.
+ */
+export const dynamic = 'force-dynamic'
+
+/** Les fiches publiées. Une erreur n'empêche pas le reste du plan d'être servi. */
+async function fichesPubliees(): Promise<MetadataRoute.Sitemap> {
+  const { data, error } = await creerClientPublic().rpc('annonces_publiees_sitemap')
+  if (error) {
+    console.error('[sitemap] annonces indisponibles', error.code, error.message)
+    return []
+  }
+  return (data ?? []).map((a) => ({
+    url: `${BASE}/find/${a.reference}`,
+    lastModified: new Date(a.publiee_le),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Date fixe plutôt que `new Date()` : recalculée à chaque build, elle
   // annoncerait à Google une modification quotidienne du contenu légal, ce qui
   // est faux et finit par être ignoré.
@@ -47,6 +75,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${BASE}/pro`,
       lastModified: separationDesEspaces,
       changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      // Sans `lastModified` : le catalogue change à chaque publication. Une
+      // date figée mentirait dès la première annonce ; `new Date()` mentirait
+      // à chaque build. Mieux vaut ne rien affirmer.
+      url: `${BASE}/find`,
+      changeFrequency: 'daily',
       priority: 0.9,
     },
     {
@@ -98,5 +134,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    ...(await fichesPubliees()),
   ]
 }

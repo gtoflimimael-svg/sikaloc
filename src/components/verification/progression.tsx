@@ -23,15 +23,15 @@ import { etapesRestantes, type EtatVerification } from '@/lib/verification/regle
 export function ProgressionVerification({
   etat,
   courante,
-  telephoneConcerne = true,
+  telephoneConcerne = false,
 }: {
   etat: EtatVerification
   courante?: 'email' | 'telephone' | null
-  /** Faux pour un compte locataire : l'étape téléphone n'existe pas pour lui. */
+  /** Vrai uniquement si un transport réellement opérationnel rend cette étape obligatoire. */
   telephoneConcerne?: boolean
 }) {
   const restantes = telephoneConcerne
-    ? etapesRestantes(etat)
+    ? etapesRestantes(etat, { telephoneExigible: true })
     : etat.emailVerifie
       ? 0
       : 1
@@ -91,7 +91,9 @@ export function ProgressionVerification({
 
       <p className="mt-md text-caption text-mute" aria-live="polite">
         {restantes === 0
-          ? 'Votre compte est vérifié.'
+          ? telephoneConcerne
+            ? 'Votre compte est vérifié.'
+            : 'Votre adresse email est confirmée.'
           : `${restantes} étape${restantes > 1 ? 's' : ''} restante${restantes > 1 ? 's' : ''}.`}
       </p>
     </div>

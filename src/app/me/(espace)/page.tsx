@@ -15,7 +15,7 @@ import {
   resteADevoir,
 } from '@/lib/locataire'
 import { ESPACE_ME } from '@/lib/roles'
-import { formaterTelephone } from '@/lib/telephone'
+import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
 import type { BailLocataire, EcheanceLocataire } from '@/lib/types/database'
 
 /*
@@ -57,11 +57,12 @@ export default async function PageAccueilMe() {
 
   return (
     <div className="space-y-xl">
-      <div>
-        <h1 className="text-display-md font-extrabold tracking-tight text-ink">
+      <div className="me-dashboard-hero rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+        <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre espace personnel</p>
+        <h1 className="mt-xs page-title text-on-dark">
           Bonjour {nom.split(' ')[0]}
         </h1>
-        <p className="mt-xs text-body-md text-mute">
+        <p className="mt-xs text-body-md text-on-dark-mute">
           {baux.length > 1
             ? `Vos ${baux.length} locations, et où en sont vos loyers.`
             : 'Votre logement, et où en sont vos loyers.'}
@@ -91,6 +92,12 @@ export default async function PageAccueilMe() {
         </Alerte>
       ) : null}
 
+      <div className="flex flex-wrap gap-sm" aria-label="Accès rapides">
+        <Link href="/me/loyers" className="btn btn-primary">Consulter mes loyers</Link>
+        <Link href="/me/paiements" className="btn btn-secondary">Paiements et documents</Link>
+        <Link href="/me/bail" className="btn btn-tertiary">Mon bail</Link>
+      </div>
+
       {baux.map((bail) => (
         <CarteBail key={bail.bail_id} bail={bail} echeances={echeances} />
       ))}
@@ -104,7 +111,7 @@ export default async function PageAccueilMe() {
         dit noir sur blanc.
       */}
       {indeterminees.length > 0 ? (
-        <section className="rounded-xl border border-hairline bg-canvas p-xl">
+        <section className="card list-card">
           <p className="flex items-start gap-sm text-body-md font-semibold text-ink">
             <CircleHelp size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             {indeterminees.length === 1
@@ -135,6 +142,7 @@ function CarteBail({
   bail: BailLocataire
   echeances: EcheanceLocataire[]
 }) {
+  const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   const prochaine = prochaineEcheance(echeances, bail.bail_id)
   const du = resteADevoir(echeances, bail.bail_id)
   const resilie = bail.statut !== 'Actif'
@@ -145,14 +153,14 @@ function CarteBail({
   ).length
 
   return (
-    <section className="rounded-xl border border-hairline bg-canvas p-xl">
+    <section className="card list-card overflow-hidden border-l-4 border-l-primary shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-lg">
-        <div className="min-w-0">
-          <p className="flex items-center gap-sm text-caption uppercase tracking-wide text-mute">
+        <div className="min-w-0 list-copy">
+          <p className="flex items-center gap-sm text-caption text-mute">
             <House size={15} strokeWidth={2} aria-hidden="true" />
             {bail.logement_type}
           </p>
-          <p className="mt-xs text-display-xs font-semibold text-ink">
+          <p className="mt-xs section-title list-copy">
             {bail.logement_adresse}
           </p>
           <p className="text-body-sm text-mute">
@@ -160,32 +168,28 @@ function CarteBail({
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="text-caption uppercase tracking-wide text-mute">Loyer mensuel</p>
-          <p className="mt-xxs text-display-xs font-extrabold tabular text-ink">
+        <div className="w-full sm:w-auto sm:text-right">
+          <p className="text-caption text-mute">Loyer mensuel</p>
+          <p className="mt-xxs text-title-lg font-semibold money text-ink">
             {formaterFCFA(bail.loyer_mensuel)}
           </p>
         </div>
       </div>
 
       {/* ── Où en est ce bail ────────────────────────────────────────────── */}
-      <div className="mt-xl rounded-lg bg-canvas-soft p-lg">
+      <div className="mt-lg rounded-md bg-canvas-soft p-md">
         {resilie ? (
-          /*
-            `v_echeances` ne calcule que les baux actifs : un bail résilié
-            n'aurait aucune ligne, et une liste vide ressemblerait à une panne.
-            On dit donc pourquoi elle est vide.
-          */
           <p className="text-body-md text-mute">
-            Ce bail est <strong className="text-ink">résilié</strong>. Vos
-            quittances et vos paiements restent consultables, mais aucun loyer
-            n’est plus calculé pour ce logement.
+            Ce bail est <strong className="text-ink">résilié</strong>. Les
+            échéances jusqu’à sa date de fin restent visibles dans « Mes loyers »
+            {du > 0 ? ` et le solde restant est de ${formaterFCFA(du)}.` : '.'}
+            {' '}Aucun mois après la fin du bail n’est calculé.
           </p>
         ) : prochaine ? (
           <>
             <div className="flex flex-wrap items-center justify-between gap-md">
               <div>
-                <p className="text-caption uppercase tracking-wide text-mute">
+                <p className="text-caption text-mute">
                   {prochaine.etat === 'Impayé' ? 'Loyer le plus ancien non réglé' : 'Prochain loyer'}
                 </p>
                 <p className="mt-xxs text-body-lg font-semibold text-ink">
@@ -206,7 +210,7 @@ function CarteBail({
               </div>
               <div className="text-right">
                 <BadgeLoyer etat={prochaine.etat} />
-                <p className="mt-sm text-display-xs font-extrabold tabular text-ink">
+                <p className="mt-sm text-title-lg font-semibold money text-ink">
                   {formaterFCFA(prochaine.montant_du)}
                 </p>
               </div>
@@ -253,13 +257,12 @@ function CarteBail({
           <span className="text-mute">Bailleur : </span>
           <span className="font-semibold text-ink">{bail.bailleur_nom}</span>
         </div>
-        <a
-          href={`tel:${bail.bailleur_telephone}`}
-          className="btn btn-tertiary btn-sm"
-        >
-          <Phone size={15} strokeWidth={2} aria-hidden="true" />
-          {formaterTelephone(bail.bailleur_telephone)}
-        </a>
+        {numeroBailleur ? (
+          <a href={`tel:${numeroBailleur}`} className="btn btn-tertiary btn-sm">
+            <Phone size={15} strokeWidth={2} aria-hidden="true" />
+            {formaterTelephone(numeroBailleur)}
+          </a>
+        ) : <span className="text-body-sm text-mute">Téléphone non renseigné</span>}
       </div>
     </section>
   )

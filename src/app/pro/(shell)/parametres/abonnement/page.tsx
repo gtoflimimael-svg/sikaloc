@@ -6,6 +6,7 @@ import { Alerte, Badge } from '@/components/ui/retours'
 import { formaterDate, formaterDateCourte, formaterFCFA } from '@/lib/format'
 import { abonnementActif, LIMITE_LOGEMENTS_GRATUIT, PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { reconcilierRetourGuichet } from '@/lib/reglement-abonnement'
+import { retourAbonnementConfirme } from '@/lib/retour-abonnement'
 import { bailleurCourant, bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -30,7 +31,7 @@ export default async function PageAbonnement({
   const bailleur = etatRetour === 'credite' ? await bailleurCourant() : bailleurInitial
 
   const supabase = await creerClientServeur()
-  const { data: transactions } = await supabase
+  const { data: transactions, error: erreurTransactions } = await supabase
     .from('abonnements_transactions')
     .select('*')
     .order('created_at', { ascending: false })
@@ -42,7 +43,7 @@ export default async function PageAbonnement({
   // bailleur vient de payer et ne sait pas si son argent est arrivé.
   const messageRetour = !etatRetour
     ? null
-    : etatRetour === 'credite' || (etatRetour === 'deja_regle' && standard)
+    : retourAbonnementConfirme(etatRetour, standard)
       ? {
           ton: 'succes' as const,
           texte:
@@ -55,9 +56,15 @@ export default async function PageAbonnement({
         ? {
             ton: 'attention' as const,
             texte:
-              "Le paiement n'a pas abouti. Aucun montant n'a été prélevé — vous " +
-              'pouvez relancer la souscription ci-dessous.',
+              "L'opérateur indique que cette transaction n'a pas abouti. " +
+              'Vérifiez votre historique Mobile Money avant de réessayer.',
           }
+        : etatRetour === 'inconnu' || etatRetour === 'a_reconcilier'
+          ? {
+              ton: 'attention' as const,
+              texte: 'Nous ne pouvons pas confirmer ce paiement pour le moment. ' +
+                'Vérifiez votre historique de facturation et contactez le support si un débit apparaît sans crédit.',
+            }
         : etatRetour === 'indisponible'
           ? {
               ton: 'info' as const,
@@ -75,7 +82,7 @@ export default async function PageAbonnement({
             }
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="settings-subscription-page max-w-[46rem]">
       <EnteteParametre cle="abonnement" />
 
       <div className="space-y-xl">
@@ -83,7 +90,7 @@ export default async function PageAbonnement({
           <Alerte ton={messageRetour.ton}>{messageRetour.texte}</Alerte>
         ) : null}
 
-        <div className="card card-lg">
+        <div className="subscription-current-card card card-lg">
           <div className="flex flex-wrap items-start justify-between gap-md">
             <div>
               <p className="text-body-sm text-mute">Votre plan actuel</p>
@@ -113,7 +120,7 @@ export default async function PageAbonnement({
           )}
         </div>
 
-        <div className="rounded-xl border-t-2 border-t-primary bg-surface-dark p-2xl text-on-dark">
+        <div className="subscription-offer-card rounded-xl border-t-2 border-t-primary bg-surface-dark p-2xl text-on-dark">
           <p className="text-display-xs font-semibold text-on-dark">Plan Standard</p>
           <p className="mt-sm text-display-md font-extrabold tracking-tight text-on-dark">
             {formaterFCFA(PRIX_STANDARD_FCFA)}
@@ -140,7 +147,11 @@ export default async function PageAbonnement({
           <h2 className="mb-lg text-display-xs font-semibold text-ink">
             Historique de facturation
           </h2>
-          {(transactions ?? []).length === 0 ? (
+          {erreurTransactions ? (
+            <Alerte ton="erreur">
+              L’historique de facturation n’a pas pu être chargé. Actualisez la page pour réessayer.
+            </Alerte>
+          ) : (transactions ?? []).length === 0 ? (
             <p className="rounded-xl bg-canvas-soft p-xl text-body-md text-mute">
               Aucune transaction pour le moment.
             </p>
