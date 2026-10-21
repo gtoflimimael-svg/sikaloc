@@ -8,6 +8,7 @@ import {
   LogOut,
   ScrollText,
   SlidersHorizontal,
+  Send,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -56,6 +57,7 @@ function estActif(href: string, chemin: string): boolean {
 export function EnTeteMe({
   email,
   aussiBailleur,
+  aussiCandidat,
 }: {
   email: string
   /**
@@ -66,6 +68,7 @@ export function EnTeteMe({
    * déconnecter pour changer d'espace.
    */
   aussiBailleur: boolean
+  aussiCandidat: boolean
 }) {
   const chemin = usePathname()
   const navigation = useRef<HTMLElement>(null)
@@ -74,7 +77,7 @@ export function EnTeteMe({
   }, [chemin])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[900px] items-center justify-between gap-xs px-md sm:gap-md sm:px-lg">
         {/*
           Le nom de l'espace est DANS la marque, pas à côté d'elle.
@@ -115,7 +118,7 @@ export function EnTeteMe({
         className="mx-auto max-w-[900px] overflow-x-auto px-md sm:px-lg"
       >
         <ul className="flex min-w-max gap-xs pb-xs">
-          {ONGLETS.map(({ href, libelle, Icone }) => {
+          {[...ONGLETS, ...(aussiCandidat ? [{ href: '/me/candidatures', libelle: 'Candidatures', Icone: Send }] : [])].map(({ href, libelle, Icone }) => {
             const actif = estActif(href, chemin)
             return (
               <li key={href}>

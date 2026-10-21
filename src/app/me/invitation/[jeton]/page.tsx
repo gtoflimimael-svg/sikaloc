@@ -108,7 +108,8 @@ export default async function PageInvitation({
       description={`${bailleur?.nom ?? 'Votre bailleur'} vous invite à suivre votre logement sur Sikaloc_Me.`}
     >
       <div className="space-y-xl">
-        <div className="rounded-md border border-hairline bg-canvas-soft p-lg">
+        <div className="rounded-lg border border-hairline bg-canvas-sage p-lg">
+          <p className="mb-md text-body-sm font-semibold text-ink">Vérifiez que cette invitation vous concerne avant de continuer.</p>
           <dl className="space-y-sm text-body-sm">
             <Ligne terme="Invitation de" definition={bailleur?.nom ?? '—'} />
             <Ligne terme="Pour" definition={locataire?.nom ?? '—'} />
@@ -125,7 +126,7 @@ export default async function PageInvitation({
           emailConnecte={user?.email ?? null}
         />
 
-        <p className="text-caption text-mute">
+        <p className="rounded-lg border border-hairline bg-canvas p-md text-caption text-mute">
           Vous ne connaissez pas {bailleur?.nom ?? 'cette personne'} ? N’acceptez
           pas cette invitation, et ignorez le message qui vous l’a transmise.
         </p>

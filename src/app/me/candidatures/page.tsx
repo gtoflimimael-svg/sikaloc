@@ -52,14 +52,15 @@ export default async function PageMesCandidatures() {
 
       <main id="contenu" className="app-main flex-1">
         <div className="mx-auto max-w-[900px] space-y-2xl">
-          <div>
-            <h1 className="page-title">
+          <header className="rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+            <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Suivi personnel</p>
+            <h1 className="mt-xs page-title text-on-dark">
               Mes candidatures
             </h1>
-            <p className="mt-sm text-body-md text-body">
+            <p className="mt-sm text-body-md text-on-dark-mute">
               Le bailleur voit votre nom et votre message. Ni votre téléphone, ni votre email.
             </p>
-          </div>
+          </header>
 
           {erreurCandidatures ? <Alerte ton="erreur">Vos candidatures n’ont pas pu être chargées. Réessayez dans un instant.</Alerte> : candidatures.length === 0 ? (
             <EtatVide
@@ -74,7 +75,7 @@ export default async function PageMesCandidatures() {
           ) : (
             <ul className="space-y-md">
               {candidatures.map((c) => (
-                <li key={c.candidature_id} className="card list-card list-row">
+                <li key={c.candidature_id} className="card list-card list-row shadow-sm">
                   <div className="list-copy min-w-0">
                     <p className="text-body-md font-semibold text-ink">
                       {c.annonce_type}
@@ -88,6 +89,11 @@ export default async function PageMesCandidatures() {
                       Envoyée le {formaterDate(c.deposee_le)}
                       {c.repondue_le ? ` · réponse le ${formaterDate(c.repondue_le)}` : ''}
                     </p>
+                    {c.statut === 'acceptee' ? (
+                      <p className="mt-sm text-body-sm text-body">Candidature acceptée par le bailleur. Cela ne crée pas automatiquement un bail : contactez-le pour connaître la suite.</p>
+                    ) : c.statut === 'en_etude' ? (
+                      <p className="mt-sm text-body-sm text-body">Le bailleur examine votre candidature. Vous retrouverez sa décision ici lorsqu’elle sera enregistrée.</p>
+                    ) : null}
                   </div>
                   <div className="list-actions">
                     <Badge ton={TON_STATUT_CANDIDATURE[c.statut]}>

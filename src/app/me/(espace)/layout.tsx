@@ -44,7 +44,7 @@ export default async function LayoutMe({ children }: { children: React.ReactNode
   return (
     <div className="flex min-h-screen flex-col bg-canvas-soft">
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
-      <EnTeteMe email={compte.email} aussiBailleur={roles.estBailleur} />
+      <EnTeteMe email={compte.email} aussiBailleur={roles.estBailleur} aussiCandidat={roles.estCandidat} />
 
       <main id="contenu-principal" tabIndex={-1} className="app-main flex-1">
         <div className="mx-auto max-w-[900px]">

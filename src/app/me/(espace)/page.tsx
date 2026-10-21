@@ -57,11 +57,12 @@ export default async function PageAccueilMe() {
 
   return (
     <div className="space-y-xl">
-      <div>
-        <h1 className="page-title">
+      <div className="rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+        <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre espace personnel</p>
+        <h1 className="mt-xs page-title text-on-dark">
           Bonjour {nom.split(' ')[0]}
         </h1>
-        <p className="mt-xs text-body-md text-mute">
+        <p className="mt-xs text-body-md text-on-dark-mute">
           {baux.length > 1
             ? `Vos ${baux.length} locations, et où en sont vos loyers.`
             : 'Votre logement, et où en sont vos loyers.'}
@@ -94,6 +95,7 @@ export default async function PageAccueilMe() {
       <div className="flex flex-wrap gap-sm" aria-label="Accès rapides">
         <Link href="/me/loyers" className="btn btn-primary">Consulter mes loyers</Link>
         <Link href="/me/paiements" className="btn btn-secondary">Paiements et documents</Link>
+        <Link href="/me/bail" className="btn btn-tertiary">Mon bail</Link>
       </div>
 
       {baux.map((bail) => (
@@ -151,7 +153,7 @@ function CarteBail({
   ).length
 
   return (
-    <section className="card list-card">
+    <section className="card list-card overflow-hidden border-l-4 border-l-primary shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-lg">
         <div className="min-w-0 list-copy">
           <p className="flex items-center gap-sm text-caption text-mute">

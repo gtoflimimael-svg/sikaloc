@@ -41,7 +41,10 @@ export default function PageRejoindre() {
       }
     >
       <div className="space-y-xl">
-        <ol className="space-y-lg">
+        <p className="rounded-lg border border-hairline bg-canvas-sage p-md text-body-sm text-body">
+          Vous êtes locataire ? Demandez à votre bailleur son invitation personnelle. Elle seule relie votre compte au bon logement.
+        </p>
+        <ol className="space-y-lg" aria-label="Étapes pour rejoindre votre logement">
           <Etape
             numero={1}
             icone={<MessageCircle size={18} strokeWidth={2} aria-hidden="true" />}
@@ -62,7 +65,7 @@ export default function PageRejoindre() {
           />
         </ol>
 
-        <div className="rounded-md border border-hairline bg-canvas-soft p-lg">
+        <div className="rounded-lg border border-hairline bg-canvas p-lg">
           <p className="text-body-sm text-body">
             <strong className="text-ink">Vous avez déjà reçu une invitation ?</strong>{' '}
             Ouvrez le lien qu’elle contient : c’est lui qui vous rattache à votre

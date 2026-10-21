@@ -1,7 +1,8 @@
 import { Banknote, Download } from 'lucide-react'
 import type { Metadata } from 'next'
 
-import { EnTetePage, EtatVide } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import { EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { mesBaux, mesPaiements } from '@/lib/locataire'
 import type { BailLocataire, PaiementLocataire } from '@/lib/types/database'
@@ -30,9 +31,10 @@ export default async function PagePaiements() {
 
   return (
     <div className="space-y-xl">
-      <EnTetePage
+      <IntroPageMe
         titre="Mes paiements"
         description="Tout ce que votre bailleur a enregistré, et les quittances émises."
+        icone={<Banknote size={24} />}
       />
 
       {paiements.length === 0 ? (
@@ -73,7 +75,7 @@ function LignePaiement({
   montrerAdresse: boolean
 }) {
   return (
-    <li className="card list-card">
+    <li className="card list-card shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-md">
         <div className="min-w-0 list-copy">
           <p className="text-body-md font-semibold text-ink">

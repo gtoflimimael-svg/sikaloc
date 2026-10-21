@@ -1,7 +1,8 @@
-import { Phone } from 'lucide-react'
+import { FileText, Phone } from 'lucide-react'
 import type { Metadata } from 'next'
 
-import { Badge, EnTetePage } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import { Badge } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { mesBaux } from '@/lib/locataire'
 import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
@@ -30,9 +31,10 @@ export default async function PageBail() {
 
   return (
     <div className="space-y-xl">
-      <EnTetePage
+      <IntroPageMe
         titre={baux.length > 1 ? 'Mes baux' : 'Mon bail'}
         description="Les termes enregistrés par votre bailleur."
+        icone={<FileText size={24} />}
       />
 
       {baux.map((bail) => (
@@ -51,8 +53,8 @@ export default async function PageBail() {
 function CarteDetail({ bail }: { bail: BailLocataire }) {
   const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   return (
-    <section className="overflow-hidden rounded-xl border border-hairline bg-canvas">
-      <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline p-lg">
+    <section className="overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
+      <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline bg-canvas-sage p-lg">
         <div className="min-w-0">
           <p className="section-title list-copy">{bail.logement_adresse}</p>
           <p className="text-body-sm text-mute">

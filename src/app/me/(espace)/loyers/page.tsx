@@ -2,7 +2,8 @@ import { CalendarDays } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import { BadgeLoyer } from '@/components/me/etat-loyer'
-import { EnTetePage, EtatVide } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import { EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import {
   EXPLICATION_ETAT,
@@ -39,13 +40,14 @@ export default async function PageLoyers() {
 
   return (
     <div className="space-y-2xl">
-      <EnTetePage
+      <IntroPageMe
         titre="Mes loyers"
         description="Chaque mois de votre bail, et ce que Sikaloc en sait."
+        icone={<CalendarDays size={24} />}
       />
 
       {excedentTotal > 0 ? (
-        <p className="rounded-md border border-hairline bg-canvas-soft p-md text-body-sm text-mute">
+        <p className="rounded-lg border border-hairline bg-canvas-sage p-md text-body-sm text-body">
           Les versements supérieurs au loyer de leur mois restent affichés comme
           excédents non reportés. Ils ne sont pas automatiquement imputés au mois suivant.
         </p>
@@ -118,7 +120,7 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
             {annee}
           </h3>
 
-          <ul className="overflow-hidden rounded-xl border border-hairline bg-canvas">
+          <ul className="overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
             {mois.map((echeance) => (
               <li
                 key={echeance.periode_debut}
