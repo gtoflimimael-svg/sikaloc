@@ -1,9 +1,6 @@
 import {
   ArrowRight,
   Building2,
-  FileCheck,
-  Lock,
-  Search,
   ScrollText,
 } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -11,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-public'
+import { ApercuQuittanceDemonstration } from '@/components/marketing/apercu-quittance-demonstration'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
@@ -88,31 +86,6 @@ const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
   { href: '/find', libelle: 'Trouver un logement' },
   { href: '/pro', libelle: 'Bailleurs' },
   { href: '/me/rejoindre', libelle: 'Je suis locataire' },
-]
-
-/**
- * Ce que la page peut affirmer à partir des parcours réellement implémentés :
- * les annonces publiées, le traitement des candidatures et l'accès de Me.
- */
-const VERIFIABLE = [
-  {
-    Icone: FileCheck,
-    titre: 'Find montre les annonces publiées',
-    texte:
-      'Le catalogue présente les logements que leurs bailleurs ont choisi de publier, pas des annonces de démonstration.',
-  },
-  {
-    Icone: Search,
-    titre: 'Une candidature reste une demande',
-    texte:
-      'Le bailleur l’examine et décide de la suite. Elle ne crée pas automatiquement un bail.',
-  },
-  {
-    Icone: Lock,
-    titre: 'Me s’ouvre sur invitation',
-    texte:
-      'Le locataire rejoint l’espace que son bailleur lui ouvre et y retrouve les informations qui lui sont destinées.',
-  },
 ]
 
 export default async function PageAccueil() {
@@ -349,42 +322,30 @@ export default async function PageAccueil() {
           </div>
         </section>
 
-        {/* ── Ce qui se vérifie ────────────────────────────────────────── */}
-        <section className="home-trust-section">
-          <div className="mx-auto max-w-[1200px]">
-            <div className="home-trust-heading">
-              <p className="home-section-label">Une promesse mesurée</p>
-              <h2 className="home-section-title">Des repères concrets, à chaque étape.</h2>
-              <p className="home-section-intro">
-                Découvrez ce que chaque espace permet de faire et comment les
-                informations sont mises à disposition.
+        {/* ── Suivi locatif et documents ───────────────────────────────── */}
+        <section className="home-document-section" aria-labelledby="home-document-title">
+          <div className="home-document-layout mx-auto max-w-[1200px]">
+            <div className="home-document-copy">
+              <p className="home-section-label">Suivi locatif &amp; documents</p>
+              <h2 id="home-document-title" className="home-document-title">
+                <span>Des loyers suivis.</span>
+                <span>Des documents à retrouver.</span>
+              </h2>
+              <p className="home-document-description">
+                Retrouvez les paiements enregistrés, les périodes de location et
+                les documents mis à disposition, selon votre rôle et vos accès.
               </p>
+              <div className="home-document-actions">
+                <Link href="/exemple-quittance" className="home-product-link">
+                  Voir un exemple de quittance <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+                <Link href="/legal/confidentialite" className="home-document-privacy lien-anime">
+                  Lire la politique de confidentialité
+                </Link>
+              </div>
             </div>
 
-            <div className="home-trust-grid">
-              {VERIFIABLE.map(({ Icone, titre, texte }) => (
-                <article className="home-trust-item" key={titre}>
-                  <span className="home-trust-icon"><Icone size={21} strokeWidth={1.8} aria-hidden="true" /></span>
-                  <h3>{titre}</h3>
-                  <p>{texte}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="home-trust-links">
-              <Link
-                href="/exemple-quittance"
-                className="lien-anime text-body-sm font-medium text-ink"
-              >
-                Voir un exemple de quittance
-              </Link>
-              <Link
-                href="/legal/confidentialite"
-                className="lien-anime text-body-sm font-medium text-ink"
-              >
-                Lire la politique de confidentialité
-              </Link>
-            </div>
+            <ApercuQuittanceDemonstration />
           </div>
         </section>
 
