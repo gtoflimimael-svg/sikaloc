@@ -279,40 +279,43 @@ export default async function PageAccueil() {
           <div className="home-problem-layout mx-auto max-w-[1200px]">
             <div className="home-problem-heading">
               <p className="home-section-label">Une location, deux points de vue</p>
-              <h2 className="home-section-title">
+              <h2 className="home-section-title home-problem-title">
                 Quand les informations se dispersent, le suivi se complique.
               </h2>
             </div>
 
             <div className="home-problem-scene">
-              <p className="home-problem-scene-caption">Quand les repères restent séparés</p>
-              <div className="home-problem-fragments" aria-hidden="true">
-                <div className="home-problem-fragment"><strong>Bail</strong><span>Conditions et période</span></div>
-                <div className="home-problem-fragment"><strong>Versement</strong><span>Suivi du règlement</span></div>
-                <div className="home-problem-fragment"><strong>Justificatif</strong><span>Document à retrouver</span></div>
+              <div className="home-problem-fragments">
+                <div className="home-problem-fragment home-problem-fragment--lease">
+                  <strong>Bail</strong>
+                  <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+                <div className="home-problem-fragment home-problem-fragment--payments">
+                  <strong>Versements</strong>
+                  <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+                <div className="home-problem-fragment home-problem-fragment--documents">
+                  <strong>Documents</strong>
+                  <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /></span>
+                </div>
               </div>
-              <div className="home-perspectives">
-                <article className="home-perspective home-perspective--owner">
-                  <span className="home-perspective-role">
-                    <Building2 size={17} aria-hidden="true" /> Côté bailleur
-                  </span>
-                  <p className="home-perspective-question">« Quelle période reste à régler ? »</p>
-                  <p className="home-perspective-copy">
-                    Contrat, versements et justificatifs sont plus simples à suivre
-                    lorsqu’ils sont réunis au même endroit.
-                  </p>
-                </article>
-                <article className="home-perspective home-perspective--tenant">
-                  <span className="home-perspective-role">
-                    <ScrollText size={17} aria-hidden="true" /> Côté locataire
-                  </span>
-                  <p className="home-perspective-question">« Où retrouver mon bail et mes reçus ? »</p>
-                  <p className="home-perspective-copy">
-                    Un espace dédié permet de consulter les informations et les
-                    documents que le bailleur a rendus disponibles.
-                  </p>
-                </article>
-              </div>
+            </div>
+
+            <div className="home-perspectives">
+              <article className="home-perspective home-perspective--owner">
+                <span className="home-perspective-role">
+                  <Building2 size={17} aria-hidden="true" /> Côté bailleur
+                </span>
+                <p className="home-perspective-question">« Quelle période reste à régler ? »</p>
+                <p className="home-perspective-copy">Bail, périodes et règlements à rapprocher.</p>
+              </article>
+              <article className="home-perspective home-perspective--tenant">
+                <span className="home-perspective-role">
+                  <ScrollText size={17} aria-hidden="true" /> Côté locataire
+                </span>
+                <p className="home-perspective-question">« Où retrouver mon bail et mes reçus ? »</p>
+                <p className="home-perspective-copy">Les documents que le bailleur rend disponibles dans Me.</p>
+              </article>
             </div>
           </div>
           <div aria-hidden="true" className="home-problem-bridge">
