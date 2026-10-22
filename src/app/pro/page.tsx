@@ -1,16 +1,8 @@
 import {
-  BellRing,
   ChartColumn,
   Check,
   Database,
   FileCheck,
-  Lock,
-  MessageCircle,
-  Scale,
-  Send,
-  ShieldCheck,
-  Smartphone,
-  TriangleAlert,
   X,
 } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -72,305 +64,119 @@ const apercus = [
   },
 ]
 
-/**
- * Trois étapes, à l'impératif, chacune close par un bénéfice de sécurité.
- *
- * Chaque promesse est adossée à un mécanisme réel du produit — la fenêtre de
- * correction de 5 minutes (`src/lib/paiement-utils.ts`) et l'empreinte SHA-256
- * enregistrée à l'émission (`src/lib/quittance.ts`). C'est ce qui permet de
- * tenir un registre « protection » sans écrire une seule promesse invérifiable.
- */
+/** Étapes réellement suivies dans le parcours de gestion des paiements. */
 const etapes = [
   {
-    numero: '1',
-    titre: 'Sécurisez votre bail',
+    numero: '01',
+    titre: 'Reliez le logement au bail',
     texte:
-      'Logement, locataire, loyer, jour d’échéance. Trois minutes pour tout mettre à plat, une fois pour toutes.',
+      'Enregistrez le logement, le locataire et les conditions du bail pour retrouver le contexte de chaque location.',
   },
   {
-    numero: '2',
-    titre: 'Tracez chaque paiement',
+    numero: '02',
+    titre: 'Enregistrez le versement',
     texte:
-      'Montant, période, mode de règlement. Sikaloc calcule et vous montre le récapitulatif avant validation. Cinq minutes pour corriger, puis le paiement est figé — c’est ce qui rend la quittance opposable.',
+      'Choisissez le bail, la période, le montant et le mode de règlement. Vérifiez le récapitulatif avant de confirmer.',
   },
   {
-    numero: '3',
-    titre: 'Gardez la preuve',
+    numero: '03',
+    titre: 'Retrouvez l’état et le document',
     texte:
-      'Le PDF est généré, numéroté et horodaté, avec son empreinte d’intégrité : si le document reçu est contesté, la moindre modification se voit. Un bouton l’envoie au locataire, par email ou depuis votre WhatsApp.',
+      'Après confirmation, consultez l’état de la période. Le document associé distingue un versement partiel d’un loyer entièrement réglé.',
   },
 ]
 
-/**
- * Fonctionnalités, ordonnées selon la pyramide du positionnement : la preuve
- * d'abord (le levier dominant), puis le contrôle, puis l'efficacité.
- *
- * Règle tenue ici : on décrit ce que le document EST, jamais ce qu'un tribunal
- * en fera. « Fait preuve du paiement » est vérifiable — c'est une décharge
- * signée des deux parties ; « vous protège en justice » ne l'est pas, et
- * contredirait les CGU, qui excluent tout conseil juridique.
- *
- * La seule capacité encore réservée au plan Standard — les relances WhatsApp —
- * le dit dans son propre texte : la landing ne peut pas promettre au visiteur
- * ce que `capacites()` refusera au compte gratuit qu'il vient de créer.
- */
-const fonctionnalites = [
+const repères = [
   {
-    Icone: FileCheck,
-    titre: 'Des quittances qui font preuve',
-    texte:
-      'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et votre signature. Chaque document reçoit un numéro continu, une empreinte d’intégrité et la mention du droit de timbre.',
+    titre: `Jusqu’à ${LIMITE_LOGEMENTS_GRATUIT} logements`,
+    detail: 'sans frais pour commencer',
   },
   {
-    Icone: BellRing,
-    titre: 'Aucun loyer ne s’échappe',
-    texte:
-      'Chaque bail a son jour d’échéance et sa tolérance. Passé le délai, le loyer bascule en impayé et remonte en haut de votre tableau de bord. Vous agissez avant que le retard ne s’enlise.',
+    titre: `${formaterFCFA(PRIX_STANDARD_FCFA)} / mois`,
+    detail: 'plan Standard, par Mobile Money',
   },
   {
-    Icone: MessageCircle,
-    titre: 'Relancez sans confrontation',
-    texte:
-      'Le message est pré-rédigé avec le nom, la période, le montant et l’échéance. Vous relisez, vous envoyez depuis votre propre WhatsApp — Sikaloc n’écrit jamais à votre place. Les relances se débloquent avec le plan Standard.',
+    titre: 'Accès Me sur invitation',
+    detail: 'le bailleur ouvre l’accès au locataire',
+  },
+]
+
+const difficultes = [
+  {
+    repere: 'Logements et baux',
+    situation: 'À quelle location cette information se rapporte-t-elle ?',
+    consequence:
+      'Adresse, locataire, loyer et conditions du bail sont plus simples à retrouver lorsqu’ils restent liés.',
   },
   {
-    Icone: ChartColumn,
-    titre: 'Votre parc, chiffres à l’appui',
-    texte:
-      'Taux d’occupation, taux de recouvrement, impayés, chiffre d’affaires du mois. Mis à jour à chaque paiement. Vous savez où vous en êtes, sans surprise.',
+    repere: 'Loyers et périodes',
+    situation: 'Quel versement couvre quelle période ?',
+    consequence:
+      'Un historique de paiements aide à distinguer ce qui a été enregistré de ce qui reste à vérifier.',
   },
-  /*
-   * Ce bloc affirmait « Pas de compte, pas de mot de passe ». C'était vrai
-   * jusqu'à l'ouverture de Sikaloc_Me : la page niait un espace que le produit
-   * offre désormais, et un locataire qui venait de recevoir une invitation y
-   * lisait le contraire de ce qu'il avait sous les yeux.
-   *
-   * La promesse utile n'était pas « pas de compte », c'était « rien à
-   * installer, rien à payer ». Celle-là tient toujours, et elle tient mieux.
-   */
   {
-    Icone: Send,
-    titre: 'Votre locataire n’a rien à installer',
-    texte:
-      'Il reçoit sa quittance par un lien de téléchargement sécurisé — aucune application, aucun frais. S’il le souhaite, vous lui ouvrez un accès à Sikaloc_Me, où il retrouve ses loyers et ses quittances. C’est vous qui invitez.',
+    repere: 'Reçus et quittances',
+    situation: 'Où retrouver le document déjà remis ?',
+    consequence:
+      'Un accès organisé évite de rechercher la pièce dans plusieurs conversations ou dossiers.',
   },
+]
+
+const universPro = [
   {
     Icone: Database,
-    titre: 'Vos données, cloisonnées',
+    numero: '01',
+    titre: 'Organisez vos biens',
     texte:
-      'Chaque bailleur ne voit que ses propres données, isolées au niveau de la base. Hébergement en Europe, échanges chiffrés.',
-  },
-]
-
-/**
- * Ligne de preuves du hero — trois faits vrais pour LES DEUX plans.
- *
- * La mention du droit de timbre y figure depuis qu'elle n'est plus réservée au
- * plan payant : le visiteur qui clique sur un CTA gratuit obtiendra bien le
- * document décrit ici.
- */
-const preuves = [
-  'Mentions attendues au Bénin, droit de timbre compris',
-  'Numérotation continue et horodatage',
-  // « Envoi sur WhatsApp » disait un canal, pas une capacité — et Sikaloc
-  // n'achemine pas sur WhatsApp : il pré-remplit un message que le bailleur
-  // envoie lui-même. La preuve porte désormais sur ce qui est vrai des deux
-  // côtés du lien : le locataire reçoit, quel que soit le chemin.
-  'Remise au locataire, par email ou par WhatsApp',
-]
-
-/**
- * Barre de confiance — trois raisons de rester, à la place d'une preuve
- * sociale que Sikaloc n'a pas encore.
- *
- * Les trois affirmations sont vérifiables, ce qui n'était pas le cas de celles
- * du rapport. La sous-ligne du premier badge portait jusqu'ici la réserve
- * « au plan Standard » : elle n'a plus lieu d'être, la mention du droit de
- * timbre figurant désormais sur toute quittance, quel que soit le plan.
- *
- * « Développé au Bénin » a été écarté : rien dans le dépôt ne permet de
- * l'établir, et une barre de confiance ne peut pas s'ouvrir sur une
- * affirmation invérifiable. Le Mobile Money et WhatsApp disent la même chose
- * — c'est un produit local — et se prouvent en ouvrant l'application.
- */
-const confiance = [
-  {
-    Icone: ShieldCheck,
-    titre: 'Calibré pour le droit béninois',
-    detail: 'Mention du droit de timbre incluse',
-  },
-  {
-    Icone: Lock,
-    titre: 'Données sécurisées',
-    detail: 'Hébergement en Europe, chiffré',
-  },
-  {
-    Icone: Smartphone,
-    titre: 'Mobile Money et WhatsApp',
-    detail: 'Sans carte bancaire ni installation',
-  },
-]
-
-/**
- * Section douleur — nommer la situation, jamais reprocher la pratique.
- *
- * Les quatre situations du rapport ont été refondues sur deux points.
- *
- * D'abord un retournement : sa première situation affirmait qu'une quittance
- * sans mention du droit de timbre « peut être rejetée » — c'était alors le
- * document que produisait le plan Gratuit, et la page aurait disqualifié sa
- * propre offre d'entrée. La douleur est ramenée à ce qui est vrai dans tous
- * les cas : l'absence de trace.
- *
- * Ensuite le registre : « Vous perdez des heures », « Vous hésitez à relancer »
- * reprochent au bailleur sa façon de faire. Le rapport pose pourtant lui-même
- * la règle (§5.1) : « on n'agite pas la douleur pour faire du chantage ». Les
- * situations décrivent donc ce qui arrive, pas ce qu'il aurait fallu faire.
- *
- * Aucune ne conclut sur le sort d'un procès : « impossible de prouver devant
- * un juge » est un pronostic juridique, que les CGU excluent.
- */
-const douleurs = [
-  {
-    situation: 'Votre locataire affirme avoir payé le mois dernier.',
-    consequence:
-      'Sans écrit daté et numéroté, la discussion devient parole contre parole.',
-  },
-  {
-    situation: 'Vous ne savez plus avec certitude qui a réglé quel mois.',
-    consequence: 'Le retard se découvre tard, quand il s’est déjà accumulé.',
-  },
-  {
-    situation: 'La relance attend le bon moment, et le bon moment ne vient pas.',
-    consequence: 'Plus le silence dure, plus la conversation devient difficile.',
-  },
-  {
-    situation: 'Chaque quittance est réécrite à la main, une par une.',
-    consequence: 'Une mention oubliée, et le document perd de sa valeur.',
-  },
-]
-
-/**
- * Preuve de sérieux — ce qui remplace les témoignages tant qu'il n'y a pas
- * d'utilisateurs à citer.
- *
- * Deux blocs seulement, et non les trois du rapport : le troisième demandait
- * une photo du fondateur et une citation signée de son nom, que le rapport
- * lui-même laisse « à fournir par le fondateur ». Inventer une phrase et la
- * signer du nom de quelqu'un serait un faux ; le bloc attend donc son texte.
- *
- * Le bloc juridique ne reprend pas « une preuve datée irréfutable » (§9.3) :
- * le PDF imprime lui-même que sa signature est simple et non qualifiée. Il
- * décrit ce que le document contient et ce qui le rend vérifiable — l'empreinte
- * SHA-256 — puis renvoie à l'exemple réel, qui vaut mieux que l'adjectif.
- */
-const preuvesSerieux = [
-  {
-    Icone: Scale,
-    titre: 'Une quittance que l’on peut vérifier',
-    points: [
-      'Identité des parties, adresse, période, montant en lettres et en chiffres, décharge, horodatage et signature.',
-      'Un numéro continu et une empreinte SHA-256 par document : toute modification du fichier devient détectable.',
-      'La mention du droit de timbre figure sur toute quittance, quel que soit votre plan.',
-    ],
-    lien: { href: '/exemple-quittance', libelle: 'Voir un exemple de quittance' },
-  },
-  {
-    Icone: Lock,
-    titre: 'Vos données restent cloisonnées',
-    points: [
-      'Chaque bailleur ne voit que ses propres données, isolées au niveau de la base.',
-      'Hébergement en Europe (Francfort), échanges chiffrés en HTTPS.',
-      'Vos données ne sont ni vendues, ni louées, ni utilisées à des fins publicitaires.',
-      'Les quittances vivent dans un stockage privé, partagées par liens signés à durée limitée.',
-    ],
-    lien: { href: '/legal/confidentialite', libelle: 'Lire la politique de confidentialité' },
-  },
-]
-
-/**
- * Ce que l'espace locataire donne, en trois points.
- *
- * Aucun n'est un argument de vente : le locataire n'achète rien. Ce sont trois
- * réponses à « qu'est-ce que ça change pour moi ? », et chacune décrit un
- * mécanisme réel.
- *
- * Le troisième est le moins spectaculaire et le plus important. « À
- * déterminer » est l'état qui empêche Sikaloc de réclamer un loyer dont il ne
- * sait rien — c'est la seule chose de cette page qui protège le locataire
- * contre le produit lui-même, et elle mérite d'être dite en face.
- */
-const avantagesLocataire = [
-  {
-    Icone: FileCheck,
-    titre: 'Vos quittances, quand vous en avez besoin',
-    texte:
-      'Téléchargeables à tout moment, avec leur numéro et leur empreinte. Celle de l’an dernier est encore là le jour où on vous la demande.',
+      'Gardez logements, locataires et baux dans un même espace de gestion, avec les informations rattachées à chaque location.',
+    points: ['Logements et locataires', 'Baux et conditions', 'Informations de location'],
   },
   {
     Icone: ChartColumn,
-    titre: 'Vos loyers, mois par mois',
+    numero: '02',
+    titre: 'Suivez vos locations',
     texte:
-      'Réglé, à venir, en retard : le même calcul que celui de votre bailleur, au même instant. Pas une copie qu’il faudrait synchroniser.',
+      'Consultez les échéances définies dans les baux, les paiements enregistrés et les retards confirmés.',
+    points: ['Loyers attendus', 'Paiements par période', 'Impayés déterminés'],
   },
   {
-    Icone: Scale,
-    titre: 'Rien ne vous est réclamé à tort',
+    Icone: FileCheck,
+    numero: '03',
+    titre: 'Retrouvez vos documents',
     texte:
-      'Les mois qui précèdent l’arrivée de votre bailleur sur Sikaloc s’affichent « à déterminer », jamais « impayé ». Sikaloc n’en sait rien, et ne le prétend pas.',
+      'Les reçus et quittances disponibles restent rattachés à leur paiement et à la période concernée.',
+    points: ['Reçu pour un versement partiel', 'Quittance pour une période soldée', 'Exemple consultable en ligne'],
   },
 ]
 
 const questions = [
   {
-    q: 'Mes quittances sont-elles valables au Bénin ?',
-    r: 'Le modèle reprend les mentions attendues : identité des parties, adresse du logement, période, montant en lettres et en chiffres, décharge, mention du droit de timbre à la charge du locataire, horodatage et signature du bailleur. Sikaloc ne fournit pas de conseil juridique : faites valider le modèle par votre conseil avant un usage contentieux.',
+    q: 'Quelle différence entre un reçu et une quittance ?',
+    r: 'Le reçu correspond à un versement qui ne solde pas encore la période. La quittance correspond au loyer entièrement réglé pour la période indiquée. Le document dépend donc du paiement et du solde de la période.',
   },
   {
-    /*
-     * Répondait « Non » tout court. C'était exact avant Sikaloc_Me, et faux
-     * depuis : un locataire invité, arrivé ici pour comprendre ce qu'il venait
-     * de recevoir, lisait que son compte n'existait pas.
-     *
-     * La réponse garde le « non » — il reste vrai, et c'est ce qui rassure un
-     * bailleur qui ne veut rien imposer — puis dit la suite.
-     */
     q: 'Le locataire doit-il créer un compte ?',
-    r: 'Non, jamais. Il reçoit sa quittance par un lien de téléchargement sécurisé, sans rien installer. Mais vous pouvez lui ouvrir un accès à Sikaloc_Me s’il le souhaite : il y retrouve son bail, ses loyers et toutes ses quittances. C’est gratuit pour lui, et c’est vous qui l’invitez — il ne peut pas s’inscrire de lui-même.',
+    r: 'Pour accéder à Sikaloc Me, le bailleur lui envoie une invitation liée à sa location. L’espace donne accès aux informations et documents prévus pour ce compte.',
   },
   {
-    q: 'J’ai reçu une invitation Sikaloc de mon propriétaire. C’est quoi ?',
-    r: 'C’est l’accès à votre espace locataire. Vous y consultez votre bail, vos loyers mois par mois et vos quittances, à télécharger quand vous en avez besoin. Ce sont les mêmes documents que votre bailleur, pas des copies. Vous ne payez rien, et vous pouvez couper les emails à tout moment.',
+    q: 'Que puis-je suivre dans Sikaloc Pro ?',
+    r: 'Les logements, les locataires, les baux, les paiements enregistrés, les échéances et les documents disponibles. Les informations dépendent des éléments saisis et des périodes suivies dans le compte.',
   },
   {
-    q: 'Je suis locataire, puis-je m’inscrire seul ?',
-    r: 'Non, et c’est délibéré : c’est l’invitation qui relie votre compte à votre bail. Sans elle, Sikaloc devrait deviner de quel logement il s’agit — avec le risque de vous donner accès aux quittances de quelqu’un d’autre. Demandez l’invitation à votre bailleur ; elle part depuis votre fiche, en un clic.',
+    q: 'Comment corriger une erreur de paiement ?',
+    r: 'Après validation, une correction est possible pendant cinq minutes. Passé ce délai, le paiement est figé ; vérifiez le récapitulatif avant de confirmer.',
   },
   {
-    /*
-     * La réponse du rapport annonçait « quittances PDF standards » et
-     * « export historique ». La première formule entre en collision avec le nom
-     * du plan payant ; la seconde vend une fonctionnalité absente du code. La
-     * réponse ci-dessous ne cite que les trois différences que `capacites()`
-     * applique réellement.
-     */
     q: 'Quelle est la différence entre le plan Gratuit et le plan Standard ?',
-    r: `Deux choses, et rien d’autre. Le plan Gratuit s’arrête à ${LIMITE_LOGEMENTS_GRATUIT} logements, et les relances WhatsApp n’y sont pas disponibles. Tout le reste est identique — y compris les quittances elles-mêmes : mêmes mentions, même numérotation, même horodatage, même mention du droit de timbre.`,
+    r: `Le plan Gratuit est limité à ${LIMITE_LOGEMENTS_GRATUIT} logements et n’inclut pas les relances WhatsApp. Les autres fonctions et les documents de quittance sont identiques sur les deux plans.`,
   },
   {
-    q: 'Comment je paie mon abonnement ?',
-    r: `Par Mobile Money, ${formaterFCFA(PRIX_STANDARD_FCFA)} par mois, sans engagement. Le plan Gratuit reste disponible jusqu’à ${LIMITE_LOGEMENTS_GRATUIT} logements.`,
+    q: 'Comment payer l’abonnement Standard ?',
+    r: `Le plan Standard coûte ${formaterFCFA(PRIX_STANDARD_FCFA)} par mois et se règle par Mobile Money, sans engagement. Le plan Gratuit reste disponible jusqu’à ${LIMITE_LOGEMENTS_GRATUIT} logements.`,
   },
   {
-    q: 'Et si je me trompe en saisissant un paiement ?',
-    r: 'Vous avez 5 minutes après validation pour corriger. Passé ce délai, le paiement est figé — c’est ce qui rend la quittance opposable.',
-  },
-  {
-    // Prolonge la première question au lieu de la contredire : elle renvoie au
-    // conseil du bailleur, cette réponse ne peut donc pas promettre qu'il n'a
-    // « plus à vérifier lui-même », comme le proposait le rapport d'origine.
-    q: 'Pourquoi Sikaloc insiste-t-il autant sur les quittances ?',
-    r: 'Parce qu’une quittance mal rédigée se retourne contre le bailleur. Sikaloc pose les mentions attendues à chaque paiement, sans que vous ayez à les ressaisir, quel que soit votre plan. Cela ne remplace pas l’avis de votre conseil, mais vous n’avez plus à reconstituer une preuve après coup.',
+    q: 'La quittance garantit-elle un résultat juridique ?',
+    r: 'Non. Sikaloc produit un document avec les informations prévues par le modèle, mais ne donne pas de conseil juridique et ne peut garantir l’issue d’un litige. Pour un usage juridique, demandez conseil à un professionnel.',
   },
 ]
 
@@ -379,10 +185,8 @@ const questions = [
  *
  * ─── D'où vient ce contenu ──────────────────────────────────────────────────
  *
- * De la page d'accueil, où il vivait. Il n'a pas été réécrit : les sections,
- * les mesures consignées en commentaire et les arguments sont ceux qui
- * convertissaient déjà. Ce qui change est l'adresse — et le fait que `/` puisse
- * enfin s'adresser à quelqu'un d'autre qu'un bailleur.
+ * La page est dédiée aux bailleurs. Le contenu reste lié aux fonctionnalités
+ * réellement disponibles dans Pro et aux modalités commerciales du produit.
  *
  * ─── Ce que cette page fait selon qui l'ouvre ───────────────────────────────
  *
@@ -410,9 +214,8 @@ const questions = [
  */
 const TITRE_PRO = `Logiciel de gestion locative au Bénin — ${ESPACE_PRO.nom}`
 const DESCRIPTION_PRO =
-  'Sikaloc_Pro suit vos loyers et vos impayés, et génère vos quittances : ' +
-  'numérotées, horodatées, montant en lettres et signature. Gratuit ' +
-  `jusqu'à ${LIMITE_LOGEMENTS_GRATUIT} logements, sans carte bancaire.`
+  'Organisez vos logements, locataires et baux, suivez les loyers et les paiements, ' +
+  `et retrouvez les documents disponibles. Gratuit jusqu'à ${LIMITE_LOGEMENTS_GRATUIT} logements.`
 
 /*
  * ─── Pourquoi cette page a besoin de son propre aperçu de partage ──────────
@@ -497,7 +300,7 @@ export default async function PagePresentationPro({
   }
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <div className="min-h-screen bg-canvas text-ink">
       {/*
         `espace="Pro"` accole « Pro » au wordmark, et le logo mène à `/pro` :
         on est chez le bailleur, la marque le dit. Les ancres sont celles de
@@ -520,390 +323,283 @@ export default async function PagePresentationPro({
       <main id="contenu">
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-xl py-5xl">
-        {/* Formes décoratives — purement atmosphériques, jamais interactives. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-pill bg-primary-pale opacity-60 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-40 -left-20 size-80 rounded-pill bg-primary-neutral opacity-20 blur-3xl"
-        />
-
-        <div className="relative mx-auto max-w-[1200px]">
-          <div className="grid items-center gap-4xl lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
-              {/*
-                Le badge dit à qui la page s'adresse ; le lien dit à l'autre
-                où aller. Les deux sur la même ligne, tout en haut.
-
-                Mesuré avant d'être écrit : posée sous l'appel à l'action, cette
-                porte tombait à 921 px sur un écran de 812 — un locataire qui a
-                reçu une invitation, tapé « sikaloc.com » et lu un titre sur les
-                juges referme bien avant. La barre de navigation, elle, n'a que
-                39 px libres à 375 px : elle ne pouvait pas l'accueillir.
-
-                Elle ancre dans la page plutôt que de sortir vers
-                `/me/rejoindre` : on a le droit de savoir de quoi il s'agit
-                avant de cliquer.
-
-                Tout est contraint par une seule mesure : à 375 px, le bouton
-                « Protéger mes revenus » finit à 775 px pour un écran de 812. Il
-                reste donc 37 px au-dessus du pli, et une ligne supplémentaire
-                en coûte 55. Le badge et la porte doivent tenir SUR LA MÊME
-                LIGNE, ou le bouton passe dessous.
-
-                D'où deux économies : « Locataire ? » plutôt que « Je suis
-                locataire », et « Pour les bailleurs » plutôt que « Conçu pour
-                les bailleurs » — « conçu » n'ajoutait rien au sens et coûtait
-                la place qui manquait.
-              */}
-              <div className="mb-lg flex flex-wrap items-center gap-sm">
-                <span className="badge badge-neutral">
-                  Pour les bailleurs au Bénin
-                </span>
-                <Link
-                  href="#locataire"
-                  className="lien-anime text-body-sm font-medium text-mute hover:text-ink"
-                >
-                  Locataire&nbsp;?
-                </Link>
-              </div>
-
-              {/*
-                Pas d'`anim-monte` sur le H1 : il est l'élément LCP de la page,
-                et l'animation le maintient à `opacity: 0` pendant 460 ms — le
-                navigateur ne compte comme « peint » que ce qui est visible.
-                L'entrée animée est déplacée sur le sous-titre, qui ne l'est pas.
-                Pas de <br /> non plus : la coupure manuelle était calibrée pour
-                l'ancien titre de 27 caractères, sur quatre tailles différentes.
-                `text-balance` répartit les lignes proprement à toutes tailles.
-              */}
-              {/*
-                Plafonné à `display-xxl`, sans le palier `xl:display-mega` de
-                l'ancien titre : celui-ci tenait en 27 caractères, celui-là en
-                fait 55. À 80 px, il occupait cinq lignes et 420 px de haut, ce
-                qui repoussait le bouton principal sous la ligne de flottaison
-                sur un écran de 900 px. Mesuré, pas supposé.
-              */}
-              <h1 className="text-balance text-display-lg font-extrabold tracking-tight text-ink sm:text-display-xl lg:text-display-xxl">
-                Vos quittances de loyer tiendront-elles devant un juge ?
-              </h1>
-
-              <p className="anim-monte mt-xl max-w-[36rem] text-body-lg text-body">
-                Sikaloc génère vos quittances : numérotées, horodatées, montant
-                en lettres, décharge et signature. Vous les remettez à vos
-                locataires, et vous gardez la preuve de chaque loyer encaissé.
-              </p>
-
-              {/* Empilée sous 640 px : en une seule ligne à séparateurs « · »,
-                  les trois preuves passaient à la ligne n'importe où. */}
-              <ul
-                role="list"
-                className="mt-lg flex flex-col gap-xs sm:flex-row sm:flex-wrap sm:gap-lg"
-              >
-                {preuves.map((preuve) => (
-                  <li key={preuve} className="flex items-start gap-xs text-body-sm text-body">
-                    <Check
-                      size={17}
-                      strokeWidth={2.5}
-                      aria-hidden="true"
-                      className="mt-xxs shrink-0 text-primary"
-                    />
-                    <span>{preuve}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-2xl flex flex-wrap items-center gap-md">
-                {/*
-                  Libellé court à dessein : `.btn` est en `white-space: nowrap`
-                  et à hauteur fixe, il ne peut donc ni revenir à la ligne ni
-                  s'élargir. « Protéger mes revenus — Gratuit jusqu'à 2
-                  logements » réclamait 416 px pour 296 px disponibles à 360 px
-                  de large : la page débordait horizontalement. L'argument de
-                  gratuité vit sur la ligne de réassurance, juste en dessous,
-                  qui interpole déjà la constante.
-                */}
-                <Link href="/inscription" className="btn btn-primary">
-                  Protéger mes revenus
-                </Link>
-                <Link
-                  href="/exemple-quittance"
-                  className="lien-anime text-body-sm font-medium text-ink"
-                >
-                  Voir un exemple de quittance
-                </Link>
-              </div>
-
-              <p className="mt-lg text-body-sm text-mute">
-                Gratuit jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements · Sans carte
-                bancaire · Mobile Money accepté
-              </p>
-
+      <section className="relative overflow-hidden px-xl pb-0 pt-4xl sm:pt-5xl">
+        <div className="mx-auto grid max-w-[1280px] items-center gap-xl lg:grid-cols-[0.92fr_1.08fr] lg:gap-2xl">
+          <div className="relative z-10 py-xl">
+            <span className="badge badge-neutral">Sikaloc Pro · Gestion locative</span>
+            <h1 className="mt-lg max-w-[13ch] text-balance text-display-xl font-extrabold leading-[0.98] tracking-tight text-ink sm:text-display-xxl">
+              Vos logements.<br />Vos loyers.<br /><span className="text-ink-deep">Vos documents.</span>
+            </h1>
+            <p className="mt-xl max-w-[34rem] text-body-lg leading-relaxed text-body sm:text-title-md">
+              Organisez vos locations, suivez les paiements et retrouvez les
+              documents associés, dans un même espace pensé pour les bailleurs.
+            </p>
+            <div className="mt-2xl flex flex-col items-start gap-md sm:flex-row sm:items-center">
+              <Link href="/inscription" className="btn btn-primary">
+                Commencer gratuitement
+              </Link>
+              <Link href="#demo" className="lien-anime inline-flex items-center gap-xs text-body-md font-semibold text-ink">
+                Découvrir le logiciel <span aria-hidden="true">↓</span>
+              </Link>
             </div>
+            <p className="mt-lg text-body-sm text-mute">
+              Gratuit jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements. Sans carte bancaire.
+            </p>
+            <Link href="#locataire" className="mt-xl inline-flex text-body-sm font-medium text-mute underline decoration-hairline-strong underline-offset-4 hover:text-ink">
+              Vous êtes locataire ? Voir l&apos;accès Sikaloc Me
+            </Link>
+          </div>
 
-            <div className="relative overflow-hidden rounded-xl bg-canvas-sage">
-              <Image
-                src="/illustrations/home-02.webp"
-                alt="Illustration stylisée d’un logement organisé autour de ses documents"
-                width={1200}
-                height={900}
-                priority
-                sizes="(max-width: 1023px) 100vw, 46vw"
-                className="h-auto w-full"
-              />
-            </div>
+          <div className="relative mx-auto w-full max-w-[760px] lg:-mr-2xl lg:max-w-none">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-[14%] bottom-[12%] top-[18%] rounded-full bg-surface-soft blur-3xl" />
+            <Image
+              src="/illustrations/home-01-sculpture.png"
+              alt="Sculpture architecturale reliant trois maisons stylisées, illustration de l’univers Sikaloc Pro"
+              width={1536}
+              height={1024}
+              priority
+              sizes="(max-width: 1023px) 100vw, 56vw"
+              className="relative block h-auto w-full object-contain"
+            />
           </div>
         </div>
       </section>
 
-      {/* ── Barre de confiance ─────────────────────────────────────────── */}
-      {/* Posée juste sous le hero : le visiteur vient de lire une question
-          inquiétante, il lui faut une raison de continuer avant la suite.
-          Bande basse et filets plutôt qu'une vraie section — elle se traverse,
-          elle ne se lit pas. */}
-      <section
-        aria-label="Ce sur quoi vous pouvez compter"
-        className="border-y border-hairline bg-canvas px-xl py-xl"
-      >
-        <ul
-          role="list"
-          className="mx-auto flex max-w-[62rem] flex-col gap-lg sm:flex-row sm:justify-between sm:gap-xl"
-        >
-          {confiance.map(({ Icone, titre, detail }) => (
-            <li key={titre} className="flex items-start gap-sm">
-              <Icone
-                size={22}
-                strokeWidth={1.9}
-                aria-hidden="true"
-                className="mt-xxs shrink-0 text-primary"
-              />
-              <div className="min-w-0">
-                <p className="text-body-sm font-semibold text-ink">{titre}</p>
-                <p className="text-caption text-mute">{detail}</p>
-              </div>
+      {/* ── Repères tarifaires et d'accès ──────────────────────────────── */}
+      <section id="confiance" aria-label="Repères Sikaloc Pro" className="border-y border-hairline bg-surface-soft px-xl py-xl">
+        <ul role="list" className="mx-auto grid max-w-[1100px] gap-lg sm:grid-cols-3 sm:gap-xl">
+          {repères.map(({ titre, detail }) => (
+            <li key={titre} className="border-l-2 border-primary pl-lg">
+              <p className="text-title-sm font-bold text-ink">{titre}</p>
+              <p className="mt-xxs text-body-sm text-mute">{detail}</p>
             </li>
           ))}
         </ul>
       </section>
 
-      {/* ── Douleur ────────────────────────────────────────────────────── */}
-      {/* Entre la confiance et la solution : le visiteur doit se reconnaître
-          avant qu'on lui montre quoi que ce soit. */}
-      <section id="situations" className="px-xl py-5xl">
-        <div className="mx-auto max-w-[48rem]">
-          <p className="text-caption-uppercase uppercase text-primary">
-            Ce que vivent les bailleurs
-          </p>
-          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
-            Vous reconnaissez-vous dans l&apos;une de ces situations ?
-          </h2>
-
-          <ul role="list" className="anim-cascade mt-2xl space-y-md">
-            {douleurs.map(({ situation, consequence }) => (
-              <li
-                key={situation}
-                className="flex items-start gap-md rounded-lg border border-hairline border-l-2 border-l-warning-deep bg-surface-soft px-lg py-md"
-              >
-                <TriangleAlert
-                  size={18}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                  className="mt-xxs shrink-0 text-warning-deep"
-                />
-                <div className="min-w-0">
-                  <p className="text-body-md font-semibold text-ink">{situation}</p>
-                  <p className="mt-xxs text-body-sm text-mute">{consequence}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-2xl border-t border-hairline pt-xl">
-            {/* Pas de pronostic judiciaire ici : ce qui manque dans les quatre
-                cas est factuel — une trace écrite —, et c'est exactement ce que
-                Sikaloc produit. La promesse reste donc tenable. */}
-            <p className="text-body-lg font-semibold text-ink">
-              Dans les quatre cas, il manque la même chose : un écrit daté,
-              numéroté, que personne ne peut réécrire après coup.
+      {/* ── Les difficultés concrètes ─────────────────────────────────── */}
+      <section id="situations" className="bg-surface-dark px-xl py-5xl text-on-dark">
+        <div className="mx-auto grid max-w-[1200px] gap-3xl lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div>
+            <p className="text-caption-uppercase uppercase text-primary-on-dark">Le quotidien d&apos;un bailleur</p>
+            <h2 className="mt-md max-w-[13ch] text-balance text-display-lg font-extrabold leading-tight tracking-tight text-on-dark sm:text-display-xl">
+              Une location, beaucoup d&apos;informations à garder en tête.
+            </h2>
+            <p className="mt-lg max-w-[34rem] text-body-lg text-on-dark-mute">
+              Quand logements, périodes, paiements et pièces sont suivis à des
+              endroits différents, retrouver le bon contexte prend du temps.
             </p>
-            <Link href="/inscription" className="btn btn-primary mt-lg">
-              Protéger mes revenus
-            </Link>
           </div>
-        </div>
-      </section>
-
-      {/* ── Étapes ─────────────────────────────────────────────────────── */}
-      <section id="etapes" className="bg-canvas px-xl py-5xl">
-        <div className="mx-auto max-w-[1200px]">
-          <p className="text-caption-uppercase uppercase text-primary">
-            Comment ça marche
-          </p>
-          {/* Le chiffre reste : c'est la promesse la plus crédible du site,
-              et la seule mesurable. Seul le mot d'arrivée change — « preuve »
-              plutôt que « quittance » — pour rejoindre le registre du hero. */}
-          <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
-            Trois clics entre le paiement reçu et la preuve envoyée
-          </h2>
-          <p className="mt-md max-w-[42rem] text-body-lg text-mute">
-            C&apos;est la promesse de Sikaloc, et c&apos;est mesurable : moins de deux
-            minutes entre l&apos;inscription et votre première quittance.
-          </p>
-
-          {/* Étapes posées sur un filet plutôt que dans des cartes : la lecture
-              reste horizontale et la page respire. */}
-          <ol className="anim-cascade mt-3xl grid gap-xl md:grid-cols-3">
-            {etapes.map((etape) => (
-              <li key={etape.numero} className="border-t border-hairline-strong pt-lg">
-                <p className="text-caption-uppercase uppercase text-primary">
-                  Étape {etape.numero}
-                </p>
-                <h3 className="mt-md text-display-sm font-bold text-ink">{etape.titre}</h3>
-                <p className="mt-sm text-body-md text-body">{etape.texte}</p>
+          <ol className="divide-y divide-white/15 border-y border-white/15">
+            {difficultes.map((item, index) => (
+              <li key={item.repere} className="grid gap-sm py-lg sm:grid-cols-[5rem_1fr] sm:gap-lg">
+                <span className="text-caption-uppercase text-primary-on-dark">0{index + 1} / {item.repere}</span>
+                <div>
+                  <h3 className="text-title-md font-semibold text-on-dark">{item.situation}</h3>
+                  <p className="mt-xs max-w-[40rem] text-body-md text-on-dark-mute">{item.consequence}</p>
+                </div>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* ── Démo visuelle ──────────────────────────────────────────────── */}
-      {/* Aperçus statiques fondés sur les vues et parcours Pro actuels.
-          Le rendu est hors ligne et toutes les valeurs affichées sont fictives. */}
-      <section id="demo" className="px-xl py-5xl">
-        <div className="mx-auto max-w-[1200px]">
-          <p className="text-caption-uppercase uppercase text-primary">Aperçu du produit</p>
-          <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
-            Voyez ce que vous allez utiliser
-          </h2>
-          <p className="mt-md max-w-[42rem] text-body-lg text-mute">
-            Trois vues de démonstration pour découvrir le pilotage, le suivi des
-            paiements et l&apos;organisation des baux dans Sikaloc Pro.
-          </p>
+      {/* ── Démonstration du produit ───────────────────────────────────── */}
+      <section id="demo" className="bg-primary px-xl py-5xl text-ink">
+        <div className="mx-auto max-w-[1280px]">
+          <div className="grid gap-xl lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className="text-caption-uppercase uppercase text-ink/70">Découvrez Sikaloc Pro</p>
+              <h2 className="mt-md max-w-[12ch] text-balance text-display-lg font-extrabold leading-tight tracking-tight text-ink sm:text-display-xl">
+                La gestion locative, à portée de regard.
+              </h2>
+            </div>
+            <p className="max-w-[38rem] text-body-lg text-ink/80">
+              Du tableau de bord aux baux et aux paiements, voici trois aperçus
+              des écrans qui structurent le suivi d&apos;une location.
+            </p>
+          </div>
 
-          <ul className="anim-cascade mt-3xl grid gap-xl md:grid-cols-3">
-            {apercus.map((apercu, rang) => (
-              <li key={apercu.fichier}>
-                <div className="overflow-hidden rounded-lg border border-hairline bg-canvas">
+          <div className="mt-3xl grid gap-xl lg:grid-cols-[1.45fr_0.85fr]">
+            <article className="min-w-0 overflow-hidden rounded-xl bg-canvas p-sm shadow-xl">
+              <Image
+                src={`/demo/${apercus[0].fichier}`}
+                alt={apercus[0].alt}
+                width={2560}
+                height={1720}
+                sizes="(max-width: 1023px) 100vw, 62vw"
+                className="block h-auto w-full rounded-lg"
+              />
+              <div className="grid gap-xs px-md pb-md pt-lg sm:grid-cols-[0.75fr_1.25fr] sm:gap-lg">
+                <p className="text-caption-uppercase uppercase text-ink-deep">{apercus[0].etiquette}</p>
+                <div>
+                  <h3 className="text-title-lg font-bold text-ink">{apercus[0].titre}</h3>
+                  <p className="mt-xs text-body-sm text-body">{apercus[0].texte}</p>
+                </div>
+              </div>
+            </article>
+
+            <div className="grid min-w-0 gap-xl sm:grid-cols-2 lg:grid-cols-1">
+              {apercus.slice(1).map((apercu) => (
+                <article key={apercu.fichier} className="min-w-0 overflow-hidden rounded-xl bg-canvas p-sm shadow-lg">
                   <Image
                     src={`/demo/${apercu.fichier}`}
                     alt={apercu.alt}
                     width={2560}
                     height={1720}
-                    priority={rang === 0}
-                    className="block h-auto w-full"
-                    sizes="(min-width: 768px) 33vw, 100vw"
+                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 35vw"
+                    className="block h-auto w-full rounded-lg"
                   />
-                </div>
-                <p className="mt-lg text-caption-uppercase uppercase text-primary">
-                  {apercu.etiquette}
-                </p>
-                <h3 className="mt-xs text-display-sm font-bold text-ink">{apercu.titre}</h3>
-                <p className="mt-sm text-body-md text-body">{apercu.texte}</p>
-              </li>
-            ))}
-          </ul>
-
-          <p className="mt-2xl text-body-sm text-mute">
-            Aperçus de démonstration, non issus d&apos;une session réelle. Les
-            identités, lieux, dates et montants affichés sont fictifs.{' '}
-            <Link href="/exemple-quittance" className="font-semibold text-ink underline">
-              Voir une vraie quittance
+                  <div className="px-md pb-md pt-md">
+                    <p className="text-caption-uppercase uppercase text-ink-deep">{apercu.etiquette}</p>
+                    <h3 className="mt-xs text-title-md font-bold text-ink">{apercu.titre}</h3>
+                    <p className="mt-xs text-body-sm text-body">{apercu.texte}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+          <p className="mt-xl text-body-sm text-ink/75">
+            Aperçus de démonstration, non issus d&apos;une session réelle : identités,
+            lieux, dates et montants sont fictifs.{' '}
+            <Link href="/exemple-quittance" className="font-semibold underline underline-offset-4">
+              Consulter un exemple de quittance
             </Link>
             .
           </p>
         </div>
       </section>
 
-      {/* ── Fonctionnalités ────────────────────────────────────────────── */}
+      {/* ── Trois univers de gestion ──────────────────────────────────── */}
       <section id="fonctionnalites" className="px-xl py-5xl">
         <div className="mx-auto max-w-[1200px]">
-          <p className="text-caption-uppercase uppercase text-primary">
-            Fonctionnalités
-          </p>
-          <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
-            Tout ce qu&apos;un bailleur fait vraiment, et rien de plus
-          </h2>
+          <div className="max-w-[46rem]">
+            <p className="text-caption-uppercase uppercase text-ink-deep">Un espace pour chaque tâche</p>
+            <h2 className="mt-md text-balance text-display-lg font-extrabold leading-tight tracking-tight text-ink sm:text-display-xl">
+              De vos biens aux documents qui s&apos;y rapportent.
+            </h2>
+          </div>
 
-          <div className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2 lg:grid-cols-3">
-            {/* Icônes lucide, pas les emojis du rapport : le projet n'en
-                utilise aucun dans son copy, et leur rendu change d'un Android
-                à l'autre sur un marché où c'est le parc dominant. */}
-            {fonctionnalites.map(({ Icone, titre, texte }) => (
-              <article key={titre} className="card card-lg">
-                <Icone
-                  size={24}
-                  strokeWidth={1.8}
-                  aria-hidden="true"
-                  className="text-primary"
-                />
-                <h3 className="mt-md text-title-lg font-bold text-ink">{titre}</h3>
-                <p className="mt-sm text-body-md text-body">{texte}</p>
+          <div className="mt-3xl grid gap-lg lg:grid-cols-12">
+            {universPro.map(({ Icone, numero, titre, texte, points }, index) => (
+              <article
+                key={numero}
+                className={`relative flex min-w-0 flex-col overflow-hidden rounded-xl p-xl sm:p-2xl ${
+                  index === 0
+                    ? 'bg-surface-soft lg:col-span-5'
+                    : index === 1
+                      ? 'bg-surface-dark text-on-dark lg:col-span-7'
+                      : 'border border-hairline bg-canvas lg:col-span-12 lg:grid lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-2xl'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-md">
+                    <Icone size={26} strokeWidth={1.8} aria-hidden="true" className={index === 1 ? 'text-primary-on-dark' : 'text-ink-deep'} />
+                    <span className={`text-caption-uppercase ${index === 1 ? 'text-on-dark-mute' : 'text-mute'}`}>{numero}</span>
+                  </div>
+                  <h3 className={`mt-xl max-w-[15ch] text-display-sm font-bold leading-tight tracking-tight ${index === 1 ? 'text-on-dark' : 'text-ink'}`}>
+                    {titre}
+                  </h3>
+                  <p className={`mt-md max-w-[38rem] text-body-md ${index === 1 ? 'text-on-dark-mute' : 'text-body'}`}>{texte}</p>
+                </div>
+                <ul role="list" className={`mt-xl grid gap-sm ${index === 2 ? 'sm:grid-cols-3 lg:mt-0' : ''}`}>
+                  {points.map((point) => (
+                    <li key={point} className={`flex items-start gap-sm border-t pt-sm text-body-sm ${index === 1 ? 'border-white/15 text-on-dark' : 'border-hairline text-body'}`}>
+                      <Check size={16} strokeWidth={2.5} aria-hidden="true" className={`mt-xxs shrink-0 ${index === 1 ? 'text-primary-on-dark' : 'text-ink-deep'}`} />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Preuve de sérieux ──────────────────────────────────────────── */}
-      {/* Entre les fonctionnalités et le prix : le visiteur sait ce que fait le
-          produit, il lui reste à savoir s'il peut le croire. Sans clients à
-          citer, on donne ce qui se vérifie — et un lien pour le vérifier. */}
-      {/*
-        Fond hérité et simple filet en haut, plutôt qu'un `bg-canvas` de plus :
-        les sections alternent canvas / canvas-soft d'un bout à l'autre de la
-        page, et une section supplémentaire cassait la parité — « confiance »
-        et « tarifs » se retrouvaient sur le même fond, collés. Le filet
-        sépare de « fonctionnalités » sans consommer d'alternance.
-      */}
-      <section id="confiance" className="border-t border-hairline px-xl py-5xl">
-        <div className="mx-auto max-w-[56rem]">
-          <p className="text-caption-uppercase uppercase text-primary">
-            Pourquoi nous croire
-          </p>
-          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
-            Ce que vous pouvez vérifier vous-même
-          </h2>
-          <p className="mt-md max-w-[42rem] text-body-lg text-mute">
-            Sikaloc n&apos;a pas encore d&apos;avis clients à afficher. À la
-            place, voici ce qui est contrôlable avant même de créer un compte.
-          </p>
+      {/* ── Parcours du paiement au document ───────────────────────────── */}
+      <section id="etapes" className="bg-surface-soft px-xl py-5xl">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="grid gap-xl lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+            <div>
+              <p className="text-caption-uppercase uppercase text-ink-deep">Le parcours</p>
+              <h2 className="mt-md max-w-[13ch] text-balance text-display-lg font-extrabold leading-tight tracking-tight text-ink">
+                Du versement au document correspondant.
+              </h2>
+              <p className="mt-lg max-w-[34rem] text-body-lg text-body">
+                Le suivi dépend des informations du bail et de l&apos;état du paiement.
+                Sikaloc distingue un versement partiel d&apos;une période soldée.
+              </p>
+            </div>
+            <ol className="border-y border-hairline-strong">
+              {etapes.map((etape) => (
+                <li key={etape.numero} className="grid gap-sm border-b border-hairline py-xl last:border-0 sm:grid-cols-[4rem_1fr] sm:gap-lg">
+                  <span className="text-display-sm font-bold text-ink-deep">{etape.numero}</span>
+                  <div>
+                    <h3 className="text-title-lg font-bold text-ink">{etape.titre}</h3>
+                    <p className="mt-xs max-w-[42rem] text-body-md text-body">{etape.texte}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
 
-          <div className="anim-cascade mt-3xl grid gap-lg md:grid-cols-2 [&>*]:min-w-0">
-            {preuvesSerieux.map(({ Icone, titre, points, lien }) => (
-              <article key={titre} className="card card-lg">
-                <Icone
-                  size={26}
-                  strokeWidth={1.8}
-                  aria-hidden="true"
-                  className="text-primary"
-                />
-                <h3 className="mt-md text-title-lg font-bold text-ink">{titre}</h3>
+      {/* ── Documents et guide ────────────────────────────────────────── */}
+      <section id="documents" className="px-xl py-5xl">
+        <div className="mx-auto grid max-w-[1200px] gap-3xl lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div>
+            <p className="text-caption-uppercase uppercase text-ink-deep">Documents locatifs</p>
+            <h2 className="mt-md max-w-[12ch] text-balance text-display-lg font-extrabold leading-tight tracking-tight text-ink">
+              Un document lisible, rattaché au bon règlement.
+            </h2>
+            <p className="mt-lg max-w-[40rem] text-body-lg text-body">
+              Retrouvez les reçus et quittances disponibles avec leur période et
+              les informations de paiement associées. Un reçu concerne un versement
+              partiel ; une quittance, une période entièrement réglée.
+            </p>
+            <div className="mt-xl flex flex-col items-start gap-md">
+              <Link href="/exemple-quittance" className="btn btn-secondary">Ouvrir l&apos;exemple de quittance</Link>
+              <Link href="/exemple-recu" className="lien-anime text-body-sm font-semibold text-ink underline underline-offset-4">Comparer avec un exemple de reçu</Link>
+              <Link href="/legal/confidentialite" className="lien-anime text-body-sm font-medium text-mute underline underline-offset-4">Consulter la politique de confidentialité</Link>
+            </div>
+          </div>
 
-                <ul role="list" className="mt-md space-y-sm">
-                  {points.map((point) => (
-                    <li key={point} className="flex items-start gap-sm text-body-sm text-body">
-                      <Check
-                        size={17}
-                        strokeWidth={2.5}
-                        aria-hidden="true"
-                        className="mt-xxs shrink-0 text-primary"
-                      />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
+          <div className="min-w-0 overflow-hidden rounded-xl border border-hairline bg-surface-soft p-sm sm:p-md">
+            <div className="flex flex-wrap items-center justify-between gap-sm px-sm py-sm">
+              <p className="text-caption-uppercase font-semibold text-ink-deep">Exemple de quittance Sikaloc</p>
+              <span className="badge badge-neutral">Données fictives · Filigrane aperçu</span>
+            </div>
+            <iframe
+              src="/exemple-quittance#toolbar=0&navpanes=0"
+              title="Exemple public de quittance Sikaloc avec données fictives et filigrane aperçu"
+              loading="lazy"
+              className="h-[460px] w-full rounded-lg border border-hairline bg-canvas sm:h-[600px]"
+            />
+            <p className="px-sm pb-sm pt-md text-body-sm text-mute">
+              Ce document est généré par le modèle Sikaloc à partir d&apos;identités fictives. Il s&apos;agit d&apos;un exemple, pas d&apos;un justificatif réel ni d&apos;un conseil juridique.
+            </p>
+          </div>
+        </div>
 
-                <Link
-                  href={lien.href}
-                  className="lien-anime mt-lg inline-block text-body-sm font-semibold text-ink"
-                >
-                  {lien.libelle}
-                </Link>
-              </article>
-            ))}
+        <div id="guide" className="mx-auto mt-3xl grid max-w-[1200px] gap-xl rounded-xl bg-surface-soft p-xl sm:p-2xl lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-caption-uppercase uppercase text-ink-deep">Guide gratuit</p>
+            <h3 className="mt-sm text-title-xl font-bold text-ink">Comprendre les documents de loyer</h3>
+            <p className="mt-sm max-w-[42rem] text-body-md text-body">
+              Le guide présente les mentions, la différence entre reçu et quittance, et le processus de correction des paiements. Il ne remplace pas l&apos;avis d&apos;un professionnel du droit.
+            </p>
+            <ul role="list" className="mt-lg grid gap-sm sm:grid-cols-2">
+              {POINTS_GUIDE.map((point) => (
+                <li key={point} className="flex items-start gap-sm text-body-sm text-body">
+                  <Check size={17} strokeWidth={2.5} aria-hidden="true" className="mt-xxs shrink-0 text-ink-deep" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-lg bg-canvas p-lg sm:p-xl">
+            <FormulaireGuide />
           </div>
         </div>
       </section>
@@ -913,10 +609,10 @@ export default async function PagePresentationPro({
         <div className="mx-auto max-w-[1200px]">
           <div className="mx-auto max-w-[42rem] text-center">
             <p className="text-caption-uppercase uppercase text-primary">Tarifs</p>
-            <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">Un tarif, sans surprise</h2>
+            <h2 className="mt-sm text-balance text-display-lg font-extrabold tracking-tight text-ink">Commencez simplement. Évoluez à votre rythme.</h2>
             <p className="mt-md text-body-lg text-mute">
-              Commencez gratuitement. Passez au plan Standard quand votre parc
-              grandit — par Mobile Money, sans engagement.
+              Le plan Gratuit permet de découvrir l&apos;outil. Le plan Standard
+              ajoute les logements illimités et les relances WhatsApp.
             </p>
           </div>
 
@@ -1047,7 +743,7 @@ export default async function PagePresentationPro({
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────────────────── */}
-      <section id="faq" className="px-xl py-5xl">
+      <section id="faq" className="bg-surface-soft px-xl py-5xl">
         <div className="mx-auto max-w-[48rem]">
           <p className="text-caption-uppercase uppercase text-primary">
             Bon à savoir
@@ -1082,155 +778,43 @@ export default async function PagePresentationPro({
         </div>
       </section>
 
-      {/* ── Locataires ─────────────────────────────────────────────────── */}
-      {/*
-        Pourquoi cette section existe, et pourquoi ICI.
-
-        Depuis l'ouverture de Sikaloc_Me, un locataire invité reçoit un lien
-        vers ce domaine. Certains tapent « sikaloc.com » plutôt que de cliquer,
-        et tombaient sur une page qui ne leur parlait pas — pire, qui affirmait
-        en FAQ qu'ils n'avaient pas de compte.
-
-        Placée après la FAQ, avant le guide : elle n'interrompt pas le parcours
-        du bailleur, qui est celui qui paie et que le reste de la page convertit.
-        Le locataire, lui, ne la cherche pas en faisant défiler — il y arrive par
-        l'ancre posée dans le hero, dès le premier écran.
-
-        Filet en haut et fond hérité, pas un `bg-canvas` de plus : même raison
-        que pour « Pourquoi nous croire » plus haut — l'alternance des fonds se
-        compte d'un bout à l'autre de la page, et une section de plus la
-        casserait.
-      */}
-      <section id="locataire" className="border-t border-hairline px-xl py-5xl">
-        <div className="mx-auto max-w-[56rem]">
-          <p className="text-caption-uppercase uppercase text-primary">Locataires</p>
-          <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
-            Votre bailleur utilise Sikaloc ?
-          </h2>
-          <p className="mt-lg max-w-[42rem] text-body-lg text-body">
-            Alors vous pouvez avoir votre propre espace. Vous y retrouvez les
-            mêmes documents que lui — pas des copies. Il ne vous coûtera jamais
-            rien.
-          </p>
-
-          <div className="mt-2xl grid gap-xl sm:grid-cols-3">
-            {avantagesLocataire.map(({ Icone, titre, texte }) => (
-              <div key={titre}>
-                <Icone
-                  size={22}
-                  strokeWidth={1.9}
-                  aria-hidden="true"
-                  className="text-primary"
-                />
-                <p className="mt-md text-body-md font-semibold text-ink">{titre}</p>
-                <p className="mt-xs text-body-sm text-body">{texte}</p>
-              </div>
-            ))}
+      {/* ── Passerelle locataire ──────────────────────────────────────── */}
+      <section id="locataire" className="px-xl py-3xl">
+        <div className="mx-auto flex max-w-[1100px] flex-col gap-lg rounded-xl border border-hairline bg-canvas p-xl sm:flex-row sm:items-center sm:justify-between sm:p-2xl">
+          <div className="max-w-[42rem]">
+            <p className="text-caption-uppercase uppercase text-primary">Vous êtes locataire ?</p>
+            <h2 className="mt-sm text-title-xl font-bold text-ink">Votre bailleur peut vous inviter sur Sikaloc Me.</h2>
+            <p className="mt-sm text-body-md text-body">
+              L&apos;invitation relie votre compte aux informations et documents que le bailleur partage avec vous.
+            </p>
           </div>
-
-          {/*
-            La contrainte est dite avant la porte, pas après.
-
-            Un locataire ne peut pas s'inscrire seul, et l'apprendre au bout
-            d'un formulaire serait une perte de temps doublée d'une vexation.
-            La raison est donnée avec la règle : sans invitation, Sikaloc
-            devrait deviner de quel bail il s'agit.
-          */}
-          <div className="mt-2xl rounded-xl border border-hairline bg-canvas p-xl">
-            <p className="text-body-md font-semibold text-ink">
-              C&apos;est votre bailleur qui ouvre l&apos;accès
-            </p>
-            <p className="mt-sm max-w-[44rem] text-body-sm text-body">
-              Vous ne pouvez pas créer ce compte vous-même, et c&apos;est
-              délibéré : l&apos;invitation est ce qui relie votre compte à votre
-              bail. Sans elle, Sikaloc devrait deviner de quel logement il
-              s&apos;agit — avec le risque de vous montrer les quittances de
-              quelqu&apos;un d&apos;autre.
-            </p>
-            <div className="mt-lg flex flex-wrap items-center gap-md">
-              <Link href="/me/rejoindre" className="btn btn-secondary">
-                Comment rejoindre Sikaloc_Me
-              </Link>
-              <Link href="/entrer" className="lien-anime text-body-sm font-medium text-ink">
-                J&apos;ai déjà un compte
-              </Link>
-            </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-md">
+            <Link href="/me/rejoindre" className="btn btn-secondary">Comment rejoindre</Link>
+            <Link href="/entrer" className="lien-anime text-body-sm font-semibold text-ink underline underline-offset-4">J&apos;ai déjà un compte</Link>
           </div>
         </div>
       </section>
 
-      {/* ── Guide ──────────────────────────────────────────────────────── */}
-      {/*
-        Placée après la FAQ, avant l'appel final : elle s'adresse au visiteur
-        qui a lu jusqu'ici sans cliquer « Commencer ». Pas plus tôt — un
-        formulaire d'email posé avant les tarifs entrerait en concurrence avec
-        l'inscription, qui est gratuite et prend deux minutes.
-
-        Le guide décrit ce que Sikaloc écrit sur ses documents, sans dire ce que
-        la loi exige : les CGU excluent le conseil juridique, et le titre le
-        reflète.
-      */}
-      <section id="guide" className="bg-canvas px-xl py-5xl">
-        <div className="mx-auto max-w-[56rem]">
-          <div className="grid gap-2xl md:grid-cols-[1.15fr_1fr] md:items-start">
-            <div>
-              <p className="text-caption-uppercase uppercase text-primary">
-                Guide gratuit
-              </p>
-              <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
-                Ce que contient une quittance Sikaloc
-              </h2>
-              <p className="mt-md text-body-lg text-mute">
-                Dix points, décrits un par un : ce que le document nomme, ce
-                qu&apos;il calcule, et ce qui le rend difficile à contester.
-              </p>
-
-              <ul role="list" className="mt-lg space-y-sm">
-                {POINTS_GUIDE.map((point) => (
-                  <li key={point} className="flex items-start gap-sm text-body-sm text-body">
-                    <Check
-                      size={17}
-                      strokeWidth={2.5}
-                      aria-hidden="true"
-                      className="mt-xxs shrink-0 text-primary"
-                    />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <p className="mt-lg text-body-sm text-mute">
-                Le guide décrit un outil. Il ne remplace pas l&apos;avis d&apos;un
-                professionnel du droit.
-              </p>
-            </div>
-
-            <div className="card card-lg">
-              <FormulaireGuide />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Appel final ────────────────────────────────────────────────── */}
-      {/* Surface sombre avant le pied de page sombre : la clôture prescrite par
-          le design system pour les moments de conversion. */}
-      <section className="px-xl pb-5xl">
-        <div className="mx-auto max-w-[1200px]">
-          <div className="rounded-xl bg-surface-dark px-xl py-5xl text-center">
-            <h2 className="mx-auto max-w-[40rem] text-display-lg font-extrabold tracking-tight text-on-dark">
-              Votre prochaine quittance peut être prête dans deux minutes
+      {/* ── Conclusion ─────────────────────────────────────────────────── */}
+      <section className="px-xl pb-5xl pt-2xl">
+        <div className="relative mx-auto max-w-[1280px] overflow-hidden rounded-xl bg-surface-dark px-xl py-4xl text-on-dark sm:px-3xl sm:py-5xl">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full border border-primary/25 sm:size-[28rem]" />
+          <div aria-hidden="true" className="pointer-events-none absolute -right-8 top-1/2 hidden size-56 -translate-y-1/2 rounded-full border border-primary/15 lg:block" />
+          <div className="relative max-w-[54rem]">
+            <p className="text-caption-uppercase uppercase text-primary-on-dark">Sikaloc Pro</p>
+            <h2 className="mt-md max-w-[15ch] text-balance text-display-lg font-extrabold leading-tight tracking-tight text-on-dark sm:text-display-xl">
+              Vos locations méritent un suivi plus clair.
             </h2>
-            <p className="mx-auto mt-lg max-w-[34rem] text-body-lg text-on-dark-mute">
-              Ne laissez plus vos quittances au hasard. Enregistrez votre premier
-              bail, saisissez un paiement, et gardez la preuve. C&apos;est tout.
+            <p className="mt-lg max-w-[38rem] text-body-lg text-on-dark-mute">
+              Rassemblez les informations de vos biens, suivez les règlements
+              enregistrés et retrouvez les documents disponibles.
             </p>
-            <Link href="/inscription" className="btn btn-primary mt-2xl">
-              Protéger mes revenus
-            </Link>
+            <div className="mt-2xl flex flex-col items-start gap-md sm:flex-row sm:items-center">
+              <Link href="/inscription" className="btn btn-primary">Commencer gratuitement</Link>
+              <Link href="#tarifs" className="lien-anime text-body-sm font-semibold text-on-dark underline decoration-primary/60 underline-offset-4">Voir les tarifs</Link>
+            </div>
             <p className="mt-lg text-body-sm text-on-dark-mute">
-              Gratuit jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements · Sans carte
-              bancaire · Mobile Money accepté
+              Gratuit jusqu&apos;à {LIMITE_LOGEMENTS_GRATUIT} logements · Sans carte bancaire
             </p>
           </div>
         </div>
