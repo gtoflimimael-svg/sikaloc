@@ -1687,10 +1687,12 @@
   .home-document-actions .home-product-link { margin-top: 0; }
   .home-document-privacy { display: inline-flex; min-height: 42px; align-items: center; color: var(--color-ink-deep); font-size: 14px; font-weight: 650; }
 
-  /* L'aperçu public est le vrai PDF fictif : l'iframe évite une copie HTML qui
-     finirait par diverger du document réellement généré. */
-  .home-document-stage { width: min(100%, 680px); justify-self: end; }
-  .home-document-pdf { display: block; width: 100%; height: clamp(560px, 68vw, 760px); border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); background: #fff; box-shadow: 0 22px 48px -36px rgb(17 24 16 / .38), 0 3px 10px rgb(17 24 16 / .08); }
+  /* PDF.js dessine le vrai PDF dans un canevas A4, sans lecteur natif encastré. */
+  .home-document-stage { width: min(100%, 560px); justify-self: end; }
+  .home-document-pdf { position: relative; width: 100%; aspect-ratio: 210 / 297; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); background: #fff; box-shadow: 0 22px 48px -36px rgb(17 24 16 / .38), 0 3px 10px rgb(17 24 16 / .08); }
+  .home-document-pdf-canvas { display: block; width: 100%; height: auto; }
+  .home-document-pdf-state { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; background: #fff; color: var(--color-body); font-size: 14px; line-height: 1.55; text-align: center; }
+  .home-document-pdf-state--error { color: var(--color-negative-deep); }
   .home-document-open { display: inline-flex; min-height: 40px; align-items: center; margin-top: 10px; color: var(--color-ink-deep); font-size: 13px; font-weight: 650; text-decoration: underline; text-underline-offset: 4px; }
   .home-document-open:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
 
@@ -1802,7 +1804,6 @@
   .home-document-title { max-width: 17ch; font-size: clamp(38px, 7.8vw, 54px); }
   .home-document-description { max-width: 55ch; font-size: 16px; }
   .home-document-stage { width: 100%; justify-self: stretch; }
-  .home-document-pdf { height: min(74vh, 700px); min-height: 520px; }
   .home-faq-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .home-final-cta { gap: 26px; padding: 32px 24px; border-radius: 4px 24px 4px 24px; }
   .home-final-cta::after { top: auto; right: -140px; bottom: -175px; width: 280px; height: 280px; }
@@ -1820,7 +1821,6 @@
   .home-hero-tenant { max-width: 34ch; }
   .home-hero-art { width: 100%; margin-top: 16px; }
   .home-document-actions { gap: 8px; }
-  .home-document-pdf { height: 560px; min-height: 0; }
   .home-document-open { margin-top: 7px; }
 }
 

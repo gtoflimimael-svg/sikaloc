@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 40,
     paddingHorizontal: 42,
-    fontFamily: 'StyreneB',
+    fontFamily: 'Inter',
     fontSize: 10,
     color: couleurs.body,
     // 1.4 plutôt que 1.5 : la quittance doit tenir sur une seule page, une
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   marque: { flexDirection: 'row', alignItems: 'center' },
   blocNumero: { alignItems: 'flex-end' },
   etiquetteNumero: { fontSize: 7.5, color: couleurs.mute, textTransform: 'uppercase', letterSpacing: 0.45 },
-  numero: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 10.5, color: couleurs.ink },
+  numero: { fontFamily: 'Inter', fontWeight: 700, fontSize: 10.5, color: couleurs.ink },
   bandeauApercu: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   etiquetteApercu: {
     color: couleurs.primary,
     fontSize: 7.5,
-    fontFamily: 'StyreneB',
+    fontFamily: 'Inter',
     fontWeight: 700,
     letterSpacing: 0.7,
   },
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
 
   titre: {
-    fontFamily: 'Copernicus',
+    fontFamily: 'Inter',
     fontWeight: 800,
     fontSize: 22,
     lineHeight: 1.15,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 3,
   },
-  recapValeur: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 12, color: couleurs.ink },
+  recapValeur: { fontFamily: 'Inter', fontWeight: 700, fontSize: 12, color: couleurs.ink },
 
   colonnes: { flexDirection: 'row', gap: 14, marginBottom: 12 },
   colonne: {
@@ -123,12 +123,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 6,
   },
-  nomPartie: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 11, color: couleurs.ink },
+  nomPartie: { fontFamily: 'Inter', fontWeight: 700, fontSize: 11, color: couleurs.ink },
   lignePartie: { fontSize: 9, color: couleurs.body },
 
   section: { marginBottom: 8 },
   titreSection: {
-    fontFamily: 'StyreneB',
+    fontFamily: 'Inter',
     fontWeight: 700,
     fontSize: 10.5,
     color: couleurs.ink,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     borderBottomColor: couleurs.hairline,
   },
   ligneEtiquette: { fontSize: 9.5, color: couleurs.mute },
-  ligneValeur: { fontSize: 9.5, color: couleurs.ink, fontFamily: 'StyreneB', fontWeight: 700 },
+  ligneValeur: { fontSize: 9.5, color: couleurs.ink, fontFamily: 'Inter', fontWeight: 700 },
 
   encadreMontant: {
     backgroundColor: couleurs.primaryPale,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   etiquetteMontant: { fontSize: 8.5, color: couleurs.inkDeep, marginBottom: 2 },
   montantChiffres: {
-    fontFamily: 'Copernicus',
+    fontFamily: 'Inter',
     fontWeight: 800,
     fontSize: 19,
     lineHeight: 1.2,
@@ -164,10 +164,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   montantLettres: {
-    // StyreneB n'est fournie qu'en trois graisses droites (regular, medium,
-    // bold) : pas d'italique enregistrée, donc pas de `fontStyle: 'italic'` —
-    // react-pdf échouerait à résoudre la police. L'espacement des lettres
-    // recrée la même distance visuelle avec le montant en chiffres au-dessus.
+    // L'espacement sépare le montant en lettres de son montant chiffré sans
+    // introduire une autre police que la famille officielle Inter.
     fontSize: 9,
     color: couleurs.primary,
     letterSpacing: 0.2,
@@ -209,16 +207,19 @@ const styles = StyleSheet.create({
   },
   cadreSignature: { flex: 1, alignItems: 'center' },
   etiquetteSignature: { fontSize: 8, color: couleurs.mute, marginBottom: 3 },
-  imageSignature: { height: 36, objectFit: 'contain', marginBottom: 3 },
+  imageSignature: { width: 160, height: 36, objectFit: 'contain', marginBottom: 3 },
   zoneSignatureVide: {
     height: 36,
     width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: couleurs.hairline,
     borderStyle: 'dashed',
     borderRadius: 4,
     marginBottom: 4,
   },
+  texteSignatureVide: { fontSize: 7, color: couleurs.muteSoft },
   traitSignature: {
     borderTopWidth: 1,
     borderTopColor: couleurs.muteSoft,
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     alignItems: 'center',
   },
-  nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'StyreneB', fontWeight: 700 },
+  nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'Inter', fontWeight: 700 },
 
   piedDePage: {
     position: 'absolute',
@@ -241,6 +242,8 @@ const styles = StyleSheet.create({
   },
   textePied: { fontSize: 7.5, color: couleurs.muteSoft },
 })
+
+export type EtatSignaturePdf = 'apposee' | 'non-apposee' | 'indisponible'
 
 export interface DonneesQuittance {
   numeroDocument: string
@@ -278,7 +281,9 @@ export interface DonneesQuittance {
   signatureDataUri: string | null
   /** Signature du locataire en data URI, ou null si non recueillie. */
   signatureLocataireDataUri: string | null
-
+  /** État précis : une erreur de lecture n'est pas assimilée à une absence. */
+  signatureBailleurEtat?: EtatSignaturePdf
+  signatureLocataireEtat?: EtatSignaturePdf
 
   /** Exemple public : ajoute le bandeau fictif, jamais posé sur un document réel. */
   apercu?: boolean
@@ -310,13 +315,21 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
    */
   const timbrePotentiellementDu =
     donnees.modePaiement === 'Espèces' && donnees.montant > 100_000
-  const nombreSignatures = Number(Boolean(donnees.signatureDataUri)) +
-    Number(Boolean(donnees.signatureLocataireDataUri))
-  const mentionSignature = nombreSignatures === 2
-    ? 'Les signatures reproduites ci-dessus sont des signatures électroniques simples, non qualifiées au sens de la réglementation applicable.'
-    : nombreSignatures === 1
-      ? `La signature ${donnees.signatureDataUri ? 'du bailleur' : 'du locataire'} reproduite ci-dessus est une signature électronique simple, non qualifiée au sens de la réglementation applicable.`
-      : 'Aucune signature électronique n’est affichée sur ce document.'
+  const etatBailleur = donnees.signatureDataUri
+    ? 'apposee'
+    : donnees.signatureBailleurEtat ?? 'non-apposee'
+  const etatLocataire = donnees.signatureLocataireDataUri
+    ? 'apposee'
+    : donnees.signatureLocataireEtat ?? 'non-apposee'
+  const mentionEtatSignature = (partie: string, etat: EtatSignaturePdf) => {
+    if (etat === 'apposee') return `Signature du ${partie} apposée.`
+    if (etat === 'indisponible') return `Signature du ${partie} indisponible pour ce document.`
+    return `Signature du ${partie} non apposée.`
+  }
+  const mentionSignature = [
+    mentionEtatSignature('bailleur', etatBailleur),
+    mentionEtatSignature('locataire', etatLocataire),
+  ].join(' ')
 
   return (
     <Document
@@ -498,16 +511,17 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
         </View>
 
         {/* ── Signatures ─────────────────────────────────────────────────── */}
-        {/* Les deux parties signent : le document vaut décharge pour le
-            bailleur (il reconnaît avoir reçu la somme) et pour le locataire
-            (il reconnaît l'avoir versée). */}
         <View style={styles.blocSignature}>
           <View style={styles.cadreSignature}>
             <Text style={styles.etiquetteSignature}>Signature du bailleur</Text>
             {donnees.signatureDataUri ? (
               <Image style={styles.imageSignature} src={donnees.signatureDataUri} />
             ) : (
-              <View style={styles.zoneSignatureVide} />
+              <View style={styles.zoneSignatureVide}>
+                <Text style={styles.texteSignatureVide}>
+                  {etatBailleur === 'indisponible' ? 'Signature indisponible' : 'Espace de signature'}
+                </Text>
+              </View>
             )}
             <View style={styles.traitSignature}>
               <Text style={styles.nomSignataire}>{donnees.bailleurNom}</Text>
@@ -519,7 +533,11 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
             {donnees.signatureLocataireDataUri ? (
               <Image style={styles.imageSignature} src={donnees.signatureLocataireDataUri} />
             ) : (
-              <View style={styles.zoneSignatureVide} />
+              <View style={styles.zoneSignatureVide}>
+                <Text style={styles.texteSignatureVide}>
+                  {etatLocataire === 'indisponible' ? 'Signature indisponible' : 'Espace de signature'}
+                </Text>
+              </View>
             )}
             <View style={styles.traitSignature}>
               <Text style={styles.nomSignataire}>{donnees.locataireNom}</Text>

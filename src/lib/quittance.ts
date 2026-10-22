@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createHash } from 'node:crypto'
 import { createElement } from 'react'
+import sharp from 'sharp'
 
 import { DocumentQuittance, type DonneesQuittance } from '@/lib/pdf/document-quittance'
 import { creerClientAdmin } from '@/lib/supabase/admin'
@@ -17,6 +18,8 @@ import type {
   TypePaiement,
 } from '@/lib/types/database'
 import { typeDocumentPaiement } from '@/lib/documents-paiement'
+import { reconnaitreFormat } from '@/lib/signature/fichier'
+import type { EtatSignaturePdf } from '@/lib/pdf/document-quittance'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -41,23 +44,39 @@ export function empreinte(pdf: Buffer): string {
   return createHash('sha256').update(pdf).digest('hex')
 }
 
-/** Charge une signature (bailleur ou locataire) et l'encode en data URI pour le PDF. */
-async function chargerSignature(chemin: string | null): Promise<string | null> {
-  if (!chemin) return null
+interface SignatureChargee {
+  dataUri: string | null
+  etat: EtatSignaturePdf
+}
+
+/**
+ * Charge la signature privée après l'autorisation du document et la normalise
+ * pour le moteur PDF. WebP est accepté par l'import, mais le renderer PDF ne
+ * sait pas l'embarquer : une conversion PNG en mémoire conserve le trait sans
+ * modifier l'objet stocké ni l'accès au bucket.
+ */
+async function chargerSignature(chemin: string | null): Promise<SignatureChargee> {
+  if (!chemin) return { dataUri: null, etat: 'non-apposee' }
 
   try {
     const admin = creerClientAdmin()
     const { data, error } = await admin.storage.from('signatures').download(chemin)
-    if (error || !data) return null
+    if (error || !data) return { dataUri: null, etat: 'indisponible' }
 
     const buffer = Buffer.from(await data.arrayBuffer())
-    const typeMime = data.type || 'image/png'
+    const format = await reconnaitreFormat(data)
+    if (!format) return { dataUri: null, etat: 'indisponible' }
 
-    return `data:${typeMime};base64,${buffer.toString('base64')}`
+    const octets = format === 'webp' ? await sharp(buffer).png().toBuffer() : buffer
+    const typeMime = format === 'jpeg' ? 'image/jpeg' : 'image/png'
+
+    return {
+      dataUri: `data:${typeMime};base64,${octets.toString('base64')}`,
+      etat: 'apposee',
+    }
   } catch {
-    // Une signature illisible ne doit pas empêcher d'émettre la quittance :
-    // le document sort avec un cadre de signature vide.
-    return null
+    // Le document peut être émis, mais l'état reste distinct d'une absence.
+    return { dataUri: null, etat: 'indisponible' }
   }
 }
 
@@ -128,7 +147,8 @@ async function donneesDuContexte(
     bailleurNom: bailleur.nom, bailleurTelephone: bailleur.telephone,
     bailleurAdresse: bailleur.adresse,
     locataireNom: locataire.nom, locataireTelephone: locataire.telephone,
-    signatureLocataireDataUri: signatureLocataire,
+    signatureLocataireDataUri: signatureLocataire.dataUri,
+    signatureLocataireEtat: signatureLocataire.etat,
     logementAdresse: logement.adresse, logementVille: logement.ville,
     logementPays: logement.pays ?? 'Bénin', logementType: logement.type,
     loyerMensuel,
@@ -139,7 +159,9 @@ async function donneesDuContexte(
     periodeDebut: finances?.periode_debut ?? paiement.periode_debut, periodeFin: finances?.periode_fin ?? paiement.periode_fin,
     montant: Number(finances?.montant ?? paiement.montant), datePaiement: finances?.date_paiement ?? paiement.date_paiement!,
     modePaiement: finances?.mode_paiement ?? paiement.mode_paiement, typePaiement,
-    estPartiel, signatureDataUri: signatureBailleur,
+    estPartiel,
+    signatureDataUri: signatureBailleur.dataUri,
+    signatureBailleurEtat: signatureBailleur.etat,
     apercu: options.apercu,
   }
 }
@@ -232,8 +254,9 @@ export async function genererEtStocker(
     const pdf = await rendrePdf(donnees)
     // Copier les MÊMES octets que ceux incrustés, sans relire la signature mutable.
     if (donnees.signatureDataUri) {
-      const source = contexte.bailleur.signature_chemin!
-      const extension = source.split('.').pop()!
+      // Le snapshot conserve les mêmes octets que ceux inclus au PDF. Les
+      // WebP importés sont alors des PNG normalisés, avec une extension exacte.
+      const extension = donnees.signatureDataUri.startsWith('data:image/jpeg;') ? 'jpg' : 'png'
       snapshot = `${acteur}/apposees/${jeton}.${extension}`
       const octets = Buffer.from(donnees.signatureDataUri.split(',')[1], 'base64')
       hashSignature = empreinte(octets)

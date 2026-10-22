@@ -54,8 +54,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '4mb',
     },
   },
-  // `document-quittance.tsx` lit les fichiers de police de marque sur le
-  // disque à l'exécution (voir son commentaire d'en-tête) : un chemin construit
+  // `pdf/base.tsx` lit les polices Inter statiques sur le disque à l'exécution
+  // (voir son commentaire d'en-tête) : un chemin construit
   // dynamiquement (`path.join(process.cwd(), …)`) n'est pas repéré par le
   // traçage statique de Next.js, donc les .ttf/.otf ne suivraient pas dans le
   // paquet déployé sans cette inclusion explicite.
@@ -65,8 +65,8 @@ const nextConfig: NextConfig = {
   // polices, un chemin construit dynamiquement échappe au traçage statique.
   outputFileTracingIncludes: {
     '/*': [
-      './src/app/fonts/Copernicus-*.ttf',
-      './src/app/fonts/StyreneB-*.otf',
+      './src/app/fonts/Inter-PDF-*.ttf',
+      './src/app/fonts/Inter-OFL.txt',
       './public/marque/sikaloc-officiel-noir.svg',
     ],
     // Le contrôle de schéma lit ce fichier pour connaître les colonnes
