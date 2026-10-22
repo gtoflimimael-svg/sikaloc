@@ -1,0 +1,331 @@
+export type EspaceDemo = 'pro' | 'me' | 'find'
+export type RoleDemo = EspaceDemo
+export type StatutPeriodeDemo = 'regle' | 'partiel' | 'impaye'
+export type StatutCandidatureDemo = 'nouvelle' | 'a_etudier' | 'acceptee' | 'refusee'
+
+export interface ProfilDemo {
+  id: string
+  nom: string
+  role: RoleDemo
+  libelle: string
+  organisation?: string
+}
+
+export interface LogementDemo {
+  id: string
+  proprietaireId: string
+  titre: string
+  ville: string
+  quartier: string
+  type: string
+  loyer: number
+  chambres: number
+  surface: number
+  statut: 'occupe' | 'disponible'
+  publie: boolean
+  description: string
+  equipements: string[]
+}
+
+export interface BailDemo {
+  id: string
+  logementId: string
+  proprietaireId: string
+  locataireId: string
+  debut: string
+  fin?: string
+  statut: 'actif' | 'termine'
+  loyer: number
+}
+
+export interface PeriodeDemo {
+  id: string
+  bailId: string
+  mois: string
+  echeance: string
+  montantDu: number
+  montantRegle: number
+  statut: StatutPeriodeDemo
+}
+
+export interface PaiementDemo {
+  id: string
+  periodeId: string
+  date: string
+  montant: number
+  moyen: string
+}
+
+export interface DocumentDemo {
+  id: string
+  type: 'Bail' | 'Quittance' | 'Reçu'
+  titre: string
+  reference: string
+  bailId: string
+  periodeId?: string
+  date: string
+  montant?: number
+}
+
+export interface CandidatureDemo {
+  id: string
+  logementId: string
+  candidatId: string
+  date: string
+  statut: StatutCandidatureDemo
+  message: string
+}
+
+export interface DonneesDemo {
+  version: 1
+  profilId: string
+  espace: EspaceDemo
+  vue: string
+  logements: LogementDemo[]
+  baux: BailDemo[]
+  periodes: PeriodeDemo[]
+  paiements: PaiementDemo[]
+  documents: DocumentDemo[]
+  candidatures: CandidatureDemo[]
+  filtreVille: string
+  filtreType: string
+  plafondLoyer: string
+  recherche: string
+  notificationLocaleParProfil: Record<string, boolean>
+}
+
+export const PROFILS_DEMO: ProfilDemo[] = [
+  { id: 'pro-petit', nom: 'Aïcha Kora', role: 'pro', libelle: 'Petit portefeuille', organisation: '2 logements' },
+  { id: 'pro-actif', nom: 'Mariam Adandé', role: 'pro', libelle: 'Bailleur actif', organisation: '5 logements' },
+  { id: 'pro-gestion', nom: 'Maison Élan', role: 'pro', libelle: 'Portefeuille étendu', organisation: '5 logements' },
+  { id: 'me-ada', nom: 'Ada Sossou', role: 'me', libelle: 'Locataire · compte A' },
+  { id: 'me-bio', nom: 'Bio Kponton', role: 'me', libelle: 'Locataire · compte B' },
+  { id: 'me-celestin', nom: 'Célestin Hounkpatin', role: 'me', libelle: 'Locataire · compte C' },
+  { id: 'me-dossi', nom: 'Dossi Ahouansou', role: 'me', libelle: 'Locataire · compte D' },
+  { id: 'me-espoir', nom: 'Espoir Zinsou', role: 'me', libelle: 'Locataire · compte E' },
+  { id: 'me-farida', nom: 'Farida Sènou', role: 'me', libelle: 'Locataire · compte F' },
+  { id: 'me-ghislain', nom: 'Ghislain Toko', role: 'me', libelle: 'Locataire · compte G' },
+  { id: 'find-amina', nom: 'Amina Yayi', role: 'find', libelle: 'Candidat · profil A' },
+  { id: 'find-koffi', nom: 'Koffi Hounsa', role: 'find', libelle: 'Candidat · profil B' },
+]
+
+export const LOCATAIRES_DEMO = [
+  { id: 'loc-ada', nom: 'Ada Sossou', profilId: 'me-ada' },
+  { id: 'loc-bio', nom: 'Bio Kponton', profilId: 'me-bio' },
+  { id: 'loc-celestin', nom: 'Célestin Hounkpatin', profilId: 'me-celestin' },
+  { id: 'loc-dossi', nom: 'Dossi Ahouansou', profilId: 'me-dossi' },
+  { id: 'loc-espoir', nom: 'Espoir Zinsou', profilId: 'me-espoir' },
+  { id: 'loc-farida', nom: 'Farida Sènou', profilId: 'me-farida' },
+  { id: 'loc-ghislain', nom: 'Ghislain Toko', profilId: 'me-ghislain' },
+] as const
+
+export const CANDIDATS_DEMO = [
+  { id: 'find-amina', nom: 'Amina Yayi' },
+  { id: 'find-koffi', nom: 'Koffi Hounsa' },
+] as const
+
+const PROPRIETAIRES = ['pro-petit', 'pro-actif', 'pro-gestion']
+
+const LOGEMENTS_INITIAUX: LogementDemo[] = [
+  { id: 'log-01', proprietaireId: PROPRIETAIRES[0], titre: 'Studio lumineux', ville: 'Cotonou', quartier: 'Cadjèhoun', type: 'Studio', loyer: 65000, chambres: 1, surface: 28, statut: 'occupe', publie: false, description: 'Un studio fonctionnel dans un quartier résidentiel, à proximité des commerces.', equipements: ['Ventilation', 'Cuisine séparée'] },
+  { id: 'log-02', proprietaireId: PROPRIETAIRES[0], titre: 'Appartement familial', ville: 'Abomey-Calavi', quartier: 'Zogbadjè', type: 'Appartement', loyer: 115000, chambres: 2, surface: 64, statut: 'occupe', publie: false, description: 'Un appartement de deux chambres avec un séjour traversant.', equipements: ['Cour commune', 'Réserve d’eau'] },
+  { id: 'log-03', proprietaireId: PROPRIETAIRES[1], titre: 'Appartement du Patio', ville: 'Cotonou', quartier: 'Fidjrossè', type: 'Appartement', loyer: 140000, chambres: 2, surface: 72, statut: 'occupe', publie: false, description: 'Un logement aéré avec balcon, dans un secteur calme de Fidjrossè.', equipements: ['Balcon', 'Cuisine équipée'] },
+  { id: 'log-04', proprietaireId: PROPRIETAIRES[1], titre: 'Deux-pièces des Cocotiers', ville: 'Cotonou', quartier: 'Agla', type: 'Appartement', loyer: 95000, chambres: 2, surface: 56, statut: 'occupe', publie: false, description: 'Un deux-pièces pratique, avec accès facile aux axes principaux.', equipements: ['Terrasse', 'Compteur individuel'] },
+  { id: 'log-05', proprietaireId: PROPRIETAIRES[1], titre: 'Maison Cour Verte', ville: 'Porto-Novo', quartier: 'Ouando', type: 'Maison', loyer: 180000, chambres: 3, surface: 118, statut: 'occupe', publie: false, description: 'Une maison familiale organisée autour d’une cour intérieure.', equipements: ['Cour privée', 'Trois chambres'] },
+  { id: 'log-06', proprietaireId: PROPRIETAIRES[1], titre: 'Studio près du marché', ville: 'Abomey-Calavi', quartier: 'Arconville', type: 'Studio', loyer: 55000, chambres: 1, surface: 25, statut: 'disponible', publie: true, description: 'Un studio compact et bien ventilé, disponible à la visite.', equipements: ['Ventilation', 'Accès indépendant'] },
+  { id: 'log-07', proprietaireId: PROPRIETAIRES[1], titre: 'Appartement des Palmiers', ville: 'Cotonou', quartier: 'Akpakpa', type: 'Appartement', loyer: 125000, chambres: 2, surface: 68, statut: 'occupe', publie: false, description: 'Un appartement lumineux avec deux chambres et une pièce de vie ouverte.', equipements: ['Balcon', 'Parking commun'] },
+  { id: 'log-08', proprietaireId: PROPRIETAIRES[2], titre: 'Maison familiale Noya', ville: 'Porto-Novo', quartier: 'Tokpota', type: 'Maison', loyer: 160000, chambres: 3, surface: 105, statut: 'occupe', publie: false, description: 'Maison calme avec une cour adaptée à la vie de famille.', equipements: ['Cour', 'Réserve d’eau'] },
+  { id: 'log-09', proprietaireId: PROPRIETAIRES[2], titre: 'Appartement des Toits', ville: 'Ouidah', quartier: 'Pahou', type: 'Appartement', loyer: 85000, chambres: 2, surface: 54, statut: 'disponible', publie: true, description: 'Un appartement simple et lumineux, proche des services du quartier.', equipements: ['Balcon', 'Cuisine séparée'] },
+  { id: 'log-10', proprietaireId: PROPRIETAIRES[2], titre: 'Chambre indépendante', ville: 'Parakou', quartier: 'Alaga', type: 'Chambre', loyer: 35000, chambres: 1, surface: 19, statut: 'disponible', publie: true, description: 'Une chambre indépendante avec accès à une cour partagée.', equipements: ['Accès indépendant', 'Cour commune'] },
+  { id: 'log-11', proprietaireId: PROPRIETAIRES[2], titre: 'Studio de la Lagune', ville: 'Porto-Novo', quartier: 'Avassa', type: 'Studio', loyer: 70000, chambres: 1, surface: 32, statut: 'disponible', publie: true, description: 'Un studio clair dans un environnement résidentiel.', equipements: ['Cuisine séparée', 'Ventilation'] },
+  { id: 'log-12', proprietaireId: PROPRIETAIRES[2], titre: 'Appartement de Bohicon', ville: 'Bohicon', quartier: 'Agongointo', type: 'Appartement', loyer: 105000, chambres: 2, surface: 61, statut: 'disponible', publie: true, description: 'Un deux-pièces bien distribué, prêt à accueillir ses futurs occupants.', equipements: ['Terrasse', 'Compteur individuel'] },
+]
+
+const BAUX_INITIAUX: BailDemo[] = [
+  { id: 'bail-01', logementId: 'log-01', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-ada', debut: '2026-03-01', statut: 'actif', loyer: 65000 },
+  { id: 'bail-02', logementId: 'log-02', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-bio', debut: '2026-02-01', statut: 'actif', loyer: 115000 },
+  { id: 'bail-03', logementId: 'log-03', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2026-06-01', statut: 'actif', loyer: 140000 },
+  { id: 'bail-04', logementId: 'log-04', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-dossi', debut: '2026-02-01', statut: 'actif', loyer: 95000 },
+  { id: 'bail-05', logementId: 'log-05', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-espoir', debut: '2026-06-01', statut: 'actif', loyer: 180000 },
+  { id: 'bail-06', logementId: 'log-06', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2025-09-01', fin: '2026-05-31', statut: 'termine', loyer: 55000 },
+  { id: 'bail-07', logementId: 'log-07', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-farida', debut: '2026-01-01', statut: 'actif', loyer: 125000 },
+  { id: 'bail-08', logementId: 'log-08', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-ghislain', debut: '2026-01-01', statut: 'actif', loyer: 160000 },
+  { id: 'bail-09', logementId: 'log-09', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-espoir', debut: '2025-11-01', fin: '2026-05-31', statut: 'termine', loyer: 85000 },
+]
+
+const MOIS_ACTIFS = [
+  { libelle: 'Juin 2026', cle: '2026-06', echeance: '2026-06-05' },
+  { libelle: 'Juillet 2026', cle: '2026-07', echeance: '2026-07-05' },
+  { libelle: 'Août 2026', cle: '2026-08', echeance: '2026-08-05' },
+  { libelle: 'Septembre 2026', cle: '2026-09', echeance: '2026-09-05' },
+  { libelle: 'Octobre 2026', cle: '2026-10', echeance: '2026-10-05' },
+]
+
+const MOIS_ARCHIVES = [
+  { libelle: 'Janvier 2026', cle: '2026-01', echeance: '2026-01-05' },
+  { libelle: 'Février 2026', cle: '2026-02', echeance: '2026-02-05' },
+  { libelle: 'Mars 2026', cle: '2026-03', echeance: '2026-03-05' },
+  { libelle: 'Avril 2026', cle: '2026-04', echeance: '2026-04-05' },
+  { libelle: 'Mai 2026', cle: '2026-05', echeance: '2026-05-05' },
+]
+
+const STATUTS_PAR_BAIL: StatutPeriodeDemo[][] = [
+  ['regle', 'regle', 'regle', 'regle', 'regle'],
+  ['regle', 'regle', 'regle', 'regle', 'regle'],
+  ['regle', 'regle', 'regle', 'partiel', 'impaye'],
+  ['regle', 'regle', 'regle', 'regle', 'regle'],
+  ['regle', 'regle', 'regle', 'regle', 'impaye'],
+  ['regle', 'regle', 'regle', 'regle', 'regle'],
+  ['regle', 'regle', 'regle', 'partiel', 'impaye'],
+  ['regle', 'regle', 'regle', 'regle', 'regle'],
+  ['regle', 'regle', 'regle', 'regle', 'regle'],
+]
+
+function distribuerMontant(total: number, parts: number): number[] {
+  const montantParPart = Math.floor(total / parts)
+  return Array.from({ length: parts }, (_, index) =>
+    index === parts - 1 ? total - montantParPart * (parts - 1) : montantParPart,
+  )
+}
+
+function creerPeriodesEtPaiements() {
+  const periodes: PeriodeDemo[] = []
+  const paiements: PaiementDemo[] = []
+
+  BAUX_INITIAUX.forEach((bail, bailIndex) => {
+    const mois = bail.statut === 'termine' ? MOIS_ARCHIVES : MOIS_ACTIFS
+    STATUTS_PAR_BAIL[bailIndex].forEach((statut, moisIndex) => {
+      const periode = mois[moisIndex]
+      const periodeId = `${bail.id}-${periode.cle}`
+      const montantRegle = statut === 'regle'
+        ? bail.loyer
+        : statut === 'partiel'
+          ? Math.floor(bail.loyer / 2)
+          : 0
+      periodes.push({
+        id: periodeId,
+        bailId: bail.id,
+        mois: periode.libelle,
+        echeance: periode.echeance,
+        montantDu: bail.loyer,
+        montantRegle,
+        statut,
+      })
+
+      const nombreVersements = statut === 'partiel' ? (bailIndex === 2 ? 2 : 3) : 1
+      const montants = statut === 'impaye'
+        ? []
+        : distribuerMontant(montantRegle, nombreVersements)
+
+      montants.forEach((montant, versementIndex) => {
+        paiements.push({
+          id: `paiement-demo-${bailIndex + 1}-${moisIndex + 1}-${versementIndex + 1}`,
+          periodeId,
+          date: `${periode.cle}-${String(10 + versementIndex * 4).padStart(2, '0')}`,
+          montant,
+          moyen: versementIndex % 2 === 0 ? 'Virement (exemple)' : 'Espèces (exemple)',
+        })
+      })
+    })
+  })
+
+  return { periodes, paiements }
+}
+
+const CANDIDATURES_INITIALES: CandidatureDemo[] = [
+  { id: 'cand-01', logementId: 'log-06', candidatId: 'find-amina', date: '2026-10-03', statut: 'nouvelle', message: 'Je souhaite connaître les créneaux de visite disponibles.' },
+  { id: 'cand-02', logementId: 'log-06', candidatId: 'find-koffi', date: '2026-10-04', statut: 'a_etudier', message: 'Le logement correspond à ma recherche. Je reste disponible pour échanger.' },
+  { id: 'cand-03', logementId: 'log-09', candidatId: 'find-amina', date: '2026-10-05', statut: 'nouvelle', message: 'Je souhaiterais obtenir des informations sur le quartier.' },
+  { id: 'cand-04', logementId: 'log-10', candidatId: 'find-koffi', date: '2026-10-06', statut: 'acceptee', message: 'Je peux me rendre disponible pour une visite cette semaine.' },
+  { id: 'cand-05', logementId: 'log-11', candidatId: 'find-amina', date: '2026-10-07', statut: 'nouvelle', message: 'Je recherche un studio pour une installation prochaine.' },
+  { id: 'cand-06', logementId: 'log-12', candidatId: 'find-koffi', date: '2026-10-08', statut: 'refusee', message: 'Merci de me préciser les conditions de location.' },
+  { id: 'cand-07', logementId: 'log-09', candidatId: 'find-koffi', date: '2026-10-09', statut: 'a_etudier', message: 'Je suis intéressé par la disposition de cet appartement.' },
+  { id: 'cand-08', logementId: 'log-10', candidatId: 'find-amina', date: '2026-10-10', statut: 'nouvelle', message: 'Je souhaiterais visiter le logement avant de me décider.' },
+  { id: 'cand-09', logementId: 'log-11', candidatId: 'find-koffi', date: '2026-10-11', statut: 'a_etudier', message: 'Le secteur me convient. Le logement est-il toujours disponible ?' },
+  { id: 'cand-10', logementId: 'log-12', candidatId: 'find-amina', date: '2026-10-12', statut: 'nouvelle', message: 'Je souhaite déposer ma candidature pour ce logement.' },
+]
+
+function creerDocuments(periodes: PeriodeDemo[], paiements: PaiementDemo[]): DocumentDemo[] {
+  const documentsBaux = BAUX_INITIAUX.map((bail, index): DocumentDemo => ({
+    id: `doc-bail-${index + 1}`,
+    type: 'Bail',
+    titre: `Bail locatif · ${bail.id.replace('bail-', 'référence ')}`,
+    reference: `DEMO-BAIL-${String(index + 1).padStart(3, '0')}`,
+    bailId: bail.id,
+    date: bail.debut,
+  }))
+
+  const quittances: DocumentDemo[] = []
+  LOCATAIRES_DEMO.forEach((locataire, index) => {
+    const bauxDuLocataire = BAUX_INITIAUX.filter((bail) => bail.locataireId === locataire.id)
+    const periode = periodes.find((item) => bauxDuLocataire.some((bail) => bail.id === item.bailId) && item.statut === 'regle')
+    if (!periode) return
+    quittances.push({
+      id: `doc-quittance-${index + 1}`,
+      type: 'Quittance',
+      titre: `Quittance · ${periode.mois}`,
+      reference: `DEMO-QUI-${String(index + 1).padStart(3, '0')}`,
+      bailId: periode.bailId,
+      periodeId: periode.id,
+      date: periode.echeance,
+      montant: periode.montantDu,
+    })
+  })
+
+  const recus = paiements
+    .filter((paiement) => periodes.some((periode) => periode.id === paiement.periodeId && periode.statut === 'partiel'))
+    .map((paiement, index): DocumentDemo => {
+      const periode = periodes.find((item) => item.id === paiement.periodeId)
+      return {
+        id: `doc-recu-${index + 1}`,
+        type: 'Reçu',
+        titre: `Reçu de versement · ${periode?.mois ?? 'période fictive'}`,
+        reference: `DEMO-REC-${String(index + 1).padStart(3, '0')}`,
+        bailId: periode?.bailId ?? '',
+        periodeId: paiement.periodeId,
+        date: paiement.date,
+        montant: paiement.montant,
+      }
+    })
+
+  return [...documentsBaux, ...quittances, ...recus]
+}
+
+export function creerDonneesDemo(): DonneesDemo {
+  const { periodes, paiements } = creerPeriodesEtPaiements()
+
+  return {
+    version: 1,
+    profilId: 'pro-actif',
+    espace: 'pro',
+    vue: 'tableau',
+    logements: LOGEMENTS_INITIAUX.map((logement) => ({ ...logement, equipements: [...logement.equipements] })),
+    baux: BAUX_INITIAUX.map((bail) => ({ ...bail })),
+    periodes,
+    paiements,
+    documents: creerDocuments(periodes, paiements),
+    candidatures: CANDIDATURES_INITIALES.map((candidature) => ({ ...candidature })),
+    filtreVille: '',
+    filtreType: '',
+    plafondLoyer: '',
+    recherche: '',
+    notificationLocaleParProfil: Object.fromEntries(
+      PROFILS_DEMO.filter((profil) => profil.role === 'me').map((profil) => [profil.id, true]),
+    ),
+  }
+}
+
+export function estDonneeDemoValide(valeur: unknown): valeur is DonneesDemo {
+  if (!valeur || typeof valeur !== 'object') return false
+  const donnees = valeur as Partial<DonneesDemo>
+  return donnees.version === 1
+    && PROFILS_DEMO.some((profil) => profil.id === donnees.profilId)
+    && Array.isArray(donnees.logements)
+    && Array.isArray(donnees.baux)
+    && Array.isArray(donnees.periodes)
+    && Array.isArray(donnees.paiements)
+    && Array.isArray(donnees.documents)
+    && Array.isArray(donnees.candidatures)
+    && Boolean(donnees.notificationLocaleParProfil && typeof donnees.notificationLocaleParProfil === 'object')
+}
+
