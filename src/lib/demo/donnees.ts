@@ -1,12 +1,10 @@
-export type EspaceDemo = 'pro' | 'me' | 'find'
-export type RoleDemo = EspaceDemo
 export type StatutPeriodeDemo = 'regle' | 'partiel' | 'impaye'
 export type StatutCandidatureDemo = 'nouvelle' | 'a_etudier' | 'acceptee' | 'refusee'
 
 export interface ProfilDemo {
   id: string
   nom: string
-  role: RoleDemo
+  role: 'pro' | 'me' | 'find'
   libelle: string
   organisation?: string
 }
@@ -56,17 +54,6 @@ export interface PaiementDemo {
   moyen: string
 }
 
-export interface DocumentDemo {
-  id: string
-  type: 'Bail' | 'Quittance' | 'Reçu'
-  titre: string
-  reference: string
-  bailId: string
-  periodeId?: string
-  date: string
-  montant?: number
-}
-
 export interface CandidatureDemo {
   id: string
   logementId: string
@@ -77,21 +64,11 @@ export interface CandidatureDemo {
 }
 
 export interface DonneesDemo {
-  version: 1
-  profilId: string
-  espace: EspaceDemo
-  vue: string
   logements: LogementDemo[]
   baux: BailDemo[]
   periodes: PeriodeDemo[]
   paiements: PaiementDemo[]
-  documents: DocumentDemo[]
   candidatures: CandidatureDemo[]
-  filtreVille: string
-  filtreType: string
-  plafondLoyer: string
-  recherche: string
-  notificationLocaleParProfil: Record<string, boolean>
 }
 
 export const PROFILS_DEMO: ProfilDemo[] = [
@@ -142,15 +119,15 @@ const LOGEMENTS_INITIAUX: LogementDemo[] = [
 ]
 
 const BAUX_INITIAUX: BailDemo[] = [
-  { id: 'bail-01', logementId: 'log-01', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-ada', debut: '2026-03-01', statut: 'actif', loyer: 65000 },
-  { id: 'bail-02', logementId: 'log-02', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-bio', debut: '2026-02-01', statut: 'actif', loyer: 115000 },
+  { id: 'bail-01', logementId: 'log-01', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-ada', debut: '2026-06-01', statut: 'actif', loyer: 65000 },
+  { id: 'bail-02', logementId: 'log-02', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-bio', debut: '2026-06-01', statut: 'actif', loyer: 115000 },
   { id: 'bail-03', logementId: 'log-03', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2026-06-01', statut: 'actif', loyer: 140000 },
-  { id: 'bail-04', logementId: 'log-04', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-dossi', debut: '2026-02-01', statut: 'actif', loyer: 95000 },
+  { id: 'bail-04', logementId: 'log-04', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-dossi', debut: '2026-06-01', statut: 'actif', loyer: 95000 },
   { id: 'bail-05', logementId: 'log-05', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-espoir', debut: '2026-06-01', statut: 'actif', loyer: 180000 },
-  { id: 'bail-06', logementId: 'log-06', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2025-09-01', fin: '2026-05-31', statut: 'termine', loyer: 55000 },
-  { id: 'bail-07', logementId: 'log-07', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-farida', debut: '2026-01-01', statut: 'actif', loyer: 125000 },
-  { id: 'bail-08', logementId: 'log-08', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-ghislain', debut: '2026-01-01', statut: 'actif', loyer: 160000 },
-  { id: 'bail-09', logementId: 'log-09', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-espoir', debut: '2025-11-01', fin: '2026-05-31', statut: 'termine', loyer: 85000 },
+  { id: 'bail-06', logementId: 'log-06', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 55000 },
+  { id: 'bail-07', logementId: 'log-07', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-farida', debut: '2026-06-01', statut: 'actif', loyer: 125000 },
+  { id: 'bail-08', logementId: 'log-08', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-ghislain', debut: '2026-06-01', statut: 'actif', loyer: 160000 },
+  { id: 'bail-09', logementId: 'log-09', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-espoir', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 85000 },
 ]
 
 const MOIS_ACTIFS = [
@@ -245,87 +222,15 @@ const CANDIDATURES_INITIALES: CandidatureDemo[] = [
   { id: 'cand-10', logementId: 'log-12', candidatId: 'find-amina', date: '2026-10-12', statut: 'nouvelle', message: 'Je souhaite déposer ma candidature pour ce logement.' },
 ]
 
-function creerDocuments(periodes: PeriodeDemo[], paiements: PaiementDemo[]): DocumentDemo[] {
-  const documentsBaux = BAUX_INITIAUX.map((bail, index): DocumentDemo => ({
-    id: `doc-bail-${index + 1}`,
-    type: 'Bail',
-    titre: `Bail locatif · ${bail.id.replace('bail-', 'référence ')}`,
-    reference: `DEMO-BAIL-${String(index + 1).padStart(3, '0')}`,
-    bailId: bail.id,
-    date: bail.debut,
-  }))
-
-  const quittances: DocumentDemo[] = []
-  LOCATAIRES_DEMO.forEach((locataire, index) => {
-    const bauxDuLocataire = BAUX_INITIAUX.filter((bail) => bail.locataireId === locataire.id)
-    const periode = periodes.find((item) => bauxDuLocataire.some((bail) => bail.id === item.bailId) && item.statut === 'regle')
-    if (!periode) return
-    quittances.push({
-      id: `doc-quittance-${index + 1}`,
-      type: 'Quittance',
-      titre: `Quittance · ${periode.mois}`,
-      reference: `DEMO-QUI-${String(index + 1).padStart(3, '0')}`,
-      bailId: periode.bailId,
-      periodeId: periode.id,
-      date: periode.echeance,
-      montant: periode.montantDu,
-    })
-  })
-
-  const recus = paiements
-    .filter((paiement) => periodes.some((periode) => periode.id === paiement.periodeId && periode.statut === 'partiel'))
-    .map((paiement, index): DocumentDemo => {
-      const periode = periodes.find((item) => item.id === paiement.periodeId)
-      return {
-        id: `doc-recu-${index + 1}`,
-        type: 'Reçu',
-        titre: `Reçu de versement · ${periode?.mois ?? 'période fictive'}`,
-        reference: `DEMO-REC-${String(index + 1).padStart(3, '0')}`,
-        bailId: periode?.bailId ?? '',
-        periodeId: paiement.periodeId,
-        date: paiement.date,
-        montant: paiement.montant,
-      }
-    })
-
-  return [...documentsBaux, ...quittances, ...recus]
-}
-
 export function creerDonneesDemo(): DonneesDemo {
   const { periodes, paiements } = creerPeriodesEtPaiements()
 
   return {
-    version: 1,
-    profilId: 'pro-actif',
-    espace: 'pro',
-    vue: 'tableau',
     logements: LOGEMENTS_INITIAUX.map((logement) => ({ ...logement, equipements: [...logement.equipements] })),
     baux: BAUX_INITIAUX.map((bail) => ({ ...bail })),
     periodes,
     paiements,
-    documents: creerDocuments(periodes, paiements),
     candidatures: CANDIDATURES_INITIALES.map((candidature) => ({ ...candidature })),
-    filtreVille: '',
-    filtreType: '',
-    plafondLoyer: '',
-    recherche: '',
-    notificationLocaleParProfil: Object.fromEntries(
-      PROFILS_DEMO.filter((profil) => profil.role === 'me').map((profil) => [profil.id, true]),
-    ),
   }
-}
-
-export function estDonneeDemoValide(valeur: unknown): valeur is DonneesDemo {
-  if (!valeur || typeof valeur !== 'object') return false
-  const donnees = valeur as Partial<DonneesDemo>
-  return donnees.version === 1
-    && PROFILS_DEMO.some((profil) => profil.id === donnees.profilId)
-    && Array.isArray(donnees.logements)
-    && Array.isArray(donnees.baux)
-    && Array.isArray(donnees.periodes)
-    && Array.isArray(donnees.paiements)
-    && Array.isArray(donnees.documents)
-    && Array.isArray(donnees.candidatures)
-    && Boolean(donnees.notificationLocaleParProfil && typeof donnees.notificationLocaleParProfil === 'object')
 }
 

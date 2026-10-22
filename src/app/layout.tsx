@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 
+import { BandeauDemoLocal } from '@/components/demo/bandeau-local'
 import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
 
 import './globals.css'
@@ -174,7 +175,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <BandeauDemoLocal />
+        {children}
+      </body>
     </html>
   )
 }

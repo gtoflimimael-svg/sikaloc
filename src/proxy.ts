@@ -7,7 +7,6 @@ import {
 } from '@/lib/maintenance-policy.mjs'
 import { cheminProtege, cheminPublic } from '@/lib/roles'
 import type { Database } from '@/lib/types/database'
-import { demonstrationLocaleAutorisee } from '@/lib/demo/activation'
 
 /*
  * Les règles de chemin — ce qui est gardé, ce qui est public — vivent dans
@@ -86,17 +85,6 @@ function reponseMaintenance(request: NextRequest) {
  */
 export default async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname
-
-  // L'espace de démonstration n'existe que sur localhost, en développement,
-  // après activation explicite. Il n'initialise alors ni Supabase ni Auth.
-  // Aucune requête hors de /demo ne bénéficie de cette exception.
-  if (
-    (chemin === '/demo' || chemin.startsWith('/demo/')) &&
-    (request.method === 'GET' || request.method === 'HEAD') &&
-    demonstrationLocaleAutorisee(request.headers.get('host'))
-  ) {
-    return NextResponse.next({ request })
-  }
 
   const decisionMaintenance = maintenanceDecision(
     chemin,
