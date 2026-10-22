@@ -1,6 +1,8 @@
 import {
   ArrowRight,
+  Banknote,
   Building2,
+  CalendarDays,
   FileCheck,
   Lock,
   Search,
@@ -249,25 +251,12 @@ export default async function PageAccueil() {
         </section>
 
         {/* ── Les trois espaces ────────────────────────────────────────── */}
-        <section id="espaces" className="home-spaces-section">
+        <section id="espaces" className="home-spaces-section" aria-labelledby="home-pro-title">
           <div className="mx-auto max-w-[1200px]">
-            <div className="home-spaces-heading">
-              <div>
-                <p className="home-section-label">Les espaces Sikaloc</p>
-                <h2 className="home-section-title">
-                  Gérer, consulter ou chercher : à chacun son espace.
-                </h2>
-              </div>
-              <p className="home-section-intro">
-                Pro accompagne le bailleur, Me le locataire invité, et Find les
-                personnes qui parcourent les annonces publiées.
-              </p>
-            </div>
-
             <article className="home-product-story home-product-story--pro">
               <div className="home-product-story-copy">
                 <p className="home-product-label">Sikaloc Pro</p>
-                <h3 className="home-product-title">Vos locations, enfin organisées.</h3>
+                <h2 id="home-pro-title" className="home-product-title">Vos locations, enfin organisées.</h2>
                 <p className="home-product-description">
                   Retrouvez vos logements, vos locataires, vos baux et le suivi
                   des loyers dans un même espace.
@@ -283,7 +272,7 @@ export default async function PageAccueil() {
                     alt="Capture de démonstration du tableau de bord Sikaloc Pro avec des données fictives."
                     width={2560}
                     height={1720}
-                    sizes="(max-width: 900px) 90vw, (max-width: 1100px) 58vw, 700px"
+                    sizes="(max-width: 900px) 90vw, (max-width: 1100px) 62vw, 760px"
                   />
                 </div>
                 <figcaption>Aperçu du logiciel — données fictives</figcaption>
@@ -298,7 +287,7 @@ export default async function PageAccueil() {
               <div className="home-product-story-copy">
                 <p className="home-product-label">Sikaloc Me</p>
                 <h2 id="home-me-title" className="home-product-title">
-                  Votre location, vos informations, votre espace.
+                  Votre location, votre espace.
                 </h2>
                 <p className="home-product-description">
                   Après invitation, consultez les informations de votre bail,
@@ -308,31 +297,47 @@ export default async function PageAccueil() {
                   Comment accéder à Sikaloc Me <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>
-              <figure className="home-product-visual home-product-visual--me">
-                <div className="home-me-illustration">
-                  <Image
-                    src="/illustrations/home-03.webp"
-                    alt="Illustration éditoriale Sikaloc Me : une clé stylisée ouvre un passage entre des espaces architecturaux."
-                    width={1200}
-                    height={900}
-                    sizes="(max-width: 900px) 90vw, (max-width: 1100px) 58vw, 700px"
-                  />
+              <figure className="home-product-visual home-product-visual--me" aria-label="Composition illustrative des rubriques Sikaloc Me">
+                <div className="home-me-scene">
+                  <div className="home-me-scene-card">
+                    <div className="home-me-scene-heading">
+                      <div>
+                        <p className="home-me-scene-kicker">Espace locataire</p>
+                        <h3>Les informations de votre location</h3>
+                      </div>
+                      <span className="home-me-invitation">Après invitation</span>
+                    </div>
+                    <div className="home-me-scene-list">
+                      <div className="home-me-scene-row">
+                        <span className="home-me-scene-icon"><ScrollText size={20} aria-hidden="true" /></span>
+                        <span><strong>Mon bail</strong><small>Les termes saisis par votre bailleur</small></span>
+                      </div>
+                      <div className="home-me-scene-row">
+                        <span className="home-me-scene-icon"><CalendarDays size={20} aria-hidden="true" /></span>
+                        <span><strong>Mes loyers</strong><small>Les périodes et leur état connu</small></span>
+                      </div>
+                      <div className="home-me-scene-row">
+                        <span className="home-me-scene-icon"><Banknote size={20} aria-hidden="true" /></span>
+                        <span><strong>Mes paiements</strong><small>Versements enregistrés et quittances émises</small></span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <figcaption>Illustration de marque — ceci n’est pas une capture d’écran.</figcaption>
+                <figcaption>Composition illustrative fondée sur les rubriques réelles de Me — pas une capture d’écran.</figcaption>
               </figure>
             </article>
           </div>
         </section>
 
-        <section id="trouver" className="home-find-section home-find-section--signature">
+        <section id="trouver" className="home-find-section home-find-section--signature" aria-labelledby="home-find-title">
           <div className="home-find-layout mx-auto max-w-[1200px]">
             <div className="home-find-copy">
               <p className="home-find-overline">Sikaloc Find</p>
-              <h2 className="home-section-title">
+              <h2 id="home-find-title" className="home-section-title">
                 Cherchez avec vos propres repères.
               </h2>
               <p className="home-find-description">
-                Choisissez une ville, un type de bien ou une fourchette de loyer.
+                Choisissez une ville, un type de bien et une fourchette de loyer.
                 Find affiche les annonces publiées qui correspondent à votre recherche.
               </p>
               <Link href="/find" className="home-find-text-link">
@@ -341,20 +346,22 @@ export default async function PageAccueil() {
               <p className="home-find-note">Une candidature reste une demande ; le bailleur décide de la suite.</p>
             </div>
 
-            <div className="home-find-live" role="group" aria-label="Filtres de recherche de Sikaloc Find">
-              <div className="home-find-live-heading">
-                <span className="home-find-live-mark"><SlidersHorizontal size={17} aria-hidden="true" /></span>
-                <div>
-                  <strong>Construisez votre recherche</strong>
-                  <span>Les villes proposées correspondent aux annonces publiées.</span>
+            <div className="home-find-scene">
+              <div className="home-find-live" role="group" aria-label="Filtres de recherche de Sikaloc Find">
+                <div className="home-find-live-heading">
+                  <span className="home-find-live-mark"><SlidersHorizontal size={17} aria-hidden="true" /></span>
+                  <div>
+                    <strong>Construisez votre recherche</strong>
+                    <span>Les villes proposées correspondent aux annonces publiées.</span>
+                  </div>
                 </div>
+                <FiltresFind
+                  filtres={lireFiltres({})}
+                  lieux={lieux ?? []}
+                  nbFiltresActifs={0}
+                  compacte
+                />
               </div>
-              <FiltresFind
-                filtres={lireFiltres({})}
-                lieux={lieux ?? []}
-                nbFiltresActifs={0}
-                compacte
-              />
             </div>
           </div>
         </section>
