@@ -4,7 +4,7 @@
 
 La route simulée `/demo` a été retirée. La démonstration cible les vraies routes, l’authentification Supabase et les vraies tables de Sikaloc.
 
-**La base de démonstration n’a pas encore été créée ni peuplée.** Aucun service Supabase distant dédié n’existe dans les projets visibles ; `Sikaloc-Test` contient des données à préserver et n’est pas utilisé. Le démarrage Supabase local est actuellement bloqué par un refus d’accès au socket Docker. Les comptes ci-dessous seront créés après autorisation de Docker et exécution de la préparation locale.
+**L’instance Supabase locale dédiée a été initialisée et peuplée le 22 octobre 2026.** Les cinq comptes Auth de démonstration, les profils Pro/candidats et les données synthétiques ci-dessous sont présents dans cette instance. Aucune base distante, Production ou Sikaloc-Test n’a été utilisée.
 
 ## Démarrer l’instance isolée
 
@@ -101,7 +101,9 @@ Les téléphones sont des valeurs non joignables de démonstration. Les noms, ad
 
 - `/demo` n’est plus l’interface de démonstration et ne contourne plus le proxy/authentification.
 - Le setup refuse les clés qui ne sont pas un JWT `service_role` local `supabase-demo`, sans référence de projet, et l’URL du port local réservé.
+- La migration additive `20261022090000_corriger_declencheur_loyer_initial.sql` est appliquée uniquement à l’instance locale pour créer l’historique du loyer après l’insertion du bail parent.
 - Les identifiants restent dans le dossier privé utilisateur ; `.env.local` n’est ni lu par le script de seed ni modifié par lui.
-- Aucun reset ou peuplement de `SIka`, de `Sikaloc-Test` ou d’une autre base distante n’est prévu.
-- Les entrées de seed utilisent les vrais déclencheurs, contraintes et relations. Le script et les migrations n’ont pas été exécutés, car Docker n’est pas accessible dans l’environnement Codex. Le nombre de lignes indiqué est le contenu préparé, pas une création déjà réalisée.
+- Aucun reset ou peuplement de `SIka`, de `Sikaloc-Test` ou d’une autre base distante n’a été effectué.
+- Les entrées de seed utilisent les vrais déclencheurs, contraintes et relations. Les identifiants stables sont vérifiés avant insertion, afin de reprendre un seed interrompu sans recréer les lignes déjà présentes. Les équipements utilisent les codes autorisés par le schéma.
+- `npm run demo:setup` a réellement appliqué les migrations locales et créé les volumes indiqués dans ce guide.
 - Aucun test automatisé, build, push GitHub ou déploiement n’a été exécuté.
