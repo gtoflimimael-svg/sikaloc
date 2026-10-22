@@ -47,6 +47,7 @@ export type ModeleEmail =
   | 'candidature_acceptee'
   | 'candidature_refusee'
   | 'candidature_retiree'
+  | 'question_recue'
 
 export interface VariablesEmail {
   nom?: string
@@ -108,6 +109,10 @@ function urlLogo(): string {
   return `${urlBase()}/marque/logo-email.png`
 }
 
+function urlGestionQuestions(): string {
+  return new URL('/questions/gestion', urlBase()).toString()
+}
+
 export function composer(modele: ModeleEmail, variables: VariablesEmail): Message {
   const prenom = String(variables.nom ?? '').trim().split(/\s+/)[0] || 'Bonjour'
   const action = { libelle: 'Régler mon abonnement', url: urlAbonnement() }
@@ -125,6 +130,20 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
   const candidat = (): string => String(variables.candidat_nom ?? '').trim() || 'Un candidat'
 
   switch (modele) {
+    // Alerte d'exploitation sans nom, coordonnées ni contenu de la question.
+    case 'question_recue': {
+      return {
+        ton: 'info',
+        sujet: 'Nouvelle question reçue — Sikaloc',
+        titre: 'Une nouvelle question a été reçue',
+        corps: [
+          'Un visiteur a envoyé une demande depuis le formulaire de contact.',
+          'Le message et la coordonnée de réponse sont disponibles dans l’espace interne protégé.',
+        ],
+        action: { libelle: 'Ouvrir les demandes', url: urlGestionQuestions() },
+      }
+    }
+
     // ─── Une candidature arrive ───────────────────────────────────────
     //
     // Le message ne promet rien au bailleur et ne lui demande rien : il

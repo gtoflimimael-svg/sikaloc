@@ -515,6 +515,22 @@ export type InscriptionGuide = {
   dernier_envoi_le: string | null
 }
 
+/** Demande de contact publique, lisible uniquement par les opérateurs autorisés. */
+export type QuestionVisiteur = {
+  id: string
+  nom: string
+  sujet: string
+  question: string
+  canal_reponse: 'email' | 'whatsapp'
+  coordonnees: string
+  consentement: boolean
+  consentie_le: string
+  statut: 'nouvelle' | 'en_cours' | 'repondue'
+  repondue_le: string | null
+  cree_le: string
+  modifie_le: string
+}
+
 export type JournalPurge = {
   id: string
   bailleur_id: string
@@ -902,6 +918,7 @@ export interface Database {
       journal_purges: Ligne<JournalPurge>
       compteurs_documents: Ligne<CompteurDocuments>
       inscriptions_guide: Ligne<InscriptionGuide>
+      questions_visiteurs: Ligne<QuestionVisiteur>
       codes_verification: Ligne<CodeVerification>
       invitations_locataire: Ligne<InvitationLocataire>
       annonces: Ligne<Annonce>
@@ -1190,6 +1207,11 @@ export interface Database {
       executer_purge_j90: {
         Args: Record<string, never>
         Returns: { bailleur: string; locataires: number; fichiers: number }[]
+      }
+      /** Incrémente atomiquement la limite anonyme des questions, réservé au serveur. */
+      consommer_limite_questions: {
+        Args: { p_empreinte: string }
+        Returns: { autorisee: boolean; reessayer_apres: number }[]
       }
     }
     Enums: {

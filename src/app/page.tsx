@@ -9,6 +9,7 @@ import Image from 'next/image'
 
 import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-public'
 import { ApercuQuittanceDemonstration } from '@/components/marketing/apercu-quittance-demonstration'
+import { FAQAccueil } from '@/components/marketing/faq-accueil'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
 import { URL_EXEMPLE_QUITTANCE } from '@/lib/pdf/exemple-url'
@@ -350,26 +351,13 @@ export default async function PageAccueil() {
           </div>
         </section>
 
-        <section id="faq" className="home-faq-section">
+        <section id="faq" className="home-faq-section" aria-labelledby="home-faq-title">
           <div className="home-faq-layout mx-auto max-w-[1200px]">
             <div className="home-faq-heading">
               <p className="home-section-label">Questions fréquentes</p>
-              <h2 className="home-section-title">Avant de choisir votre espace.</h2>
+              <h2 id="home-faq-title" className="home-section-title">Des questions avant de commencer&nbsp;?</h2>
             </div>
-            <div className="home-faq-list">
-              <details>
-                <summary>Qui peut créer un compte bailleur ?</summary>
-                <p>Un propriétaire ou gestionnaire peut commencer depuis Sikaloc Pro. La confirmation de son adresse email reste nécessaire.</p>
-              </details>
-              <details>
-                <summary>Comment un locataire accède-t-il à Sikaloc Me ?</summary>
-                <p>Il reçoit une invitation de son bailleur. L’accès à Me ne nécessite pas de souscrire un abonnement.</p>
-              </details>
-              <details>
-                <summary>Les annonces Find sont-elles garanties disponibles ?</summary>
-                <p>Find présente les annonces publiées par les bailleurs. Une candidature ne vaut pas attribution d’un logement : le bailleur l’examine et décide de la suite.</p>
-              </details>
-            </div>
+            <FAQAccueil />
           </div>
         </section>
 
