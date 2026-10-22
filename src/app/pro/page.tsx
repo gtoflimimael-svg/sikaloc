@@ -41,36 +41,34 @@ const POINTS_GUIDE = [
 ]
 
 /**
- * Captures de la section « Aperçu du produit ».
- *
- * Produites par `npm run capturer:demo`, qui photographie l'application réelle
- * sur le jeu de démonstration local. À refaire après toute refonte visuelle de
- * l'espace connecté : une capture périmée promet un produit qui n'existe plus.
+ * Aperçus statiques de la section « Aperçu du produit ».
+ * Ils reprennent les parcours et libellés de Pro, mais sont rendus hors ligne
+ * avec des données fictives : ce ne sont pas des captures de comptes réels.
  */
 const apercus = [
   {
-    fichier: 'tableau-de-bord.png',
-    alt: 'Tableau de bord Sikaloc : taux d’occupation, taux de recouvrement, impayés et loyers en retard.',
-    etiquette: 'Votre tableau de bord',
-    titre: 'Qui a payé, qui doit encore',
+    fichier: 'pro-tableau-de-bord.png',
+    alt: 'Aperçu de démonstration du tableau de bord Sikaloc Pro : occupation, recouvrement, retards confirmés et paiements récents. Données fictives.',
+    etiquette: 'Pilotage quotidien',
+    titre: 'Votre activité locative en un regard',
     texte:
-      'Le montant encaissé ce mois-ci, les loyers en retard et depuis combien de jours. Sans ouvrir un cahier.',
+      'Retrouvez les indicateurs disponibles, les actions rapides et les derniers paiements enregistrés.',
   },
   {
-    fichier: 'saisie-paiement.png',
-    alt: 'Formulaire d’enregistrement d’un paiement : bail, montant, mois concerné, mode de paiement.',
-    etiquette: 'Enregistrer un paiement',
-    titre: 'Six champs, pas un de plus',
+    fichier: 'pro-paiements-quittances.png',
+    alt: 'Aperçu de démonstration de l’historique des paiements Sikaloc Pro avec statuts et justificatifs associés. Données fictives.',
+    etiquette: 'Paiements et documents',
+    titre: 'Du règlement à son justificatif',
     texte:
-      'Mobile Money, espèces ou virement. Un montant inférieur au loyer produit un reçu plutôt qu’une quittance — la distinction est faite pour vous.',
+      'Consultez les versements par période et retrouvez le reçu ou la quittance correspondant au paiement.',
   },
   {
-    fichier: 'liste-paiements.png',
-    alt: 'Historique des paiements avec statut payé ou partiel, et le lien vers la quittance émise.',
-    etiquette: 'Votre historique',
-    titre: 'Chaque encaissement, son document',
+    fichier: 'pro-baux-locataires.png',
+    alt: 'Aperçu de démonstration de la liste des baux Sikaloc Pro, reliant locataires, logements, périodes et loyers. Données fictives.',
+    etiquette: 'Gestion locative',
+    titre: 'Baux, logements et locataires',
     texte:
-      'La quittance est générée à la confirmation et reste téléchargeable. Vous gardez la trace de tout ce que vous avez encaissé.',
+      'Retrouvez pour chaque bail le locataire, le logement, le loyer mensuel et les principales conditions.',
   },
 ]
 
@@ -772,17 +770,8 @@ export default async function PagePresentationPro({
       </section>
 
       {/* ── Démo visuelle ──────────────────────────────────────────────── */}
-      {/*
-        Placée juste après les trois étapes : le visiteur vient de comprendre
-        que c'est simple, mais il n'a toujours pas vu le produit. Montrer
-        l'écran avant de demander un compte enlève la peur de l'inconnu.
-
-        Les captures viennent de la VRAIE application, prises par
-        `npm run capturer:demo` sur le jeu de démonstration local. Les personnes
-        et les montants sont inventés — c'est dit sous la grille, parce qu'une
-        capture qu'on laisse passer pour de vrais chiffres est un mensonge par
-        omission.
-      */}
+      {/* Aperçus statiques fondés sur les vues et parcours Pro actuels.
+          Le rendu est hors ligne et toutes les valeurs affichées sont fictives. */}
       <section id="demo" className="px-xl py-5xl">
         <div className="mx-auto max-w-[1200px]">
           <p className="text-caption-uppercase uppercase text-primary">Aperçu du produit</p>
@@ -790,8 +779,8 @@ export default async function PagePresentationPro({
             Voyez ce que vous allez utiliser
           </h2>
           <p className="mt-md max-w-[42rem] text-body-lg text-mute">
-            Pas de surprise au moment de créer votre compte : voici les trois
-            écrans où vous passerez l&apos;essentiel de votre temps.
+            Trois vues de démonstration pour découvrir le pilotage, le suivi des
+            paiements et l&apos;organisation des baux dans Sikaloc Pro.
           </p>
 
           <ul className="anim-cascade mt-3xl grid gap-xl md:grid-cols-3">
@@ -803,8 +792,6 @@ export default async function PagePresentationPro({
                     alt={apercu.alt}
                     width={2560}
                     height={1720}
-                    // Les deux premières sont susceptibles d'entrer dans le
-                    // premier écran sur un grand moniteur.
                     priority={rang === 0}
                     className="block h-auto w-full"
                     sizes="(min-width: 768px) 33vw, 100vw"
@@ -820,9 +807,8 @@ export default async function PagePresentationPro({
           </ul>
 
           <p className="mt-2xl text-body-sm text-mute">
-            Captures de démonstration d&apos;une interface antérieure : elles
-            seront actualisées avant publication. Les locataires, montants et
-            adresses sont fictifs.{' '}
+            Aperçus de démonstration, non issus d&apos;une session réelle. Les
+            identités, lieux, dates et montants affichés sont fictifs.{' '}
             <Link href="/exemple-quittance" className="font-semibold text-ink underline">
               Voir une vraie quittance
             </Link>

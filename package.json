@@ -34,6 +34,7 @@
     "preparer:modeles": "node scripts/preparer-modeles-visage.mjs",
     "banc:contraste": "node scripts/banc-contraste.cjs",
     "capturer:demo": "node scripts/capturer-demo.cjs",
+    "capturer:apercus-pro": "node scripts/capturer-apercus-pro.cjs",
     "banc:guide": "node scripts/banc-guide.cjs",
     "banc:onboarding": "node scripts/banc-onboarding.cjs",
     "banc:visite": "tsx scripts/banc-visite.ts",
