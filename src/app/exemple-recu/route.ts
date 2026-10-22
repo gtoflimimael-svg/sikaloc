@@ -11,8 +11,9 @@ import { rendrePdf } from '@/lib/quittance'
  * sous les yeux doit croire sur parole.
  *
  * Même `rendrePdf` que les documents réels, mêmes garde-fous que l'exemple de
- * quittance : filigrane « APERÇU », données fictives, numéro qui n'imite pas la
- * numérotation réelle, aucune signature diffusée.
+ * quittance : bandeau visible « EXEMPLE — DOCUMENT FICTIF — SANS VALEUR
+ * JUSTIFICATIVE », données génériques, numéro qui n'imite pas la numérotation
+ * réelle, aucune signature diffusée.
  *
  * Les chiffres sont ceux de l'exemple de quittance — même bail, même locataire,
  * même période — pour que les deux documents se comparent ligne à ligne. Seul
@@ -32,17 +33,17 @@ export async function GET() {
     dateGeneration: '2026-03-05T10:30:00.000Z',
     pays: 'Bénin',
 
-    bailleurNom: 'Awa Hounkpatin',
-    bailleurTelephone: '+2290197000000',
-    bailleurAdresse: 'Lot 128, Cadjèhoun, Cotonou',
+    bailleurNom: 'Bailleur de démonstration',
+    bailleurTelephone: '',
+    bailleurAdresse: null,
 
-    locataireNom: 'Koffi Adjovi',
-    locataireTelephone: '+2290196000000',
+    locataireNom: 'Locataire de démonstration',
+    locataireTelephone: '',
 
-    logementAdresse: 'Appartement B2, rue 12.045, Fidjrossè',
+    logementAdresse: 'Logement de démonstration',
     logementVille: 'Cotonou',
     logementPays: 'Bénin',
-    logementType: 'Appartement 2 chambres',
+    logementType: 'Appartement de démonstration',
 
     loyerMensuel: 75_000,
     periodeDebut: '2026-03-01',

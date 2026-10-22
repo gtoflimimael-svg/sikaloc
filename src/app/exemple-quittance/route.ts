@@ -15,9 +15,10 @@ import { rendrePdf } from '@/lib/quittance'
  * Le document est rendu par le même `rendrePdf` que les quittances réelles :
  * il ne peut donc pas diverger du produit. Deux garde-fous le distinguent
  * d'une pièce opposable :
- *   - `apercu: true` imprime le filigrane « APERÇU » en travers de la page ;
- *   - les données sont fictives, et le numéro de document le dit en toutes
- *     lettres plutôt que d'imiter la numérotation réelle (`Q-2026…`).
+ *   - `apercu: true` imprime « EXEMPLE — DOCUMENT FICTIF — SANS VALEUR
+ *     JUSTIFICATIVE » dans un bandeau discret ;
+ *   - les données sont génériques et le numéro n'imite pas la numérotation
+ *     réelle (`Q-2026…`).
  *
  * Un seul exemple, et non un par plan : depuis que la mention du droit de
  * timbre est imprimée sur toutes les quittances, les deux plans produisent le
@@ -37,17 +38,17 @@ export async function GET() {
     dateGeneration: '2026-03-05T10:30:00.000Z',
     pays: 'Bénin',
 
-    bailleurNom: 'Awa Hounkpatin',
-    bailleurTelephone: '+2290197000000',
-    bailleurAdresse: 'Lot 128, Cadjèhoun, Cotonou',
+    bailleurNom: 'Bailleur de démonstration',
+    bailleurTelephone: '',
+    bailleurAdresse: null,
 
-    locataireNom: 'Koffi Adjovi',
-    locataireTelephone: '+2290196000000',
+    locataireNom: 'Locataire de démonstration',
+    locataireTelephone: '',
 
-    logementAdresse: 'Appartement B2, rue 12.045, Fidjrossè',
+    logementAdresse: 'Logement de démonstration',
     logementVille: 'Cotonou',
     logementPays: 'Bénin',
-    logementType: 'Appartement 2 chambres',
+    logementType: 'Appartement de démonstration',
 
     loyerMensuel: 75_000,
     periodeDebut: '2026-03-01',
@@ -70,9 +71,8 @@ export async function GET() {
   return new NextResponse(pdf as unknown as BodyInit, {
     headers: {
       'Content-Type': 'application/pdf',
-      // `inline` : le PDF s'ouvre dans l'onglet plutôt que de tomber dans les
-      // téléchargements. Sur mobile, un téléchargement sort le visiteur du
-      // parcours d'inscription, dont c'est ici la dernière hésitation.
+      // `inline` : le même PDF peut s'ouvrir dans l'onglet et dans l'aperçu
+      // intégré de l'accueil, sans copie HTML du modèle documentaire.
       'Content-Disposition': 'inline; filename="exemple-quittance-sikaloc.pdf"',
       'Cache-Control': 'public, max-age=3600, s-maxage=86400',
     },

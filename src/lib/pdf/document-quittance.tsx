@@ -1,28 +1,14 @@
-import { join } from 'node:path'
-
 import {
   Document,
-  Font,
-  G,
   Image,
   Page,
-  Path,
   StyleSheet,
-  Svg,
   Text,
   View,
 } from '@react-pdf/renderer'
 
 import { formaterDate, formaterFCFA, formaterHorodatage, formaterPeriode } from '@/lib/format'
-import {
-  COULEUR_MARQUE,
-  HAUTEUR_MARQUE,
-  LARGEUR_MARQUE,
-  RATIO_MARQUE,
-  TRACES_ICONE,
-  TRACES_TEXTE,
-  TRANSFORM_ICONE,
-} from '@/lib/marque'
+import { couleurs, LogoMarque } from '@/lib/pdf/base'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
 import { formaterTelephone } from '@/lib/telephone'
 import type { TypePaiement } from '@/lib/types/database'
@@ -31,63 +17,8 @@ import type { TypePaiement } from '@/lib/types/database'
  * Quittance de loyer / Reçu — template Bénin.
  * Mentions obligatoires : spec §6.1.10.
  *
- * Polices de marque : Copernicus pour les titres, StyreneB pour le corps — les
- * mêmes familles que le site (`src/app/layout.tsx`). Les fichiers sont lus
- * localement sur le disque de la fonction serverless plutôt que récupérés par
- * URL : react-pdf accepte les deux, mais un aller-retour réseau au milieu
- * d'un rendu PDF est une latence et un point de panne qu'on peut s'éviter — le
- * fichier ne pèse que quelques dizaines de kilo-octets. `next.config.ts`
- * (`outputFileTracingIncludes`) garantit que ces fichiers suivent bien le
- * paquet déployé, faute de quoi ce chemin serait introuvable en production.
+ * Polices et palette partagées avec les autres documents via `pdf/base.tsx`.
  */
-const DOSSIER_POLICES = join(process.cwd(), 'src/app/fonts')
-
-// L'enregistrement est mémoïsé au niveau du module : une fonction serverless
-// réutilisée entre requêtes (Fluid Compute) ne doit pas ré-enregistrer les
-// mêmes polices à chaque appel.
-let policesEnregistrees = false
-
-function enregistrerPolices(): void {
-  if (policesEnregistrees) return
-  policesEnregistrees = true
-
-  Font.register({
-    family: 'Copernicus',
-    fonts: [
-      { src: join(DOSSIER_POLICES, 'Copernicus-Book.ttf'), fontWeight: 400 },
-      { src: join(DOSSIER_POLICES, 'Copernicus-Bold.ttf'), fontWeight: 700 },
-      { src: join(DOSSIER_POLICES, 'Copernicus-Extrabold.ttf'), fontWeight: 800 },
-      { src: join(DOSSIER_POLICES, 'Copernicus-Heavy.ttf'), fontWeight: 900 },
-    ],
-  })
-
-  Font.register({
-    family: 'StyreneB',
-    fonts: [
-      { src: join(DOSSIER_POLICES, 'StyreneB-Regular.otf'), fontWeight: 400 },
-      { src: join(DOSSIER_POLICES, 'StyreneB-Medium.otf'), fontWeight: 500 },
-      { src: join(DOSSIER_POLICES, 'StyreneB-Bold.otf'), fontWeight: 700 },
-    ],
-  })
-}
-
-enregistrerPolices()
-
-const couleurs = {
-  ink: '#131314',
-  body: '#3A3A3D',
-  mute: '#64646C',
-  muteSoft: '#82828E',
-  primary: '#5555BC',
-  inkDeep: '#3E3EA9',
-  canvasSoft: '#F4F4FB',
-  hairline: '#D8D8E6',
-  primaryPale: '#DEDEEF',
-  warningPale: '#FAF0D4',
-  warningContent: '#6B5210',
-  warningDeep: '#A37B12',
-  positiveDeep: '#2F6B3F',
-}
 
 const styles = StyleSheet.create({
   page: {
@@ -113,8 +44,33 @@ const styles = StyleSheet.create({
   },
   marque: { flexDirection: 'row', alignItems: 'center' },
   blocNumero: { alignItems: 'flex-end' },
-  etiquetteNumero: { fontSize: 8, color: couleurs.mute, textTransform: 'uppercase' },
-  numero: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 11, color: couleurs.ink },
+  etiquetteNumero: { fontSize: 7.5, color: couleurs.mute, textTransform: 'uppercase', letterSpacing: 0.45 },
+  numero: { fontFamily: 'StyreneB', fontWeight: 700, fontSize: 10.5, color: couleurs.ink },
+  bandeauApercu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginBottom: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: couleurs.primary,
+    backgroundColor: couleurs.canvasSoft,
+  },
+  etiquetteApercu: {
+    color: couleurs.primary,
+    fontSize: 7.5,
+    fontFamily: 'StyreneB',
+    fontWeight: 700,
+    letterSpacing: 0.7,
+  },
+  mentionApercu: {
+    color: couleurs.mute,
+    fontSize: 7,
+    textAlign: 'right',
+    letterSpacing: 0.25,
+  },
 
   titre: {
     fontFamily: 'Copernicus',
@@ -131,7 +87,7 @@ const styles = StyleSheet.create({
   // sans avoir à parcourir le détail du paiement pour se faire une idée.
   recapitulatif: {
     flexDirection: 'row',
-    borderRadius: 8,
+    borderRadius: 6,
     overflow: 'hidden',
     marginBottom: 12,
     borderWidth: 1,
@@ -139,7 +95,7 @@ const styles = StyleSheet.create({
   },
   recapCellule: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 10,
     borderRightWidth: 1,
     borderRightColor: couleurs.hairline,
@@ -157,8 +113,8 @@ const styles = StyleSheet.create({
   colonne: {
     flex: 1,
     backgroundColor: couleurs.canvasSoft,
-    borderRadius: 8,
-    padding: 9,
+    borderRadius: 6,
+    padding: 10,
   },
   etiquetteBloc: {
     fontSize: 8,
@@ -191,8 +147,11 @@ const styles = StyleSheet.create({
 
   encadreMontant: {
     backgroundColor: couleurs.primaryPale,
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: couleurs.primary,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     marginBottom: 8,
   },
   etiquetteMontant: { fontSize: 8.5, color: couleurs.inkDeep, marginBottom: 2 },
@@ -201,7 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: 800,
     fontSize: 19,
     lineHeight: 1.2,
-    color: couleurs.inkDeep,
+    color: couleurs.primary,
     letterSpacing: -0.4,
   },
   montantLettres: {
@@ -210,23 +169,23 @@ const styles = StyleSheet.create({
     // react-pdf échouerait à résoudre la police. L'espacement des lettres
     // recrée la même distance visuelle avec le montant en chiffres au-dessus.
     fontSize: 9,
-    color: couleurs.inkDeep,
+    color: couleurs.primary,
     letterSpacing: 0.2,
     marginTop: 3,
   },
 
   decharge: {
     borderLeftWidth: 3,
-    borderLeftColor: couleurs.primary,
+    borderLeftColor: couleurs.signature,
     paddingLeft: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
     marginBottom: 8,
   },
   texteDecharge: { fontSize: 9.5, color: couleurs.ink, lineHeight: 1.45 },
 
   encadreTimbre: {
     backgroundColor: couleurs.warningPale,
-    borderRadius: 6,
+    borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginTop: 6,
@@ -268,18 +227,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'StyreneB', fontWeight: 700 },
-
-  filigrane: {
-    position: 'absolute',
-    top: 330,
-    left: 100,
-    fontSize: 62,
-    color: couleurs.muteSoft,
-    opacity: 0.12,
-    fontFamily: 'Copernicus',
-    fontWeight: 900,
-    transform: 'rotate(-28deg)',
-  },
 
   piedDePage: {
     position: 'absolute',
@@ -333,39 +280,8 @@ export interface DonneesQuittance {
   signatureLocataireDataUri: string | null
 
 
-  /** Aperçu écran : marque le document d'un filigrane. */
+  /** Exemple public : ajoute le bandeau fictif, jamais posé sur un document réel. */
   apercu?: boolean
-}
-
-/**
- * Le logo Sikaloc en en-tête de quittance — tracés vectoriels, pas une image
- * rasterisée : react-pdf sait rendre du SVG directement (`Svg`/`Path`/`G`),
- * ce qui évite de charger un fichier et garde un rendu net à toute résolution
- * d'impression. Les tracés viennent de `src/lib/marque.ts`, source unique
- * partagée avec le logo web et le logo email.
- */
-function LogoQuittance() {
-  const hauteur = 17
-  const largeur = Math.round(hauteur * RATIO_MARQUE)
-
-  return (
-    <Svg
-      width={largeur}
-      height={hauteur}
-      viewBox={`0 0 ${LARGEUR_MARQUE} ${HAUTEUR_MARQUE}`}
-    >
-      <G transform={TRANSFORM_ICONE} fill={COULEUR_MARQUE}>
-        {TRACES_ICONE.map((d, i) => (
-          <Path key={i} d={d} />
-        ))}
-      </G>
-      {TRACES_TEXTE.map(({ transform, d }, i) => (
-        <G key={i} transform={transform} fill={COULEUR_MARQUE}>
-          <Path d={d} />
-        </G>
-      ))}
-    </Svg>
-  )
 }
 
 function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
@@ -394,6 +310,13 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
    */
   const timbrePotentiellementDu =
     donnees.modePaiement === 'Espèces' && donnees.montant > 100_000
+  const nombreSignatures = Number(Boolean(donnees.signatureDataUri)) +
+    Number(Boolean(donnees.signatureLocataireDataUri))
+  const mentionSignature = nombreSignatures === 2
+    ? 'Les signatures reproduites ci-dessus sont des signatures électroniques simples, non qualifiées au sens de la réglementation applicable.'
+    : nombreSignatures === 1
+      ? `La signature ${donnees.signatureDataUri ? 'du bailleur' : 'du locataire'} reproduite ci-dessus est une signature électronique simple, non qualifiée au sens de la réglementation applicable.`
+      : 'Aucune signature électronique n’est affichée sur ce document.'
 
   return (
     <Document
@@ -406,12 +329,17 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
       producer="Sikaloc"
     >
       <Page size="A4" style={styles.page}>
-        {donnees.apercu ? <Text style={styles.filigrane}>APERÇU</Text> : null}
+        {donnees.apercu ? (
+          <View style={styles.bandeauApercu}>
+            <Text style={styles.etiquetteApercu}>EXEMPLE</Text>
+            <Text style={styles.mentionApercu}>DOCUMENT FICTIF — SANS VALEUR JUSTIFICATIVE</Text>
+          </View>
+        ) : null}
 
         {/* ── En-tête ────────────────────────────────────────────────────── */}
         <View style={styles.enTete}>
           <View style={styles.marque}>
-            <LogoQuittance />
+            <LogoMarque hauteur={20} />
           </View>
           <View style={styles.blocNumero}>
             <Text style={styles.etiquetteNumero}>N° de document</Text>
@@ -489,7 +417,9 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           <View style={styles.colonne}>
             <Text style={styles.etiquetteBloc}>Bailleur</Text>
             <Text style={styles.nomPartie}>{donnees.bailleurNom}</Text>
-            <Text style={styles.lignePartie}>Tél. {formaterTelephone(donnees.bailleurTelephone)}</Text>
+            {donnees.bailleurTelephone ? (
+              <Text style={styles.lignePartie}>Tél. {formaterTelephone(donnees.bailleurTelephone)}</Text>
+            ) : null}
             {donnees.bailleurAdresse ? (
               <Text style={styles.lignePartie}>{donnees.bailleurAdresse}</Text>
             ) : null}
@@ -498,7 +428,9 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           <View style={styles.colonne}>
             <Text style={styles.etiquetteBloc}>Locataire</Text>
             <Text style={styles.nomPartie}>{donnees.locataireNom}</Text>
-            <Text style={styles.lignePartie}>Tél. {formaterTelephone(donnees.locataireTelephone)}</Text>
+            {donnees.locataireTelephone ? (
+              <Text style={styles.lignePartie}>Tél. {formaterTelephone(donnees.locataireTelephone)}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -626,8 +558,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           </Text>
 
           <Text style={styles.mentionLegale}>
-            La signature apposée est une signature électronique simple, non
-            qualifiée au sens de la réglementation applicable.
+            {mentionSignature}
           </Text>
         </View>
 

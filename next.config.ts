@@ -64,7 +64,11 @@ const nextConfig: NextConfig = {
   // et la comparer suppose de la lire telle qu'elle est écrite. Comme pour les
   // polices, un chemin construit dynamiquement échappe au traçage statique.
   outputFileTracingIncludes: {
-    '/*': ['./src/app/fonts/Copernicus-*.ttf', './src/app/fonts/StyreneB-*.otf'],
+    '/*': [
+      './src/app/fonts/Copernicus-*.ttf',
+      './src/app/fonts/StyreneB-*.otf',
+      './public/marque/sikaloc-officiel-noir.svg',
+    ],
     // Le contrôle de schéma lit ce fichier pour connaître les colonnes
     // attendues. Les objets (contraintes, politiques…) passaient par le même
     // mécanisme, mais les migrations n'arrivaient pas dans la fonction
@@ -126,6 +130,11 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    const cspForPublicPdfPreview = cspHeader.replace(
+      "frame-ancestors 'none';",
+      "frame-ancestors 'self';",
+    )
+
     return [
       {
         // Toutes les routes : les API et les pages méritent la même
@@ -155,6 +164,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Seuls les PDF fictifs peuvent être intégrés dans les aperçus Sikaloc.
+      // Leur ouverture reste interdite depuis les pages d'une autre origine.
+      ...['/exemple-quittance', '/exemple-recu'].map((source) => ({
+        source,
+        headers: [
+          { key: 'Content-Security-Policy', value: cspForPublicPdfPreview },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        ],
+      })),
     ]
   },
 }
