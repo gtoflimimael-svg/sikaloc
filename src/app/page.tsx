@@ -287,14 +287,17 @@ export default async function PageAccueil() {
             <div className="home-problem-scene">
               <div className="home-problem-fragments">
                 <div className="home-problem-fragment home-problem-fragment--lease">
+                  <span className="home-problem-paper-edge" aria-hidden="true" />
                   <strong>Bail</strong>
                   <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
                 </div>
                 <div className="home-problem-fragment home-problem-fragment--payments">
+                  <span className="home-problem-paper-edge" aria-hidden="true" />
                   <strong>Versements</strong>
                   <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
                 </div>
                 <div className="home-problem-fragment home-problem-fragment--documents">
+                  <span className="home-problem-paper-edge" aria-hidden="true" />
                   <strong>Documents</strong>
                   <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /></span>
                 </div>
@@ -304,24 +307,21 @@ export default async function PageAccueil() {
             <div className="home-perspectives">
               <article className="home-perspective home-perspective--owner">
                 <span className="home-perspective-role">
-                  <Building2 size={17} aria-hidden="true" /> Côté bailleur
+                  <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Côté bailleur</span>
                 </span>
-                <p className="home-perspective-question">« Quelle période reste à régler ? »</p>
+                <p className="home-perspective-question">Quelle période reste à régler&nbsp;?</p>
                 <p className="home-perspective-copy">Bail, périodes et règlements à rapprocher.</p>
               </article>
               <article className="home-perspective home-perspective--tenant">
                 <span className="home-perspective-role">
-                  <ScrollText size={17} aria-hidden="true" /> Côté locataire
+                  <ScrollText size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Côté locataire</span>
                 </span>
-                <p className="home-perspective-question">« Où retrouver mon bail et mes reçus ? »</p>
+                <p className="home-perspective-question">Où retrouver mon bail et mes reçus&nbsp;?</p>
                 <p className="home-perspective-copy">Les documents que le bailleur rend disponibles dans Me.</p>
               </article>
             </div>
-          </div>
-          <div aria-hidden="true" className="home-problem-bridge">
-            <span>Des repères mieux organisés</span>
-            <span className="home-bridge-line" />
-            <span>Sikaloc</span>
           </div>
         </section>
 
