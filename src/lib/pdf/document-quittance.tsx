@@ -2,7 +2,9 @@ import {
   Document,
   Image,
   Page,
+  Path,
   StyleSheet,
+  Svg,
   Text,
   View,
 } from '@react-pdf/renderer'
@@ -45,7 +47,7 @@ const styles = StyleSheet.create({
   marque: { flexDirection: 'row', alignItems: 'center' },
   blocNumero: { alignItems: 'flex-end' },
   etiquetteNumero: { fontSize: 7.5, color: couleurs.mute, textTransform: 'uppercase', letterSpacing: 0.45 },
-  numero: { fontFamily: 'Inter', fontWeight: 700, fontSize: 10.5, color: couleurs.ink },
+  numero: { fontFamily: 'Inter', fontWeight: 600, fontSize: 10.5, color: couleurs.ink },
   bandeauApercu: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -62,7 +64,7 @@ const styles = StyleSheet.create({
     color: couleurs.primary,
     fontSize: 7.5,
     fontFamily: 'Inter',
-    fontWeight: 700,
+    fontWeight: 600,
     letterSpacing: 0.7,
   },
   mentionApercu: {
@@ -73,7 +75,7 @@ const styles = StyleSheet.create({
   },
 
   titre: {
-    fontFamily: 'Inter',
+    fontFamily: 'Manrope',
     fontWeight: 800,
     fontSize: 22,
     lineHeight: 1.15,
@@ -81,7 +83,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginBottom: 3,
   },
-  sousTitre: { fontSize: 9.5, color: couleurs.mute, marginBottom: 12 },
+  sousTitre: { fontFamily: 'Manrope', fontWeight: 500, fontSize: 9.5, color: couleurs.mute, marginBottom: 12 },
 
   // Bandeau de synthèse — loyer, montant réglé, solde : lisible d'un regard,
   // sans avoir à parcourir le détail du paiement pour se faire une idée.
@@ -101,13 +103,15 @@ const styles = StyleSheet.create({
     borderRightColor: couleurs.hairline,
   },
   recapEtiquette: {
+    fontFamily: 'Inter',
+    fontWeight: 500,
     fontSize: 7.5,
     color: couleurs.mute,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: 3,
   },
-  recapValeur: { fontFamily: 'Inter', fontWeight: 700, fontSize: 12, color: couleurs.ink },
+  recapValeur: { fontFamily: 'Manrope', fontWeight: 700, fontSize: 12, color: couleurs.ink },
 
   colonnes: { flexDirection: 'row', gap: 14, marginBottom: 12 },
   colonne: {
@@ -117,18 +121,20 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   etiquetteBloc: {
+    fontFamily: 'Inter',
+    fontWeight: 500,
     fontSize: 8,
     color: couleurs.mute,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: 6,
   },
-  nomPartie: { fontFamily: 'Inter', fontWeight: 700, fontSize: 11, color: couleurs.ink },
+  nomPartie: { fontFamily: 'Inter', fontWeight: 600, fontSize: 11, color: couleurs.ink },
   lignePartie: { fontSize: 9, color: couleurs.body },
 
   section: { marginBottom: 8 },
   titreSection: {
-    fontFamily: 'Inter',
+    fontFamily: 'Manrope',
     fontWeight: 700,
     fontSize: 10.5,
     color: couleurs.ink,
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
     borderBottomColor: couleurs.hairline,
   },
   ligneEtiquette: { fontSize: 9.5, color: couleurs.mute },
-  ligneValeur: { fontSize: 9.5, color: couleurs.ink, fontFamily: 'Inter', fontWeight: 700 },
+  ligneValeur: { fontSize: 9.5, color: couleurs.ink, fontFamily: 'Inter', fontWeight: 600 },
 
   encadreMontant: {
     backgroundColor: couleurs.primaryPale,
@@ -154,9 +160,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 8,
   },
-  etiquetteMontant: { fontSize: 8.5, color: couleurs.inkDeep, marginBottom: 2 },
+  etiquetteMontant: { fontFamily: 'Inter', fontWeight: 500, fontSize: 8.5, color: couleurs.inkDeep, marginBottom: 2 },
   montantChiffres: {
-    fontFamily: 'Inter',
+    fontFamily: 'Manrope',
     fontWeight: 800,
     fontSize: 19,
     lineHeight: 1.2,
@@ -206,7 +212,7 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   cadreSignature: { flex: 1, alignItems: 'center' },
-  etiquetteSignature: { fontSize: 8, color: couleurs.mute, marginBottom: 3 },
+  etiquetteSignature: { fontFamily: 'Inter', fontWeight: 500, fontSize: 8, color: couleurs.mute, marginBottom: 3 },
   imageSignature: { width: 160, height: 36, objectFit: 'contain', marginBottom: 3 },
   zoneSignatureVide: {
     height: 36,
@@ -227,7 +233,14 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     alignItems: 'center',
   },
-  nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'Inter', fontWeight: 700 },
+  nomSignataire: { fontSize: 9, color: couleurs.ink, fontFamily: 'Inter', fontWeight: 600 },
+  mentionSignaturesExemple: {
+    fontFamily: 'Inter',
+    fontSize: 7.5,
+    color: couleurs.mute,
+    textAlign: 'center',
+    marginTop: 4,
+  },
 
   piedDePage: {
     position: 'absolute',
@@ -245,7 +258,7 @@ const styles = StyleSheet.create({
 
 export type EtatSignaturePdf = 'apposee' | 'non-apposee' | 'indisponible'
 
-export interface DonneesQuittance {
+interface DonneesQuittanceCommunes {
   numeroDocument: string
   type: 'Quittance' | 'Reçu'
   dateGeneration: string
@@ -284,9 +297,43 @@ export interface DonneesQuittance {
   /** État précis : une erreur de lecture n'est pas assimilée à une absence. */
   signatureBailleurEtat?: EtatSignaturePdf
   signatureLocataireEtat?: EtatSignaturePdf
+}
 
-  /** Exemple public : ajoute le bandeau fictif, jamais posé sur un document réel. */
-  apercu?: boolean
+/** Le type de rendu sépare les exemples publics des pièces utilisateurs. */
+export type DonneesQuittance = DonneesQuittanceCommunes & (
+  | { modeDocument: 'reel'; signaturesExemple?: never }
+  | { modeDocument: 'exemple'; signaturesExemple?: boolean }
+)
+
+/** Traits vectoriels dessinés pour l'exemple public, jamais pour un document réel. */
+function SignatureBailleurExemple() {
+  return (
+    <Svg width={160} height={36} viewBox="0 0 160 36">
+      <Path
+        d="M7 27 C13 25 17 14 20 9 C22 6 25 8 23 17 C22 22 21 26 25 22 C29 18 32 10 35 11 C39 11 35 20 33 22 C31 24 37 21 42 16 C47 11 51 10 53 14 C55 18 49 23 46 24 C44 25 50 22 55 18 C60 14 63 14 64 18 C65 22 68 21 73 17 C78 13 83 10 86 13 C89 16 83 22 80 24 C78 25 84 23 89 19 C94 15 98 14 100 18 C102 22 105 21 110 17 C116 12 120 12 119 17 C118 21 116 24 121 23 C127 22 133 17 147 14"
+        fill="none"
+        stroke="#17311C"
+        strokeWidth={1.45}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+function SignatureLocataireExemple() {
+  return (
+    <Svg width={160} height={36} viewBox="0 0 160 36">
+      <Path
+        d="M10 23 C18 23 24 17 24 11 C24 6 18 6 16 12 C13 19 20 26 27 23 C33 20 34 13 38 13 C42 13 39 20 36 23 C34 25 42 23 49 17 C55 12 60 12 61 16 C62 20 56 24 53 25 C50 26 58 22 65 18 C71 14 75 16 73 21 C72 24 78 22 84 17 C90 12 96 11 98 15 C100 18 95 22 91 24 C89 26 98 24 105 19 C111 15 116 15 116 20 C116 24 121 22 128 17 C134 13 140 13 150 14"
+        fill="none"
+        stroke="#17311C"
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
 }
 
 function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
@@ -299,6 +346,8 @@ function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
 }
 
 export function DocumentQuittance(donnees: DonneesQuittance) {
+  const estExemple = donnees.modeDocument === 'exemple'
+  const signaturesExemple = estExemple && donnees.signaturesExemple === true
   const estLoyer = donnees.typePaiement === 'Loyer'
   const estQuittance = estLoyer && donnees.type === 'Quittance'
   const cumul = estLoyer ? (donnees.montantCumule ?? donnees.montant) : 0
@@ -315,10 +364,10 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
    */
   const timbrePotentiellementDu =
     donnees.modePaiement === 'Espèces' && donnees.montant > 100_000
-  const etatBailleur = donnees.signatureDataUri
+  const etatBailleur = donnees.modeDocument === 'reel' && donnees.signatureDataUri
     ? 'apposee'
     : donnees.signatureBailleurEtat ?? 'non-apposee'
-  const etatLocataire = donnees.signatureLocataireDataUri
+  const etatLocataire = donnees.modeDocument === 'reel' && donnees.signatureLocataireDataUri
     ? 'apposee'
     : donnees.signatureLocataireEtat ?? 'non-apposee'
   const mentionEtatSignature = (partie: string, etat: EtatSignaturePdf) => {
@@ -326,10 +375,18 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
     if (etat === 'indisponible') return `Signature du ${partie} indisponible pour ce document.`
     return `Signature du ${partie} non apposée.`
   }
-  const mentionSignature = [
-    mentionEtatSignature('bailleur', etatBailleur),
-    mentionEtatSignature('locataire', etatLocataire),
-  ].join(' ')
+  const mentionSignature = signaturesExemple
+    ? 'Les signatures graphiques sont illustratives : elles n’ont été apposées par aucune personne réelle et ne sont pas authentifiées.'
+    : [
+        mentionEtatSignature('bailleur', etatBailleur),
+        mentionEtatSignature('locataire', etatLocataire),
+      ].join(' ')
+
+  // Les signatures illustratives sont accessibles exclusivement au mode
+  // exemple. Les documents réels ne consomment que les signatures autorisées
+  // chargées depuis le mécanisme métier existant.
+  const signatureBailleurReelle = donnees.modeDocument === 'reel' ? donnees.signatureDataUri : null
+  const signatureLocataireReelle = donnees.modeDocument === 'reel' ? donnees.signatureLocataireDataUri : null
 
   return (
     <Document
@@ -342,7 +399,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
       producer="Sikaloc"
     >
       <Page size="A4" style={styles.page}>
-        {donnees.apercu ? (
+        {estExemple ? (
           <View style={styles.bandeauApercu}>
             <Text style={styles.etiquetteApercu}>EXEMPLE</Text>
             <Text style={styles.mentionApercu}>DOCUMENT FICTIF — SANS VALEUR JUSTIFICATIVE</Text>
@@ -514,8 +571,10 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
         <View style={styles.blocSignature}>
           <View style={styles.cadreSignature}>
             <Text style={styles.etiquetteSignature}>Signature du bailleur</Text>
-            {donnees.signatureDataUri ? (
-              <Image style={styles.imageSignature} src={donnees.signatureDataUri} />
+            {signaturesExemple ? (
+              <SignatureBailleurExemple />
+            ) : signatureBailleurReelle ? (
+              <Image style={styles.imageSignature} src={signatureBailleurReelle} />
             ) : (
               <View style={styles.zoneSignatureVide}>
                 <Text style={styles.texteSignatureVide}>
@@ -530,8 +589,10 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
 
           <View style={styles.cadreSignature}>
             <Text style={styles.etiquetteSignature}>Signature du locataire</Text>
-            {donnees.signatureLocataireDataUri ? (
-              <Image style={styles.imageSignature} src={donnees.signatureLocataireDataUri} />
+            {signaturesExemple ? (
+              <SignatureLocataireExemple />
+            ) : signatureLocataireReelle ? (
+              <Image style={styles.imageSignature} src={signatureLocataireReelle} />
             ) : (
               <View style={styles.zoneSignatureVide}>
                 <Text style={styles.texteSignatureVide}>
@@ -544,6 +605,10 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
             </View>
           </View>
         </View>
+
+        {signaturesExemple ? (
+          <Text style={styles.mentionSignaturesExemple}>{mentionSignature}</Text>
+        ) : null}
 
         {/* ── Mentions légales ───────────────────────────────────────────── */}
         {timbrePotentiellementDu ? (
@@ -575,9 +640,9 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
             {formaterHorodatage(donnees.dateGeneration)}.
           </Text>
 
-          <Text style={styles.mentionLegale}>
-            {mentionSignature}
-          </Text>
+          {!signaturesExemple ? (
+            <Text style={styles.mentionLegale}>{mentionSignature}</Text>
+          ) : null}
         </View>
 
         <View style={styles.piedDePage} fixed>

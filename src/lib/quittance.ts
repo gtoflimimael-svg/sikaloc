@@ -123,7 +123,7 @@ export async function obtenirDocumentAutorise(id: string): Promise<DocumentAutor
 
 async function donneesDuContexte(
   c: ContexteQuittance,
-  options: { numeroDocument?: string; dateGeneration?: string; apercu?: boolean } = {},
+  options: { numeroDocument?: string; dateGeneration?: string } = {},
 ): Promise<DonneesQuittance> {
   const { paiement, bail, bailleur, logement, locataire } = c
   const finances = c.finances
@@ -140,6 +140,7 @@ async function donneesDuContexte(
     ? Number(finances.cumul_loyer)
     : undefined
   return {
+    modeDocument: 'reel',
     numeroDocument: options.numeroDocument ?? '',
     type: typeDocumentPaiement(typePaiement, estPartiel),
     dateGeneration: options.dateGeneration ?? new Date().toISOString(),
@@ -162,14 +163,13 @@ async function donneesDuContexte(
     estPartiel,
     signatureDataUri: signatureBailleur.dataUri,
     signatureBailleurEtat: signatureBailleur.etat,
-    apercu: options.apercu,
   }
 }
 
 /** Repli de téléchargement : seulement un document autorisé jamais publié/signé. */
 export async function rassemblerDonnees(
   paiementId: string,
-  options: { apercu?: boolean; numeroDocument?: string; dateGeneration?: string } = {},
+  options: { numeroDocument?: string; dateGeneration?: string } = {},
 ): Promise<DonneesQuittance | null> {
   const acteur = await identiteServeur()
   if (!UUID.test(paiementId)) return null
@@ -186,7 +186,6 @@ export async function rassemblerDonnees(
   const document = data as unknown as DocumentAutorise
   if (document.signee || document.quittance.hash_sha256 || document.quittance.pdf_chemin) return null
   return donneesDuContexte(document.contexte, {
-    apercu: options.apercu,
     numeroDocument: document.quittance.numero_document ?? '',
     dateGeneration: document.quittance.date_generation,
   })

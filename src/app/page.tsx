@@ -11,6 +11,7 @@ import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-pu
 import { ApercuQuittanceDemonstration } from '@/components/marketing/apercu-quittance-demonstration'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
+import { URL_EXEMPLE_QUITTANCE } from '@/lib/pdf/exemple-url'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
 
 /**
@@ -336,7 +337,7 @@ export default async function PageAccueil() {
                 les documents mis à disposition, selon votre rôle et vos accès.
               </p>
               <div className="home-document-actions">
-                <Link href="/exemple-quittance" className="home-product-link">
+                <Link href={URL_EXEMPLE_QUITTANCE} className="home-product-link">
                   Voir un exemple de quittance <ArrowRight size={18} aria-hidden="true" />
                 </Link>
                 <Link href="/legal/confidentialite" className="home-document-privacy lien-anime">

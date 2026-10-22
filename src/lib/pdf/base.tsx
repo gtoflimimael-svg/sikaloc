@@ -31,8 +31,20 @@ export function enregistrerPolices(): void {
     fonts: [
       { src: join(DOSSIER_POLICES, 'Inter-PDF-Regular.ttf'), fontWeight: 400 },
       { src: join(DOSSIER_POLICES, 'Inter-PDF-Medium.ttf'), fontWeight: 500 },
+      { src: join(DOSSIER_POLICES, 'Inter-PDF-Semibold.ttf'), fontWeight: 600 },
       { src: join(DOSSIER_POLICES, 'Inter-PDF-Bold.ttf'), fontWeight: 700 },
       { src: join(DOSSIER_POLICES, 'Inter-PDF-Extrabold.ttf'), fontWeight: 800 },
+    ],
+  })
+
+  Font.register({
+    family: 'Manrope',
+    fonts: [
+      { src: join(DOSSIER_POLICES, 'Manrope-PDF-Regular.ttf'), fontWeight: 400 },
+      { src: join(DOSSIER_POLICES, 'Manrope-PDF-Medium.ttf'), fontWeight: 500 },
+      { src: join(DOSSIER_POLICES, 'Manrope-PDF-SemiBold.ttf'), fontWeight: 600 },
+      { src: join(DOSSIER_POLICES, 'Manrope-PDF-Bold.ttf'), fontWeight: 700 },
+      { src: join(DOSSIER_POLICES, 'Manrope-PDF-Extrabold.ttf'), fontWeight: 800 },
     ],
   })
 }

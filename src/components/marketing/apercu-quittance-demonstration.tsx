@@ -8,7 +8,9 @@ import type {
   RenderTask,
 } from 'pdfjs-dist'
 
-const SOURCE_PDF = '/exemple-quittance'
+import { URL_EXEMPLE_QUITTANCE } from '@/lib/pdf/exemple-url'
+
+const SOURCE_PDF = URL_EXEMPLE_QUITTANCE
 // Worker servi localement et aligné sur pdfjs-dist 6.3.289 (version verrouillée).
 const WORKER_PDFJS = '/vendor/pdfjs/pdf.worker.min.mjs'
 

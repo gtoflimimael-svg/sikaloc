@@ -58,7 +58,7 @@ export async function GET() {
     signatureDataUri: null,
     signatureLocataireDataUri: null,
 
-    apercu: true,
+    modeDocument: 'exemple',
   })
 
   return new NextResponse(pdf as unknown as BodyInit, {

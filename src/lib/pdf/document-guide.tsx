@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   },
   titre: {
     marginTop: 6,
-    fontFamily: 'Inter',
+    fontFamily: 'Manrope',
     fontSize: 25,
     fontWeight: 800,
     color: couleurs.ink,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   sousTitre: {
     marginTop: 4,
-    fontFamily: 'Inter',
+    fontFamily: 'Manrope',
     fontSize: 14,
     fontWeight: 700,
     color: couleurs.ink,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.canvasSoft,
   },
   recapTitre: {
-    fontFamily: 'Inter',
+    fontFamily: 'Manrope',
     fontSize: 13,
     fontWeight: 700,
     color: couleurs.ink,

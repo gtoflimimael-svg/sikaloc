@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '4mb',
     },
   },
-  // `pdf/base.tsx` lit les polices Inter statiques sur le disque à l'exécution
+  // `pdf/base.tsx` lit les polices statiques Manrope et Inter sur le disque à l'exécution
   // (voir son commentaire d'en-tête) : un chemin construit
   // dynamiquement (`path.join(process.cwd(), …)`) n'est pas repéré par le
   // traçage statique de Next.js, donc les .ttf/.otf ne suivraient pas dans le
@@ -67,7 +67,10 @@ const nextConfig: NextConfig = {
     '/*': [
       './src/app/fonts/Inter-PDF-*.ttf',
       './src/app/fonts/Inter-OFL.txt',
+      './src/app/fonts/Manrope-PDF-*.ttf',
+      './src/app/fonts/Manrope-OFL.txt',
       './public/marque/sikaloc-officiel-noir.svg',
+      './public/documents/exemple-quittance-sikaloc.pdf',
     ],
     // Le contrôle de schéma lit ce fichier pour connaître les colonnes
     // attendues. Les objets (contraintes, politiques…) passaient par le même

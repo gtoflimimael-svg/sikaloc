@@ -77,6 +77,7 @@ for (const [valeur, attendu] of CAS) {
 // ─── 2. Rendu du PDF ─────────────────────────────────────────────────────────
 
 const exemple: DonneesQuittance = {
+  modeDocument: 'reel',
   numeroDocument: 'Q-8F3A2-20260817-9X4K',
   type: 'Quittance',
   dateGeneration: new Date('2026-08-17T14:32:00').toISOString(),

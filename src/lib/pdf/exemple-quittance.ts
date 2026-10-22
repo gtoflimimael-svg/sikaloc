@@ -1,0 +1,30 @@
+import type { DonneesQuittance } from '@/lib/pdf/document-quittance'
+
+/** Données fictives uniques servant à générer le PDF public de démonstration. */
+export const donneesExempleQuittance: DonneesQuittance = {
+  modeDocument: 'exemple',
+  signaturesExemple: true,
+  numeroDocument: 'EXEMPLE-SIKALOC',
+  type: 'Quittance',
+  dateGeneration: '2026-03-05T10:30:00.000Z',
+  pays: 'Bénin',
+  bailleurNom: 'Bailleur de démonstration',
+  bailleurTelephone: '',
+  bailleurAdresse: null,
+  locataireNom: 'Locataire de démonstration',
+  locataireTelephone: '',
+  logementAdresse: 'Logement de démonstration',
+  logementVille: 'Cotonou',
+  logementPays: 'Bénin',
+  logementType: 'Appartement de démonstration',
+  loyerMensuel: 75_000,
+  periodeDebut: '2026-03-01',
+  periodeFin: '2026-03-31',
+  montant: 75_000,
+  datePaiement: '2026-03-05',
+  modePaiement: 'Mobile Money',
+  typePaiement: 'Loyer',
+  estPartiel: false,
+  signatureDataUri: null,
+  signatureLocataireDataUri: null,
+}

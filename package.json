@@ -21,6 +21,7 @@
     "test:isolation-guard": "node --test tests/isolation-guard.test.mjs",
     "verifier:migrations": "node scripts/verifier-migrations-statique.mjs",
     "verifier:quittance": "tsx scripts/verifier-quittance.ts",
+    "generer:exemple-quittance": "node --import tsx scripts/pdf/generer-exemple-quittance.tsx",
     "verifier:parcours": "node scripts/parcours-e2e.mjs",
     "generer:logo-email": "tsx scripts/generer-logo-email.ts",
     "db:start": "supabase start",
