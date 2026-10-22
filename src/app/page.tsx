@@ -1,8 +1,6 @@
 import {
   ArrowRight,
-  Banknote,
   Building2,
-  CalendarDays,
   FileCheck,
   Lock,
   Search,
@@ -268,14 +266,14 @@ export default async function PageAccueil() {
               <figure className="home-product-visual home-product-visual--pro">
                 <div className="home-product-visual-frame">
                   <Image
-                    src="/demo/pro-tableau-de-bord.png"
-                    alt="Capture de démonstration du tableau de bord Sikaloc Pro avec des données fictives."
-                    width={2560}
-                    height={1720}
-                    sizes="(max-width: 900px) 90vw, (max-width: 1100px) 62vw, 760px"
+                    src="/images/home/sikaloc-pro-editorial.webp"
+                    alt="Scène illustrative : une propriétaire béninoise organise ses locations dans son espace de travail."
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 900px) 90vw, (max-width: 1200px) 58vw, 680px"
                   />
                 </div>
-                <figcaption>Aperçu du logiciel — données fictives</figcaption>
+                <figcaption>Photographie illustrative générée par IA ; la personne représentée n’est pas une utilisatrice réelle.</figcaption>
               </figure>
             </article>
           </div>
@@ -297,33 +295,17 @@ export default async function PageAccueil() {
                   Comment accéder à Sikaloc Me <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>
-              <figure className="home-product-visual home-product-visual--me" aria-label="Composition illustrative des rubriques Sikaloc Me">
-                <div className="home-me-scene">
-                  <div className="home-me-scene-card">
-                    <div className="home-me-scene-heading">
-                      <div>
-                        <p className="home-me-scene-kicker">Espace locataire</p>
-                        <h3>Les informations de votre location</h3>
-                      </div>
-                      <span className="home-me-invitation">Après invitation</span>
-                    </div>
-                    <div className="home-me-scene-list">
-                      <div className="home-me-scene-row">
-                        <span className="home-me-scene-icon"><ScrollText size={20} aria-hidden="true" /></span>
-                        <span><strong>Mon bail</strong><small>Les termes saisis par votre bailleur</small></span>
-                      </div>
-                      <div className="home-me-scene-row">
-                        <span className="home-me-scene-icon"><CalendarDays size={20} aria-hidden="true" /></span>
-                        <span><strong>Mes loyers</strong><small>Les périodes et leur état connu</small></span>
-                      </div>
-                      <div className="home-me-scene-row">
-                        <span className="home-me-scene-icon"><Banknote size={20} aria-hidden="true" /></span>
-                        <span><strong>Mes paiements</strong><small>Versements enregistrés et quittances émises</small></span>
-                      </div>
-                    </div>
-                  </div>
+              <figure className="home-product-visual home-product-visual--me">
+                <div className="home-product-visual-frame">
+                  <Image
+                    src="/images/home/sikaloc-me-editorial.webp"
+                    alt="Scène illustrative : une locataire béninoise consulte son téléphone dans son logement."
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 900px) 90vw, (max-width: 1200px) 58vw, 680px"
+                  />
                 </div>
-                <figcaption>Composition illustrative fondée sur les rubriques réelles de Me — pas une capture d’écran.</figcaption>
+                <figcaption>Photographie illustrative générée par IA ; elle ne représente pas une locataire réelle et ne montre pas l’application.</figcaption>
               </figure>
             </article>
           </div>
@@ -347,6 +329,18 @@ export default async function PageAccueil() {
             </div>
 
             <div className="home-find-scene">
+              <figure className="home-find-photo">
+                <div className="home-find-photo-frame">
+                  <Image
+                    src="/images/home/sikaloc-find-editorial.webp"
+                    alt="Scène illustrative : un couple béninois découvre un appartement contemporain à louer."
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 900px) 90vw, (max-width: 1200px) 58vw, 680px"
+                  />
+                </div>
+                <figcaption>Photographie illustrative générée par IA ; ce logement n’est pas une annonce disponible sur Find.</figcaption>
+              </figure>
               <div className="home-find-live" role="group" aria-label="Filtres de recherche de Sikaloc Find">
                 <div className="home-find-live-heading">
                   <span className="home-find-live-mark"><SlidersHorizontal size={17} aria-hidden="true" /></span>
