@@ -258,7 +258,7 @@ function environnementApplication(identite, secrets) {
 
 async function peupler(identite) {
   const environnement = environnementApplication(identite, await lireSecrets())
-  const resultat = spawnSync(binaireTsx, [path.join(racine, 'scripts', 'demo', 'seed-local.ts')], {
+  const resultat = spawnSync(binaireTsx, [path.join(racine, 'scripts', 'demo', 'seed-local.mts')], {
     cwd: racine,
     env: {
       ...environnement,

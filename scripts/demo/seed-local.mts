@@ -1,3 +1,4 @@
+// .mts garde ce seed en ESM afin que tsx accepte ses imports et son await.
 import { createHash, randomBytes } from 'node:crypto'
 import { chmod, lstat, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
