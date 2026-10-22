@@ -73,8 +73,8 @@ export interface DonneesDemo {
 
 export const PROFILS_DEMO: ProfilDemo[] = [
   { id: 'pro-petit', nom: 'Aïcha Kora', role: 'pro', libelle: 'Petit portefeuille', organisation: '2 logements' },
-  { id: 'pro-actif', nom: 'Mariam Adandé', role: 'pro', libelle: 'Bailleur actif', organisation: '5 logements' },
-  { id: 'pro-gestion', nom: 'Maison Élan', role: 'pro', libelle: 'Portefeuille étendu', organisation: '5 logements' },
+  { id: 'pro-actif', nom: 'Mariam Adandé', role: 'pro', libelle: 'Bailleur actif', organisation: '2 logements' },
+  { id: 'pro-gestion', nom: 'Maison Élan', role: 'pro', libelle: 'Gestionnaire', organisation: '2 logements' },
   { id: 'me-ada', nom: 'Ada Sossou', role: 'me', libelle: 'Locataire · compte A' },
   { id: 'me-bio', nom: 'Bio Kponton', role: 'me', libelle: 'Locataire · compte B' },
   { id: 'me-celestin', nom: 'Célestin Hounkpatin', role: 'me', libelle: 'Locataire · compte C' },
@@ -107,27 +107,21 @@ const LOGEMENTS_INITIAUX: LogementDemo[] = [
   { id: 'log-01', proprietaireId: PROPRIETAIRES[0], titre: 'Studio lumineux', ville: 'Cotonou', quartier: 'Cadjèhoun', type: 'Studio', loyer: 65000, chambres: 1, surface: 28, statut: 'occupe', publie: false, description: 'Un studio fonctionnel dans un quartier résidentiel, à proximité des commerces.', equipements: ['Ventilation', 'Cuisine séparée'] },
   { id: 'log-02', proprietaireId: PROPRIETAIRES[0], titre: 'Appartement familial', ville: 'Abomey-Calavi', quartier: 'Zogbadjè', type: 'Appartement', loyer: 115000, chambres: 2, surface: 64, statut: 'occupe', publie: false, description: 'Un appartement de deux chambres avec un séjour traversant.', equipements: ['Cour commune', 'Réserve d’eau'] },
   { id: 'log-03', proprietaireId: PROPRIETAIRES[1], titre: 'Appartement du Patio', ville: 'Cotonou', quartier: 'Fidjrossè', type: 'Appartement', loyer: 140000, chambres: 2, surface: 72, statut: 'occupe', publie: false, description: 'Un logement aéré avec balcon, dans un secteur calme de Fidjrossè.', equipements: ['Balcon', 'Cuisine équipée'] },
-  { id: 'log-04', proprietaireId: PROPRIETAIRES[1], titre: 'Deux-pièces des Cocotiers', ville: 'Cotonou', quartier: 'Agla', type: 'Appartement', loyer: 95000, chambres: 2, surface: 56, statut: 'occupe', publie: false, description: 'Un deux-pièces pratique, avec accès facile aux axes principaux.', equipements: ['Terrasse', 'Compteur individuel'] },
-  { id: 'log-05', proprietaireId: PROPRIETAIRES[1], titre: 'Maison Cour Verte', ville: 'Porto-Novo', quartier: 'Ouando', type: 'Maison', loyer: 180000, chambres: 3, surface: 118, statut: 'occupe', publie: false, description: 'Une maison familiale organisée autour d’une cour intérieure.', equipements: ['Cour privée', 'Trois chambres'] },
-  { id: 'log-06', proprietaireId: PROPRIETAIRES[1], titre: 'Studio près du marché', ville: 'Abomey-Calavi', quartier: 'Arconville', type: 'Studio', loyer: 55000, chambres: 1, surface: 25, statut: 'disponible', publie: true, description: 'Un studio compact et bien ventilé, disponible à la visite.', equipements: ['Ventilation', 'Accès indépendant'] },
-  { id: 'log-07', proprietaireId: PROPRIETAIRES[1], titre: 'Appartement des Palmiers', ville: 'Cotonou', quartier: 'Akpakpa', type: 'Appartement', loyer: 125000, chambres: 2, surface: 68, statut: 'occupe', publie: false, description: 'Un appartement lumineux avec deux chambres et une pièce de vie ouverte.', equipements: ['Balcon', 'Parking commun'] },
-  { id: 'log-08', proprietaireId: PROPRIETAIRES[2], titre: 'Maison familiale Noya', ville: 'Porto-Novo', quartier: 'Tokpota', type: 'Maison', loyer: 160000, chambres: 3, surface: 105, statut: 'occupe', publie: false, description: 'Maison calme avec une cour adaptée à la vie de famille.', equipements: ['Cour', 'Réserve d’eau'] },
-  { id: 'log-09', proprietaireId: PROPRIETAIRES[2], titre: 'Appartement des Toits', ville: 'Ouidah', quartier: 'Pahou', type: 'Appartement', loyer: 85000, chambres: 2, surface: 54, statut: 'disponible', publie: true, description: 'Un appartement simple et lumineux, proche des services du quartier.', equipements: ['Balcon', 'Cuisine séparée'] },
-  { id: 'log-10', proprietaireId: PROPRIETAIRES[2], titre: 'Chambre indépendante', ville: 'Parakou', quartier: 'Alaga', type: 'Chambre', loyer: 35000, chambres: 1, surface: 19, statut: 'disponible', publie: true, description: 'Une chambre indépendante avec accès à une cour partagée.', equipements: ['Accès indépendant', 'Cour commune'] },
-  { id: 'log-11', proprietaireId: PROPRIETAIRES[2], titre: 'Studio de la Lagune', ville: 'Porto-Novo', quartier: 'Avassa', type: 'Studio', loyer: 70000, chambres: 1, surface: 32, statut: 'disponible', publie: true, description: 'Un studio clair dans un environnement résidentiel.', equipements: ['Cuisine séparée', 'Ventilation'] },
-  { id: 'log-12', proprietaireId: PROPRIETAIRES[2], titre: 'Appartement de Bohicon', ville: 'Bohicon', quartier: 'Agongointo', type: 'Appartement', loyer: 105000, chambres: 2, surface: 61, statut: 'disponible', publie: true, description: 'Un deux-pièces bien distribué, prêt à accueillir ses futurs occupants.', equipements: ['Terrasse', 'Compteur individuel'] },
+  { id: 'log-04', proprietaireId: PROPRIETAIRES[1], titre: 'Deux-pièces des Cocotiers', ville: 'Cotonou', quartier: 'Agla', type: 'Appartement', loyer: 95000, chambres: 2, surface: 56, statut: 'disponible', publie: true, description: 'Un deux-pièces pratique, avec accès facile aux axes principaux.', equipements: ['Terrasse', 'Compteur individuel'] },
+  { id: 'log-05', proprietaireId: PROPRIETAIRES[2], titre: 'Maison Cour Verte', ville: 'Porto-Novo', quartier: 'Ouando', type: 'Maison', loyer: 180000, chambres: 3, surface: 118, statut: 'occupe', publie: false, description: 'Une maison familiale organisée autour d’une cour intérieure.', equipements: ['Cour privée', 'Trois chambres'] },
+  { id: 'log-06', proprietaireId: PROPRIETAIRES[2], titre: 'Studio près du marché', ville: 'Abomey-Calavi', quartier: 'Arconville', type: 'Studio', loyer: 55000, chambres: 1, surface: 25, statut: 'disponible', publie: true, description: 'Un studio compact et bien ventilé, disponible à la visite.', equipements: ['Ventilation', 'Accès indépendant'] },
 ]
 
 const BAUX_INITIAUX: BailDemo[] = [
-  { id: 'bail-01', logementId: 'log-01', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-ada', debut: '2026-06-01', statut: 'actif', loyer: 65000 },
+  { id: 'bail-01', logementId: 'log-01', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-farida', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 65000 },
   { id: 'bail-02', logementId: 'log-02', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-bio', debut: '2026-06-01', statut: 'actif', loyer: 115000 },
   { id: 'bail-03', logementId: 'log-03', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2026-06-01', statut: 'actif', loyer: 140000 },
-  { id: 'bail-04', logementId: 'log-04', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-dossi', debut: '2026-06-01', statut: 'actif', loyer: 95000 },
-  { id: 'bail-05', logementId: 'log-05', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-espoir', debut: '2026-06-01', statut: 'actif', loyer: 180000 },
-  { id: 'bail-06', logementId: 'log-06', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 55000 },
-  { id: 'bail-07', logementId: 'log-07', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-farida', debut: '2026-06-01', statut: 'actif', loyer: 125000 },
-  { id: 'bail-08', logementId: 'log-08', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-ghislain', debut: '2026-06-01', statut: 'actif', loyer: 160000 },
-  { id: 'bail-09', logementId: 'log-09', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-espoir', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 85000 },
+  { id: 'bail-04', logementId: 'log-03', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-dossi', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 140000 },
+  { id: 'bail-05', logementId: 'log-05', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-ghislain', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 180000 },
+  { id: 'bail-06', logementId: 'log-04', proprietaireId: PROPRIETAIRES[1], locataireId: 'loc-celestin', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 95000 },
+  { id: 'bail-07', logementId: 'log-05', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-espoir', debut: '2026-06-01', statut: 'actif', loyer: 180000 },
+  { id: 'bail-08', logementId: 'log-06', proprietaireId: PROPRIETAIRES[2], locataireId: 'loc-espoir', debut: '2026-01-01', fin: '2026-05-31', statut: 'termine', loyer: 55000 },
+  { id: 'bail-09', logementId: 'log-01', proprietaireId: PROPRIETAIRES[0], locataireId: 'loc-ada', debut: '2026-06-01', statut: 'actif', loyer: 65000 },
 ]
 
 const MOIS_ACTIFS = [
@@ -210,16 +204,10 @@ function creerPeriodesEtPaiements() {
 }
 
 const CANDIDATURES_INITIALES: CandidatureDemo[] = [
-  { id: 'cand-01', logementId: 'log-06', candidatId: 'find-amina', date: '2026-10-03', statut: 'nouvelle', message: 'Je souhaite connaître les créneaux de visite disponibles.' },
-  { id: 'cand-02', logementId: 'log-06', candidatId: 'find-koffi', date: '2026-10-04', statut: 'a_etudier', message: 'Le logement correspond à ma recherche. Je reste disponible pour échanger.' },
-  { id: 'cand-03', logementId: 'log-09', candidatId: 'find-amina', date: '2026-10-05', statut: 'nouvelle', message: 'Je souhaiterais obtenir des informations sur le quartier.' },
-  { id: 'cand-04', logementId: 'log-10', candidatId: 'find-koffi', date: '2026-10-06', statut: 'acceptee', message: 'Je peux me rendre disponible pour une visite cette semaine.' },
-  { id: 'cand-05', logementId: 'log-11', candidatId: 'find-amina', date: '2026-10-07', statut: 'nouvelle', message: 'Je recherche un studio pour une installation prochaine.' },
-  { id: 'cand-06', logementId: 'log-12', candidatId: 'find-koffi', date: '2026-10-08', statut: 'refusee', message: 'Merci de me préciser les conditions de location.' },
-  { id: 'cand-07', logementId: 'log-09', candidatId: 'find-koffi', date: '2026-10-09', statut: 'a_etudier', message: 'Je suis intéressé par la disposition de cet appartement.' },
-  { id: 'cand-08', logementId: 'log-10', candidatId: 'find-amina', date: '2026-10-10', statut: 'nouvelle', message: 'Je souhaiterais visiter le logement avant de me décider.' },
-  { id: 'cand-09', logementId: 'log-11', candidatId: 'find-koffi', date: '2026-10-11', statut: 'a_etudier', message: 'Le secteur me convient. Le logement est-il toujours disponible ?' },
-  { id: 'cand-10', logementId: 'log-12', candidatId: 'find-amina', date: '2026-10-12', statut: 'nouvelle', message: 'Je souhaite déposer ma candidature pour ce logement.' },
+  { id: 'cand-01', logementId: 'log-04', candidatId: 'find-amina', date: '2026-10-03', statut: 'nouvelle', message: 'Je souhaite connaître les créneaux de visite disponibles.' },
+  { id: 'cand-02', logementId: 'log-04', candidatId: 'find-koffi', date: '2026-10-04', statut: 'a_etudier', message: 'Le logement correspond à ma recherche. Je reste disponible pour échanger.' },
+  { id: 'cand-03', logementId: 'log-06', candidatId: 'find-amina', date: '2026-10-05', statut: 'acceptee', message: 'Je peux me rendre disponible pour une visite cette semaine.' },
+  { id: 'cand-04', logementId: 'log-06', candidatId: 'find-koffi', date: '2026-10-06', statut: 'refusee', message: 'Merci de me préciser les conditions de location.' },
 ]
 
 export function creerDonneesDemo(): DonneesDemo {

@@ -87,8 +87,8 @@ const definitionsComptes: Array<{
   logements?: number
 }> = [
   { cle: 'pro-petit', email: `pro.petit@${EMAIL_DOMAIN}`, nom: profilsPro[0].nom, role: 'bailleur', logements: 2 },
-  { cle: 'pro-actif', email: `pro.actif@${EMAIL_DOMAIN}`, nom: profilsPro[1].nom, role: 'bailleur', logements: 5 },
-  { cle: 'pro-gestion', email: `pro.gestion@${EMAIL_DOMAIN}`, nom: profilsPro[2].nom, role: 'bailleur', logements: 5 },
+  { cle: 'pro-actif', email: `pro.actif@${EMAIL_DOMAIN}`, nom: profilsPro[1].nom, role: 'bailleur', logements: 2 },
+  { cle: 'pro-gestion', email: `pro.gestion@${EMAIL_DOMAIN}`, nom: profilsPro[2].nom, role: 'bailleur', logements: 2 },
   { cle: 'find-amina', email: `candidate.amina@${EMAIL_DOMAIN}`, nom: candidats[0].nom, role: 'candidat' },
   { cle: 'find-koffi', email: `candidate.koffi@${EMAIL_DOMAIN}`, nom: candidats[1].nom, role: 'candidat' },
 ]
@@ -260,7 +260,11 @@ async function insererLignesAbsentes(table: string, rows: Array<Record<string, u
   const absentes = rows.filter((row) => !dejaPresent.has(String(row.id)))
   if (absentes.length === 0) return
   const { error } = await supabase.from(table).insert(absentes)
-  if (error) refuser(`insertion des nouvelles fixtures locales dans ${table} refusée par le schéma`)
+  if (error) {
+    const message = error.message.replace(/\b[0-9a-f-]{36}\b/gi, '[identifiant]')
+    console.error(`Détail non sensible de la base locale (${table}, ${error.code}): ${message}`)
+    refuser(`insertion des nouvelles fixtures locales dans ${table} refusée par le schéma`)
+  }
 }
 
 await insererLignesAbsentes('logements', jeu.logements.map((logement) => ({

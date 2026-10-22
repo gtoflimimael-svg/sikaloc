@@ -51,9 +51,9 @@ Comptes Pro créés par la préparation :
 
 | Profil | Email | Parcours |
 |---|---|---|
-| Petit portefeuille | `pro.petit@sikaloc-demo.test` | `/pro/tableau-de-bord`, deux logements |
-| Bailleur principal | `pro.actif@sikaloc-demo.test` | Tableau de bord, cinq logements, locataires, baux, paiements |
-| Portefeuille étendu | `pro.gestion@sikaloc-demo.test` | Tableau de bord et cinq logements |
+| Petit portefeuille | `pro.petit@sikaloc-demo.test` | `/pro/tableau-de-bord`, deux logements et historique de baux |
+| Bailleur principal | `pro.actif@sikaloc-demo.test` | Tableau de bord, deux logements, locataires, baux et paiements |
+| Gestionnaire | `pro.gestion@sikaloc-demo.test` | Tableau de bord, deux logements et historique locatif |
 
 Connectez-vous par la page normale `/connexion`. Les comptes sont créés dans Auth local et déjà confirmés par le serveur local ; les profils métiers sont créés par les déclencheurs existants.
 
@@ -71,13 +71,13 @@ Pour un même profil fictif présent auprès de deux bailleurs, la seconde invit
 
 ## Catalogue Sikaloc Find
 
-Le seed prépare 12 logements, 9 baux, 45 périodes et 45 versements historiques. Les périodes couvrent les périodes renseignées par la fixture ; trois sont sans versement et deux restent partielles. Les dates des baux ont été alignées sur ces périodes pour ne pas inventer d’arriérés antérieurs.
+Le seed prépare 6 logements, 9 baux (4 en cours et 5 terminés), 45 périodes et 45 versements historiques. Les baux terminés précèdent les baux en cours sur les mêmes biens lorsqu’il s’agit d’une relocation ; trois périodes sont sans versement et deux restent partielles. Les dates sont alignées sur les périodes réelles de chaque fixture afin de ne pas inventer d’arriérés antérieurs.
 
-Cinq logements sont disponibles dans la fixture et peuvent donc avoir une annonce active. Le schéma permet une annonce vivante par logement : il ne serait pas cohérent d’afficher 15 annonces actives pour ces 12 biens, dont plusieurs portent un bail actif. Les annonces ne sont publiées qu’après dépôt d’une image dans le bucket privé réel `annonces`.
+Deux logements sont disponibles dans la fixture et peuvent donc avoir une annonce active. Le schéma permet une annonce vivante par logement. Chaque compte bailleur reste sur le plan Gratuit et ne dépasse pas le plafond réel de deux logements ; aucun abonnement payant ni paiement fictif n’est injecté. Les annonces ne sont publiées qu’après dépôt d’une image dans le bucket privé réel `annonces`.
 
 Pour éviter de présenter une illustration comme une photographie d’un logement réel, les images du seed sont des illustrations originales générées localement, portant la mention **« ILLUSTRATION · DÉMO LOCALE · BIEN FICTIF »**. La description de chaque annonce précise aussi qu’il ne s’agit pas d’une offre réelle. Les annonces ne sont présentes que dans la base locale dédiée ; elles ne sont ni publiques sur Internet ni sur Production.
 
-Ouvrez `/find`, appliquez les filtres, consultez une fiche puis utilisez le parcours réel de candidature. Deux comptes candidats Auth locaux et dix candidatures synthétiques avec statuts cohérents sont préparés lorsque les annonces correspondantes restent publiées. Une candidature acceptée ne crée pas automatiquement de bail.
+Ouvrez `/find`, appliquez les filtres, consultez une fiche puis utilisez le parcours réel de candidature. Deux comptes candidats Auth locaux et jusqu’à quatre candidatures synthétiques avec statuts cohérents sont préparés, selon les annonces encore publiées. Une candidature acceptée ne crée pas automatiquement de bail.
 
 ## Documents
 
@@ -88,10 +88,11 @@ Le seed ne crée pas de quittances ou reçus factices. Les versements sont de vr
 - 3 comptes bailleurs Auth et leurs profils Pro.
 - 7 personnes locataires, matérialisées par les fiches nécessaires aux relations avec les bailleurs (une personne peut avoir une relation chez plusieurs bailleurs).
 - 2 comptes candidats Auth.
-- 12 logements et 9 baux (actifs et terminés).
+- 6 logements (deux par bailleur) et 9 baux (4 en cours, 5 terminés).
 - 45 périodes et 45 versements, dont des paiements partiels et des impayés.
-- Jusqu’à 5 annonces Find publiées, selon la cohérence du bail et de l’illustration.
-- Jusqu’à 10 candidatures synthétiques, sous la contrainte d’unicité candidat/annonce.
+- Jusqu’à 2 annonces Find publiées, selon la cohérence du bail et de l’illustration.
+- Jusqu’à 4 candidatures synthétiques, sous la contrainte d’unicité candidat/annonce.
+- Les trois bailleurs restent sur l’offre gratuite : les données respectent le quota effectif et ne simulent pas un abonnement payé.
 - Aucun PDF fictif préfabriqué ; les vrais documents sont à générer depuis l’application.
 
 Les téléphones sont des valeurs non joignables de démonstration. Les noms, adresses, montants et statuts sont synthétiques. Le bandeau est visible sur toutes les pages uniquement dans le processus local démarré par `demo:dev`.
