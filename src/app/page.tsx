@@ -4,7 +4,6 @@ import {
   FileCheck,
   Lock,
   Search,
-  SlidersHorizontal,
   ScrollText,
 } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -14,9 +13,7 @@ import Image from 'next/image'
 import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-public'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
-import { FiltresFind } from '@/components/find/filtres'
-import { lireFiltres } from '@/lib/find/recherche'
-import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
+import { obtenirUtilisateur } from '@/lib/supabase/serveur'
 
 /**
  * La page d'accueil de Sikaloc — la marque, pas l'un de ses espaces.
@@ -119,11 +116,7 @@ const VERIFIABLE = [
 ]
 
 export default async function PageAccueil() {
-  const supabase = await creerClientServeur()
-  const [utilisateur, { data: lieux }] = await Promise.all([
-    obtenirUtilisateur(),
-    supabase.rpc('lieux_publies'),
-  ])
+  const utilisateur = await obtenirUtilisateur()
 
   return (
     <div className="min-h-screen bg-canvas-soft">
@@ -270,10 +263,9 @@ export default async function PageAccueil() {
                     alt="Scène illustrative : une propriétaire béninoise organise ses locations dans son espace de travail."
                     width={1536}
                     height={1024}
-                    sizes="(max-width: 900px) 90vw, (max-width: 1200px) 58vw, 680px"
+                    sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
                   />
                 </div>
-                <figcaption>Photographie illustrative générée par IA ; la personne représentée n’est pas une utilisatrice réelle.</figcaption>
               </figure>
             </article>
           </div>
@@ -302,61 +294,42 @@ export default async function PageAccueil() {
                     alt="Scène illustrative : une locataire béninoise consulte son téléphone dans son logement."
                     width={1536}
                     height={1024}
-                    sizes="(max-width: 900px) 90vw, (max-width: 1200px) 58vw, 680px"
+                    sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
                   />
                 </div>
-                <figcaption>Photographie illustrative générée par IA ; elle ne représente pas une locataire réelle et ne montre pas l’application.</figcaption>
               </figure>
             </article>
           </div>
         </section>
 
-        <section id="trouver" className="home-find-section home-find-section--signature" aria-labelledby="home-find-title">
+        <section id="trouver" className="home-find-section" aria-labelledby="home-find-title">
           <div className="home-find-layout mx-auto max-w-[1200px]">
             <div className="home-find-copy">
-              <p className="home-find-overline">Sikaloc Find</p>
-              <h2 id="home-find-title" className="home-section-title">
+              <p className="home-product-label">Sikaloc Find</p>
+              <h2 id="home-find-title" className="home-product-title">
                 Cherchez avec vos propres repères.
               </h2>
-              <p className="home-find-description">
+              <p className="home-product-description">
                 Choisissez une ville, un type de bien et une fourchette de loyer.
                 Find affiche les annonces publiées qui correspondent à votre recherche.
               </p>
-              <Link href="/find" className="home-find-text-link">
+              <Link href="/find" className="home-product-link">
                 Explorer les annonces <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <p className="home-find-note">Une candidature reste une demande ; le bailleur décide de la suite.</p>
             </div>
 
-            <div className="home-find-scene">
-              <figure className="home-find-photo">
-                <div className="home-find-photo-frame">
-                  <Image
-                    src="/images/home/sikaloc-find-editorial.webp"
-                    alt="Scène illustrative : un couple béninois découvre un appartement contemporain à louer."
-                    width={1536}
-                    height={1024}
-                    sizes="(max-width: 900px) 90vw, (max-width: 1200px) 58vw, 680px"
-                  />
-                </div>
-                <figcaption>Photographie illustrative générée par IA ; ce logement n’est pas une annonce disponible sur Find.</figcaption>
-              </figure>
-              <div className="home-find-live" role="group" aria-label="Filtres de recherche de Sikaloc Find">
-                <div className="home-find-live-heading">
-                  <span className="home-find-live-mark"><SlidersHorizontal size={17} aria-hidden="true" /></span>
-                  <div>
-                    <strong>Construisez votre recherche</strong>
-                    <span>Les villes proposées correspondent aux annonces publiées.</span>
-                  </div>
-                </div>
-                <FiltresFind
-                  filtres={lireFiltres({})}
-                  lieux={lieux ?? []}
-                  nbFiltresActifs={0}
-                  compacte
+            <figure className="home-product-visual home-product-visual--find">
+              <div className="home-product-visual-frame">
+                <Image
+                  src="/images/home/sikaloc-find-editorial.webp"
+                  alt="Scène illustrative : un couple béninois découvre un appartement contemporain."
+                  width={1536}
+                  height={1024}
+                  sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
                 />
               </div>
-            </div>
+            </figure>
           </div>
         </section>
 
