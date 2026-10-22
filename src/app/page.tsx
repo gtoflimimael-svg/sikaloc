@@ -362,33 +362,36 @@ export default async function PageAccueil() {
         </section>
 
         {/* ── Appel final ──────────────────────────────────────────────── */}
-        <section className="home-final-section">
+        <section className="home-final-section" aria-labelledby="home-final-title">
           <div className="home-final-cta mx-auto max-w-[1200px]">
             <div className="home-final-copy">
               <p className="home-final-kicker">Choisissez votre prochain pas</p>
-              <h2 className="text-display-md font-extrabold tracking-tight text-on-dark">
-                Une location. Votre manière d’avancer.
+              <h2 id="home-final-title" className="text-display-md font-extrabold tracking-tight text-on-dark">
+                <span>Une location.</span>
+                <span>Votre manière</span>
+                <span className="home-final-title-accent">d’avancer.</span>
               </h2>
               <p className="home-final-description">
-                Gérez avec Pro, retrouvez vos informations dans Me sur invitation,
-                ou explorez les annonces publiées avec Find.
+                Gérez vos locations avec Pro, retrouvez vos informations dans Me sur invitation, ou explorez les annonces avec Find.
               </p>
             </div>
 
             <nav className="home-final-paths" aria-label="Choisir un espace Sikaloc">
-              <Link href={utilisateur ? '/entrer' : '/inscription'} className="home-final-path home-final-path--pro">
-                <span className="home-final-path-space">Pro</span>
-                <span className="home-final-path-label">{utilisateur ? 'Ouvrir mon espace' : 'Créer un compte bailleur'}</span>
+              <Link href={utilisateur ? '/entrer' : '/inscription'} className="home-final-action home-final-action--pro">
+                <span className="home-final-action-space">SIKALOC PRO</span>
+                <span className="home-final-action-label">{utilisateur ? 'Ouvrir mon espace' : 'Créer un compte bailleur'}</span>
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
-              <Link href="/me/rejoindre" className="home-final-path">
-                <span className="home-final-path-space">Me</span>
-                <span className="home-final-path-label">Accéder sur invitation</span>
+              <Link href="/find" className="home-final-action home-final-action--find">
+                <span className="home-final-action-space">SIKALOC FIND</span>
+                <span className="home-final-action-label">Explorer les annonces</span>
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
-              <Link href="/find" className="home-final-path">
-                <span className="home-final-path-space">Find</span>
-                <span className="home-final-path-label">Explorer les annonces</span>
+              <Link href="/me/rejoindre" className="home-final-me">
+                <span className="home-final-me-copy">
+                  <span className="home-final-me-title">Vous êtes locataire ? <strong>Accéder à Sikaloc Me</strong></span>
+                  <span className="home-final-me-note">Accès sur invitation</span>
+                </span>
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
             </nav>

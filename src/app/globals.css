@@ -1794,23 +1794,34 @@
   .questions-admin-message { color: var(--color-positive-deep); font-size: 14px; }
   .questions-admin-filters a:focus-visible, .questions-admin-contact a:focus-visible, .questions-admin-item-actions button:focus-visible { outline: 3px solid #b8f36d; outline-offset: 3px; }
 
-  .home-final-section { padding: 0 clamp(20px, 5vw, 56px) clamp(56px, 7vw, 90px); }
-  .home-final-cta { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(28px, 4vw, 48px); overflow: hidden; padding: clamp(36px, 6vw, 76px); border-radius: 4px 42px 4px 42px; background: #17311c; }
-  .home-final-cta::after { position: absolute; top: -210px; right: -96px; width: 430px; height: 430px; border: 1px solid rgb(184 243 109 / .2); border-radius: 50%; box-shadow: 0 0 0 40px rgb(184 243 109 / .035), 0 0 0 82px rgb(184 243 109 / .02); content: ''; pointer-events: none; }
+  .home-final-section { padding: 0 clamp(20px, 5vw, 56px) clamp(32px, 4vw, 48px); }
+  .home-final-cta { position: relative; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); align-items: center; gap: clamp(36px, 5.5vw, 76px); overflow: hidden; padding: clamp(42px, 5.4vw, 72px); border-radius: 32px; background: #17311c; }
+  .home-final-cta::after { position: absolute; top: -285px; right: -165px; width: 500px; height: 500px; border: 1px solid rgb(184 243 109 / .1); border-radius: 50%; box-shadow: 0 0 0 44px rgb(184 243 109 / .018), 0 0 0 90px rgb(184 243 109 / .012); content: ''; pointer-events: none; }
   .home-final-copy, .home-final-paths { position: relative; z-index: 1; }
-  .home-final-kicker { margin: 0 0 13px; color: #b8f36d; font-size: 14px; font-weight: 700; }
-  .home-final-copy h2 { max-width: 930px; margin: 0; color: #f7fcf3; font-size: clamp(46px, 6.3vw, 84px); letter-spacing: -.06em; line-height: .98; }
-  .home-final-description { max-width: 640px; margin: 16px 0 0; color: #d6e5d3; font-size: 16px; line-height: 1.65; }
-  .home-final-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .home-final-path { display: grid; min-width: 0; grid-template-columns: 1fr auto; align-items: center; gap: 6px 12px; min-height: 92px; padding: 16px 18px; border: 1px solid rgb(234 241 231 / .22); border-radius: 14px 14px 3px 14px; color: #f7fcf3; text-decoration: none; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
-  .home-final-path-space { grid-column: 1; color: #b8f36d; font-size: 12px; font-weight: 750; }
-  .home-final-path-label { grid-column: 1; font-size: 14px; font-weight: 650; line-height: 1.4; }
-  .home-final-path > svg { grid-column: 2; grid-row: 1 / span 2; }
-  .home-final-path--pro { border-color: #b8f36d; background: #b8f36d; color: #111810; }
-  .home-final-path--pro .home-final-path-space { color: #17311c; }
-  .home-final-path:hover { border-color: #b8f36d; background: #23452a; }
-  .home-final-path--pro:hover { background: #a4e951; color: #111810; }
-  .home-final-path:focus-visible { outline: 3px solid #b8f36d; outline-offset: 4px; }
+  .home-final-kicker { margin: 0 0 17px; color: #b8f36d; font-size: 14px; font-weight: 700; letter-spacing: .015em; }
+  .home-final-copy h2 { display: grid; max-width: 13ch; margin: 0; color: #f7fcf3; font-family: var(--font-display); font-size: clamp(50px, 5.25vw, 74px); letter-spacing: -.065em; line-height: .97; text-wrap: balance; }
+  .home-final-copy h2 span { display: block; }
+  .home-final-title-accent { color: #b8f36d; }
+  .home-final-description { max-width: 43ch; margin: 24px 0 0; color: #d6e5d3; font-size: 16px; line-height: 1.65; }
+  .home-final-paths { display: grid; gap: 12px; }
+  .home-final-action { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px 16px; min-height: 82px; padding: 17px 22px; border: 1px solid rgb(234 241 231 / .25); border-radius: 18px; color: #f7fcf3; text-decoration: none; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease; }
+  .home-final-action-space { grid-column: 1; color: #b8f36d; font-size: 11px; font-weight: 750; letter-spacing: .09em; }
+  .home-final-action-label { grid-column: 1; font-size: 16px; font-weight: 700; line-height: 1.35; }
+  .home-final-action > svg { grid-column: 2; grid-row: 1 / span 2; }
+  .home-final-action--pro { min-height: 108px; border-color: #b8f36d; background: #b8f36d; color: #111810; }
+  .home-final-action--pro .home-final-action-space { color: #17311c; }
+  .home-final-action--pro .home-final-action-label { font-size: 19px; }
+  .home-final-action--find:hover { border-color: #b8f36d; background: rgb(184 243 109 / .08); color: #b8f36d; }
+  .home-final-action--pro:hover { border-color: #a4e951; background: #a4e951; color: #111810; transform: translateY(-1px); }
+  .home-final-me { display: flex; min-width: 0; min-height: 68px; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 4px 0; color: #f7fcf3; text-decoration: none; }
+  .home-final-me-copy { display: grid; gap: 4px; }
+  .home-final-me-title { font-size: 14px; font-weight: 500; line-height: 1.45; }
+  .home-final-me-title strong { color: #b8f36d; font-weight: 750; }
+  .home-final-me-note { color: #c8d8c5; font-size: 12px; line-height: 1.4; }
+  .home-final-me > svg { flex: 0 0 auto; color: #b8f36d; transition: transform 160ms ease; }
+  .home-final-me:hover .home-final-me-title strong { text-decoration: underline; text-underline-offset: 4px; }
+  .home-final-me:hover > svg { transform: translateX(3px); }
+  .home-final-action:focus-visible, .home-final-me:focus-visible { outline: 3px solid #b8f36d; outline-offset: 4px; }
 
   .legal-copy { max-width: 52rem; }
   .legal-copy h1 { text-wrap: balance; }
@@ -1833,10 +1844,11 @@
 @media (max-width: 1050px) {
   .home-product-story { gap: 28px; }
   .home-find-layout { grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr); gap: 28px; }
-  .home-final-cta { grid-template-columns: minmax(0, 1fr); }
+  .home-final-cta { gap: 32px; }
 }
 
 @media (max-width: 900px) {
+  .home-final-cta { grid-template-columns: minmax(0, 1fr); }
   .home-problem-layout { grid-template-columns: minmax(0, 1fr); row-gap: 26px; }
   .home-problem-heading { max-width: 760px; }
   .home-section-title.home-problem-title { max-width: 16ch; }
@@ -1899,10 +1911,12 @@
   .question-form-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .question-form-footer { align-items: flex-start; flex-direction: column; }
   .question-form-footer > p { max-width: 48ch; }
-  .home-final-cta { gap: 26px; padding: 32px 24px; border-radius: 4px 24px 4px 24px; }
-  .home-final-cta::after { top: auto; right: -140px; bottom: -175px; width: 280px; height: 280px; }
-  .home-final-paths { grid-template-columns: minmax(0, 1fr); }
-  .home-final-path { min-height: 76px; }
+  .home-final-cta { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 36px 30px; border-radius: 26px; }
+  .home-final-copy h2 { max-width: 15ch; font-size: clamp(48px, 8vw, 66px); }
+  .home-final-description { margin-top: 18px; }
+  .home-final-action { min-height: 76px; padding: 16px 18px; border-radius: 16px; }
+  .home-final-action--pro { min-height: 96px; }
+  .home-final-me { min-height: 58px; }
 }
 
 @media (max-width: 420px) {
@@ -1925,8 +1939,14 @@
   .questions-admin-contact { align-items: flex-start; }
   .questions-admin-contact a { width: 100%; margin-left: 26px; }
   .questions-admin-item-actions .questions-admin-delete { margin-left: 0; }
+  .home-final-cta { gap: 24px; padding: 30px 24px; border-radius: 24px; }
+  .home-final-copy h2 { font-size: clamp(43px, 10.8vw, 54px); }
+  .home-final-description { font-size: 15px; }
+  .home-final-paths { gap: 9px; }
+  .home-final-action { min-height: 72px; padding-inline: 16px; }
+  .home-final-action--pro { min-height: 88px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-faq-chevron, .home-faq-answer-wrap, .home-faq-contact-button, .question-submit, .question-channel-option, .home-final-path { transition: none; }
+  .home-faq-chevron, .home-faq-answer-wrap, .home-faq-contact-button, .question-submit, .question-channel-option, .home-final-action, .home-final-me, .home-final-me > svg { transition: none; }
 }
