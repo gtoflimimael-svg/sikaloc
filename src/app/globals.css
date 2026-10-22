@@ -1666,7 +1666,6 @@
   .home-find-layout { display: grid; grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr); grid-template-areas: 'copy visual'; align-items: center; gap: clamp(32px, 5vw, 64px); }
   .home-find-copy { grid-area: copy; min-width: 0; max-width: 440px; }
   .home-find-copy .home-product-title { max-width: 13ch; }
-  .home-find-note { max-width: 390px; margin: 13px 0 0; color: var(--color-mute); font-size: 14px; line-height: 1.5; }
   .home-product-visual--find { grid-area: visual; min-width: 0; margin: 0; }
   .home-product-visual--find .home-product-visual-frame img { object-position: 52% center; }
 

@@ -316,7 +316,6 @@ export default async function PageAccueil() {
               <Link href="/find" className="home-product-link">
                 Explorer les annonces <ArrowRight size={18} aria-hidden="true" />
               </Link>
-              <p className="home-find-note">Une candidature reste une demande ; le bailleur décide de la suite.</p>
             </div>
 
             <figure className="home-product-visual home-product-visual--find">
