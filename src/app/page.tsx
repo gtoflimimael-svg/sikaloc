@@ -2,7 +2,6 @@ import {
   ArrowRight,
   Building2,
   FileCheck,
-  Home,
   Lock,
   Search,
   SlidersHorizontal,
@@ -17,7 +16,6 @@ import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
 import { FiltresFind } from '@/components/find/filtres'
 import { lireFiltres } from '@/lib/find/recherche'
-import { ESPACE_ME, ESPACE_PRO } from '@/lib/roles'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
 
 /**
@@ -84,10 +82,8 @@ const LIENS_ACCUEIL: LienEnTete[] = [
 /**
  * Le tiroir mobile : les mêmes entrées, plus la porte du locataire.
  *
- * Vers `/me/rejoindre` et non `#locataire` : cette section a quitté la page
- * d'accueil avec le reste du contenu bailleur. C'est au téléphone qu'arrive le
- * locataire qui a reçu une invitation — le tiroir est l'endroit où il la
- * cherche.
+ * Vers `/me/rejoindre` et non directement vers l'espace privé : le locataire
+ * qui a reçu une invitation y trouve les étapes pour rejoindre son espace.
  */
 const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
   { href: '#espaces', libelle: 'Les espaces' },
@@ -95,79 +91,6 @@ const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
   { href: '/find', libelle: 'Trouver un logement' },
   { href: '/pro', libelle: 'Bailleurs' },
   { href: '/me/rejoindre', libelle: 'Je suis locataire' },
-]
-
-/**
- * Les trois espaces, avec leur état RÉEL.
- *
- * `disponible` n'est pas un drapeau d'affichage : c'est ce qui décide si une
- * carte porte un lien ou une mention d'attente. Sikaloc_Find est passé à
- * `true` le jour où `/find` a existé — pas avant.
- */
-const ESPACES_PRESENTES = [
-  {
-    cle: 'pro',
-    nom: ESPACE_PRO.nom,
-    Icone: Building2,
-    image: '/illustrations/home-02.webp',
-    pour: 'Propriétaires et bailleurs',
-    texte:
-      'Organisez vos logements, locataires et baux. Retrouvez les paiements enregistrés et les documents disponibles.',
-    disponible: true,
-    lien: { href: '/pro?presentation=1', libelle: 'Découvrir Sikaloc Pro' },
-  },
-  {
-    cle: 'me',
-    nom: ESPACE_ME.nom,
-    Icone: ScrollText,
-    image: '/illustrations/home-03.webp',
-    pour: 'Locataires',
-    texte:
-      'Après invitation, consultez les informations de votre bail, les paiements enregistrés et les documents partagés.',
-    disponible: true,
-    // Pas `/me` : cette adresse exige une session, et un curieux y serait
-    // renvoyé vers un formulaire de connexion sans identifiants.
-    lien: { href: '/me/rejoindre', libelle: 'Comment y accéder' },
-  },
-  {
-    cle: 'find',
-    nom: 'Sikaloc_Find',
-    Icone: Search,
-    image: '/illustrations/home-04.webp',
-    pour: 'Personnes en recherche',
-    texte:
-      'Explorez les annonces publiées et candidatez depuis la fiche lorsqu’une candidature est ouverte.',
-    disponible: true,
-    lien: { href: '/find', libelle: 'Voir les logements' },
-  },
-]
-
-/**
- * Le parcours d'un logement, d'un bout à l'autre de l'écosystème.
- *
- * Ces usages se complètent sans former un parcours automatique : le bailleur
- * publie une annonce s'il le souhaite, et l'accès du locataire à Me dépend
- * d'une invitation.
- */
-const PARCOURS = [
-  {
-    espace: ESPACE_PRO.nom,
-    titre: 'Le bailleur enregistre son bien',
-    texte:
-      'Il renseigne le logement et suit séparément le bail, les loyers et les paiements enregistrés.',
-  },
-  {
-    espace: 'Sikaloc_Find',
-    titre: 'Il le publie s’il est vacant',
-    texte:
-      'S’il souhaite le proposer à la location, le bailleur peut publier une annonce à partir des informations du logement.',
-  },
-  {
-    espace: ESPACE_ME.nom,
-    titre: 'Le locataire entre dans son espace',
-    texte:
-      'Une fois la relation locative établie, le bailleur peut l’inviter à consulter les informations et documents disponibles dans Me.',
-  },
 ]
 
 /**
@@ -330,65 +253,74 @@ export default async function PageAccueil() {
           <div className="mx-auto max-w-[1200px]">
             <div className="home-spaces-heading">
               <div>
-                <p className="home-section-label">Trois espaces, des rôles distincts</p>
+                <p className="home-section-label">Les espaces Sikaloc</p>
                 <h2 className="home-section-title">
-                  Le bon espace pour votre moment de location.
+                  Gérer, consulter ou chercher : à chacun son espace.
                 </h2>
               </div>
               <p className="home-section-intro">
-                Le bailleur gère ses biens, le locataire consulte ce qui lui est
-                partagé sur invitation, et Find rassemble les annonces publiées.
+                Pro accompagne le bailleur, Me le locataire invité, et Find les
+                personnes qui parcourent les annonces publiées.
               </p>
             </div>
 
-            <div className="home-space-grid">
-              {ESPACES_PRESENTES.map(({ cle, nom, Icone, image, pour, texte, disponible, lien }) => (
-                <article key={nom} className={`home-space-card home-space-card--${cle}`}>
-                  <div className="home-space-art">
-                    <Image
-                      src={image}
-                      alt=""
-                      width={1200}
-                      height={900}
-                      sizes="(max-width: 767px) 92vw, (max-width: 1100px) 46vw, 360px"
-                    />
-                    <span className="home-space-art-index" aria-hidden="true">
-                      {cle === 'pro' ? 'Gestion' : cle === 'me' ? 'Documents' : 'Recherche'}
-                    </span>
-                  </div>
-                  <div className="home-space-content">
-                    <div className="home-space-title-row">
-                      <span className="home-space-icon"><Icone size={20} strokeWidth={1.8} aria-hidden="true" /></span>
-                      <div>
-                        <h3>{nom}</h3>
-                        <p>{pour}</p>
-                      </div>
-                    </div>
-                    <p className="home-space-description">{texte}</p>
-                    {cle === 'pro' ? (
-                      <div className="home-space-glance" role="group" aria-label="Schéma illustratif des rubriques de Sikaloc Pro">
-                        <p className="home-space-glance-title">
-                          Dans l’espace Pro <span>Schéma illustratif, sans données de compte</span>
-                        </p>
-                        <ul className="home-space-glance-list" role="list">
-                          <li>Logements</li>
-                          <li>Locataires et baux</li>
-                          <li>Loyers et paiements</li>
-                          <li>Reçus et quittances</li>
-                        </ul>
-                      </div>
-                    ) : null}
-                    {disponible && lien ? (
-                      <Link href={lien.href} className="home-space-link">
-                        {lien.libelle}<ArrowRight size={16} aria-hidden="true" />
-                      </Link>
-                    ) : (
-                      <p className="home-space-link home-space-link--muted">Bientôt disponible</p>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
+            <article className="home-product-story home-product-story--pro">
+              <div className="home-product-story-copy">
+                <p className="home-product-label">Sikaloc Pro</p>
+                <h3 className="home-product-title">Vos locations, enfin organisées.</h3>
+                <p className="home-product-description">
+                  Retrouvez vos logements, vos locataires, vos baux et le suivi
+                  des loyers dans un même espace.
+                </p>
+                <Link href="/pro" className="home-product-link">
+                  Découvrir Sikaloc Pro <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              </div>
+              <figure className="home-product-visual home-product-visual--pro">
+                <div className="home-product-visual-frame">
+                  <Image
+                    src="/demo/pro-tableau-de-bord.png"
+                    alt="Capture de démonstration du tableau de bord Sikaloc Pro avec des données fictives."
+                    width={2560}
+                    height={1720}
+                    sizes="(max-width: 900px) 90vw, (max-width: 1100px) 58vw, 700px"
+                  />
+                </div>
+                <figcaption>Aperçu du logiciel — données fictives</figcaption>
+              </figure>
+            </article>
+          </div>
+        </section>
+
+        <section className="home-me-section" aria-labelledby="home-me-title">
+          <div className="mx-auto max-w-[1200px]">
+            <article className="home-product-story home-product-story--me">
+              <div className="home-product-story-copy">
+                <p className="home-product-label">Sikaloc Me</p>
+                <h2 id="home-me-title" className="home-product-title">
+                  Votre location, vos informations, votre espace.
+                </h2>
+                <p className="home-product-description">
+                  Après invitation, consultez les informations de votre bail,
+                  les paiements enregistrés et les documents mis à votre disposition.
+                </p>
+                <Link href="/me/rejoindre" className="home-product-link">
+                  Comment accéder à Sikaloc Me <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              </div>
+              <figure className="home-product-visual home-product-visual--me">
+                <div className="home-me-illustration">
+                  <Image
+                    src="/illustrations/home-03.webp"
+                    alt="Illustration éditoriale Sikaloc Me : une clé stylisée ouvre un passage entre des espaces architecturaux."
+                    width={1200}
+                    height={900}
+                    sizes="(max-width: 900px) 90vw, (max-width: 1100px) 58vw, 700px"
+                  />
+                </div>
+                <figcaption>Illustration de marque — ceci n’est pas une capture d’écran.</figcaption>
+              </figure>
+            </article>
           </div>
         </section>
 
@@ -404,7 +336,7 @@ export default async function PageAccueil() {
                 Find affiche les annonces publiées qui correspondent à votre recherche.
               </p>
               <Link href="/find" className="home-find-text-link">
-                Voir le catalogue complet <ArrowRight size={18} aria-hidden="true" />
+                Explorer les annonces <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <p className="home-find-note">Une candidature reste une demande ; le bailleur décide de la suite.</p>
             </div>
@@ -431,74 +363,15 @@ export default async function PageAccueil() {
         <section id="parcours" className="home-journey-section">
           <div className="mx-auto max-w-[1200px]">
             <div className="home-journey-heading">
-              <p className="home-section-label">Des usages qui se complètent</p>
-              <h2 className="home-section-title">Chaque espace intervient à sa juste place.</h2>
-              <p className="home-section-intro">
-                Chaque espace intervient quand vous en avez besoin. Une annonce
-                ne crée pas de bail et l’accès locataire reste sur invitation.
+              <p className="home-section-label">Comment les espaces se complètent</p>
+              <h2 className="home-section-title">Chaque espace garde son rôle.</h2>
+              <p className="home-journey-transition">
+                Dans <strong>Pro</strong>, le bailleur organise ses locations et
+                peut choisir de publier une annonce sur <strong>Find</strong>.
+                Les candidatures restent des demandes à examiner : elles ne
+                créent pas de bail. L’accès à <strong>Me</strong> se fait sur
+                invitation du bailleur.
               </p>
-            </div>
-            <div className="home-journey-list" role="list">
-              {PARCOURS.map(({ espace, titre, texte }) => (
-                <article key={espace} className="home-journey-step" role="listitem">
-                  <div className="home-journey-copy">
-                    <p className="home-journey-space">{espace}</p>
-                    <h3>{titre}</h3>
-                    <p>{texte}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Pour les bailleurs ───────────────────────────────────────── */}
-        <section className="home-audiences-section">
-          <div className="mx-auto max-w-[1200px]">
-            <div className="home-audiences-heading">
-              <p className="home-section-label">Deux expériences, selon votre rôle</p>
-              <h2 className="home-section-title">La gestion côté bailleur. Le suivi côté locataire.</h2>
-              <p className="home-section-intro">
-                Pro organise le travail du bailleur ; Me rassemble, sur invitation, les informations rendues accessibles au locataire.
-              </p>
-            </div>
-            <div className="home-audiences-grid">
-              <article className="home-audience home-audience--pro">
-                <div className="home-audience-topline"><Building2 size={19} aria-hidden="true" /> Pour les bailleurs</div>
-                <h2>Une gestion qui reste lisible, période après période.</h2>
-                <div className="home-audience-scene home-audience-scene--pro" role="group" aria-label="Schéma illustratif des fonctions de Sikaloc Pro">
-                  <p className="home-audience-scene-label">Sikaloc Pro <span>Schéma illustratif</span></p>
-                  <div className="home-pro-scene-rows">
-                    <div><span>Logements</span><strong>Organiser les biens</strong></div>
-                    <div><span>Baux</span><strong>Retrouver les conditions</strong></div>
-                    <div><span>Paiements</span><strong>Suivre les versements</strong></div>
-                    <div><span>Documents</span><strong>Consulter les pièces disponibles</strong></div>
-                  </div>
-                  <p className="home-audience-scene-note">Illustration des rubriques, sans compte ni données réelles.</p>
-                </div>
-                <Link href="/pro?presentation=1" className="home-audience-link">
-                  Voir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
-                </Link>
-              </article>
-
-              <article className="home-audience home-audience--me">
-                <div className="home-audience-topline"><Home size={19} aria-hidden="true" /> Pour les locataires</div>
-                <h2>Les informations de votre location, dans votre espace.</h2>
-                <div className="home-audience-scene home-audience-scene--me" role="group" aria-label="Schéma illustratif des informations consultables dans Sikaloc Me">
-                  <p className="home-audience-scene-label">Sikaloc Me <span>Après invitation</span></p>
-                  <div className="home-me-scene-card">
-                    <span className="home-me-scene-mark" aria-hidden="true"><ScrollText size={19} /></span>
-                    <div><strong>Mon espace locataire</strong><small>Informations selon les accès accordés</small></div>
-                  </div>
-                  <div className="home-me-scene-items" aria-hidden="true">
-                    <span>Bail</span><span>Paiements enregistrés</span><span>Documents disponibles</span>
-                  </div>
-                  <p className="home-audience-scene-note">Schéma illustratif — aucun dossier réel affiché.</p>
-                </div>
-                <Link href="/me/rejoindre" className="home-audience-link">
-                  Comprendre l’accès à Me <ArrowRight size={17} aria-hidden="true" />
-                </Link>
-              </article>
             </div>
           </div>
         </section>
