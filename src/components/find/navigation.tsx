@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { MenuFind } from '@/components/find/menu'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { SikalocSpaceBrand } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { lienConnexion } from '@/lib/auth-contexte'
 
@@ -18,7 +18,7 @@ export function EnTeteFind({ connecte }: { connecte: boolean }) {
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 backdrop-blur">
       <a href="#contenu" className="skip-link">Aller au contenu</a>
       <nav aria-label="Navigation Find" className="mx-auto flex min-h-16 max-w-[1200px] items-center justify-between gap-sm px-md sm:px-xl">
-        <MarqueSikaloc href="/find" taille="sm" espace="Find" />
+        <SikalocSpaceBrand href="/find" taille="sm" espace="Find" />
         <div className="hidden items-center gap-lg lg:flex">
           {LIENS.map(l => <Link key={l.href} href={l.href} className="text-body-sm text-body hover:text-ink">{l.libelle}</Link>)}
         </div>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
 import { FormulaireConnexion } from '@/components/auth/formulaires'
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { MarqueSikaloc, SikalocSpaceBrand } from '@/components/ui/logo'
 import { Alerte } from '@/components/ui/retours'
 import {
   contexteDepuisSuite,
@@ -57,8 +57,8 @@ const CONTENUS: Record<ContexteConnexion, {
     label: 'Sikaloc Me · Espace locataire',
     titre: 'Retrouvez votre espace locataire.',
     description: 'Connectez-vous pour consulter votre bail, vos paiements et les documents partagés par votre bailleur.',
-    image: '/images/me/sikaloc-me-rejoindre-editorial.webp',
-    alt: 'Un jeune homme ouest-africain consulte son téléphone dans son salon.',
+    image: '/images/me/sikaloc-me-connexion-editorial.webp',
+    alt: 'Un locataire ouest-africain debout près d’une fenêtre de son appartement, consultant son téléphone.',
     titreFormulaire: 'Bon retour',
     aideFormulaire: 'Utilisez le compte associé à votre invitation déjà acceptée.',
   },
@@ -95,7 +95,7 @@ function LiensSecondaires({ contexte, suite }: { contexte: ContexteConnexion; su
   if (contexte === 'me') {
     return (
       <p>
-        Vous n’avez pas encore reçu d’invitation ?{' '}
+        <span>Vous n’avez pas encore reçu d’invitation ?</span>
         <Link href="/me/rejoindre">Comment accéder à Sikaloc Me ?</Link>
       </p>
     )
@@ -139,6 +139,7 @@ export default async function PageConnexion({
     contexte,
   )
   const contenu = CONTENUS[contexte]
+  const espaceMarque = contexte === 'pro' ? 'Pro' : contexte === 'me' ? 'Me' : contexte === 'find' ? 'Find' : null
 
   return (
     <main id="contenu-principal" tabIndex={-1} className={`connexion-page ${manropeConnexion.variable}`}>
@@ -157,6 +158,7 @@ export default async function PageConnexion({
               src={contenu.image}
               alt={contenu.alt}
               fill
+              priority
               sizes="(max-width: 900px) 100vw, (max-width: 1280px) 48vw, 620px"
             />
           </figure>
@@ -165,7 +167,11 @@ export default async function PageConnexion({
         <section className="connexion-form-side" aria-labelledby="connexion-form-title">
           <div className="connexion-form-inner">
             <div className="connexion-brand">
-              <MarqueSikaloc taille="md" />
+              {espaceMarque ? (
+                <SikalocSpaceBrand espace={espaceMarque} taille="md" />
+              ) : (
+                <MarqueSikaloc taille="md" />
+              )}
             </div>
 
             <div className="connexion-mobile-context">
@@ -186,7 +192,7 @@ export default async function PageConnexion({
 
             <FormulaireConnexion suite={suite} contexte={contexte} />
 
-            <div className="connexion-secondary-links">
+            <div className="connexion-secondary-links" data-context={contexte}>
               <LiensSecondaires contexte={contexte} suite={suite} />
             </div>
 

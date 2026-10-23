@@ -19,7 +19,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { SikalocSpaceBrand } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
 import { ESPACE_PRO } from '@/lib/roles'
@@ -178,7 +178,7 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
     <aside className="pro-sidebar hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
       <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto p-md">
         <div className="mb-xl px-md pt-sm">
-          <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
+          <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
         </div>
 
         <LiensNavigation chemin={chemin} impayes={impayes} />
@@ -286,7 +286,7 @@ export function EnTeteMobile({
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
 
-        <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
+        <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
           <Link
@@ -327,7 +327,7 @@ export function EnTeteMobile({
       >
           <div className="anim-glisse relative flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto bg-canvas p-md shadow-modal">
             <div className="mb-lg flex items-center justify-between px-md pt-sm">
-              <MarqueSikaloc href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
+              <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
               <button
                 type="button"
                 onClick={() => setOuvert(false)}

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { AssistantOnboarding } from '@/components/app/onboarding'
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { SikalocSpaceBrand } from '@/components/ui/logo'
 import { bailleurCourant } from '@/lib/session'
 import { ESPACE_PRO } from '@/lib/roles'
 
@@ -27,7 +27,7 @@ export default async function PageOnboarding() {
   return (
     <div className="onboarding-page min-h-screen bg-canvas-soft">
       <header className="onboarding-page-header flex h-16 items-center justify-center border-b border-hairline bg-canvas px-lg">
-        <MarqueSikaloc href={null} taille="sm" />
+        <SikalocSpaceBrand href={null} taille="sm" espace="Pro" />
       </header>
 
       <main className="onboarding-page-main mx-auto max-w-[640px] px-lg py-3xl">

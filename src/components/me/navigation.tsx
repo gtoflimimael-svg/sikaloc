@@ -14,7 +14,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { SikalocSpaceBrand } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
 import { ESPACE_ME } from '@/lib/roles'
@@ -87,7 +87,7 @@ export function EnTeteMe({
           Sikaloc_Me. Le repère qui distingue les deux espaces disparaissait
           précisément là où il sert le plus.
         */}
-        <MarqueSikaloc href={ESPACE_ME.racine} taille="sm" espace="Me" />
+        <SikalocSpaceBrand href={ESPACE_ME.racine} taille="sm" espace="Me" />
 
         <div className="flex shrink-0 items-center gap-xs">
           <SelecteurTheme compact />

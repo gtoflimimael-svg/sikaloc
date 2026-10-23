@@ -2711,7 +2711,7 @@
   min-height: calc(100svh - clamp(44px, 8vw, 112px));
   grid-template-columns: minmax(0, 1.04fr) minmax(360px, .82fr);
   align-items: center;
-  gap: clamp(48px, 7.2vw, 112px);
+  gap: clamp(40px, 5.8vw, 88px);
   margin-inline: auto;
 }
 .connexion-editorial {
@@ -2767,10 +2767,10 @@
 .connexion-form-side {
   min-width: 0;
   border-left: 1px solid var(--color-hairline-soft);
-  padding-left: clamp(32px, 5.2vw, 76px);
+  padding-left: clamp(28px, 4vw, 56px);
 }
 .connexion-form-inner { width: min(100%, 430px); margin-inline: auto; }
-.connexion-brand { margin-bottom: clamp(40px, 5vw, 66px); }
+.connexion-brand { margin-bottom: clamp(28px, 3.2vw, 42px); }
 .connexion-form-heading h2 {
   margin: 0;
   color: var(--color-ink);
@@ -2806,8 +2806,8 @@
 }
 .connexion-error { margin-top: 22px; }
 .connexion-secondary-links {
-  margin-top: 26px;
-  padding-top: 21px;
+  margin-top: 23px;
+  padding-top: 18px;
   border-top: 1px solid var(--color-hairline-soft);
   color: var(--color-mute);
   font-size: 14px;
@@ -2815,6 +2815,12 @@
 }
 .connexion-secondary-links p { margin: 0; }
 .connexion-secondary-links a { font-weight: 700; }
+.connexion-secondary-links[data-context='me'] p {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+.connexion-secondary-links[data-context='me'] a { width: fit-content; }
 .connexion-home-link {
   display: inline-flex;
   min-height: 44px;
@@ -2844,7 +2850,7 @@
   .connexion-editorial-copy h1 { max-width: 14ch; font-size: clamp(42px, 7vw, 58px); }
   .connexion-editorial-description { margin-top: 13px; font-size: 16px; }
   .connexion-form-inner { width: 100%; }
-  .connexion-brand { margin-bottom: 27px; }
+  .connexion-brand { margin-bottom: 25px; }
   .connexion-mobile-context { display: none; }
 }
 @media (max-width: 640px) {
@@ -2860,8 +2866,8 @@
   .connexion-form-heading p { font-size: 14px; }
   .connexion-form-side form { margin-top: 23px; }
   .connexion-form-side .input { min-height: 52px; font-size: 16px; }
-  .connexion-brand { margin-bottom: 23px; }
-  .connexion-secondary-links { margin-top: 21px; padding-top: 17px; font-size: 13px; }
+  .connexion-brand { margin-bottom: 20px; }
+  .connexion-secondary-links { margin-top: 19px; padding-top: 15px; font-size: 13px; }
   .connexion-home-link { margin-top: 10px; }
 }
 @media (max-width: 360px) {

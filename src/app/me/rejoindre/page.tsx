@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { MarqueSikaloc, SikalocSpaceBrand } from '@/components/ui/logo'
 import { lienConnexion } from '@/lib/auth-contexte'
 
 const manropeMe = localFont({
@@ -53,7 +53,7 @@ export default function PageRejoindre() {
 
       <header className="me-join-header">
         <div className="me-join-wrap me-join-header-inner">
-          <MarqueSikaloc taille="sm" />
+          <SikalocSpaceBrand espace="Me" taille="sm" />
           <Link href="/" className="me-join-home-link">
             Accueil <ArrowRight size={15} aria-hidden="true" />
           </Link>

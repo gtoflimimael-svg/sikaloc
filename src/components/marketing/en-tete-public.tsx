@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import { MenuMobile } from '@/components/marketing/menu-mobile'
-import { MarqueSikaloc, type SuffixeEspace } from '@/components/ui/logo'
+import { MarqueSikaloc, SikalocSpaceBrand, type SuffixeEspace } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { lienConnexion } from '@/lib/auth-contexte'
 
@@ -107,10 +107,10 @@ export function EnTetePublic({
           tranche 768–1023 px, celle des tablettes en portrait.
         */}
         <span className="lg:hidden">
-          <MarqueSikaloc href={marqueHref} taille="sm" espace={espace} />
+          {espace ? <SikalocSpaceBrand href={marqueHref} taille="sm" espace={espace} /> : <MarqueSikaloc href={marqueHref} taille="sm" />}
         </span>
         <span className="hidden lg:block">
-          <MarqueSikaloc href={marqueHref} espace={espace} />
+          {espace ? <SikalocSpaceBrand href={marqueHref} espace={espace} /> : <MarqueSikaloc href={marqueHref} />}
         </span>
 
         {/*
