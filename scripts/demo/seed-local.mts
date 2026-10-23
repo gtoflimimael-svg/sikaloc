@@ -23,8 +23,6 @@ const NETTOYAGE_TRANSACTIONNEL_CONFIRME = process.env.SIKALOC_DEMO_REBUILD_CLEAN
 const MARQUEUR_DEMO = 'sikaloc-demo-v1'
 const DOMAINE_EMAIL = 'sikaloc-demo.test'
 const TELEPHONE_FICTIF = '+2290000000000'
-const NOM_PHOTO = 'studio-agla-demo.jpg'
-const CHEMIN_PHOTO = path.join(process.cwd(), 'scripts/demo/assets/find', NOM_PHOTO)
 const MAINTENANT = new Date()
 const ISO_AUJOURDHUI = MAINTENANT.toISOString().slice(0, 10)
 
@@ -41,21 +39,117 @@ type CoffrePrive = {
   otpSecret: string
   comptes?: Record<string, { id: string; email: string; nom: string; motDePasse: string }>
 }
+type FixtureAnnonceFind = {
+  slug: string
+  photo: string
+  adresse: string
+  type: 'Appartement' | 'Maison' | 'Studio'
+  ville: string
+  quartier: string
+  chambres: number
+  surfaceM2: number
+  loyer: number
+  charges: number
+  depotGarantie: number
+  avanceMois: number
+  equipements: string[]
+  description: string
+}
 
 const DEFINITIONS: DefinitionCompte[] = [
-  { cle: 'pro', email: `bailleur@${DOMAINE_EMAIL}`, nom: 'Aïcha Kora', role: 'bailleur', nbLogements: '2' },
+  { cle: 'pro', email: `bailleur@${DOMAINE_EMAIL}`, nom: 'Aïcha Kora', role: 'bailleur', nbLogements: '6' },
   { cle: 'me', email: `locataire@${DOMAINE_EMAIL}`, nom: 'Mila Adjovi', role: 'locataire' },
   { cle: 'find', email: `candidat@${DOMAINE_EMAIL}`, nom: 'Sena Hounsa', role: 'candidat' },
 ]
 
 const IDS = {
   logementLoue: uuidStable('logement-loue'),
-  logementAnnonce: uuidStable('logement-find'),
   locataire: uuidStable('locataire-principal'),
   bail: uuidStable('bail-principal'),
-  annonce: uuidStable('annonce-find'),
-  photo: uuidStable('photo-find'),
 }
+
+const FIXTURES_FIND: FixtureAnnonceFind[] = [
+  {
+    slug: 'studio-zogbadje',
+    photo: 'find-studio-zogbadje-demo.jpg',
+    adresse: 'Adresse fictive — secteur Zogbadjè',
+    type: 'Studio',
+    ville: 'Abomey-Calavi',
+    quartier: 'Zogbadjè',
+    chambres: 0,
+    surfaceM2: 28,
+    loyer: 65000,
+    charges: 5000,
+    depotGarantie: 65000,
+    avanceMois: 1,
+    equipements: ['eau_courante', 'electricite', 'compteur_electrique_individuel', 'douche_interieure', 'wc_interieur', 'cuisine_interieure'],
+    description: 'DÉMONSTRATION LOCALE — annonce et logement entièrement fictifs ; aucune offre réelle. Studio clair et ventilé avec espace nuit, coin cuisine, douche intérieure et accès pratique aux commerces du quartier.',
+  },
+  {
+    slug: 'appartement-akpakpa',
+    photo: 'find-chambre-cotonou-demo.jpg',
+    adresse: 'Adresse fictive — secteur Akpakpa',
+    type: 'Appartement',
+    ville: 'Cotonou',
+    quartier: 'Akpakpa',
+    chambres: 1,
+    surfaceM2: 36,
+    loyer: 85000,
+    charges: 0,
+    depotGarantie: 85000,
+    avanceMois: 1,
+    equipements: ['eau_courante', 'electricite', 'compteur_electrique_individuel', 'douche_interieure', 'wc_interieur', 'cuisine_interieure'],
+    description: 'DÉMONSTRATION LOCALE — annonce et logement entièrement fictifs ; aucune offre réelle. Appartement simple et bien entretenu avec une chambre, une fenêtre sécurisée et des rangements pratiques.',
+  },
+  {
+    slug: 'appartement-ouando',
+    photo: 'find-appartement-ouando-demo.jpg',
+    adresse: 'Adresse fictive — secteur Ouando',
+    type: 'Appartement',
+    ville: 'Porto-Novo',
+    quartier: 'Ouando',
+    chambres: 1,
+    surfaceM2: 56,
+    loyer: 125000,
+    charges: 8000,
+    depotGarantie: 125000,
+    avanceMois: 1,
+    equipements: ['eau_courante', 'electricite', 'compteur_electrique_individuel', 'douche_interieure', 'wc_interieur', 'cuisine_interieure', 'parking'],
+    description: 'DÉMONSTRATION LOCALE — annonce et logement entièrement fictifs ; aucune offre réelle. Deux pièces avec séjour lumineux, espace repas, chambre séparée et stationnement dans la cour.',
+  },
+  {
+    slug: 'appartement-fidjrosse',
+    photo: 'find-appartement-fidjrosse-demo.jpg',
+    adresse: 'Adresse fictive — secteur Fidjrossè',
+    type: 'Appartement',
+    ville: 'Cotonou',
+    quartier: 'Fidjrossè',
+    chambres: 2,
+    surfaceM2: 78,
+    loyer: 180000,
+    charges: 10000,
+    depotGarantie: 180000,
+    avanceMois: 1,
+    equipements: ['eau_courante', 'electricite', 'compteur_electrique_individuel', 'compteur_eau_individuel', 'douche_interieure', 'wc_interieur', 'cuisine_interieure', 'parking'],
+    description: 'DÉMONSTRATION LOCALE — annonce et logement entièrement fictifs ; aucune offre réelle. Appartement familial de trois pièces, séjour et coin repas, deux chambres et fenêtres laissant entrer la lumière.',
+  },
+  {
+    slug: 'maison-ouidah',
+    photo: 'find-maison-ouidah-demo.jpg',
+    adresse: 'Adresse fictive — secteur résidentiel d’Ouidah',
+    type: 'Maison',
+    ville: 'Ouidah',
+    quartier: 'Centre résidentiel',
+    chambres: 3,
+    surfaceM2: 110,
+    loyer: 160000,
+    charges: 0,
+    depotGarantie: 160000,
+    avanceMois: 1,
+    equipements: ['eau_courante', 'electricite', 'compteur_electrique_individuel', 'douche_interieure', 'wc_interieur', 'cuisine_interieure', 'cour_cloturee'],
+    description: 'DÉMONSTRATION LOCALE — annonce et logement entièrement fictifs ; aucune offre réelle. Maison indépendante avec trois chambres, petite cour clôturée et véranda ombragée.',
+  },
+]
 
 function refuser(message: string): never {
   throw new Error(message)
@@ -288,6 +382,12 @@ function dernierJourDuMois(mois: string): number {
   return new Date(Date.UTC(annee, numeroMois, 0)).getUTCDate()
 }
 
+function dateFinStandardDemo(): string {
+  const date = new Date(MAINTENANT)
+  date.setUTCFullYear(date.getUTCFullYear() + 1)
+  return date.toISOString().slice(0, 10)
+}
+
 function dateAvant(mois: string): string {
   const date = new Date(`${mois}T12:00:00.000Z`)
   date.setUTCDate(date.getUTCDate() - 1)
@@ -307,7 +407,10 @@ async function creerDossierMetier(comptes: Map<'pro' | 'me' | 'find', CompteDemo
   const find = comptes.get('find')!
 
   const { error: erreurProfil } = await admin.from('bailleurs').update({
-    nb_logements_declare: 2,
+    // Offre Standard réservée à cette base locale de démonstration, sans paiement.
+    plan: 'Standard',
+    date_fin_abonnement: dateFinStandardDemo(),
+    nb_logements_declare: FIXTURES_FIND.length + 1,
     onboarding_termine: true,
   }).eq('id', pro.id)
   assurerSansErreur(erreurProfil, 'préparation du profil Pro local impossible')
@@ -318,15 +421,6 @@ async function creerDossierMetier(comptes: Map<'pro' | 'me' | 'find', CompteDemo
     adresse: 'Adresse fictive — voie des Flamboyants, Agla',
     type: 'Appartement',
     ville: 'Cotonou',
-    pays: 'Bénin',
-  }, pro.id)
-
-  await insererSiAbsente('logements', {
-    id: IDS.logementAnnonce,
-    bailleur_id: pro.id,
-    adresse: 'Adresse fictive — quartier Zogbadjè',
-    type: 'Studio',
-    ville: 'Abomey-Calavi',
     pays: 'Bénin',
   }, pro.id)
 
@@ -554,73 +648,80 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
 }
 
 async function preparerAnnonceFind(pro: CompteDemo, candidat: CompteDemo): Promise<{ reference: string }> {
-  const description =
-    'DÉMONSTRATION LOCALE — logement et annonce entièrement fictifs. Photographie générée à titre illustratif ; aucune offre réelle. ' +
-    'Studio clair et bien ventilé, avec espace nuit, coin cuisine, douche intérieure et accès pratique aux commerces du quartier.'
-  await insererSiAbsente('annonces', {
-    id: IDS.annonce,
-    bailleur_id: pro.id,
-    logement_id: IDS.logementAnnonce,
-    statut: 'brouillon',
-    motif_cloture: null,
-    type: 'Studio',
-    ville: 'Abomey-Calavi',
-    quartier: 'Zogbadjè',
-    chambres: 0,
-    surface_m2: 28,
-    loyer: 65000,
-    charges: 5000,
-    depot_garantie: 65000,
-    avance_mois: 1,
-    equipements: [
-      'eau_courante',
-      'electricite',
-      'compteur_electrique_individuel',
-      'douche_interieure',
-      'wc_interieur',
-      'cuisine_interieure',
-    ],
-    description,
-    disponible_le: null,
-  }, pro.id)
+  const references: string[] = []
+  for (const fixture of FIXTURES_FIND) {
+    const logementId = uuidStable(`logement-find-${fixture.slug}`)
+    const annonceId = uuidStable(`annonce-find-${fixture.slug}`)
+    const photoId = uuidStable(`photo-find-${fixture.slug}`)
 
-  const photo = await readFile(CHEMIN_PHOTO)
-  const metadata = await sharp(photo).metadata()
-  if (metadata.format !== 'jpeg' || !metadata.width || !metadata.height) {
-    refuser('la photographie locale Find n’est pas un JPEG optimisé exploitable')
-  }
-  const chemin = `${pro.id}/${IDS.annonce}/${IDS.photo}.jpg`
-  const { error: erreurDepot } = await admin.storage.from('annonces').upload(chemin, photo, {
-    contentType: 'image/jpeg',
-    upsert: true,
-  })
-  assurerSansErreur(erreurDepot, 'dépôt de la photographie fictive dans le bucket Demo annonces impossible')
+    await insererSiAbsente('logements', {
+      id: logementId,
+      bailleur_id: pro.id,
+      adresse: fixture.adresse,
+      type: fixture.type,
+      ville: fixture.ville,
+      pays: 'Bénin',
+    }, pro.id)
 
-  await insererSiAbsente('annonce_photos', {
-    id: IDS.photo,
-    annonce_id: IDS.annonce,
-    bailleur_id: pro.id,
-    chemin,
-    position: 0,
-    largeur: metadata.width,
-    hauteur: metadata.height,
-    type_mime: 'image/jpeg',
-    poids: photo.length,
-  }, pro.id)
+    await insererSiAbsente('annonces', {
+      id: annonceId,
+      bailleur_id: pro.id,
+      logement_id: logementId,
+      statut: 'brouillon',
+      motif_cloture: null,
+      type: fixture.type,
+      ville: fixture.ville,
+      quartier: fixture.quartier,
+      chambres: fixture.chambres,
+      surface_m2: fixture.surfaceM2,
+      loyer: fixture.loyer,
+      charges: fixture.charges,
+      depot_garantie: fixture.depotGarantie,
+      avance_mois: fixture.avanceMois,
+      equipements: fixture.equipements,
+      description: fixture.description,
+      disponible_le: null,
+    }, pro.id)
 
-  const { data: annonce, error: erreurAnnonce } = await admin.from('annonces')
-    .select('id,reference,statut,bailleur_id,logement_id')
-    .eq('id', IDS.annonce)
-    .single()
-  assurerSansErreur(erreurAnnonce, 'lecture de l’annonce Find de démonstration impossible')
-  if (annonce.bailleur_id !== pro.id || annonce.logement_id !== IDS.logementAnnonce) {
-    refuser('l’annonce de démonstration n’est pas liée au logement attendu')
-  }
-  if (annonce.statut === 'brouillon') {
-    const { error } = await admin.from('annonces').update({ statut: 'publiee', publiee_le: new Date().toISOString() }).eq('id', IDS.annonce)
-    assurerSansErreur(error, 'publication de l’annonce locale via ses contrôles de cohérence impossible')
-  } else if (annonce.statut !== 'publiee') {
-    refuser('l’annonce de démonstration a été clôturée ou suspendue; elle n’est pas réactivée automatiquement')
+    const photo = await readFile(path.join(process.cwd(), 'scripts/demo/assets/find', fixture.photo))
+    const metadata = await sharp(photo).metadata()
+    if (metadata.format !== 'jpeg' || !metadata.width || !metadata.height || photo.length > 3 * 1024 * 1024) {
+      refuser(`la photographie locale ${fixture.photo} n’est pas un JPEG optimisé exploitable`)
+    }
+    const chemin = `${pro.id}/${annonceId}/${photoId}.jpg`
+    const { error: erreurDepot } = await admin.storage.from('annonces').upload(chemin, photo, {
+      contentType: 'image/jpeg',
+      upsert: true,
+    })
+    assurerSansErreur(erreurDepot, 'dépôt d’une photographie fictive dans le bucket Demo annonces impossible')
+
+    await insererSiAbsente('annonce_photos', {
+      id: photoId,
+      annonce_id: annonceId,
+      bailleur_id: pro.id,
+      chemin,
+      position: 0,
+      largeur: metadata.width,
+      hauteur: metadata.height,
+      type_mime: 'image/jpeg',
+      poids: photo.length,
+    }, pro.id)
+
+    const { data: annonce, error: erreurAnnonce } = await admin.from('annonces')
+      .select('id,reference,statut,bailleur_id,logement_id')
+      .eq('id', annonceId)
+      .single()
+    assurerSansErreur(erreurAnnonce, 'lecture d’une annonce Find de démonstration impossible')
+    if (annonce.bailleur_id !== pro.id || annonce.logement_id !== logementId) {
+      refuser('une annonce de démonstration n’est pas liée au logement attendu')
+    }
+    if (annonce.statut === 'brouillon') {
+      const { error } = await admin.from('annonces').update({ statut: 'publiee', publiee_le: new Date().toISOString() }).eq('id', annonceId)
+      assurerSansErreur(error, 'publication d’une annonce locale via ses contrôles de cohérence impossible')
+    } else if (annonce.statut !== 'publiee') {
+      refuser('une annonce de démonstration a été clôturée ou suspendue; elle n’est pas réactivée automatiquement')
+    }
+    references.push(String(annonce.reference))
   }
 
   // Vérifier que le troisième compte reste un candidat ordinaire, sans dossier prérempli.
@@ -633,7 +734,7 @@ async function preparerAnnonceFind(pro: CompteDemo, candidat: CompteDemo): Promi
   assurerSansErreur(erreurCandidatures, 'vérification du compte candidat sans candidature préremplie impossible')
   if (count) refuser('le candidat possède déjà une candidature; reconstruction complète nécessaire pour préserver un état initial vierge')
 
-  return { reference: annonce.reference }
+  return { reference: references[0] }
 }
 
 async function verifierVolumes(comptes: Map<'pro' | 'me' | 'find', CompteDemo>): Promise<void> {
@@ -660,9 +761,9 @@ async function verifierVolumes(comptes: Map<'pro' | 'me' | 'find', CompteDemo>):
     volumes[table] = count ?? 0
   }
   if (
-    volumes.logements !== 2 || volumes.locataires !== 1 || volumes.baux !== 1 ||
-    volumes.paiements !== 3 || volumes.quittances !== 3 || volumes.annonces !== 1 ||
-    volumes.annonce_photos !== 1
+    volumes.logements !== FIXTURES_FIND.length + 1 || volumes.locataires !== 1 || volumes.baux !== 1 ||
+    volumes.paiements !== 3 || volumes.quittances !== 3 || volumes.annonces !== FIXTURES_FIND.length ||
+    volumes.annonce_photos !== FIXTURES_FIND.length
   ) {
     refuser(`les volumes du jeu Demo diffèrent de la configuration attendue (${JSON.stringify(volumes)})`)
   }
@@ -681,7 +782,8 @@ function construireFicheAcces(comptes: Map<'pro' | 'me' | 'find', CompteDemo>, r
   return `# Accès privés — Sikaloc Demo locale\n\n` +
     `Instance isolée : Supabase local sur 127.0.0.1:54821. Données entièrement fictives.\n` +
     `Ne pas partager ce fichier : il contient des mots de passe.\n\n` +
-    `## Pro — bailleur\n- Nom : ${pro.nom}\n- Email : ${pro.email}\n- Mot de passe : ${pro.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- À montrer : tableau de bord, les deux logements (un loué et une annonce Find), l'unique bail, paiements et documents.\n\n` +
+    `## Pro — bailleur\n- Nom : ${pro.nom}\n- Email : ${pro.email}\n- Mot de passe : ${pro.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- À montrer : tableau de bord, les six logements (un loué et cinq annonces Find), l'unique bail, paiements et documents.\n` +
+    `- Plan : Standard actif uniquement dans cette base Demo locale, pour présenter cinq annonces sans paiement ni effet sur les autres environnements.\n\n` +
     `## Me — locataire invité\n- Nom : ${me.nom}\n- Email : ${me.email}\n- Mot de passe : ${me.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- Relation : bail actif de démonstration à Cotonou, rattaché par la RPC d’acceptation d’invitation.\n\n` +
     `## Find — candidat\n- Nom : ${find.nom}\n- Email : ${find.email}\n- Mot de passe : ${find.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- Annonce conseillée : Studio à Zogbadjè, Abomey-Calavi (référence ${reference}).\n- Aucune candidature n’est précréée : utilisez le parcours réel pour la déposer.\n\n` +
     `Téléphone des profils : valeur fictive non joignable. Les emails/SMS, paiements réels et notifications externes sont désactivés.\n`
@@ -704,9 +806,10 @@ async function main(): Promise<void> {
   await ecrirePrive(FICHIER_PRIVE!, `${JSON.stringify(coffre, null, 2)}\n`)
   await ecrirePrive(FICHIER_ACCES!, construireFicheAcces(comptes, referenceAnnonce))
   console.log('Jeu Sikaloc Demo prêt : 3 comptes Auth (Pro, Me et candidat Find).')
-  console.log('Pro : 2 logements (1 loué et 1 annoncé), 1 locataire, 1 bail actif, 3 paiements et 3 PDF générés par le parcours documentaire réel.')
+  console.log(`Pro : 6 logements (1 loué et ${FIXTURES_FIND.length} annoncés), 1 locataire, 1 bail actif, 3 paiements et 3 PDF générés par le parcours documentaire réel.`)
+  console.log('Plan Standard actif uniquement dans cette base Demo locale, sans paiement ni effet sur les autres environnements.')
   console.log(`Me : compte lié au bail par l’invitation et la RPC accepter_invitation; bail depuis ${debutBail}.`)
-  console.log(`Find : 1 annonce fictive publiée avec 1 photographie IA optimisée; aucune candidature préremplie (référence ${referenceAnnonce}).`)
+  console.log(`Find : ${FIXTURES_FIND.length} annonces fictives publiées avec ${FIXTURES_FIND.length} photographies IA optimisées; aucune candidature préremplie (référence Studio ${referenceAnnonce}).`)
   console.log(`Identifiants privés : ${FICHIER_ACCES}; coffre local : ${FICHIER_PRIVE}. Aucun mot de passe n’est affiché.`)
 }
 

@@ -37,15 +37,15 @@ Connectez les trois profils par la page réelle `/connexion`. Le compte Me est d
 
 ## Données préparées
 
-- **Pro :** un seul bailleur sur le plan réel Gratuit ; deux logements au total, soit un logement loué et un logement distinct publié sur Find. Ce total respecte le plafond de deux logements du plan : aucun abonnement ni quota n’est simulé.
+- **Pro :** un seul bailleur, un logement loué et cinq logements distincts publiés sur Find (six logements au total), une fiche locataire et un bail actif. Le profil est placé sur Standard uniquement dans la base Supabase Demo locale afin de respecter le quota utilisé par l’application ; aucun paiement n’est effectué et cette valeur n’existe ni en production ni dans une autre base.
 - **Me :** une fiche locataire, un bail actif cohérent avec Pro et le même logement loué.
 - **Paiements :** deux périodes complètes et une période courante partiellement réglée. Les brouillons sont créés par la RPC réelle, puis validés et documentés par les RPC de génération/publication. Les montants ne sont pas insérés directement comme paiements déjà validés.
 - **Documents :** deux quittances pour les périodes intégralement réglées et un reçu pour le versement partiel, produits avec le template PDF officiel. Les documents portent la mention « EXEMPLE / DOCUMENT FICTIF — SANS VALEUR JUSTIFICATIVE » et n’ont pas de signatures fictives.
-- **Find :** une annonce de studio à Zogbadjè, Abomey-Calavi, avec une photographie immobilière générée et optimisée pour le Web. L’annonce et le logement sont explicitement fictifs et n’existent que dans l’instance locale.
+- **Find :** cinq annonces fictives à Abomey-Calavi, Cotonou, Porto-Novo et Ouidah (studio, appartements et maison), chacune liée à son propre logement et illustrée par une photographie immobilière générée par IA, optimisée en JPEG pour le Web. Descriptions et adresses signalent la démonstration ; aucune annonce n’est une offre réelle. Les données ne sont visibles que dans l’instance locale isolée.
 - **Candidatures :** aucune n’est précréée. Le compte Find peut parcourir l’annonce et déposer une candidature par le vrai parcours. Une candidature ne crée pas automatiquement de bail.
 - **Contacts :** numéros fictifs non joignables ; aucune adresse de personne réelle n’est utilisée.
 
-Le seed n’invente pas de quittance pour une période impayée. Il ne modifie pas le plan, le calcul des loyers, les règles d’accès ni les autorisations RLS.
+Le seed n’invente pas de quittance pour une période impayée et ne modifie pas les règles d’accès, les autorisations RLS ou les calculs métier. Seul le profil Pro de l’instance locale Demo reçoit un statut Standard d’un an, sans paiement, pour que le quota existant autorise les six logements de démonstration.
 
 ## Parcours de présentation (environ 10 minutes)
 
@@ -53,10 +53,10 @@ Le seed n’invente pas de quittance pour une période impayée. Il ne modifie p
 
 1. Connectez-vous avec le profil **Pro** depuis `/connexion`.
 2. Ouvrez `/pro/tableau-de-bord`.
-3. Depuis la navigation Pro, consultez `/pro/logements`, `/pro/locataires` et `/pro/baux` : vous verrez un seul logement loué, une seule fiche locataire et un bail actif.
+3. Depuis la navigation Pro, consultez `/pro/logements`, `/pro/locataires` et `/pro/baux` : vous verrez six logements (un loué et cinq reliés aux annonces Find), une seule fiche locataire et un bail actif.
 4. Ouvrez `/pro/paiements` pour comparer les deux périodes réglées et le versement partiel de la période courante.
 5. Ouvrez les documents liés : les périodes complètes ont une quittance ; le paiement partiel a un reçu.
-6. Montrez les actions d’ajout disponibles. Le compte est sur Gratuit : respectez son quota réel et ajoutez seulement après avoir supprimé ou clôturé selon le fonctionnement normal de l’application.
+6. Montrez les actions d’ajout disponibles. Le statut Standard n’existe que sur l’instance Demo locale ; aucun paiement n’a été effectué.
 
 ### B — Sikaloc Me
 
@@ -66,7 +66,7 @@ Le seed n’invente pas de quittance pour une période impayée. Il ne modifie p
 
 ### C — Sikaloc Find
 
-1. Ouvrez `/find` et explorez l’annonce de démonstration et sa photographie.
+1. Ouvrez `/find` et explorez les cinq annonces fictives et leurs photographies distinctes.
 2. Testez les filtres réels et ouvrez la fiche du studio.
 3. Pour déposer une candidature, connectez-vous avec le profil **Find** via `/connexion`, puis revenez à l’annonce et suivez l’action de candidature.
 4. Le suivi apparaît dans l’espace candidat s’il est proposé par le parcours actuel ; Pro peut consulter la demande sur son annonce.
@@ -91,7 +91,7 @@ La sélection et l’affichage des avatars et photos de profil ont été retiré
 
 ## Limites
 
-- Le plan Gratuit autorise deux logements : un logement loué et un autre lié à l’unique annonce Find. Le portefeuille Pro affiche donc ces deux biens.
+- Le compte Pro affiche six logements : un loué et cinq reliés aux annonces Find. Le statut Standard est une configuration locale de démonstration, sans transaction financière ; il ne doit pas être interprété comme un abonnement payé.
 - Le compte candidat n’a pas de candidature au départ afin que vous puissiez montrer le dépôt réel.
-- La photographie générée illustre une annonce fictive et ne représente pas un bien réellement disponible.
+- Les cinq photographies générées illustrent des logements fictifs et ne représentent pas des biens réellement disponibles.
 - La démonstration n’a pas été validée par des tests automatisés ou un build ; la revue manuelle sur localhost reste à effectuer.
