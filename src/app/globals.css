@@ -2585,3 +2585,105 @@
   .pro-sales-button span,
   .pro-sales-faq-list summary span { transition: none; }
 }
+
+/* Page publique d'accès à Sikaloc Me : narration éditoriale, hors du cadre auth. */
+.me-join {
+  min-height: 100vh;
+  overflow: clip;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+.me-join-wrap { width: min(100% - 48px, 1200px); margin-inline: auto; }
+.me-join-header { border-bottom: 1px solid var(--color-hairline-soft); }
+.me-join-header-inner { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 18px; }
+.me-join-home-link { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; color: var(--color-body); font-size: 13px; font-weight: 650; text-decoration: none; }
+.me-join-home-link:hover { color: var(--color-ink-deep); }
+.me-join-home-link:focus-visible,
+.me-join-next-item a:focus-visible,
+.me-join-footer a:focus-visible { border-radius: 4px; outline: 3px solid var(--color-ink-deep); outline-offset: 4px; }
+.me-join-hero { padding: clamp(50px, 7.4vw, 100px) 0 clamp(70px, 9vw, 118px); }
+.me-join-hero-grid { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: center; gap: clamp(40px, 7.4vw, 104px); }
+.me-join-hero-copy { min-width: 0; }
+.me-join-eyebrow { margin: 0; color: var(--color-ink-deep); font-size: 12px; font-weight: 750; letter-spacing: .075em; line-height: 1.45; text-transform: uppercase; }
+.me-join-title,
+.me-join-section-heading h2,
+.me-join-invitation-panel h2 { color: var(--color-ink); font-family: var(--font-me-display), var(--font-display), sans-serif; font-weight: 800; letter-spacing: -.065em; text-wrap: balance; }
+.me-join-title { max-width: 11ch; margin: 20px 0 0; font-size: clamp(48px, 5.5vw, 76px); line-height: 1.01; }
+.me-join-lead { max-width: 51ch; margin: 23px 0 0; color: var(--color-body); font-size: clamp(16px, 1.35vw, 18px); line-height: 1.68; }
+.me-join-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 31px; }
+.me-join-button { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; padding: 0 21px; border: 1px solid transparent; border-radius: var(--radius-pill); font-size: 14px; font-weight: 700; line-height: 1.2; text-decoration: none; transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease; }
+.me-join-button:hover { transform: translateY(-1px); }
+.me-join-button:focus-visible { outline: 3px solid var(--color-ink-deep); outline-offset: 4px; }
+.me-join-button-primary { background: var(--color-primary); color: var(--color-on-primary); }
+.me-join-button-primary:hover { background: var(--color-primary-active); }
+.me-join-button-secondary { border-color: var(--color-hairline-strong); background: var(--color-canvas); color: var(--color-ink); }
+.me-join-button-secondary:hover { border-color: var(--color-ink-deep); background: var(--color-canvas-soft); }
+.me-join-photo { position: relative; min-width: 0; overflow: hidden; aspect-ratio: 1.22; margin: 0; border-radius: var(--radius-xl); background: var(--color-canvas-soft); box-shadow: 0 18px 42px -32px rgb(17 24 16 / .34); }
+.me-join-photo img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 63% center; }
+.me-join-steps { padding: clamp(58px, 7.5vw, 94px) 0 clamp(68px, 8vw, 102px); border-top: 1px solid var(--color-hairline-soft); }
+.me-join-section-heading { max-width: 740px; }
+.me-join-section-heading h2 { max-width: 17ch; margin: 15px 0 0; font-size: clamp(36px, 4.1vw, 56px); line-height: 1.06; }
+.me-join-step-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3.4vw, 42px); margin: clamp(34px, 4.5vw, 54px) 0 0; padding: 0; list-style: none; }
+.me-join-step { min-width: 0; padding: 20px 0 0; border-top: 1px solid var(--color-hairline-strong); }
+.me-join-step-number { display: block; margin-bottom: 26px; color: var(--color-ink-deep); font-family: var(--font-me-display), var(--font-display), sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -.035em; }
+.me-join-step h3 { max-width: 20ch; margin: 0; color: var(--color-ink); font-family: var(--font-me-display), var(--font-display), sans-serif; font-size: clamp(18px, 1.6vw, 21px); font-weight: 750; letter-spacing: -.03em; line-height: 1.35; }
+.me-join-step p { max-width: 38ch; margin: 10px 0 0; color: var(--color-body); font-size: 15px; line-height: 1.65; }
+.me-join-invitation { padding: 0 0 clamp(64px, 7.5vw, 94px); }
+.me-join-invitation-panel { padding: clamp(26px, 4.5vw, 52px); border-radius: var(--radius-xl); background: var(--color-canvas-sage); }
+.me-join-invitation-panel h2 { max-width: 22ch; margin: 12px 0 0; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.1; }
+.me-join-invitation-panel > p:last-child { max-width: 68ch; margin: 14px 0 0; color: var(--color-body); font-size: 15px; line-height: 1.7; }
+.me-join-next { padding: 0 0 28px; }
+.me-join-next-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--color-hairline-strong); }
+.me-join-next-item { min-width: 0; padding: 22px 24px 24px 0; }
+.me-join-next-item + .me-join-next-item { padding-left: 24px; border-left: 1px solid var(--color-hairline-soft); }
+.me-join-next-item p { margin: 0; color: var(--color-mute); font-size: 13px; line-height: 1.5; }
+.me-join-next-item a { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; margin-top: 6px; color: var(--color-ink-deep); font-size: 15px; font-weight: 750; text-decoration: none; }
+.me-join-next-item a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.me-join-footer { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--color-hairline-soft); }
+.me-join-footer > a { color: var(--color-mute); font-size: 12px; text-decoration: underline; text-decoration-color: var(--color-hairline-strong); text-underline-offset: 4px; }
+
+@media (max-width: 900px) {
+  .me-join-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .me-join-hero-copy { max-width: 700px; }
+  .me-join-title { max-width: 13ch; }
+  .me-join-photo { width: 100%; aspect-ratio: 1.55; }
+  .me-join-photo img { object-position: 61% center; }
+}
+@media (max-width: 640px) {
+  .me-join-wrap { width: min(100% - 36px, 1200px); }
+  .me-join-header-inner { min-height: 64px; }
+  .me-join-hero { padding: 48px 0 66px; }
+  .me-join-hero-grid { gap: 29px; }
+  .me-join-title { max-width: 12ch; margin-top: 16px; font-size: clamp(43px, 11vw, 62px); }
+  .me-join-lead { margin-top: 17px; font-size: 16px; }
+  .me-join-hero-actions { align-items: stretch; flex-direction: column; margin-top: 24px; }
+  .me-join-button { width: 100%; min-height: 52px; }
+  .me-join-photo { aspect-ratio: 1.28; border-radius: var(--radius-lg); }
+  .me-join-photo img { object-position: 63% center; }
+  .me-join-steps { padding-block: 56px 66px; }
+  .me-join-section-heading h2 { max-width: 15ch; font-size: clamp(34px, 9vw, 46px); }
+  .me-join-step-list { grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 34px; }
+  .me-join-step { display: grid; grid-template-columns: 38px minmax(0, 1fr); column-gap: 12px; padding-top: 15px; }
+  .me-join-step-number { grid-row: span 2; margin: 0; font-size: 15px; }
+  .me-join-step h3 { font-size: 18px; }
+  .me-join-step p { grid-column: 2; margin-top: 5px; font-size: 14px; }
+  .me-join-invitation { padding-bottom: 56px; }
+  .me-join-invitation-panel { padding: 26px 22px; border-radius: var(--radius-lg); }
+  .me-join-invitation-panel h2 { font-size: clamp(27px, 7vw, 34px); }
+  .me-join-invitation-panel > p:last-child { font-size: 14px; }
+  .me-join-next-grid { grid-template-columns: minmax(0, 1fr); }
+  .me-join-next-item { padding: 18px 0; }
+  .me-join-next-item + .me-join-next-item { padding-left: 0; border-top: 1px solid var(--color-hairline-soft); border-left: 0; }
+  .me-join-footer { min-height: 72px; }
+}
+@media (max-width: 380px) {
+  .me-join-wrap { width: min(100% - 32px, 1200px); }
+  .me-join-title { font-size: 42px; }
+  .me-join-home-link { gap: 5px; font-size: 12px; }
+  .me-join-photo { aspect-ratio: 1.12; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .me-join-button { transition: none; }
+  .me-join-button:hover { transform: none; }
+}

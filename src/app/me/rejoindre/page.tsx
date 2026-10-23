@@ -1,120 +1,155 @@
-import { Mail, MessageCircle, ShieldCheck } from 'lucide-react'
 import type { Metadata } from 'next'
+import localFont from 'next/font/local'
+import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 
-import { CarteAuth } from '@/components/auth/carte-auth'
-import { ESPACE_ME } from '@/lib/roles'
+import { MarqueSikaloc } from '@/components/ui/logo'
+
+const manropeMe = localFont({
+  src: [
+    { path: '../../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
+    { path: '../../fonts/Manrope-PDF-Medium.ttf', weight: '500' },
+    { path: '../../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
+    { path: '../../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
+    { path: '../../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
+  ],
+  variable: '--font-me-display',
+  display: 'swap',
+  preload: false,
+})
 
 export const metadata: Metadata = {
-  title: 'Rejoindre Sikaloc_Me',
+  title: 'Rejoindre Sikaloc Me',
   description:
-    'Votre bailleur vous invite à consulter votre logement, vos loyers et vos quittances.',
+    'Retrouvez votre bail, vos paiements et les documents partagés par votre bailleur dans votre espace Sikaloc Me.',
 }
 
-/**
- * Comment on entre dans Sikaloc_Me.
- *
- * ─── Pourquoi pas un formulaire d'inscription ───────────────────────────────
- *
- * Parce qu'un compte locataire créé tout seul ne serait relié à rien. Ce qui
- * rattache une personne à un logement, à un bail, à des quittances, c'est
- * l'invitation de son bailleur — elle seule sait de quel bail il s'agit.
- *
- * Un formulaire ouvert produirait des comptes vides que personne ne pourrait
- * relier ensuite sans risquer de rattacher la mauvaise personne au mauvais
- * bail. C'est un risque qu'on ne prend pas avec des documents de loyer.
- *
- * Cette page dit donc la vérité et donne le chemin : demandez l'invitation.
- */
+const etapes = [
+  {
+    numero: '01',
+    titre: 'Votre bailleur vous invite.',
+    texte: 'Il vous envoie un lien personnel depuis votre fiche locataire dans Sikaloc Pro.',
+  },
+  {
+    numero: '02',
+    titre: 'Vous acceptez l’invitation.',
+    texte: 'Ouvrez le lien reçu pour créer votre accès ou vous connecter avec l’adresse e-mail invitée.',
+  },
+  {
+    numero: '03',
+    titre: 'Vous retrouvez votre location.',
+    texte: 'Consultez votre bail, les paiements enregistrés et les documents mis à votre disposition.',
+  },
+]
+
 export default function PageRejoindre() {
   return (
-    <CarteAuth
-      titre="Rejoindre Sikaloc_Me"
-      description="Votre espace locataire s’ouvre sur invitation de votre bailleur."
-      bas={
-        <>
-          Vous gérez des biens ?{' '}
-          <Link href="/inscription" className="font-semibold text-ink underline">
-            Créer un compte Sikaloc_Pro
+    <main id="contenu-principal" tabIndex={-1} className={`me-join ${manropeMe.variable}`}>
+      <a href="#contenu-principal" className="skip-link">
+        Aller au contenu
+      </a>
+
+      <header className="me-join-header">
+        <div className="me-join-wrap me-join-header-inner">
+          <MarqueSikaloc taille="sm" />
+          <Link href="/" className="me-join-home-link">
+            Accueil <ArrowRight size={15} aria-hidden="true" />
           </Link>
-        </>
-      }
-    >
-      <div className="space-y-xl">
-        <p className="rounded-lg border border-hairline bg-canvas-sage p-md text-body-sm text-body">
-          Vous êtes locataire ? Demandez à votre bailleur son invitation personnelle. Elle seule relie votre compte au bon logement.
-        </p>
-        <ol className="space-y-lg" aria-label="Étapes pour rejoindre votre logement">
-          <Etape
-            numero={1}
-            icone={<MessageCircle size={18} strokeWidth={2} aria-hidden="true" />}
-            titre="Votre bailleur vous invite"
-            texte="Il vous envoie un lien par email, depuis votre fiche dans Sikaloc_Pro."
-          />
-          <Etape
-            numero={2}
-            icone={<ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />}
-            titre="Vous confirmez que c’est bien vous"
-            texte="Créez votre compte ou connectez-vous avec l’adresse email destinataire de l’invitation."
-          />
-          <Etape
-            numero={3}
-            icone={<Mail size={18} strokeWidth={2} aria-hidden="true" />}
-            titre="Vous retrouvez votre logement"
-            texte="Votre bail, vos loyers et vos quittances vous attendent — ce sont les mêmes documents que ceux de votre bailleur, pas des copies."
-          />
-        </ol>
-
-        <div className="rounded-lg border border-hairline bg-canvas p-lg">
-          <p className="text-body-sm text-body">
-            <strong className="text-ink">Vous avez déjà reçu une invitation ?</strong>{' '}
-            Ouvrez le lien qu’elle contient : c’est lui qui vous rattache à votre
-            bail.
-          </p>
-          <p className="mt-sm text-body-sm text-mute">
-            Vous avez déjà un compte ?{' '}
-            <Link href="/connexion" className="font-semibold text-ink underline">
-              Se connecter
-            </Link>
-          </p>
         </div>
+      </header>
 
-        <p className="text-caption text-mute">
-          Sikaloc ne crée jamais de compte locataire sans invitation : c’est elle
-          qui relie une personne à un logement. Sans elle, {ESPACE_ME.nom}{' '}
-          n’aurait rien à vous montrer.
-        </p>
-      </div>
-    </CarteAuth>
-  )
-}
+      <section className="me-join-hero" aria-labelledby="me-join-title">
+        <div className="me-join-wrap me-join-hero-grid">
+          <div className="me-join-hero-copy">
+            <p className="me-join-eyebrow">Sikaloc Me · Espace locataire</p>
+            <h1 id="me-join-title" className="me-join-title">
+              Votre location, à portée de main.
+            </h1>
+            <p className="me-join-lead">
+              Retrouvez votre bail, vos paiements et vos quittances dans un espace
+              personnel accessible sur invitation de votre bailleur.
+            </p>
+            <div className="me-join-hero-actions">
+              <Link href="/connexion" className="me-join-button me-join-button-primary">
+                Se connecter <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <a href="#fonctionnement" className="me-join-button me-join-button-secondary">
+                Comment ça marche ? <ChevronDown size={16} aria-hidden="true" />
+              </a>
+            </div>
+          </div>
 
-function Etape({
-  numero,
-  icone,
-  titre,
-  texte,
-}: {
-  numero: number
-  icone: React.ReactNode
-  titre: string
-  texte: string
-}) {
-  return (
-    <li className="flex gap-md">
-      <span
-        aria-hidden="true"
-        className="flex size-9 shrink-0 items-center justify-center rounded-pill bg-canvas-sage text-primary"
-      >
-        {icone}
-      </span>
-      <div className="min-w-0">
-        <p className="text-body-md font-semibold text-ink">
-          <span className="sr-only">Étape {numero} — </span>
-          {titre}
-        </p>
-        <p className="mt-xxs text-body-sm text-mute">{texte}</p>
-      </div>
-    </li>
+          <figure className="me-join-photo">
+            <Image
+              src="/images/home/sikaloc-me-editorial.webp"
+              alt="Scène illustrative : une locataire consulte sereinement son téléphone dans son logement lumineux."
+              width={1536}
+              height={1024}
+              sizes="(max-width: 900px) 100vw, (max-width: 1200px) 52vw, 620px"
+              priority
+            />
+          </figure>
+        </div>
+      </section>
+
+      <section id="fonctionnement" className="me-join-steps" aria-labelledby="me-join-steps-title">
+        <div className="me-join-wrap">
+          <div className="me-join-section-heading">
+            <p className="me-join-eyebrow">Un accès personnel, relié à votre bail</p>
+            <h2 id="me-join-steps-title">Votre espace locataire, en trois étapes.</h2>
+          </div>
+
+          <ol className="me-join-step-list">
+            {etapes.map((etape) => (
+              <li key={etape.numero} className="me-join-step">
+                <span className="me-join-step-number" aria-hidden="true">
+                  {etape.numero}
+                </span>
+                <h3>{etape.titre}</h3>
+                <p>{etape.texte}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="me-join-invitation" aria-labelledby="me-join-invitation-title">
+        <div className="me-join-wrap">
+          <div className="me-join-invitation-panel">
+            <p className="me-join-eyebrow">Vous n’avez pas encore reçu d’invitation ?</p>
+            <h2 id="me-join-invitation-title">Votre bailleur vous ouvre l’accès.</h2>
+            <p>
+              Demandez-lui de vous inviter depuis son espace Sikaloc Pro. Cette
+              invitation relie votre compte à la bonne location et aux documents
+              qu’il partage avec vous.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="me-join-next" aria-label="Autres accès Sikaloc">
+        <div className="me-join-wrap">
+          <div className="me-join-next-grid">
+            <div className="me-join-next-item">
+              <p>Vous avez déjà activé votre accès ?</p>
+              <Link href="/connexion">
+                Se connecter <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="me-join-next-item">
+              <p>Vous gérez des logements ?</p>
+              <Link href="/pro">
+                Découvrir Sikaloc Pro <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+          <div className="me-join-footer">
+            <MarqueSikaloc taille="sm" />
+            <Link href="/">Retour à l’accueil Sikaloc</Link>
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }
