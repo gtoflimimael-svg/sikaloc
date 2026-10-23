@@ -1,6 +1,6 @@
 'use client'
 
-import { SlidersHorizontal, X } from 'lucide-react'
+import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 
@@ -9,280 +9,279 @@ import type { Filtres } from '@/lib/find/recherche'
 import { EQUIPEMENTS_ANNONCE, TYPES_LOGEMENT } from '@/lib/types/database'
 
 /**
- * Les filtres de la recherche.
- *
- * ─── Un formulaire, une URL ────────────────────────────────────────────────
- *
- * `method="get"` vers `/find` : le navigateur construit lui-même l'URL, avec
- * les seuls champs remplis. Aucun état client à tenir, une recherche reste
- * partageable, et le bouton « Précédent » fonctionne. `page` n'est pas un
- * champ : changer un filtre ramène donc toujours à la première page.
- *
- * ─── Une seule instance ────────────────────────────────────────────────────
- *
- * Le même formulaire sert au téléphone et au bureau : deux copies auraient
- * dupliqué les identifiants de champs, et un lecteur d'écran aurait annoncé
- * deux fois chaque libellé. Sous `lg`, il s'ouvre par le bouton « Filtrer » ;
- * au-dessus, il est toujours là.
+ * Recherche publique Find : critères principaux visibles, critères avancés
+ * dans un panneau repliable. Le GET natif garde l’URL partageable et la
+ * recherche côté serveur reste l’unique source des résultats.
  */
 export function FiltresFind({
   filtres,
   lieux,
   nbFiltresActifs,
-  compacte = false,
 }: {
   filtres: Filtres
   /** Villes et quartiers réellement publiés — `lieux_publies`. */
   lieux: { ville: string; quartier: string | null }[]
   nbFiltresActifs: number
-  /** Variante de l'accueil : ville, type et budget, soumis au vrai catalogue. */
-  compacte?: boolean
 }) {
-  const [ouvert, setOuvert] = useState(false)
+  const filtresAvancesActifs =
+    Number(Boolean(filtres.quartier)) +
+    Number(filtres.chambres !== undefined) +
+    Number(filtres.surfaceMin !== undefined) +
+    Number(filtres.surfaceMax !== undefined) +
+    Number(Boolean(filtres.disponible)) +
+    filtres.equipements.length
+  const [ouvert, setOuvert] = useState(filtresAvancesActifs > 0)
   const panneau = useId()
   const declencheur = useRef<HTMLButtonElement>(null)
   const formulaire = useRef<HTMLFormElement>(null)
-  useEffect(() => {
-    if (ouvert && !window.matchMedia('(min-width: 1024px)').matches) formulaire.current?.querySelector('select')?.focus()
-  }, [ouvert])
+  const focaliserPremierFiltre = useRef(false)
 
-  const villes = [...new Set(lieux.map((l) => l.ville))].sort((a, b) => a.localeCompare(b, 'fr'))
+  const villes = [...new Set(lieux.map((lieu) => lieu.ville))].sort((a, b) => a.localeCompare(b, 'fr'))
   const quartiers = [
     ...new Set(
       lieux
-        .filter((l) => (filtres.ville ? l.ville.toLowerCase() === filtres.ville.toLowerCase() : true))
-        .map((l) => l.quartier)
-        .filter((q): q is string => Boolean(q)),
+        .filter((lieu) => (filtres.ville ? lieu.ville.toLowerCase() === filtres.ville.toLowerCase() : true))
+        .map((lieu) => lieu.quartier)
+        .filter((quartier): quartier is string => Boolean(quartier)),
     ),
   ].sort((a, b) => a.localeCompare(b, 'fr'))
 
+  useEffect(() => {
+    if (!ouvert || !focaliserPremierFiltre.current) return
+    formulaire.current?.querySelector<HTMLElement>('[data-first-advanced="true"]')?.focus()
+    focaliserPremierFiltre.current = false
+  }, [ouvert])
+
+  function basculerFiltres() {
+    if (ouvert) {
+      setOuvert(false)
+      declencheur.current?.focus()
+      return
+    }
+    focaliserPremierFiltre.current = true
+    setOuvert(true)
+  }
+
+  function fermerFiltres() {
+    setOuvert(false)
+    declencheur.current?.focus()
+  }
+
   return (
-    <div>
-      <button
-        ref={declencheur}
-        type="button"
-        onClick={() => setOuvert((o) => !o)}
-        aria-expanded={ouvert}
-        aria-controls={panneau}
-        className="btn btn-secondary w-full lg:hidden"
-      >
-        {ouvert ? <X size={18} aria-hidden="true" /> : <SlidersHorizontal size={18} aria-hidden="true" />}
-        {ouvert ? 'Fermer les filtres' : 'Filtrer'}
-        {nbFiltresActifs > 0 && !ouvert ? ` (${nbFiltresActifs})` : ''}
-      </button>
-
-      <form
-        id={panneau}
-        ref={formulaire}
-        onKeyDown={e => {
-          if (e.key === 'Escape' && ouvert && !window.matchMedia('(min-width: 1024px)').matches) {
-            e.preventDefault(); setOuvert(false); declencheur.current?.focus()
-          }
-        }}
-        method="get"
-        action="/find"
-        onSubmit={(evenement) => {
-          // Un champ vide part quand même dans l'URL (`&type=`), où il ne veut
-          // rien dire. On le désactive juste avant l'envoi : le navigateur ne
-          // le transmet plus. Sans JavaScript, il est simplement ignoré à la
-          // lecture — la recherche fonctionne dans les deux cas.
-          for (const champ of Array.from(evenement.currentTarget.elements)) {
-            const controle = champ as HTMLInputElement | HTMLSelectElement
-            if (controle.name && 'value' in controle && controle.value === '') controle.disabled = true
-          }
-        }}
-        className={`card list-card mt-md space-y-lg lg:mt-0 lg:block ${compacte ? 'find-filters--compact' : ''} ${ouvert ? 'block' : 'hidden'}`}
-        aria-label="Filtrer les logements"
-      >
-        <div>
-          <label htmlFor="f-ville" className="field-label">
-            Ville
-          </label>
-          <select id="f-ville" name="ville" defaultValue={filtres.ville ?? ''} className="input">
+    <form
+      ref={formulaire}
+      method="get"
+      action="/find"
+      className="find-search-form"
+      role="search"
+      aria-label="Rechercher un logement"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && ouvert) {
+          event.preventDefault()
+          fermerFiltres()
+        }
+      }}
+      onSubmit={(event) => {
+        // Les champs vides ne doivent pas polluer l’URL. Le navigateur
+        // construit et soumet toujours la recherche par GET.
+        for (const element of Array.from(event.currentTarget.elements)) {
+          const control = element as HTMLInputElement | HTMLSelectElement
+          if (control.name && 'value' in control && control.value === '') control.disabled = true
+        }
+      }}
+    >
+      <div className="find-search-primary">
+        <div className="find-search-field">
+          <label htmlFor={`${panneau}-ville`} className="find-search-label">Ville</label>
+          <select
+            id={`${panneau}-ville`}
+            name="ville"
+            defaultValue={filtres.ville ?? ''}
+            className="input find-search-input"
+          >
             <option value="">Toutes les villes</option>
-            {villes.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
+            {villes.map((ville) => <option key={ville} value={ville}>{ville}</option>)}
           </select>
         </div>
 
-        {!compacte && quartiers.length > 0 ? (
-          <div>
-            <label htmlFor="f-quartier" className="field-label">
-              Quartier
-            </label>
-            <select id="f-quartier" name="quartier" defaultValue={filtres.quartier ?? ''} className="input">
-              <option value="">Tous les quartiers</option>
-              {quartiers.map((q) => (
-                <option key={q} value={q}>
-                  {q}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-
-        <div>
-          <label htmlFor="f-type" className="field-label">
-            Type de bien
-          </label>
-          <select id="f-type" name="type" defaultValue={filtres.type ?? ''} className="input">
+        <div className="find-search-field">
+          <label htmlFor={`${panneau}-type`} className="find-search-label">Type de logement</label>
+          <select
+            id={`${panneau}-type`}
+            name="type"
+            defaultValue={filtres.type ?? ''}
+            className="input find-search-input"
+          >
             <option value="">Tous les types</option>
-            {TYPES_LOGEMENT.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
+            {TYPES_LOGEMENT.map((type) => <option key={type} value={type}>{type}</option>)}
           </select>
         </div>
 
-        <fieldset className="min-w-0">
-          <legend className="field-label">Loyer mensuel (FCFA)</legend>
-          <div className="find-range">
-            <div>
-              <label htmlFor="f-loyer-min" className="sr-only">
-                Loyer minimum en FCFA
-              </label>
-              <input
-                id="f-loyer-min"
-                name="loyer_min"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1000}
-                placeholder="Minimum"
-                defaultValue={filtres.loyerMin ?? ''}
-                className="input tabular"
-              />
-            </div>
-            <div>
-              <label htmlFor="f-loyer-max" className="sr-only">
-                Loyer maximum en FCFA
-              </label>
-              <input
-                id="f-loyer-max"
-                name="loyer_max"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1000}
-                placeholder="Maximum"
-                defaultValue={filtres.loyerMax ?? ''}
-                className="input tabular"
-              />
-            </div>
+        <fieldset className="find-search-field find-budget-field">
+          <legend className="find-search-label">Budget mensuel (FCFA)</legend>
+          <div className="find-budget-inputs">
+            <label className="sr-only" htmlFor={`${panneau}-loyer-min`}>Loyer minimum en FCFA</label>
+            <input
+              id={`${panneau}-loyer-min`}
+              name="loyer_min"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={999_999_999}
+              step={1000}
+              placeholder="Min."
+              defaultValue={filtres.loyerMin ?? ''}
+              className="input find-search-input tabular"
+            />
+            <span className="find-budget-separator" aria-hidden="true">à</span>
+            <label className="sr-only" htmlFor={`${panneau}-loyer-max`}>Loyer maximum en FCFA</label>
+            <input
+              id={`${panneau}-loyer-max`}
+              name="loyer_max"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={999_999_999}
+              step={1000}
+              placeholder="Max."
+              defaultValue={filtres.loyerMax ?? ''}
+              className="input find-search-input tabular"
+            />
           </div>
         </fieldset>
 
-        {!compacte ? <div>
-          <label htmlFor="f-chambres" className="field-label">
-            Chambres
-          </label>
-          <select id="f-chambres" name="chambres" defaultValue={filtres.chambres?.toString() ?? ''} className="input">
-            <option value="">Peu importe</option>
-            <option value="0">Entrer-coucher</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>
-                {n} chambre{n > 1 ? 's' : ''} salon
-              </option>
-            ))}
-          </select>
-        </div> : null}
+        <button type="submit" className="btn btn-primary find-search-submit">
+          <Search size={18} aria-hidden="true" />
+          Rechercher
+        </button>
+      </div>
 
-        {!compacte ? <fieldset className="min-w-0">
-          <legend className="field-label">Surface (m²)</legend>
-          <div className="find-range">
-            <div>
-              <label htmlFor="f-surface-min" className="sr-only">
-                Surface minimum en mètres carrés
-              </label>
+      <div className="find-search-tools">
+        <button
+          ref={declencheur}
+          type="button"
+          onClick={basculerFiltres}
+          aria-expanded={ouvert}
+          aria-controls={panneau}
+          className="find-filter-toggle"
+        >
+          <SlidersHorizontal size={17} aria-hidden="true" />
+          <span>Tous les filtres</span>
+          {nbFiltresActifs > 0 ? <span className="find-filter-count">{nbFiltresActifs}</span> : null}
+          <ChevronDown size={16} aria-hidden="true" className={ouvert ? 'is-open' : ''} />
+        </button>
+        <p className="find-search-note">Les résultats correspondent aux annonces publiées.</p>
+      </div>
+
+      <section id={panneau} hidden={!ouvert} aria-label="Filtres avancés" className="find-advanced-panel">
+        <div className="find-advanced-grid">
+          {quartiers.length > 0 ? (
+            <div className="find-search-field">
+              <label htmlFor={`${panneau}-quartier`} className="find-search-label">Quartier</label>
+              <select
+                id={`${panneau}-quartier`}
+                name="quartier"
+                defaultValue={filtres.quartier ?? ''}
+                className="input find-search-input"
+                data-first-advanced="true"
+              >
+                <option value="">Tous les quartiers</option>
+                {quartiers.map((quartier) => <option key={quartier} value={quartier}>{quartier}</option>)}
+              </select>
+            </div>
+          ) : null}
+
+          <div className="find-search-field">
+            <label htmlFor={`${panneau}-chambres`} className="find-search-label">Chambres</label>
+            <select
+              id={`${panneau}-chambres`}
+              name="chambres"
+              defaultValue={filtres.chambres?.toString() ?? ''}
+              className="input find-search-input"
+              data-first-advanced={quartiers.length === 0 ? 'true' : undefined}
+            >
+              <option value="">Peu importe</option>
+              <option value="0">Entrer-coucher</option>
+              {[1, 2, 3, 4, 5].map((nombre) => (
+                <option key={nombre} value={nombre}>{nombre} chambre{nombre > 1 ? 's' : ''} salon</option>
+              ))}
+            </select>
+          </div>
+
+          <fieldset className="find-search-field">
+            <legend className="find-search-label">Surface (m²)</legend>
+            <div className="find-budget-inputs">
+              <label className="sr-only" htmlFor={`${panneau}-surface-min`}>Surface minimum en mètres carrés</label>
               <input
-                id="f-surface-min"
+                id={`${panneau}-surface-min`}
                 name="surface_min"
                 type="number"
                 inputMode="numeric"
                 min={0}
                 max={2000}
-                placeholder="Minimum"
+                step={1}
+                placeholder="Min."
                 defaultValue={filtres.surfaceMin ?? ''}
-                className="input tabular"
+                className="input find-search-input tabular"
               />
-            </div>
-            <div>
-              <label htmlFor="f-surface-max" className="sr-only">
-                Surface maximum en mètres carrés
-              </label>
+              <span className="find-budget-separator" aria-hidden="true">à</span>
+              <label className="sr-only" htmlFor={`${panneau}-surface-max`}>Surface maximum en mètres carrés</label>
               <input
-                id="f-surface-max"
+                id={`${panneau}-surface-max`}
                 name="surface_max"
                 type="number"
                 inputMode="numeric"
                 min={0}
                 max={2000}
-                placeholder="Maximum"
+                step={1}
+                placeholder="Max."
                 defaultValue={filtres.surfaceMax ?? ''}
-                className="input tabular"
+                className="input find-search-input tabular"
               />
             </div>
-          </div>
-        </fieldset> : null}
+          </fieldset>
 
-        {!compacte ? <div>
-          <label
-            htmlFor="f-disponible"
-            className="flex cursor-pointer items-center gap-md rounded-md border border-hairline bg-canvas px-lg py-md"
-          >
+          <label htmlFor={`${panneau}-disponible`} className="find-availability-option">
             <input
-              id="f-disponible"
+              id={`${panneau}-disponible`}
               name="disponible"
               type="checkbox"
               value="maintenant"
               defaultChecked={filtres.disponible === true}
               className="size-5 shrink-0 accent-primary"
             />
-            <span className="text-body-md text-ink">Disponible maintenant</span>
+            <span>Disponible immédiatement</span>
           </label>
-        </div> : null}
 
-        {!compacte ? <details open={filtres.equipements.length > 0}>
-          <summary className="min-h-11 cursor-pointer py-sm text-body-sm font-medium text-ink">Équipements</summary>
-          <fieldset className="mt-sm min-w-0"><legend className="sr-only">Équipements souhaités</legend>
-          {/*
-            Chaque case porte le même nom : le navigateur envoie
-            `equipements=parking&equipements=climatisation`, sans une ligne de
-            JavaScript. `lireFiltres` accepte cette forme comme la forme
-            « séparée par des virgules » que produisent nos propres liens.
-          */}
-          <div className="grid gap-xs sm:grid-cols-2 lg:grid-cols-1">
-            {EQUIPEMENTS_ANNONCE.map((e) => (
-              <label key={e} className="flex min-h-11 cursor-pointer items-center gap-sm text-body-sm text-ink">
-                <input
-                  type="checkbox"
-                  name="equipements"
-                  value={e}
-                  defaultChecked={filtres.equipements.includes(e)}
-                  className="size-5 shrink-0 accent-primary"
-                />
-                {LIBELLES_EQUIPEMENT[e]}
-              </label>
-            ))}
-          </div>
-          </fieldset>
-        </details> : null}
-
-        <div className="flex flex-wrap gap-sm pt-sm">
-          <button type="submit" className="btn btn-primary">
-            Voir les résultats
-          </button>
-          {nbFiltresActifs > 0 ? (
-            <Link href="/find" className="btn btn-tertiary">
-              Réinitialiser
-            </Link>
-          ) : null}
+          <details open={filtres.equipements.length > 0} className="find-equipment-details">
+            <summary>Équipements souhaités</summary>
+            <fieldset className="find-equipment-options">
+              <legend className="sr-only">Équipements souhaités</legend>
+              {EQUIPEMENTS_ANNONCE.map((equipement) => (
+                <label key={equipement}>
+                  <input
+                    type="checkbox"
+                    name="equipements"
+                    value={equipement}
+                    defaultChecked={filtres.equipements.includes(equipement)}
+                    className="size-4 shrink-0 accent-primary"
+                  />
+                  <span>{LIBELLES_EQUIPEMENT[equipement]}</span>
+                </label>
+              ))}
+            </fieldset>
+          </details>
         </div>
-      </form>
-    </div>
+
+        <div className="find-advanced-actions">
+          <button type="submit" className="btn btn-primary">Appliquer les filtres</button>
+          <Link href="/find" className="btn btn-secondary">Réinitialiser</Link>
+          <button type="button" onClick={fermerFiltres} className="find-filter-close">
+            <X size={16} aria-hidden="true" />
+            Fermer
+          </button>
+        </div>
+      </section>
+    </form>
   )
 }

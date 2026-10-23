@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { notFound, redirect } from 'next/navigation'
 
 import { CarteAnnonce } from '@/components/find/carte-annonce'
@@ -45,8 +44,7 @@ const PAR_PAGE = 24
 
 const TITRE = 'Logements à louer au Bénin — Sikaloc_Find'
 const DESCRIPTION =
-  'Appartements, maisons, studios et boutiques à louer au Bénin, publiés par leurs bailleurs sur ' +
-  'Sikaloc. Loyer, charges, caution, équipements et disponibilité, sans adresse exacte.'
+  'Explorez les logements disponibles au Bénin, comparez leurs caractéristiques et trouvez celui qui correspond à vos besoins.'
 
 export async function generateMetadata({
   searchParams,
@@ -110,138 +108,93 @@ export default async function PageFind({ searchParams }: { searchParams: Promise
   const aujourdhui = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="find-catalog-page min-h-screen bg-canvas-soft">
+    <div className="find-catalog-page min-h-screen bg-canvas">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
-      <main id="contenu" className="mx-auto max-w-[1200px] app-main">
-        <header className="find-catalog-hero relative isolate overflow-hidden rounded-xl bg-surface-dark px-lg py-2xl text-on-dark sm:px-2xl lg:min-h-[250px] lg:py-3xl">
-          <div className="relative z-10 max-w-[42rem]">
-            <p className="text-body-sm font-semibold text-primary-on-dark">Sikaloc Find</p>
-            <h1 className="mt-sm text-display-md font-extrabold tracking-tight text-on-dark">
-              Trouvez un logement qui vous correspond.
-            </h1>
-            <p className="mt-md max-w-[37rem] text-body-md text-on-dark-mute">
-              Consultez les annonces publiées par les bailleurs, puis affinez selon votre ville,
-              votre budget et les caractéristiques dont vous avez besoin.
-            </p>
-          </div>
-          <Image src="/illustrations/home-04.webp" width={1200} height={900} alt="" aria-hidden="true" sizes="(min-width: 1024px) 290px, 0px" className="pointer-events-none absolute -bottom-14 -right-10 hidden w-[300px] rounded-xl opacity-90 lg:block" />
+      <main id="contenu" className="find-catalog-main mx-auto max-w-[1320px]">
+        <header className="find-catalog-intro">
+          <p className="find-catalog-eyebrow">Catalogue immobilier <span aria-hidden="true">·</span> Bénin</p>
+          <h1>Trouvez un logement qui vous ressemble.</h1>
+          <p className="find-catalog-description">
+            Explorez les logements disponibles au Bénin, comparez leurs caractéristiques et trouvez celui qui correspond à vos besoins.
+          </p>
         </header>
 
-        <div className="mt-2xl grid gap-lg lg:grid-cols-[18rem_minmax(0,1fr)]">
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="mb-md hidden lg:block">
-              <h2 className="text-display-sm font-bold text-ink">Affiner la recherche</h2>
-              <p className="mt-xs text-body-sm text-mute">Les filtres portent uniquement sur les annonces publiées.</p>
+        <section aria-label="Recherche de logements" className="find-catalog-search-section">
+          <FiltresFind filtres={filtres} lieux={lieux.data ?? []} nbFiltresActifs={actifs.length} />
+        </section>
+
+        <section className="find-catalog-results" aria-labelledby="find-results-title">
+          <div className="find-results-heading">
+            <div>
+              <p className="find-results-eyebrow">Le catalogue</p>
+              <h2 id="find-results-title">Logements disponibles</h2>
             </div>
-            <FiltresFind filtres={filtres} lieux={lieux.data ?? []} nbFiltresActifs={actifs.length} />
+            <p className="find-privacy-note">Les adresses exactes restent privées.</p>
           </div>
 
-          <div className="min-w-0">
-            <div className="mb-lg flex flex-wrap items-end justify-between gap-sm border-b border-hairline pb-md">
-              <div>
-                <p className="text-body-sm font-semibold text-primary">Le catalogue</p>
-                <h2 className="text-display-sm font-bold text-ink">Logements publiés</h2>
-              </div>
-              <p className="text-body-sm text-mute">L’adresse exacte n’est jamais publiée.</p>
-            </div>
-            {lieux.error ? <Alerte ton="attention">Les choix de lieux ne sont pas disponibles pour le moment. Les autres critères restent utilisables.</Alerte> : null}
-            {actifs.length > 0 ? (
-              <div className="mb-lg">
-                <h2 className="sr-only">Filtres actifs</h2>
-                <ul className="flex flex-wrap items-center gap-sm">
-                  {actifs.map((p) => (
-                    <li key={p.cle}>
-                      <Link
-                        href={p.href}
-                        className="inline-flex min-h-11 items-center gap-xs rounded-pill border border-hairline bg-canvas px-md py-xs text-body-sm text-ink hover:border-hairline-strong"
-                      >
-                        {p.libelle}
-                        <span aria-hidden="true">×</span>
-                        <span className="sr-only">— retirer ce filtre</span>
-                      </Link>
-                    </li>
-                  ))}
-                  <li>
-                    <Link href="/find" className="text-body-sm text-mute underline hover:text-ink">
-                      Réinitialiser
+          {lieux.error ? <Alerte ton="attention">Les choix de lieux ne sont pas disponibles pour le moment. Les autres critères restent utilisables.</Alerte> : null}
+          {actifs.length > 0 ? (
+            <div className="find-active-filters">
+              <h3 className="sr-only">Filtres actifs</h3>
+              <ul>
+                {actifs.map((p) => (
+                  <li key={p.cle}>
+                    <Link href={p.href}>
+                      {p.libelle}<span aria-hidden="true">×</span><span className="sr-only"> — retirer ce filtre</span>
                     </Link>
                   </li>
-                </ul>
-              </div>
-            ) : null}
+                ))}
+                <li><Link href="/find" className="find-clear-filters">Tout effacer</Link></li>
+              </ul>
+            </div>
+          ) : null}
 
-            {error ? (
-              <div className="space-y-md">
-                <Alerte ton="erreur">Le catalogue ne peut pas être affiché pour le moment. Aucun résultat n’est confirmé.</Alerte>
-                <Link href={urlRecherche(filtres, page)} className="btn btn-secondary">Réessayer la recherche</Link>
-              </div>
-            ) : annonces.length === 0 ? (
-              <section className="card card-lg">
-                <h2 className="section-title">
-                  {filtree ? 'Aucun logement ne correspond à ces critères' : 'Aucun logement publié pour le moment'}
-                </h2>
-                <p className="mt-sm text-body-md text-body">
-                  {filtree
-                    ? 'Élargissez votre recherche : un loyer plus haut, une autre ville, moins d’équipements.'
-                    : 'Les logements que les bailleurs mettent en location sur Sikaloc apparaîtront ici, dès leur publication.'}
-                </p>
-                <div className="mt-lg flex flex-wrap gap-md">
-                  {filtree ? (
-                    <Link href="/find" className="btn btn-primary">
-                      Réinitialiser les filtres
-                    </Link>
-                  ) : (
-                    <>
-                      <Link href="/" className="btn btn-secondary">
-                        Découvrir Sikaloc
-                      </Link>
-                      <Link href="/pro" className="btn btn-tertiary">
-                        Vous êtes bailleur ?
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </section>
-            ) : (
-              <>
-                <p className="mb-md text-body-sm text-mute" role="status">{annonces.length} annonce{annonces.length > 1 ? 's' : ''} sur cette page{suivante ? ' · d’autres résultats à la page suivante' : ''}.</p>
-                <ul className="grid gap-lg sm:grid-cols-2 xl:grid-cols-3" aria-label="Annonces">
-                  {annonces.map((annonce, i) => (
-                    <li key={annonce.reference}>
-                      <CarteAnnonce annonce={annonce} aujourdhui={aujourdhui} prioritaire={i < 3} />
-                    </li>
-                  ))}
-                </ul>
+          {error ? (
+            <div className="find-catalog-error">
+              <Alerte ton="erreur">Le catalogue ne peut pas être affiché pour le moment. Aucun résultat n’est confirmé.</Alerte>
+              <Link href={urlRecherche(filtres, page)} className="btn btn-secondary">Réessayer la recherche</Link>
+            </div>
+          ) : annonces.length === 0 ? (
+            <section className="find-empty-state">
+              <p className="find-results-eyebrow">Votre recherche</p>
+              <h2>{filtree ? 'Aucun logement ne correspond à votre recherche.' : 'Aucun logement publié pour le moment.'}</h2>
+              <p>
+                {filtree
+                  ? 'Essayez d’élargir votre budget, de choisir une autre ville ou de retirer un équipement.'
+                  : 'Les logements publiés par les bailleurs apparaîtront ici dès leur mise en ligne.'}
+              </p>
+              {filtree ? <Link href="/find" className="btn btn-primary">Réinitialiser les filtres</Link> : null}
+            </section>
+          ) : (
+            <>
+              <p className="find-results-count" role="status">
+                {suivante
+                  ? `${annonces.length} logements affichés sur cette page`
+                  : `${annonces.length} logement${annonces.length > 1 ? 's' : ''} trouvé${annonces.length > 1 ? 's' : ''}`}
+              </p>
+              <ul className="find-property-grid" aria-label="Annonces disponibles">
+                {annonces.map((annonce, index) => (
+                  <li key={annonce.reference}>
+                    <CarteAnnonce annonce={annonce} aujourdhui={aujourdhui} prioritaire={index < 3} />
+                  </li>
+                ))}
+              </ul>
 
-                {page > 1 || suivante ? (
-                  <nav
-                    aria-label="Pages du catalogue"
-                    className="mt-2xl flex flex-wrap items-center justify-between gap-md"
-                  >
-                    {page > 1 ? (
-                      <Link href={urlRecherche(filtres, page - 1)} className="btn btn-secondary" rel="prev">
-                        ← Page précédente
-                      </Link>
-                    ) : (
-                      <span />
-                    )}
-                    <p className="text-body-sm text-mute" aria-current="page">
-                      Page {page}
-                    </p>
-                    {suivante ? (
-                      <Link href={urlRecherche(filtres, page + 1)} className="btn btn-secondary" rel="next">
-                        Page suivante →
-                      </Link>
-                    ) : (
-                      <span />
-                    )}
-                  </nav>
-                ) : null}
-              </>
-            )}
-          </div>
-        </div>
+              {page > 1 || suivante ? (
+                <nav aria-label="Pages du catalogue" className="find-pagination">
+                  {page > 1 ? (
+                    <Link href={urlRecherche(filtres, page - 1)} className="btn btn-secondary" rel="prev">← Page précédente</Link>
+                  ) : <span />}
+                  <p aria-current="page">Page {page}</p>
+                  {suivante ? (
+                    <Link href={urlRecherche(filtres, page + 1)} className="btn btn-secondary" rel="next">Page suivante →</Link>
+                  ) : <span />}
+                </nav>
+              ) : null}
+            </>
+          )}
+        </section>
       </main>
 
       <PiedDePageFind />
