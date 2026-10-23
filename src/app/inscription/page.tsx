@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { CarteAuth } from '@/components/auth/carte-auth'
 import { FormulaireInscription } from '@/components/auth/formulaires'
+import { lienConnexion } from '@/lib/auth-contexte'
 
 export const metadata: Metadata = { title: 'Créer un compte' }
 
@@ -21,7 +22,7 @@ export default async function PageInscription({
       bas={
         <>
           Vous avez déjà un compte ?{' '}
-          <Link href="/connexion" className="font-semibold text-ink underline">
+          <Link href={lienConnexion('pro', '/pro/tableau-de-bord')} className="font-semibold text-ink underline">
             Se connecter
           </Link>
         </>

@@ -12,6 +12,7 @@ import {
 } from '@/lib/actions/candidatures'
 import { LIBELLES_STATUT_CANDIDATURE, TON_STATUT_CANDIDATURE } from '@/lib/candidatures/messages'
 import { formaterDate, formaterFCFA } from '@/lib/format'
+import { lienConnexion } from '@/lib/auth-contexte'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
 import { canauxDisponibles } from '@/lib/verification/canaux'
 import type { CandidatureDuCandidat } from '@/lib/types/database'
@@ -36,7 +37,7 @@ export const metadata: Metadata = { title: 'Mes candidatures' }
  */
 export default async function PageMesCandidatures() {
   const utilisateur = await obtenirUtilisateur()
-  if (!utilisateur) redirect('/connexion?suite=%2Fme%2Fcandidatures')
+  if (!utilisateur) redirect(lienConnexion('find', '/me/candidatures'))
 
   const supabase = await creerClientServeur()
   const [{ data: profil, error: erreurProfil }, { data: lignes, error: erreurCandidatures }] = await Promise.all([

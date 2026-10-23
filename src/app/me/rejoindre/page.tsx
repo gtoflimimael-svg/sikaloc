@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
+import { lienConnexion } from '@/lib/auth-contexte'
 
 const manropeMe = localFont({
   src: [
@@ -72,7 +73,7 @@ export default function PageRejoindre() {
               personnel accessible sur invitation de votre bailleur.
             </p>
             <div className="me-join-hero-actions">
-              <Link href="/connexion?suite=%2Fme" className="me-join-button me-join-button-primary">
+              <Link href={lienConnexion('me', '/me')} className="me-join-button me-join-button-primary">
                 Se connecter <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <a href="#fonctionnement" className="me-join-button me-join-button-secondary">
@@ -134,7 +135,7 @@ export default function PageRejoindre() {
           <div className="me-join-next-grid">
             <div className="me-join-next-item">
               <p>Vous avez déjà activé votre accès ?</p>
-              <Link href="/connexion?suite=%2Fme">
+              <Link href={lienConnexion('me', '/me')}>
                 Se connecter <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>

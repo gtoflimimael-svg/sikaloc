@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
+import { normaliserSuiteConnexion } from '@/lib/auth-contexte'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import {
   erreursChamps,
@@ -16,7 +17,6 @@ import {
   type EtatFormulaire,
 } from '@/lib/validation'
 import { poserTemoinVerification } from '@/lib/verification/temoin'
-import { ESPACE_PRO } from '@/lib/roles'
 
 async function urlDeBase(): Promise<string> {
   const enTetes = await headers()
@@ -118,7 +118,6 @@ export async function connecter(
   }
 
   const { email, motDePasse } = analyse.data
-  const suite = (donnees.get('suite') as string) || ESPACE_PRO.tableauDeBord
 
   const blocage = await verifierBlocage(email)
   if (blocage.bloque) {
@@ -153,11 +152,11 @@ export async function connecter(
   await enregistrerTentative(email, true, await adresseIp())
 
   revalidatePath('/', 'layout')
-  // Une destination fournie par l'URL ne doit jamais pouvoir pointer ailleurs
-  // que sur ce site : on n'accepte qu'un chemin relatif.
-  redirect(
-    suite.startsWith('/') && !suite.startsWith('//') ? suite : ESPACE_PRO.tableauDeBord,
-  )
+  // Le retour conserve une destination interne connue. Si le champ caché a
+  // été modifié, l'orientation normale dépend des rôles calculés côté serveur.
+  // Les gardes des routes restent responsables des autorisations.
+  const suite = normaliserSuiteConnexion(donnees.get('suite'))
+  redirect(suite ?? '/entrer')
 }
 
 // ─── Déconnexion ────────────────────────────────────────────────────────────
@@ -183,8 +182,12 @@ export async function demanderReinitialisation(
   }
 
   const supabase = await creerClientServeur()
+  const suite = normaliserSuiteConnexion(donnees.get('suite')) ?? '/entrer'
+  const callback = new URL('/auth/callback', await urlDeBase())
+  callback.searchParams.set('next', '/reinitialiser-mot-de-passe')
+  callback.searchParams.set('suite', suite)
   await supabase.auth.resetPasswordForEmail(analyse.data.email, {
-    redirectTo: `${await urlDeBase()}/auth/callback?next=/reinitialiser-mot-de-passe`,
+    redirectTo: callback.toString(),
   })
 
   // Réponse identique que le compte existe ou non : révéler la différence
@@ -235,5 +238,6 @@ export async function definirNouveauMotDePasse(
   }
 
   revalidatePath('/', 'layout')
-  redirect(ESPACE_PRO.tableauDeBord)
+  const suite = normaliserSuiteConnexion(donnees.get('suite'))
+  redirect(suite ?? '/entrer')
 }

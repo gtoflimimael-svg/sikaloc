@@ -74,6 +74,7 @@ export function MenuMobile({
   connecte,
   liens,
   destinationTableauDeBord = ESPACE_PRO.tableauDeBord,
+  destinationConnexion = '/entrer',
 }: {
   connecte: boolean
   /** Les entrées du tiroir, fournies par la page — voir le commentaire plus haut. */
@@ -91,6 +92,8 @@ export function MenuMobile({
    * seule la page d'accueil a besoin de le renseigner.
    */
   destinationTableauDeBord?: string
+  /** Le choix neutre sur l’accueil ou le parcours Pro sur `/pro`. */
+  destinationConnexion?: string
 }) {
   const [ouvert, setOuvert] = useState(false)
   const [monte, setMonte] = useState(false)
@@ -303,7 +306,7 @@ export function MenuMobile({
 
                 <div className="mt-auto space-y-lg pt-xl">
                   <Link
-                    href={connecte ? destinationTableauDeBord : '/entrer'}
+                    href={connecte ? destinationTableauDeBord : destinationConnexion}
                     onClick={() => fermer(false)}
                     className="btn btn-secondary w-full"
                   >

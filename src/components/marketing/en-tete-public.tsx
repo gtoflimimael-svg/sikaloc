@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { MenuMobile } from '@/components/marketing/menu-mobile'
 import { MarqueSikaloc, type SuffixeEspace } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
+import { lienConnexion } from '@/lib/auth-contexte'
 
 /**
  * La barre du haut des pages publiques.
@@ -86,6 +87,9 @@ export function EnTetePublic({
   /** Destination du logo. */
   marqueHref?: string
 }) {
+  const destinationConnexion =
+    espace === 'Pro' ? lienConnexion('pro', '/pro/tableau-de-bord') : '/entrer'
+
   return (
     <header className="public-navigation sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-sm px-lg xl:px-xl">
@@ -146,15 +150,8 @@ export function EnTetePublic({
             </Link>
           ) : (
             <>
-              {/*
-                « Se connecter » mène au choix d'espace : c'est le seul point
-                du site où quelqu'un qui revient peut être aussi bien bailleur
-                que locataire. Les appels à l'action plus bas, eux, restent
-                dirigés vers l'inscription bailleur — cette page vend
-                Sikaloc_Pro, et un sélecteur y ajouterait une étape à un
-                parcours qui convertit.
-              */}
-              <Link href="/entrer" className="btn btn-secondary btn-sm max-lg:hidden">
+              {/* L’accueil reste neutre ; depuis la page Pro, la connexion parle au bailleur. */}
+              <Link href={destinationConnexion} className="btn btn-secondary btn-sm max-lg:hidden">
                 Se connecter
               </Link>
               <Link href="/inscription" className="btn btn-primary btn-sm">
@@ -167,6 +164,7 @@ export function EnTetePublic({
             connecte={connecte}
             liens={liensTiroir}
             destinationTableauDeBord={destinationTableauDeBord}
+            destinationConnexion={destinationConnexion}
           />
         </div>
       </nav>

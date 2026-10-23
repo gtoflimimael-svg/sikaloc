@@ -18,6 +18,7 @@ import {
 import { LIBELLES_STATUT_CANDIDATURE, TON_STATUT_CANDIDATURE } from '@/lib/candidatures/messages'
 import { libelleChambres } from '@/lib/annonces/libelles'
 import { formaterFCFA } from '@/lib/format'
+import { lienConnexion } from '@/lib/auth-contexte'
 import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
 import type { AnnoncePublique, CandidatureDuCandidat } from '@/lib/types/database'
@@ -125,7 +126,7 @@ export default async function PageCandidater({
               </p>
               <FormulaireInscriptionCandidat
                 action={inscrireCandidat.bind(null, reference)}
-                connexion={`/connexion?suite=${encodeURIComponent(`/find/${reference}/candidater`)}`}
+                connexion={lienConnexion('find', `/find/${reference}/candidater`)}
               />
             </>
           ) : !profilCandidat ? (

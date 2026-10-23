@@ -2695,3 +2695,179 @@
   .me-join-button { transition: none; }
   .me-join-button:hover { transform: none; }
 }
+
+/* Connexion commune : une seule structure, un récit adapté au parcours. */
+.connexion-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: clamp(22px, 4vw, 56px);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+.connexion-layout {
+  display: grid;
+  width: min(100%, 1336px);
+  min-height: calc(100svh - clamp(44px, 8vw, 112px));
+  grid-template-columns: minmax(0, 1.04fr) minmax(360px, .82fr);
+  align-items: center;
+  gap: clamp(48px, 7.2vw, 112px);
+  margin-inline: auto;
+}
+.connexion-editorial {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 48px);
+}
+.connexion-editorial-copy { max-width: 690px; }
+.connexion-eyebrow {
+  margin: 0;
+  color: var(--color-ink-deep);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .055em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+.connexion-editorial-copy h1 {
+  max-width: 13ch;
+  margin: 18px 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-connexion-display), var(--font-display), sans-serif;
+  font-size: clamp(48px, 5.25vw, 76px);
+  font-weight: 800;
+  letter-spacing: -.068em;
+  line-height: 1.01;
+  text-wrap: balance;
+}
+.connexion-editorial-description {
+  max-width: 52ch;
+  margin: 20px 0 0;
+  color: var(--color-body);
+  font-size: clamp(16px, 1.3vw, 18px);
+  line-height: 1.68;
+}
+.connexion-photo {
+  position: relative;
+  width: 100%;
+  max-height: 435px;
+  overflow: hidden;
+  aspect-ratio: 1.5;
+  margin: 0;
+  border-radius: var(--radius-xl);
+  background: var(--color-canvas-sage);
+  box-shadow: 0 20px 48px -38px rgb(17 24 16 / .48);
+}
+.connexion-photo img { object-fit: cover; }
+.connexion-photo[data-context='pro'] img { object-position: 52% 51%; }
+.connexion-photo[data-context='me'] img { object-position: 62% 50%; }
+.connexion-photo[data-context='find'] img { object-position: 54% 50%; }
+.connexion-photo[data-context='general'] img { object-position: 54% 50%; }
+.connexion-form-side {
+  min-width: 0;
+  border-left: 1px solid var(--color-hairline-soft);
+  padding-left: clamp(32px, 5.2vw, 76px);
+}
+.connexion-form-inner { width: min(100%, 430px); margin-inline: auto; }
+.connexion-brand { margin-bottom: clamp(40px, 5vw, 66px); }
+.connexion-form-heading h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-connexion-display), var(--font-display), sans-serif;
+  font-size: clamp(30px, 3vw, 38px);
+  font-weight: 750;
+  letter-spacing: -.052em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.connexion-form-heading p {
+  margin: 11px 0 0;
+  color: var(--color-mute);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.connexion-form-side form { margin-top: 28px; }
+.connexion-form-side .field-label { color: var(--color-body-strong); }
+.connexion-form-side .input { min-height: 52px; background: var(--color-surface-card); }
+.connexion-form-side .input:focus-visible {
+  border-color: var(--color-ink-deep);
+  outline: 3px solid color-mix(in srgb, var(--color-ink-deep) 22%, transparent);
+  outline-offset: 2px;
+}
+.connexion-form-side a {
+  color: var(--color-ink-deep);
+  text-underline-offset: 3px;
+}
+.connexion-form-side a:focus-visible {
+  border-radius: 3px;
+  outline: 3px solid var(--color-ink-deep);
+  outline-offset: 4px;
+}
+.connexion-error { margin-top: 22px; }
+.connexion-secondary-links {
+  margin-top: 26px;
+  padding-top: 21px;
+  border-top: 1px solid var(--color-hairline-soft);
+  color: var(--color-mute);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.connexion-secondary-links p { margin: 0; }
+.connexion-secondary-links a { font-weight: 700; }
+.connexion-home-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 17px;
+  color: var(--color-mute) !important;
+  font-size: 13px;
+  text-decoration: none;
+}
+.connexion-home-link:hover { color: var(--color-ink) !important; }
+.connexion-mobile-context { display: none; }
+
+@media (max-width: 980px) {
+  .connexion-page { padding: 32px 28px 40px; }
+  .connexion-layout {
+    display: grid;
+    width: min(100%, 600px);
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+  }
+  .connexion-editorial { display: contents; }
+  .connexion-editorial-copy { grid-row: 1; }
+  .connexion-form-side { grid-row: 2; border-left: 0; padding-left: 0; }
+  .connexion-photo { grid-row: 3; max-height: 360px; aspect-ratio: 1.7; }
+  .connexion-editorial-copy h1 { max-width: 14ch; font-size: clamp(42px, 7vw, 58px); }
+  .connexion-editorial-description { margin-top: 13px; font-size: 16px; }
+  .connexion-form-inner { width: 100%; }
+  .connexion-brand { margin-bottom: 27px; }
+  .connexion-mobile-context { display: none; }
+}
+@media (max-width: 640px) {
+  .connexion-page { padding: 26px 20px 32px; }
+  .connexion-layout { gap: 25px; }
+  .connexion-editorial-copy h1 { max-width: 15ch; margin-top: 11px; font-size: clamp(34px, 9.8vw, 44px); letter-spacing: -.06em; line-height: 1.04; }
+  .connexion-editorial-description { display: none; }
+  .connexion-photo { display: none; }
+  .connexion-mobile-context { display: block; margin-bottom: 21px; }
+  .connexion-mobile-context .connexion-eyebrow { display: none; }
+  .connexion-mobile-context p:last-child { margin: 0; color: var(--color-body); font-size: 14px; line-height: 1.55; }
+  .connexion-form-heading h2 { font-size: 29px; }
+  .connexion-form-heading p { font-size: 14px; }
+  .connexion-form-side form { margin-top: 23px; }
+  .connexion-form-side .input { min-height: 52px; font-size: 16px; }
+  .connexion-brand { margin-bottom: 23px; }
+  .connexion-secondary-links { margin-top: 21px; padding-top: 17px; font-size: 13px; }
+  .connexion-home-link { margin-top: 10px; }
+}
+@media (max-width: 360px) {
+  .connexion-page { padding-inline: 16px; }
+  .connexion-editorial-copy h1 { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .connexion-page *, .connexion-page *::before, .connexion-page *::after { scroll-behavior: auto !important; }
+}

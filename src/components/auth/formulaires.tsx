@@ -8,6 +8,7 @@ import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
 import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
+import { lienConnexion, lienMotDePasseOublie, type ContexteConnexion } from '@/lib/auth-contexte'
 import {
   connecter,
   definirNouveauMotDePasse,
@@ -15,18 +16,23 @@ import {
   inscrire,
 } from '@/lib/actions/auth'
 import type { EtatFormulaire } from '@/lib/validation'
-import { ESPACE_PRO } from '@/lib/roles'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
-export function FormulaireConnexion({ suite }: { suite?: string }) {
+export function FormulaireConnexion({
+  suite = '/entrer',
+  contexte = 'general',
+}: {
+  suite?: string
+  contexte?: ContexteConnexion
+}) {
   const [etat, action] = useActionState(connecter, ETAT_INITIAL)
 
   return (
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
-      <input type="hidden" name="suite" value={suite ?? ESPACE_PRO.tableauDeBord} />
+      <input type="hidden" name="suite" value={suite} />
 
       <ChampTexte
         nom="email"
@@ -50,7 +56,7 @@ export function FormulaireConnexion({ suite }: { suite?: string }) {
           erreur={etat.erreursChamps?.motDePasse}
         />
         <div className="mt-sm text-right">
-          <Link href="/mot-de-passe-oublie" className="text-body-sm text-mute hover:text-ink">
+          <Link href={lienMotDePasseOublie(contexte, suite)} className="text-body-sm text-mute hover:text-ink">
             Mot de passe oublié ?
           </Link>
         </div>
@@ -158,14 +164,20 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
   )
 }
 
-export function FormulaireMotDePasseOublie() {
+export function FormulaireMotDePasseOublie({
+  contexte = 'general',
+  suite = '/entrer',
+}: {
+  contexte?: ContexteConnexion
+  suite?: string
+}) {
   const [etat, action] = useActionState(demanderReinitialisation, ETAT_INITIAL)
 
   if (etat.succes) {
     return (
       <div className="space-y-lg anim-apparait">
         <Alerte ton="succes">{etat.succes}</Alerte>
-        <Link href="/connexion" className="btn btn-secondary w-full">
+        <Link href={lienConnexion(contexte, suite)} className="btn btn-secondary w-full">
           Retour à la connexion
         </Link>
       </div>
@@ -175,6 +187,8 @@ export function FormulaireMotDePasseOublie() {
   return (
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
+
+      <input type="hidden" name="suite" value={suite} />
 
       <ChampTexte
         nom="email"
@@ -193,12 +207,20 @@ export function FormulaireMotDePasseOublie() {
   )
 }
 
-export function FormulaireNouveauMotDePasse({ email }: { email?: string }) {
+export function FormulaireNouveauMotDePasse({
+  email,
+  suite = '/entrer',
+}: {
+  email?: string
+  suite?: string
+}) {
   const [etat, action] = useActionState(definirNouveauMotDePasse, ETAT_INITIAL)
 
   return (
     <form action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
+
+      <input type="hidden" name="suite" value={suite} />
 
       {/*
         Champ d'identifiant caché, recommandé par les éditeurs de navigateurs sur

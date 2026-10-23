@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { CarteAuth } from '@/components/auth/carte-auth'
 import { FormulaireNouveauMotDePasse } from '@/components/auth/formulaires'
+import { normaliserSuiteConnexion } from '@/lib/auth-contexte'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
 
 export const metadata: Metadata = { title: 'Nouveau mot de passe' }
@@ -17,15 +18,23 @@ export const metadata: Metadata = { title: 'Nouveau mot de passe' }
  * de passe de rattacher le nouveau mot de passe au bon compte. Absent, le
  * formulaire fonctionne à l'identique — c'est une aide, pas une dépendance.
  */
-export default async function PageReinitialisation() {
-  const utilisateur = await obtenirUtilisateur()
+export default async function PageReinitialisation({
+  searchParams,
+}: {
+  searchParams: Promise<{ suite?: string }>
+}) {
+  const [{ suite: suiteBrute }, utilisateur] = await Promise.all([
+    searchParams,
+    obtenirUtilisateur(),
+  ])
+  const suite = normaliserSuiteConnexion(suiteBrute) ?? '/entrer'
 
   return (
     <CarteAuth
       titre="Choisir un nouveau mot de passe"
       description="Il remplacera immédiatement l'ancien."
     >
-      <FormulaireNouveauMotDePasse email={utilisateur?.email} />
+      <FormulaireNouveauMotDePasse email={utilisateur?.email} suite={suite} />
     </CarteAuth>
   )
 }

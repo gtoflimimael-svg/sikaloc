@@ -4,11 +4,13 @@ import { MenuFind } from '@/components/find/menu'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
+import { lienConnexion } from '@/lib/auth-contexte'
 
 const LIENS = [
   { href: '/find', libelle: 'Tous les logements' },
   { href: '/me/candidatures', libelle: 'Mes candidatures' },
 ]
+const CONNEXION_FIND = lienConnexion('find', '/find')
 
 /** Find privilégie la recherche et le suivi ; un menu de liens compact reste non modal. */
 export function EnTeteFind({ connecte }: { connecte: boolean }) {
@@ -24,8 +26,8 @@ export function EnTeteFind({ connecte }: { connecte: boolean }) {
           <div className="hidden sm:block"><SelecteurTheme compact /></div>
           {connecte ? (
             <Link href="/me/candidatures" aria-label="Mes candidatures" className="btn btn-primary btn-sm hidden min-[360px]:inline-flex"><span className="sm:hidden">Suivi</span><span className="hidden sm:inline">Mes candidatures</span></Link>
-          ) : <Link href="/connexion?suite=%2Ffind" className="btn btn-secondary btn-sm hidden min-[360px]:inline-flex">Connexion</Link>}
-          <MenuFind liens={[{ href: '/', libelle: 'Accueil Sikaloc' }, { href: '/#espaces', libelle: 'Les espaces' }, ...LIENS, ...(!connecte ? [{ href: '/connexion?suite=%2Ffind', libelle: 'Se connecter' }] : []), { href: '/me/rejoindre', libelle: 'Je suis locataire' }, { href: '/pro', libelle: 'Bailleurs' }]} />
+          ) : <Link href={CONNEXION_FIND} className="btn btn-secondary btn-sm hidden min-[360px]:inline-flex">Connexion</Link>}
+          <MenuFind liens={[{ href: '/', libelle: 'Accueil Sikaloc' }, { href: '/#espaces', libelle: 'Les espaces' }, ...LIENS, ...(!connecte ? [{ href: CONNEXION_FIND, libelle: 'Se connecter' }] : []), { href: '/me/rejoindre', libelle: 'Je suis locataire' }, { href: '/pro', libelle: 'Bailleurs' }]} />
         </div>
       </nav>
     </header>

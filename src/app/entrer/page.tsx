@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
+import { lienConnexion } from '@/lib/auth-contexte'
 import { destinationApresConnexion, ESPACE_ME, ESPACE_PRO, type Espace } from '@/lib/roles'
 import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -80,7 +81,11 @@ export default async function PageEntrer({
           <CarteEspace
             espace={ESPACE_PRO}
             icone={<Building2 size={26} strokeWidth={1.75} aria-hidden="true" />}
-            destination={user ? ESPACE_PRO.tableauDeBord : '/connexion'}
+            destination={
+              user
+                ? ESPACE_PRO.tableauDeBord
+                : lienConnexion('pro', ESPACE_PRO.tableauDeBord)
+            }
             secondaire={user ? null : { libelle: 'Créer un compte', href: '/inscription' }}
           />
 
