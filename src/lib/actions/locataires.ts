@@ -17,7 +17,6 @@ function lireFormulaire(donnees: FormData) {
     telephone: donnees.get('telephone'),
     email: donnees.get('email') ?? '',
     consentement: donnees.get('consentement') === 'on' || donnees.get('consentement') === 'true',
-    avatar: donnees.get('avatar') ?? '',
   })
 }
 
@@ -40,7 +39,6 @@ export async function creerLocataire(
     email: analyse.data.email || null,
     consentement_donnees: true,
     date_consentement: aujourdhuiISO(),
-    avatar: analyse.data.avatar || null,
   })
 
   if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
@@ -68,7 +66,6 @@ export async function modifierLocataire(
       nom: analyse.data.nom,
       telephone: analyse.data.telephone,
       email: analyse.data.email || null,
-      avatar: analyse.data.avatar || null,
     })
     .eq('id', id)
     .eq('bailleur_id', acces.bailleur.id)

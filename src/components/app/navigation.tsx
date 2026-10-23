@@ -12,13 +12,13 @@ import {
   Settings,
   TriangleAlert,
   Users,
+  UserRound,
   X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 
-import { PhotoProfil } from '@/components/ui/photo-profil'
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
@@ -204,23 +204,16 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
  * offrent : l'action principale, la navigation, le thème, et surtout le bloc
  * compte avec la déconnexion. Une application où l'on ne peut pas se
  * déconnecter depuis son téléphone n'est pas « adaptée au mobile », elle est
- * amputée — c'était le cas ici, l'avatar mobile menant droit aux paramètres.
+ * amputée.
  */
 export function EnTeteMobile({
   impayes,
   nomBailleur,
-  idBailleur,
-  avatarBailleur,
-  aPhotoBailleur,
   emailBailleur,
   plan,
 }: {
   impayes: number
   nomBailleur: string
-  idBailleur: string
-  avatarBailleur: string | null
-  /** Le bailleur a-t-il une photo réelle ? Elle prime sur l'avatar. */
-  aPhotoBailleur: boolean
   emailBailleur: string
   plan: string
 }) {
@@ -315,13 +308,9 @@ export function EnTeteMobile({
             aria-haspopup="dialog"
             className="inline-flex items-center rounded-pill"
           >
-            <PhotoProfil
-              id={idBailleur}
-              avatar={avatarBailleur}
-              aPhoto={aPhotoBailleur}
-              nom={nomBailleur}
-              taille={36}
-            />
+            <span className="inline-flex size-9 items-center justify-center rounded-pill bg-canvas-soft text-ink" aria-hidden="true">
+              <UserRound size={18} strokeWidth={1.8} />
+            </span>
           </button>
         </div>
       </header>
@@ -352,20 +341,11 @@ export function EnTeteMobile({
 
             {/* Bloc compte — l'équivalent mobile du menu en haut à droite. */}
             <div className="mb-lg rounded-lg border border-hairline bg-surface-soft p-md">
-              <div className="flex items-center gap-sm">
-                <PhotoProfil
-                  id={idBailleur}
-                  avatar={avatarBailleur}
-                  aPhoto={aPhotoBailleur}
-                  nom={nomBailleur}
-                  taille={40}
-                />
-                <div className="min-w-0">
+              <div className="min-w-0">
                   <p className="truncate text-body-sm font-semibold text-ink">
                     {nomBailleur}
                   </p>
                   <p className="truncate text-caption text-mute">{emailBailleur}</p>
-                </div>
               </div>
               <span className="badge badge-neutral mt-sm">Plan {plan}</span>
             </div>

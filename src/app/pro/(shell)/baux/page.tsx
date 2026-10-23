@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { ResumeListe } from '@/components/ui/listes'
 import { LienFiltre } from '@/components/ui/lien-filtre'
 import { IllustrationMarque } from '@/components/ui/illustration-marque'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
@@ -98,13 +97,7 @@ export default async function PageBaux({
                 className="card list-card lease-list-card block transition-colors hover:border-hairline-strong"
               >
                 <div className="list-row">
-                  <div className="flex min-w-0 items-start gap-sm">
-                    <AvatarPeep
-                      id={locataire?.id ?? bail.locataire_id}
-                      avatar={locataire?.avatar}
-                      nom={locataire?.nom}
-                    />
-                    <div className="min-w-0">
+                  <div className="min-w-0">
                       <h2 className="list-title">
                         {locataire?.nom ?? 'Locataire inconnu'}
                       </h2>
@@ -116,7 +109,6 @@ export default async function PageBaux({
                         Depuis le {formaterDate(bail.date_debut)} · échéance le{' '}
                         {bail.jour_echeance} du mois · tolérance {bail.tolerance_jours} j
                       </p>
-                    </div>
                   </div>
 
                   <div className="list-aside">

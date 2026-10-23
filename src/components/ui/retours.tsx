@@ -61,29 +61,6 @@ export function EtatVide({
   )
 }
 
-/** Avatar circulaire à initiales — design system « Avatars locataires ». */
-export function Avatar({
-  initiales,
-  taille = 40,
-  ton = 'primary',
-}: {
-  initiales: string
-  taille?: number
-  ton?: 'primary' | 'neutre'
-}) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{ width: taille, height: taille, fontSize: taille * 0.36 }}
-      className={`inline-flex shrink-0 items-center justify-center rounded-pill font-semibold ${
-        ton === 'primary' ? 'bg-primary text-on-primary' : 'bg-surface-elevated text-mute'
-      }`}
-    >
-      {initiales}
-    </span>
-  )
-}
-
 /** Titre de page — Copernicus Book, taille responsive commune aux espaces. */
 export function EnTetePage({
   titre,

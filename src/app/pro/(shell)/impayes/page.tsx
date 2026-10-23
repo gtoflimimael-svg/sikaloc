@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { ResumeListe } from '@/components/ui/listes'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { capacites } from '@/lib/plan'
@@ -100,9 +99,7 @@ export default async function PageImpayes() {
                   className="card list-card arrears-card border-l-4 border-l-negative"
                 >
                   <div className="list-row">
-                    <div className="flex min-w-0 items-start gap-sm">
-                      <AvatarPeep id={impaye.locataire_id} nom={impaye.locataire_nom} />
-                      <div className="min-w-0">
+                    <div className="min-w-0">
                         <h2 className="list-title">
                           {impaye.locataire_nom}
                         </h2>
@@ -124,7 +121,6 @@ export default async function PageImpayes() {
                             {formaterFCFA(impaye.loyer_mensuel)}
                           </p>
                         ) : null}
-                      </div>
                     </div>
 
                     <div className="list-aside">

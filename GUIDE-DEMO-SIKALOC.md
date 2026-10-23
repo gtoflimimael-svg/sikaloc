@@ -1,109 +1,97 @@
 # Guide de démonstration du véritable Sikaloc
 
-## État actuel
+Cette démonstration utilise les vraies routes, les vrais composants, Supabase Auth et les tables métier de Sikaloc. Il n’existe pas d’application parallèle sur `/demo`.
 
-La route simulée `/demo` a été retirée. La démonstration cible les vraies routes, l’authentification Supabase et les vraies tables de Sikaloc.
+## Démarrer
 
-**L’instance Supabase locale dédiée a été initialisée et peuplée le 22 octobre 2026.** Les cinq comptes Auth de démonstration, les profils Pro/candidats et les données synthétiques ci-dessous sont présents dans cette instance. Aucune base distante, Production ou Sikaloc-Test n’a été utilisée.
+Depuis un terminal dans `MVP Sika` :
 
-## Démarrer l’instance isolée
+```bash
+npm run demo:dev
+```
 
-Depuis un terminal ouvert dans `MVP Sika` :
+Puis ouvrez [http://localhost:3000](http://localhost:3000). L’application utilise l’instance Supabase locale isolée sur `127.0.0.1:54821`. Les variables Demo sont injectées uniquement dans le processus local ; `.env.local` n’est pas modifié.
+
+Pour un premier démarrage sur une machine où cette instance dédiée n’existe pas encore :
 
 ```bash
 npm run demo:setup
 npm run demo:dev
 ```
 
-`demo:setup` crée un projet Supabase local dédié sous `~/.local/share/sikaloc-demo-local`, avec un identifiant aléatoire, des ports réservés et une configuration dont l’émetteur JWT est propre à cette démo. Il applique les migrations du dépôt puis prépare les fixtures. Au tout premier lancement uniquement, il initialise la base neuve de ce projet local précis ; les lancements suivants n’appliquent que les migrations en attente et ne réinitialisent pas la base.
+Les notifications e-mail/SMS, les paiements réels, Resend et FedaPay sont neutralisés. Aucun contact réel n’est sollicité.
 
-`demo:dev` lance le vrai site à `http://localhost:3000`, en surchargeant les variables dans le processus uniquement. Il ne modifie pas `.env.local`. Le bandeau vert indique que les pages utilisent des données de démonstration. Le mode maintenance local est désactivé uniquement pour ce processus de développement ; aucune configuration de production n’est modifiée.
+## Trois comptes fictifs
 
-Les commandes n’emploient ni `supabase link`, ni `--linked`, ni URL distante. Les emails transactionnels de l’application sont déposés dans `.emails-locaux/`; les emails de confirmation Auth arrivent dans l’interface locale Mailpit (`http://127.0.0.1:54824`). Les clés FedaPay, Resend et SMS sont neutralisées dans le processus de démonstration. Aucun paiement, email ou SMS réel ne doit partir.
+La reconstruction crée exactement trois utilisateurs Auth, déjà confirmés pour permettre la connexion directe :
 
-Autres commandes :
+| Espace | Profil | E-mail |
+|---|---|---|
+| Pro | Aïcha Kora, bailleuse | `bailleur@sikaloc-demo.test` |
+| Me | Mila Adjovi, locataire liée au bail | `locataire@sikaloc-demo.test` |
+| Find | Sena Hounsa, candidat sans rôle bailleur/locataire | `candidat@sikaloc-demo.test` |
+
+Les mots de passe ne sont jamais inscrits dans Git ni affichés dans le terminal. La fiche privée complète se trouve dans `~/.local/share/sikaloc-demo-local/acces-demo.md` (permissions `0600`), et le coffre `secrets.json` conserve aussi les secrets nécessaires au fonctionnement local.
+
+Connectez les trois profils par la page réelle `/connexion`. Le compte Me est déjà rattaché au bail via une invitation synthétique acceptée par la véritable RPC `accepter_invitation` ; aucun e-mail d’invitation n’est envoyé.
+
+## Données préparées
+
+- **Pro :** un seul bailleur sur le plan réel Gratuit ; deux logements au total, soit un logement loué et un logement distinct publié sur Find. Ce total respecte le plafond de deux logements du plan : aucun abonnement ni quota n’est simulé.
+- **Me :** une fiche locataire, un bail actif cohérent avec Pro et le même logement loué.
+- **Paiements :** deux périodes complètes et une période courante partiellement réglée. Les brouillons sont créés par la RPC réelle, puis validés et documentés par les RPC de génération/publication. Les montants ne sont pas insérés directement comme paiements déjà validés.
+- **Documents :** deux quittances pour les périodes intégralement réglées et un reçu pour le versement partiel, produits avec le template PDF officiel. Les documents portent la mention « EXEMPLE / DOCUMENT FICTIF — SANS VALEUR JUSTIFICATIVE » et n’ont pas de signatures fictives.
+- **Find :** une annonce de studio à Zogbadjè, Abomey-Calavi, avec une photographie immobilière générée et optimisée pour le Web. L’annonce et le logement sont explicitement fictifs et n’existent que dans l’instance locale.
+- **Candidatures :** aucune n’est précréée. Le compte Find peut parcourir l’annonce et déposer une candidature par le vrai parcours. Une candidature ne crée pas automatiquement de bail.
+- **Contacts :** numéros fictifs non joignables ; aucune adresse de personne réelle n’est utilisée.
+
+Le seed n’invente pas de quittance pour une période impayée. Il ne modifie pas le plan, le calcul des loyers, les règles d’accès ni les autorisations RLS.
+
+## Parcours de présentation (environ 10 minutes)
+
+### A — Sikaloc Pro
+
+1. Connectez-vous avec le profil **Pro** depuis `/connexion`.
+2. Ouvrez `/pro/tableau-de-bord`.
+3. Depuis la navigation Pro, consultez `/pro/logements`, `/pro/locataires` et `/pro/baux` : vous verrez un seul logement loué, une seule fiche locataire et un bail actif.
+4. Ouvrez `/pro/paiements` pour comparer les deux périodes réglées et le versement partiel de la période courante.
+5. Ouvrez les documents liés : les périodes complètes ont une quittance ; le paiement partiel a un reçu.
+6. Montrez les actions d’ajout disponibles. Le compte est sur Gratuit : respectez son quota réel et ajoutez seulement après avoir supprimé ou clôturé selon le fonctionnement normal de l’application.
+
+### B — Sikaloc Me
+
+1. Déconnectez-vous, puis reconnectez-vous à `/connexion` avec le profil **Me**.
+2. Le compte locataire est reconnu via la relation obtenue par invitation et ouvre les pages Me.
+3. Consultez le logement, le bail, les périodes, les paiements et les documents disponibles. Ces informations sont les mêmes enregistrements que ceux consultés côté Pro.
+
+### C — Sikaloc Find
+
+1. Ouvrez `/find` et explorez l’annonce de démonstration et sa photographie.
+2. Testez les filtres réels et ouvrez la fiche du studio.
+3. Pour déposer une candidature, connectez-vous avec le profil **Find** via `/connexion`, puis revenez à l’annonce et suivez l’action de candidature.
+4. Le suivi apparaît dans l’espace candidat s’il est proposé par le parcours actuel ; Pro peut consulter la demande sur son annonce.
+
+## Reconstruction initiale et conservation
+
+`npm run demo:dev` conserve les modifications apportées pendant une présentation. Il ne réinitialise ni ne reseed les données à chaque démarrage.
+
+Pour **remplacer explicitement les fixtures de démonstration** et retrouver les trois comptes initiaux :
 
 ```bash
-npm run demo:status   # statut local, sans afficher les clés
-npm run demo:seed     # installe les fixtures une seule fois, si elles ne le sont pas déjà
-npm run demo:stop     # arrête uniquement cette pile et conserve ses volumes
+npm run demo:rebuild
 ```
 
-Le seed est volontairement non réinitialisant : `demo:setup` le lance lors de la première préparation. Une fois les fixtures marquées comme installées, `demo:seed` refuse de rejouer le jeu initial afin de préserver les changements effectués dans les vraies pages Sikaloc. Aucun mécanisme de remise à zéro des données n’est fourni.
+La commande exige que vous saisissiez l’identifiant de l’instance privée affiché par l’invite. Elle ne lance pas `db reset` : elle vérifie l’instance locale dédiée, puis exécute un nettoyage SQL transactionnel réservé aux comptes dont l’email finit par `@sikaloc-demo.test` et dont les métadonnées Auth portent le marqueur Sikaloc Demo. Le script refuse l’opération si un seul compte Auth ne correspond pas à ces critères. Trois déclencheurs de protection sont désactivés temporairement dans cette transaction, puis réactivés avant son `COMMIT` ; toute erreur annule l’ensemble. Les fichiers Storage sont ensuite supprimés uniquement sous les préfixes UUID de ces comptes, dans les buckets concernés. Un manifeste privé permet de reprendre le nettoyage si une interruption survient. N’utilisez jamais `npm run db:reset` pour cette opération.
 
-Ne lancez pas `npm run db:reset` pour la démo : cette commande vise la configuration Supabase habituelle du dépôt, pas l’instance privée préparée ici.
+`npm run demo:status` affiche l’URL locale et le chemin des accès privés ; `npm run demo:stop` arrête la pile et conserve ses volumes.
 
-### Si Docker refuse l’accès
+## Avatars
 
-Démarrez Docker Desktop/le moteur local et faites autoriser l’accès au socket Docker au compte utilisateur local par l’administrateur de la machine. N’utilisez pas `chmod 666 /var/run/docker.sock`, ne lancez pas une base distante en remplacement et ne basculez pas vers `Sikaloc-Test`.
+La sélection et l’affichage des avatars et photos de profil ont été retirés des interfaces concernées. Les noms et rôles restent visibles ; les photographies immobilières Find et les signatures documentaires ne sont pas concernés. Les anciennes colonnes de profil restent dans le schéma pour éviter une suppression destructive.
 
-## Connexion Sikaloc Pro
+## Limites
 
-Après réussite de `demo:setup`, ouvrez le fichier privé indiqué par le terminal :
-
-```text
-~/.local/share/sikaloc-demo-local/secrets.json
-```
-
-Il contient les mots de passe aléatoires de démonstration. Le fichier est créé avec des droits privés (`0600`), reste hors du dépôt et ne doit pas être envoyé ou collé dans un message. Il contient aussi le secret local requis pour les invitations. Aucun mot de passe n’est imprimé dans le terminal.
-
-Comptes Pro créés par la préparation :
-
-| Profil | Email | Parcours |
-|---|---|---|
-| Petit portefeuille | `pro.petit@sikaloc-demo.test` | `/pro/tableau-de-bord`, deux logements et historique de baux |
-| Bailleur principal | `pro.actif@sikaloc-demo.test` | Tableau de bord, deux logements, locataires, baux et paiements |
-| Gestionnaire | `pro.gestion@sikaloc-demo.test` | Tableau de bord, deux logements et historique locatif |
-
-Connectez-vous par la page normale `/connexion`. Les comptes sont créés dans Auth local et déjà confirmés par le serveur local ; les profils métiers sont créés par les déclencheurs existants.
-
-## Parcours locataire Me par invitation réelle
-
-Les fiches locataires sont créées dans les tables réelles avec des adresses `@sikaloc-demo.test`, mais aucun compte Me n’est pré-rattaché. Le lien compte–bail est une action sensible : il doit passer par l’invitation du bailleur et la RPC d’acceptation existante, pas par un rattachement injecté dans le seed.
-
-1. Connectez-vous au compte `pro.actif`.
-2. Ouvrez `/pro/locataires`, sélectionnez une fiche liée à ce bailleur (par exemple Ada Sossou) et lancez l’invitation depuis le parcours proposé.
-3. L’invitation est déposée localement, sans envoi externe, dans `.emails-locaux/`. Ouvrez le dernier fichier JSON correspondant et utilisez son lien `localhost` uniquement dans le navigateur local.
-4. Créez le compte avec l’adresse `@sikaloc-demo.test` affichée sur la fiche. Le code de confirmation Auth se consulte dans Mailpit local. Une confirmation renvoyée par le parcours de Sikaloc est également déposée dans `.emails-locaux/`.
-5. Après vérification, l’invitation est acceptée par le mécanisme Sikaloc et le locataire accède à `/me`, `/me/bail`, `/me/loyers` et `/me/paiements`.
-
-Pour un même profil fictif présent auprès de deux bailleurs, la seconde invitation se traite en étant connecté au compte Me déjà créé. Elle ne crée pas un second compte.
-
-## Catalogue Sikaloc Find
-
-Le seed prépare 6 logements, 9 baux (4 en cours et 5 terminés), 45 périodes et 45 versements historiques. Les baux terminés précèdent les baux en cours sur les mêmes biens lorsqu’il s’agit d’une relocation ; trois périodes sont sans versement et deux restent partielles. Les dates sont alignées sur les périodes réelles de chaque fixture afin de ne pas inventer d’arriérés antérieurs.
-
-Deux logements sont disponibles dans la fixture et peuvent donc avoir une annonce active. Le schéma permet une annonce vivante par logement. Chaque compte bailleur reste sur le plan Gratuit et ne dépasse pas le plafond réel de deux logements ; aucun abonnement payant ni paiement fictif n’est injecté. Les annonces ne sont publiées qu’après dépôt d’une image dans le bucket privé réel `annonces`.
-
-Pour éviter de présenter une illustration comme une photographie d’un logement réel, les images du seed sont des illustrations originales générées localement, portant la mention **« ILLUSTRATION · DÉMO LOCALE · BIEN FICTIF »**. La description de chaque annonce précise aussi qu’il ne s’agit pas d’une offre réelle. Les annonces ne sont présentes que dans la base locale dédiée ; elles ne sont ni publiques sur Internet ni sur Production.
-
-Ouvrez `/find`, appliquez les filtres, consultez une fiche puis utilisez le parcours réel de candidature. Deux comptes candidats Auth locaux et jusqu’à quatre candidatures synthétiques avec statuts cohérents sont préparés, selon les annonces encore publiées. Une candidature acceptée ne crée pas automatiquement de bail.
-
-## Documents
-
-Le seed ne crée pas de quittances ou reçus factices. Les versements sont de vraies lignes locales synthétiques, mais les PDF doivent être émis par le parcours de génération existant dans Pro. Après connexion, ouvrez un paiement réglé et utilisez l’action réelle de confirmation/émission lorsqu’elle est proposée. Les paiements partiels restent des reçus selon les règles du produit ; aucun document n’est généré pour les périodes impayées.
-
-## Volumes et limites du jeu de données
-
-- 3 comptes bailleurs Auth et leurs profils Pro.
-- 7 personnes locataires, matérialisées par les fiches nécessaires aux relations avec les bailleurs (une personne peut avoir une relation chez plusieurs bailleurs).
-- 2 comptes candidats Auth.
-- 6 logements (deux par bailleur) et 9 baux (4 en cours, 5 terminés).
-- 45 périodes et 45 versements, dont des paiements partiels et des impayés.
-- Jusqu’à 2 annonces Find publiées, selon la cohérence du bail et de l’illustration.
-- Jusqu’à 4 candidatures synthétiques, sous la contrainte d’unicité candidat/annonce.
-- Les trois bailleurs restent sur l’offre gratuite : les données respectent le quota effectif et ne simulent pas un abonnement payé.
-- Aucun PDF fictif préfabriqué ; les vrais documents sont à générer depuis l’application.
-
-Les téléphones sont des valeurs non joignables de démonstration. Les noms, adresses, montants et statuts sont synthétiques. Le bandeau est visible sur toutes les pages uniquement dans le processus local démarré par `demo:dev`.
-
-## Sécurité, persistance et état de validation
-
-- `/demo` n’est plus l’interface de démonstration et ne contourne plus le proxy/authentification.
-- Le setup refuse les clés qui ne sont pas un JWT `service_role` local `supabase-demo`, sans référence de projet, et l’URL du port local réservé.
-- La migration additive `20261022090000_corriger_declencheur_loyer_initial.sql` est appliquée uniquement à l’instance locale pour créer l’historique du loyer après l’insertion du bail parent.
-- Les identifiants restent dans le dossier privé utilisateur ; `.env.local` n’est ni lu par le script de seed ni modifié par lui.
-- Aucun reset ou peuplement de `SIka`, de `Sikaloc-Test` ou d’une autre base distante n’a été effectué.
-- Les entrées de seed utilisent les vrais déclencheurs, contraintes et relations. Les identifiants stables sont vérifiés avant insertion, afin de reprendre un seed interrompu sans recréer les lignes déjà présentes. Les équipements utilisent les codes autorisés par le schéma.
-- `npm run demo:setup` a réellement appliqué les migrations locales et créé les volumes indiqués dans ce guide.
-- Aucun test automatisé, build, push GitHub ou déploiement n’a été exécuté.
+- Le plan Gratuit autorise deux logements : un logement loué et un autre lié à l’unique annonce Find. Le portefeuille Pro affiche donc ces deux biens.
+- Le compte candidat n’a pas de candidature au départ afin que vous puissiez montrer le dépôt réel.
+- La photographie générée illustre une annonce fictive et ne représente pas un bien réellement disponible.
+- La démonstration n’a pas été validée par des tests automatisés ou un build ; la revue manuelle sur localhost reste à effectuer.

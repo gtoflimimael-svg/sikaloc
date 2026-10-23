@@ -10,11 +10,9 @@ import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
 import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampTexte } from '@/components/ui/champs'
 import { Alerte } from '@/components/ui/retours'
-import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import { souscrire } from '@/lib/actions/abonnement'
 import {
   changerMotDePasse,
-  modifierAvatar,
   modifierPreferences,
   modifierProfil,
   supprimerSignature,
@@ -24,44 +22,6 @@ import type { Bailleur } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
 
 const ETAT_INITIAL: EtatFormulaire = {}
-
-/**
- * Avatar — bloc autonome.
- *
- * Séparé des informations personnelles : ce sont deux gestes différents.
- * On change d'avatar par jeu, on corrige son numéro de téléphone parce qu'il
- * est faux sur les quittances ; les mélanger obligeait à réenregistrer l'un
- * pour toucher à l'autre.
- */
-export function FormulaireAvatar({ bailleur }: { bailleur: Bailleur }) {
-  const [etat, action] = useActionState(modifierAvatar, ETAT_INITIAL)
-
-  return (
-    <form action={action} className="card card-lg space-y-lg">
-      <div>
-        <h2 className="text-title-lg font-semibold text-ink">Votre avatar</h2>
-        <p className="mt-xxs text-body-sm text-mute">
-          Il vous représente dans l’application. Il n’apparaît pas sur vos
-          quittances.
-        </p>
-      </div>
-
-      {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
-      {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
-
-      <SelecteurAvatar
-        nom="avatar"
-        identifiant={bailleur.id}
-        valeurInitiale={bailleur.avatar}
-        taille={96}
-      />
-
-      <BoutonSoumettre libelleEnCours="Enregistrement…">
-        Enregistrer mon avatar
-      </BoutonSoumettre>
-    </form>
-  )
-}
 
 export function FormulaireProfil({ bailleur }: { bailleur: Bailleur }) {
   const [etat, action] = useActionState(modifierProfil, ETAT_INITIAL)

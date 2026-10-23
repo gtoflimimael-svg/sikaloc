@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { IllustrationMarque } from '@/components/ui/illustration-marque'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
 import { TableauListe } from '@/components/ui/listes'
@@ -128,13 +127,7 @@ export default async function PageDetailBail({
         </Link>
 
         <div className="lease-detail-heading mt-lg flex flex-wrap items-start justify-between gap-lg">
-          <div className="flex items-center gap-lg">
-            <AvatarPeep
-              id={locataire?.id ?? bail.locataire_id}
-              avatar={locataire?.avatar}
-              nom={locataire?.nom}
-              taille={56}
-            />
+          <div className="flex min-w-0 items-center gap-lg">
             <div>
               <h1 className="text-display-md font-extrabold tracking-tight text-ink">
                 {locataire?.nom ?? 'Locataire'}

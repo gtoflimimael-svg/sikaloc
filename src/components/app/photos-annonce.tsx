@@ -24,7 +24,7 @@ export type PhotoGeree = { id: string; position: number; largeur: number; hauteu
  *
  * `<img>` et non `next/image` : les images viennent d'une route authentifiée
  * (`/api/annonces/photos/[id]`), que l'optimiseur de Next appellerait sans le
- * cookie de session. Même choix que `photo-profil.tsx`.
+ * cookie de session.
  */
 export function PhotosAnnonce({
   annonceId,

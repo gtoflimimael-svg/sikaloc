@@ -106,7 +106,6 @@ export async function rejoindreAvecInvitation(
     telephone: donnees.get('telephone'),
     motDePasse: donnees.get('motDePasse'),
     codeParrain: '',
-    avatar: '',
   })
 
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }

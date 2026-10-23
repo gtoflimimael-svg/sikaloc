@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
-import { BandeauPhoto } from '@/components/app/bandeau-photo'
 import { MenuCompte } from '@/components/app/menu-compte'
 import { BarreLaterale, ContextePro, EnTeteMobile } from '@/components/app/navigation'
 import { VisiteGuidee } from '@/components/app/visite-guidee'
@@ -74,16 +73,12 @@ export default async function LayoutApplication({
       <div className="flex min-w-0 flex-1 flex-col">
         <EnTeteMobile
           impayes={impayes}
-          aPhotoBailleur={Boolean(bailleur.photo_chemin)}
           nomBailleur={bailleur.nom}
-          idBailleur={bailleur.id}
-          avatarBailleur={bailleur.avatar}
           emailBailleur={bailleur.email}
           plan={plan}
         />
 
         <BandeauAbonnement bailleur={bailleur} />
-        <BandeauPhoto bailleur={bailleur} />
 
         <header className="hidden h-16 shrink-0 items-center justify-between gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
           <ContextePro />
@@ -98,9 +93,6 @@ export default async function LayoutApplication({
             Enregistrer un paiement
           </Link>
           <MenuCompte
-            id={bailleur.id}
-            aPhoto={Boolean(bailleur.photo_chemin)}
-            avatar={bailleur.avatar}
             nom={bailleur.nom}
             email={bailleur.email}
             plan={plan}

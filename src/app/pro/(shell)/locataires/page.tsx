@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { ResumeListe } from '@/components/ui/listes'
 import { BoutonInvitation } from '@/components/app/bouton-invitation'
 import { IllustrationMarque } from '@/components/ui/illustration-marque'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { supprimerLocataire } from '@/lib/actions/locataires'
@@ -76,9 +75,7 @@ export default async function PageLocataires() {
             return (
               <li key={locataire.id} className="card list-card tenant-list-card" aria-labelledby={`locataire-${locataire.id}`}>
                 <div className="tenant-list-row list-row">
-                  <div className="flex min-w-0 items-start gap-sm">
-                    <AvatarPeep id={locataire.id} avatar={locataire.avatar} nom={locataire.nom} />
-                    <div className="min-w-0">
+                  <div className="min-w-0">
                       <h2 id={`locataire-${locataire.id}`} className="list-title">
                         {locataire.nom}
                       </h2>
@@ -95,7 +92,6 @@ export default async function PageLocataires() {
                           <Badge ton="neutral">Aucun bail actif</Badge>
                         )}
                       </div>
-                    </div>
                   </div>
 
                   <div className="list-actions">

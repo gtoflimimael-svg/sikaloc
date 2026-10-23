@@ -76,15 +76,15 @@ export type Bailleur = {
   statut_abonnement: StatutAbonnement
   date_echec_paiement: string | null
   dernier_rappel_envoye: string | null
-  /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
+  /** Colonne historique conservée en base; l’interface avatar n’est plus utilisée. */
   avatar: string | null
   /** Fin de la visite guidée, menée à son terme. NULL = jamais terminée. */
   tutoriel_vu_le: string | null
   /** Sortie de la visite avant la fin. Renseignée = ne plus l'ouvrir d'elle-même. */
   visite_quittee_le: string | null
-  /** Chemin de la photo dans le bucket privé `photos`. Renseignée = prime sur l'avatar. */
+  /** Colonne historique conservée en base; la photo de profil n’est plus affichée. */
   photo_chemin: string | null
-  /** Début de la période où l'avatar tient lieu de photo. NULL = pas de période. */
+  /** Colonne historique conservée pour compatibilité avec les anciennes données. */
   avatar_temporaire_depuis: string | null
   /**
    * Validation d'un code OTP envoyé au numéro. NULL = jamais vérifié.
@@ -150,7 +150,7 @@ export type Locataire = {
   email: string | null
   consentement_donnees: boolean
   date_consentement: string | null
-  /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
+  /** Colonne historique conservée en base; l’interface avatar n’est plus utilisée. */
   avatar: string | null
   /** Chemin dans le bucket `signatures`. NULL = aucune signature recueillie. */
   signature_chemin: string | null

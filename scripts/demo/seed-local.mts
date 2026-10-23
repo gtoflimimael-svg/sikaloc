@@ -1,38 +1,75 @@
-// .mts garde ce seed en ESM afin que tsx accepte ses imports et son await.
-import { createHash, randomBytes } from 'node:crypto'
+// Seed idempotent des seules fixtures locales Sikaloc Demo.
+// Les paiements et leurs PDF passent par les RPC métier et le template PDF officiel.
+import { createHash, createHmac, randomBytes } from 'node:crypto'
 import { chmod, lstat, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import sharp from 'sharp'
+import { Font, renderToBuffer } from '@react-pdf/renderer'
 import { createClient } from '@supabase/supabase-js'
+import sharp from 'sharp'
+import { createElement } from 'react'
 
-import {
-  CANDIDATS_DEMO,
-  creerDonneesDemo,
-  LOCATAIRES_DEMO,
-  PROFILS_DEMO,
-} from '../../src/lib/demo/donnees'
+import { DocumentQuittance, type DonneesQuittance } from '../../src/lib/pdf/document-quittance'
+import { enregistrerPolicesPdf } from '../../src/lib/pdf/polices'
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const URL_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
+const CLE_ANONYME = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const CLE_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const FICHIER_PRIVE = process.env.SIKALOC_DEMO_CREDENTIALS_FILE
-const ORIGINE_LOCALE = 'sikaloc-demo-v1'
-const EMAIL_DOMAIN = 'sikaloc-demo.test'
-const TELEPHONE_FICTIF = 'DEMO0000'
-const ALPHABET_MOT_DE_PASSE = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
-const COULEURS = [
-  ['#B8F36D', '#17311C', '#EAF1E7'],
-  ['#F2D58B', '#294536', '#F4EEE1'],
-  ['#D7E6CC', '#254833', '#E7B980'],
-  ['#B9D5C4', '#1E3C31', '#F2D79C'],
-  ['#DCCBA6', '#263E32', '#B8F36D'],
+const FICHIER_ACCES = process.env.SIKALOC_DEMO_ACCESS_FILE
+const PROJECT_ID_ATTENDU = process.env.SIKALOC_DEMO_EXPECTED_PROJECT_ID
+const MODE = process.env.SIKALOC_DEMO_MODE ?? 'initial'
+const NETTOYAGE_TRANSACTIONNEL_CONFIRME = process.env.SIKALOC_DEMO_REBUILD_CLEANUP === '1'
+const MARQUEUR_DEMO = 'sikaloc-demo-v1'
+const DOMAINE_EMAIL = 'sikaloc-demo.test'
+const TELEPHONE_FICTIF = '+2290000000000'
+const NOM_PHOTO = 'studio-agla-demo.jpg'
+const CHEMIN_PHOTO = path.join(process.cwd(), 'scripts/demo/assets/find', NOM_PHOTO)
+const MAINTENANT = new Date()
+const ISO_AUJOURDHUI = MAINTENANT.toISOString().slice(0, 10)
+
+type RoleDemo = 'bailleur' | 'locataire' | 'candidat'
+type DefinitionCompte = {
+  cle: 'pro' | 'me' | 'find'
+  email: string
+  nom: string
+  role: RoleDemo
+  nbLogements?: string
+}
+type CompteDemo = DefinitionCompte & { id: string; motDePasse: string }
+type CoffrePrive = {
+  otpSecret: string
+  comptes?: Record<string, { id: string; email: string; nom: string; motDePasse: string }>
+}
+
+const DEFINITIONS: DefinitionCompte[] = [
+  { cle: 'pro', email: `bailleur@${DOMAINE_EMAIL}`, nom: 'Aïcha Kora', role: 'bailleur', nbLogements: '2' },
+  { cle: 'me', email: `locataire@${DOMAINE_EMAIL}`, nom: 'Mila Adjovi', role: 'locataire' },
+  { cle: 'find', email: `candidat@${DOMAINE_EMAIL}`, nom: 'Sena Hounsa', role: 'candidat' },
 ]
+
+const IDS = {
+  logementLoue: uuidStable('logement-loue'),
+  logementAnnonce: uuidStable('logement-find'),
+  locataire: uuidStable('locataire-principal'),
+  bail: uuidStable('bail-principal'),
+  annonce: uuidStable('annonce-find'),
+  photo: uuidStable('photo-find'),
+}
 
 function refuser(message: string): never {
   throw new Error(message)
 }
 
-function analyserJeton(jeton: string) {
+function uuidStable(cle: string): string {
+  const octets = createHash('sha256').update(`${MARQUEUR_DEMO}:minimal-v2:${cle}`).digest().subarray(0, 16)
+  octets[6] = (octets[6] & 0x0f) | 0x40
+  octets[8] = (octets[8] & 0x3f) | 0x80
+  const hex = octets.toString('hex')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
+function decoderJeton(jeton: string): Record<string, unknown> | null {
   try {
     return JSON.parse(Buffer.from(jeton.split('.')[1], 'base64url').toString('utf8')) as Record<string, unknown>
   } catch {
@@ -40,411 +77,641 @@ function analyserJeton(jeton: string) {
   }
 }
 
-function verifierCibleLocale() {
-  if (!URL || !CLE_SERVICE || !FICHIER_PRIVE) {
-    refuser('configuration locale absente; relancez uniquement via npm run demo:setup ou demo:dev')
+function verifierInstanceDemo(): void {
+  if (
+    !URL_SUPABASE || !CLE_ANONYME || !CLE_SERVICE || !FICHIER_PRIVE || !FICHIER_ACCES ||
+    !PROJECT_ID_ATTENDU || process.env.SIKALOC_DEMO_LOCAL !== '1' ||
+    MODE !== 'initial' && MODE !== 'rebuild' ||
+    (MODE === 'rebuild') !== NETTOYAGE_TRANSACTIONNEL_CONFIRME
+  ) {
+    refuser('configuration locale incomplète; utilisez exclusivement npm run demo:setup, demo:seed ou demo:rebuild')
   }
 
   let destination: URL
   try {
-    destination = new globalThis.URL(URL)
+    destination = new URL(URL_SUPABASE)
   } catch {
     refuser('adresse Supabase locale invalide')
   }
   if (
     !['localhost', '127.0.0.1', '::1'].includes(destination.hostname) ||
-    destination.port !== '54821'
+    destination.port !== '54821' || !/^sikaloc-demo-[a-f0-9]{12}$/.test(PROJECT_ID_ATTENDU)
   ) {
-    refuser('le seed refuse toute cible autre que le port Supabase local réservé à la démo')
+    refuser('la cible ne correspond pas à l’instance Supabase Demo locale réservée')
   }
 
-  const claims = analyserJeton(CLE_SERVICE)
+  const claims = decoderJeton(CLE_SERVICE)
   if (
-    !claims || claims.iss !== 'supabase-demo' || claims.ref ||
-    claims.role !== 'service_role'
+    !claims || claims.iss !== 'supabase-demo' || claims.ref || claims.role !== 'service_role'
   ) {
-    refuser('la clé ne porte pas la signature locale attendue; aucune écriture effectuée')
+    refuser('l’émetteur de la clé n’identifie pas Supabase Demo local; aucune écriture n’a été effectuée')
   }
 }
 
-verifierCibleLocale()
+verifierInstanceDemo()
+// En ESM, tsx peut charger le template .tsx via un registre CJS distinct.
+// Enregistrer ici aussi garantit que le renderer exécutant le seed dispose
+// bien de Manrope et Inter, sans dépendre d'un alias de module implicite.
+enregistrerPolicesPdf(Font)
 
-const supabase = createClient(URL!, CLE_SERVICE!, {
+const admin = createClient(URL_SUPABASE!, CLE_SERVICE!, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
-const jeu = creerDonneesDemo()
-const profilsPro = PROFILS_DEMO.filter((profil) => profil.role === 'pro')
-const candidats = CANDIDATS_DEMO
 
-type Compte = { id: string; email: string; motDePasse: string; nom: string; role: 'bailleur' | 'candidat' }
-type CoffrePrive = { otpSecret: string; comptes?: Record<string, Omit<Compte, 'role'>> }
+function creerClientAuthentifie() {
+  return createClient(URL_SUPABASE!, CLE_ANONYME!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
-const definitionsComptes: Array<{
-  cle: string
-  email: string
-  nom: string
-  role: 'bailleur' | 'candidat'
-  logements?: number
-}> = [
-  { cle: 'pro-petit', email: `pro.petit@${EMAIL_DOMAIN}`, nom: profilsPro[0].nom, role: 'bailleur', logements: 2 },
-  { cle: 'pro-actif', email: `pro.actif@${EMAIL_DOMAIN}`, nom: profilsPro[1].nom, role: 'bailleur', logements: 2 },
-  { cle: 'pro-gestion', email: `pro.gestion@${EMAIL_DOMAIN}`, nom: profilsPro[2].nom, role: 'bailleur', logements: 2 },
-  { cle: 'find-amina', email: `candidate.amina@${EMAIL_DOMAIN}`, nom: candidats[0].nom, role: 'candidat' },
-  { cle: 'find-koffi', email: `candidate.koffi@${EMAIL_DOMAIN}`, nom: candidats[1].nom, role: 'candidat' },
-]
+function nomErreur(erreur: { code?: string; message?: string } | null | undefined): string {
+  if (!erreur) return ''
+  const code = erreur.code ? ` (${erreur.code})` : ''
+  const message = (erreur.message ?? '').replace(/\b[0-9a-f-]{36}\b/gi, '[identifiant]').slice(0, 240)
+  return `${code}${message ? ` ${message}` : ''}`
+}
 
-function uuidStable(cle: string): string {
-  const octets = createHash('sha256').update(`${ORIGINE_LOCALE}:${cle}`).digest().subarray(0, 16)
-  octets[6] = (octets[6] & 0x0f) | 0x40
-  octets[8] = (octets[8] & 0x3f) | 0x80
-  const hex = octets.toString('hex')
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+function assurerSansErreur(erreur: { code?: string; message?: string } | null, contexte: string): void {
+  if (erreur) refuser(`${contexte}${nomErreur(erreur)}`)
 }
 
 function nouveauMotDePasse(): string {
-  const octets = randomBytes(30)
-  return Array.from(octets, (octet) => ALPHABET_MOT_DE_PASSE[octet % ALPHABET_MOT_DE_PASSE.length])
-    .slice(0, 24)
-    .join('')
+  return randomBytes(30).toString('base64url').slice(0, 32)
 }
 
-async function ecrireCoffre(coffre: CoffrePrive) {
-  const temporaire = `${FICHIER_PRIVE}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
-  await writeFile(temporaire, `${JSON.stringify(coffre, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
+async function ecrirePrive(chemin: string, contenu: string): Promise<void> {
+  const temporaire = `${chemin}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
+  await writeFile(temporaire, contenu, { mode: 0o600, flag: 'wx' })
   await chmod(temporaire, 0o600)
-  await rename(temporaire, FICHIER_PRIVE!)
-  await chmod(FICHIER_PRIVE!, 0o600)
+  await rename(temporaire, chemin)
+  await chmod(chemin, 0o600)
 }
 
-let coffre: CoffrePrive
-try {
-  const info = await lstat(FICHIER_PRIVE!)
-  if (info.isSymbolicLink() || !info.isFile()) {
-    refuser('le coffre privé n’est pas un fichier local normal; aucun secret n’a été lu')
+async function lireCoffre(): Promise<CoffrePrive> {
+  let info
+  try {
+    info = await lstat(FICHIER_PRIVE!)
+  } catch {
+    refuser('coffre local des accès absent; aucune donnée Auth ne sera créée')
+  }
+  if (info!.isSymbolicLink() || !info!.isFile()) {
+    refuser('le coffre local n’est pas un fichier privé ordinaire')
   }
   await chmod(FICHIER_PRIVE!, 0o600)
-  coffre = JSON.parse(await readFile(FICHIER_PRIVE!, 'utf8')) as CoffrePrive
-} catch {
-  refuser('le coffre privé local est illisible; aucun mot de passe ne sera affiché dans le terminal')
+  let coffre: CoffrePrive
+  try {
+    coffre = JSON.parse(await readFile(FICHIER_PRIVE!, 'utf8')) as CoffrePrive
+  } catch {
+    refuser('lecture du coffre privé impossible')
+  }
+  if (typeof coffre!.otpSecret !== 'string' || coffre!.otpSecret.length < 32) {
+    refuser('le secret local des invitations est absent ou trop court')
+  }
+  coffre!.comptes ??= {}
+  return coffre!
 }
-coffre.comptes ??= {}
 
 async function tousLesUtilisateurs() {
-  const utilisateurs = [] as Array<{ id: string; email?: string; app_metadata?: Record<string, unknown> }>
+  const resultats = [] as Array<{
+    id: string
+    email?: string
+    app_metadata?: Record<string, unknown>
+  }>
   for (let page = 1; ; page += 1) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
-    if (error) refuser('lecture des comptes Auth locaux impossible')
-    utilisateurs.push(...data.users)
-    if (data.users.length < 1000) return utilisateurs
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) refuser('lecture de la liste Auth de l’instance Demo impossible')
+    resultats.push(...data.users)
+    if (data.users.length < 1000) return resultats
   }
 }
 
-const cacheUtilisateurs = await tousLesUtilisateurs()
-const comptes = new Map<string, Compte>()
+async function preparerCoherenceAuth(coffre: CoffrePrive): Promise<Map<'pro' | 'me' | 'find', CompteDemo>> {
+  const utilisateurs = await tousLesUtilisateurs()
+  const emailsAttendus = new Set(DEFINITIONS.map(({ email }) => email))
+  const comptesInattendus = utilisateurs.filter((utilisateur) =>
+    utilisateur.app_metadata?.sikaloc_demo !== MARQUEUR_DEMO ||
+    !utilisateur.email?.toLowerCase().endsWith(`@${DOMAINE_EMAIL}`) ||
+    !emailsAttendus.has(utilisateur.email.toLowerCase()),
+  )
+  if (comptesInattendus.length > 0) {
+    refuser('des comptes fictifs anciens ou non reconnus sont présents; utilisez npm run demo:rebuild pour les retirer avec confirmation')
+  }
 
-async function obtenirOuCreerCompte(definition: (typeof definitionsComptes)[number]): Promise<Compte> {
-  const existant = cacheUtilisateurs.find((utilisateur) => utilisateur.email?.toLowerCase() === definition.email)
-  const sauvegarde = coffre.comptes?.[definition.cle]
-  let utilisateurId: string
-  let motDePasse = sauvegarde?.motDePasse
-
-  if (existant) {
-    if (existant.app_metadata?.sikaloc_demo !== ORIGINE_LOCALE) {
-      refuser(`un compte local non identifié comme démonstration utilise ${definition.email}; il est préservé`)
+  const resultats = new Map<'pro' | 'me' | 'find', CompteDemo>()
+  for (const definition of DEFINITIONS) {
+    const existant = utilisateurs.find((utilisateur) => utilisateur.email?.toLowerCase() === definition.email)
+    const sauvegarde = coffre.comptes?.[definition.cle]
+    let id = existant?.id
+    let motDePasse = sauvegarde && sauvegarde.id === id ? sauvegarde.motDePasse : undefined
+    const metadonnees = {
+      role: definition.role,
+      nom: definition.nom,
+      telephone: TELEPHONE_FICTIF,
+      ...(definition.nbLogements ? { nb_logements: definition.nbLogements } : {}),
     }
-    utilisateurId = existant.id
-    if (!motDePasse || sauvegarde?.id !== utilisateurId) {
+
+    if (existant) {
+      if (existant.app_metadata?.sikaloc_demo !== MARQUEUR_DEMO) {
+        refuser(`un compte non démonstratif possède l’adresse prévue pour ${definition.cle}; il est préservé`)
+      }
+      if (!motDePasse) motDePasse = nouveauMotDePasse()
+      const { error } = await admin.auth.admin.updateUserById(existant.id, {
+        password: motDePasse,
+        email_confirm: true,
+        app_metadata: { ...existant.app_metadata, sikaloc_demo: MARQUEUR_DEMO },
+        user_metadata: metadonnees,
+      })
+      assurerSansErreur(error, `mise à jour du compte Auth local ${definition.cle} impossible`)
+    } else {
       motDePasse = nouveauMotDePasse()
-      const { error } = await supabase.auth.admin.updateUserById(utilisateurId, { password: motDePasse })
-      if (error) refuser('renouvellement du mot de passe local impossible')
+      const { data, error } = await admin.auth.admin.createUser({
+        email: definition.email,
+        password: motDePasse,
+        email_confirm: true,
+        app_metadata: { sikaloc_demo: MARQUEUR_DEMO },
+        user_metadata: metadonnees,
+      })
+      assurerSansErreur(error, `création du compte Auth local ${definition.cle} impossible`)
+      if (!data.user) refuser(`Auth n’a pas retourné le compte ${definition.cle}`)
+      id = data.user.id
     }
-  } else {
-    motDePasse = nouveauMotDePasse()
-    const { data, error } = await supabase.auth.admin.createUser({
+
+    if (!id || !motDePasse) refuser(`identité Auth locale ${definition.cle} incomplète`)
+    const compte: CompteDemo = { ...definition, id, motDePasse }
+    resultats.set(definition.cle, compte)
+    coffre.comptes![definition.cle] = {
+      id,
       email: definition.email,
-      password: motDePasse,
-      email_confirm: true,
-      app_metadata: { sikaloc_demo: ORIGINE_LOCALE },
-      user_metadata: {
-        role: definition.role,
-        nom: definition.nom,
-        telephone: TELEPHONE_FICTIF,
-        ...(definition.logements ? { nb_logements: String(definition.logements) } : {}),
-      },
-    })
-    if (error || !data.user) refuser('création d’un compte de démonstration dans Auth local impossible')
-    utilisateurId = data.user.id
-    cacheUtilisateurs.push(data.user)
+      nom: definition.nom,
+      motDePasse,
+    }
+    await ecrirePrive(FICHIER_PRIVE!, `${JSON.stringify(coffre, null, 2)}\n`)
   }
 
-  const compte: Compte = {
-    id: utilisateurId,
-    email: definition.email,
-    motDePasse: motDePasse!,
-    nom: definition.nom,
-    role: definition.role,
-  }
-  coffre.comptes![definition.cle] = {
-    id: compte.id,
-    email: compte.email,
-    motDePasse: compte.motDePasse,
-    nom: compte.nom,
-  }
-  await ecrireCoffre(coffre)
+  const { data: profilPro, error: erreurPro } = await admin.from('bailleurs').select('id').eq('id', resultats.get('pro')!.id).maybeSingle()
+  assurerSansErreur(erreurPro, 'lecture du profil bailleur local impossible')
+  if (!profilPro) refuser('le déclencheur Auth n’a pas créé le profil Pro attendu')
 
-  const profilTable = definition.role === 'bailleur' ? 'bailleurs' : 'candidats'
-  const { data: profil, error: erreurProfil } = await supabase
-    .from(profilTable)
-    .select('id')
-    .eq('id', utilisateurId)
-    .maybeSingle()
-  if (erreurProfil || !profil) {
-    refuser(`le déclencheur Auth n’a pas créé le profil métier attendu (${definition.role})`)
-  }
+  const { data: profilCandidat, error: erreurCandidat } = await admin.from('candidats').select('id').eq('id', resultats.get('find')!.id).maybeSingle()
+  assurerSansErreur(erreurCandidat, 'lecture du profil candidat local impossible')
+  if (!profilCandidat) refuser('le déclencheur Auth n’a pas créé le profil Find attendu')
 
-  return compte
+  const { data: profilMeBailleur, error: erreurMe } = await admin.from('bailleurs').select('id').eq('id', resultats.get('me')!.id).maybeSingle()
+  assurerSansErreur(erreurMe, 'vérification du rôle Me local impossible')
+  if (profilMeBailleur) refuser('le compte Me possède un profil bailleur inattendu')
+
+  return resultats
 }
 
-for (const definition of definitionsComptes) {
-  comptes.set(definition.cle, await obtenirOuCreerCompte(definition))
-}
-
-const comptesPro = new Map(profilsPro.map((profil) => [
-  profil.id,
-  comptes.get(profil.id)!,
-]))
-
-for (const profil of profilsPro) {
-  const compte = comptesPro.get(profil.id)!
-  const nombreLogements = jeu.logements.filter((logement) => logement.proprietaireId === profil.id).length
-  const { error } = await supabase.from('bailleurs').update({
-    nb_logements_declare: nombreLogements,
-    onboarding_termine: true,
-  }).eq('id', compte.id)
-  if (error) refuser('mise en place du profil bailleur local impossible')
-}
-
-const logementsParCle = new Map(jeu.logements.map((logement) => [logement.id, uuidStable(`logement/${logement.id}`)]))
-const profilsLocataires = new Map(LOCATAIRES_DEMO.map((locataire) => [locataire.id, locataire]))
-const locatairesParRelation = new Map<string, string>()
-const lignesLocataires: Array<Record<string, unknown>> = []
-
-for (const bail of jeu.baux) {
-  const cleRelation = `${bail.proprietaireId}/${bail.locataireId}`
-  if (locatairesParRelation.has(cleRelation)) continue
-  const locataire = profilsLocataires.get(bail.locataireId)
-  if (!locataire) refuser('un bail de démonstration référence un locataire absent')
-  const email = `${locataire.id.replace('loc-', 'me.')}@${EMAIL_DOMAIN}`
-  const id = uuidStable(`locataire/${cleRelation}`)
-  locatairesParRelation.set(cleRelation, id)
-  lignesLocataires.push({
-    id,
-    bailleur_id: comptesPro.get(bail.proprietaireId)!.id,
-    nom: locataire.nom,
-    telephone: TELEPHONE_FICTIF,
-    email,
-    consentement_donnees: true,
-    date_consentement: '2026-10-01',
-  })
-}
-
-async function insererLignesAbsentes(table: string, rows: Array<Record<string, unknown>>) {
-  if (rows.length === 0) return
-  const ids = rows.map((row) => String(row.id))
-  const { data: existantes, error: erreurLecture } = await supabase
+async function insererSiAbsente(table: string, ligne: Record<string, unknown>, bailleurId: string) {
+  const { data: existante, error: erreurLecture } = await admin
     .from(table)
-    .select('id')
-    .in('id', ids)
-  if (erreurLecture) refuser(`lecture préalable des lignes locales de ${table} impossible`)
-  const dejaPresent = new Set((existantes ?? []).map((row: { id: string }) => row.id))
-  const absentes = rows.filter((row) => !dejaPresent.has(String(row.id)))
-  if (absentes.length === 0) return
-  const { error } = await supabase.from(table).insert(absentes)
-  if (error) {
-    const message = error.message.replace(/\b[0-9a-f-]{36}\b/gi, '[identifiant]')
-    console.error(`Détail non sensible de la base locale (${table}, ${error.code}): ${message}`)
-    refuser(`insertion des nouvelles fixtures locales dans ${table} refusée par le schéma`)
+    .select('id,bailleur_id')
+    .eq('id', String(ligne.id))
+    .maybeSingle()
+  assurerSansErreur(erreurLecture, `lecture de ${table} impossible`)
+  if (existante) {
+    if (existante.bailleur_id !== bailleurId) refuser(`l’identifiant de fixture ${table} est déjà rattaché hors du compte Demo`)
+    return
   }
+  const { error } = await admin.from(table).insert(ligne)
+  assurerSansErreur(error, `création de la fixture ${table} impossible`)
 }
 
-await insererLignesAbsentes('logements', jeu.logements.map((logement) => ({
-  id: logementsParCle.get(logement.id),
-  bailleur_id: comptesPro.get(logement.proprietaireId)!.id,
-  adresse: `Adresse fictive — ${logement.quartier}, ${logement.ville}`,
-  type: logement.type === 'Chambre' ? 'Autre' : logement.type,
-  ville: logement.ville,
-  pays: 'Bénin',
-})))
-
-await insererLignesAbsentes('locataires', lignesLocataires)
-
-const bauxParCle = new Map(jeu.baux.map((bail) => [bail.id, uuidStable(`bail/${bail.id}`)]))
-await insererLignesAbsentes('baux', jeu.baux.map((bail) => ({
-  id: bauxParCle.get(bail.id),
-  bailleur_id: comptesPro.get(bail.proprietaireId)!.id,
-  logement_id: logementsParCle.get(bail.logementId),
-  locataire_id: locatairesParRelation.get(`${bail.proprietaireId}/${bail.locataireId}`),
-  loyer_mensuel: bail.loyer,
-  date_debut: bail.debut,
-  date_fin: bail.fin ?? null,
-  jour_echeance: 5,
-  tolerance_jours: 5,
-  depot_garantie: bail.loyer,
-  statut: bail.statut === 'actif' ? 'Actif' : 'Résilié',
-})))
-
-const periodesParCle = new Map(jeu.periodes.map((periode) => [periode.id, periode]))
-const joursDansMois = (dateIso: string) => {
-  const [annee, mois] = dateIso.split('-').map(Number)
-  return new Date(Date.UTC(annee, mois, 0)).getUTCDate()
+function moisDecale(decalage: number): string {
+  const date = new Date(Date.UTC(MAINTENANT.getUTCFullYear(), MAINTENANT.getUTCMonth() + decalage, 1))
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-01`
 }
 
-const lignesPaiements = jeu.paiements.map((paiement) => {
-  const periode = periodesParCle.get(paiement.periodeId)
-  if (!periode) refuser('un versement de démonstration référence une période absente')
-  const mois = periode.echeance.slice(0, 7)
-  const dateFin = `${mois}-${String(joursDansMois(periode.echeance)).padStart(2, '0')}`
-  const bail = jeu.baux.find((item) => item.id === periode.bailId)
-  if (!bail) refuser('une période de démonstration référence un bail absent')
+function dernierJourDuMois(mois: string): number {
+  const [annee, numeroMois] = mois.split('-').map(Number)
+  return new Date(Date.UTC(annee, numeroMois, 0)).getUTCDate()
+}
 
-  return {
-    id: uuidStable(`paiement/${paiement.id}`),
-    bailleur_id: comptesPro.get(bail.proprietaireId)!.id,
-    bail_id: bauxParCle.get(bail.id),
-    date_paiement: paiement.date,
-    montant: paiement.montant,
-    periode_debut: `${mois}-01`,
-    periode_fin: dateFin,
-    mode_paiement: paiement.moyen.startsWith('Virement') ? 'Virement bancaire' : 'Espèces',
-    type_paiement: 'Loyer',
-    est_partiel: periode.statut === 'partiel',
-    statut: 'Validé',
-    valide_le: `${paiement.date}T12:00:00.000Z`,
+function dateAvant(mois: string): string {
+  const date = new Date(`${mois}T12:00:00.000Z`)
+  date.setUTCDate(date.getUTCDate() - 1)
+  return date.toISOString()
+}
+
+async function creerSession(compte: CompteDemo) {
+  const client = creerClientAuthentifie()
+  const { error } = await client.auth.signInWithPassword({ email: compte.email, password: compte.motDePasse })
+  assurerSansErreur(error, `connexion interne au parcours authentifié ${compte.cle} impossible`)
+  return client
+}
+
+async function creerDossierMetier(comptes: Map<'pro' | 'me' | 'find', CompteDemo>) {
+  const pro = comptes.get('pro')!
+  const me = comptes.get('me')!
+  const find = comptes.get('find')!
+
+  const { error: erreurProfil } = await admin.from('bailleurs').update({
+    nb_logements_declare: 2,
+    onboarding_termine: true,
+  }).eq('id', pro.id)
+  assurerSansErreur(erreurProfil, 'préparation du profil Pro local impossible')
+
+  await insererSiAbsente('logements', {
+    id: IDS.logementLoue,
+    bailleur_id: pro.id,
+    adresse: 'Adresse fictive — voie des Flamboyants, Agla',
+    type: 'Appartement',
+    ville: 'Cotonou',
+    pays: 'Bénin',
+  }, pro.id)
+
+  await insererSiAbsente('logements', {
+    id: IDS.logementAnnonce,
+    bailleur_id: pro.id,
+    adresse: 'Adresse fictive — quartier Zogbadjè',
+    type: 'Studio',
+    ville: 'Abomey-Calavi',
+    pays: 'Bénin',
+  }, pro.id)
+
+  await insererSiAbsente('locataires', {
+    id: IDS.locataire,
+    bailleur_id: pro.id,
+    nom: me.nom,
+    telephone: TELEPHONE_FICTIF,
+    email: me.email,
+    consentement_donnees: true,
+    date_consentement: ISO_AUJOURDHUI,
+  }, pro.id)
+
+  const debutBail = moisDecale(-2)
+  await insererSiAbsente('baux', {
+    id: IDS.bail,
+    bailleur_id: pro.id,
+    logement_id: IDS.logementLoue,
+    locataire_id: IDS.locataire,
+    loyer_mensuel: 120000,
+    date_debut: debutBail,
+    date_fin: null,
+    jour_echeance: 5,
+    tolerance_jours: 5,
+    depot_garantie: 120000,
+    statut: 'Actif',
+    created_at: dateAvant(debutBail),
+  }, pro.id)
+
+  await accepterInvitationDemo(pro.id, IDS.locataire, me)
+  await preparerPaiementsEtDocuments(pro, IDS.bail)
+  const annonce = await preparerAnnonceFind(pro, find)
+
+  return { debutBail, referenceAnnonce: annonce.reference }
+}
+
+async function accepterInvitationDemo(bailleurId: string, locataireId: string, compteMe: CompteDemo) {
+  const { data: fiche, error: erreurFiche } = await admin
+    .from('locataires')
+    .select('compte_id,email')
+    .eq('id', locataireId)
+    .single()
+  assurerSansErreur(erreurFiche, 'lecture de la fiche Me locale impossible')
+  if (fiche.compte_id === compteMe.id) return
+  if (fiche.compte_id) refuser('la fiche locataire est déjà liée à un autre compte; aucun rattachement ne sera remplacé')
+  if (fiche.email?.toLowerCase() !== compteMe.email.toLowerCase()) {
+    refuser('l’adresse du compte Me ne correspond pas au destinataire de la fiche locataire')
   }
-})
-await insererLignesAbsentes('paiements', lignesPaiements)
 
-function echapperXml(texte: string) {
-  return texte.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+  const secret = (await lireCoffre()).otpSecret
+  const jeton = randomBytes(32).toString('base64url')
+  const empreinte = createHmac('sha256', secret).update(jeton).digest('hex')
+  const idInvitation = uuidStable('invitation-me')
+  const invitation = {
+    id: idInvitation,
+    locataire_id: locataireId,
+    bailleur_id: bailleurId,
+    email: compteMe.email,
+    empreinte,
+    expire_le: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    cree_par: bailleurId,
+  }
+  const { error: erreurInvitation } = await admin.from('invitations_locataire').upsert(invitation, { onConflict: 'id' })
+  assurerSansErreur(erreurInvitation, 'création de l’invitation synthétique locale impossible')
+
+  // L'attachement est effectué par la même RPC authentifiée que le parcours de production.
+  const sessionMe = await creerSession(compteMe)
+  const { data, error } = await sessionMe.rpc('accepter_invitation', { p_empreinte: empreinte })
+  assurerSansErreur(error, 'acceptation de l’invitation Me par le parcours Sikaloc impossible')
+  const resultat = Array.isArray(data) ? data[0] : data
+  if (resultat?.motif !== 'ok' || resultat.locataire_id !== locataireId || resultat.bailleur_id !== bailleurId) {
+    refuser(`l’invitation Me n’a pas été acceptée par la RPC réelle (${resultat?.motif ?? 'réponse inattendue'})`)
+  }
+  await sessionMe.auth.signOut()
 }
 
-function svgIllustration(logement: (typeof jeu.logements)[number], index: number) {
-  const [accent, encre, fond] = COULEURS[index % COULEURS.length]
-  const quartier = echapperXml(`${logement.quartier} · ${logement.ville}`)
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
-    <rect width="1200" height="900" fill="${fond}"/>
-    <circle cx="920" cy="170" r="105" fill="${accent}" opacity=".78"/>
-    <path d="M0 685 Q270 620 505 690 T1200 655 V900 H0Z" fill="${encre}" opacity=".10"/>
-    <path d="M160 640 160 400 400 270 640 400 640 640Z" fill="#fffdf6" stroke="${encre}" stroke-width="8" stroke-linejoin="round"/>
-    <path d="M115 405 400 235 685 405" fill="${accent}" stroke="${encre}" stroke-width="12" stroke-linejoin="round"/>
-    <rect x="215" y="445" width="105" height="120" rx="12" fill="${accent}"/>
-    <rect x="475" y="445" width="105" height="120" rx="12" fill="${accent}"/>
-    <rect x="355" y="475" width="95" height="165" rx="10" fill="${encre}"/>
-    <path d="M700 650h320" stroke="${encre}" stroke-width="14" stroke-linecap="round" opacity=".55"/>
-    <path d="M750 610c35-90 85-90 120 0m30 0c35-120 90-120 125 0" fill="none" stroke="${encre}" stroke-width="10" stroke-linecap="round" opacity=".55"/>
-    <rect x="60" y="742" width="1080" height="104" rx="22" fill="#ffffff" opacity=".92"/>
-    <text x="100" y="790" fill="${encre}" font-family="Arial,sans-serif" font-size="27" font-weight="700">${quartier}</text>
-    <text x="100" y="824" fill="${encre}" font-family="Arial,sans-serif" font-size="17" letter-spacing="2">ILLUSTRATION · DÉMO LOCALE · BIEN FICTIF</text>
-  </svg>`
+async function paiementExistant(bailId: string, periodeDebut: string, montantAttendu: number, dateAttendue: string) {
+  const { data, error } = await admin.from('paiements')
+    .select('id,bailleur_id,bail_id,date_paiement,montant,periode_debut,mode_paiement,type_paiement,statut')
+    .eq('bail_id', bailId)
+    .eq('periode_debut', periodeDebut)
+    .eq('type_paiement', 'Loyer')
+  assurerSansErreur(error, 'lecture du suivi financier local impossible')
+  const lignes = data ?? []
+  if (lignes.length > 1) refuser(`plusieurs paiements existent déjà pour la période ${periodeDebut}; aucune duplication n’a été créée`)
+  if (lignes.length === 0) return null
+  const paiement = lignes[0]
+  if (
+    Number(paiement.montant) !== montantAttendu || paiement.date_paiement !== dateAttendue ||
+    paiement.mode_paiement !== 'Virement bancaire' || paiement.bailleur_id !== (await bailleurDuBail(bailId))
+  ) {
+    refuser(`un paiement de la période ${periodeDebut} ne correspond pas à la fixture attendue; il est préservé`)
+  }
+  return paiement as { id: string; statut: string }
 }
 
-const annoncesParLogement = new Map<string, string>()
-let imagesAnnonce = 0
-const logementsPublies = jeu.logements.filter((logement) => logement.statut === 'disponible' && logement.publie)
+async function bailleurDuBail(bailId: string): Promise<string> {
+  const { data, error } = await admin.from('baux').select('bailleur_id').eq('id', bailId).single()
+  assurerSansErreur(error, 'lecture du propriétaire du bail local impossible')
+  return data.bailleur_id
+}
 
-for (const [index, logement] of logementsPublies.entries()) {
-  const idAnnonce = uuidStable(`annonce/${logement.id}`)
-  const idPhoto = uuidStable(`photo/${logement.id}`)
-  const proprietaireId = comptesPro.get(logement.proprietaireId)!.id
-  const description = `DÉMONSTRATION LOCALE — annonce et logement fictifs; illustration non photographique, aucune offre réelle. ${logement.description}`
-  const annonce = {
-    id: idAnnonce,
-    bailleur_id: proprietaireId,
-    logement_id: logementsParCle.get(logement.id),
-    type: logement.type === 'Chambre' ? 'Autre' : logement.type,
-    ville: logement.ville,
-    quartier: logement.quartier,
-    chambres: logement.chambres,
-    surface_m2: logement.surface,
-    loyer: logement.loyer,
-    charges: null,
-    depot_garantie: null,
-    avance_mois: null,
-    equipements: logement.equipements,
+async function preparerPaiementsEtDocuments(pro: CompteDemo, bailId: string): Promise<void> {
+  const sessionPro = await creerSession(pro)
+  const moisPrecedent2 = moisDecale(-2)
+  const moisPrecedent1 = moisDecale(-1)
+  const moisCourant = moisDecale(0)
+  const jourCourant = Math.max(1, Math.min(31, MAINTENANT.getUTCDate()))
+  const datePartielle = `${moisCourant.slice(0, 7)}-${String(Math.min(jourCourant, dernierJourDuMois(moisCourant))).padStart(2, '0')}`
+  const definitions = [
+    { periode: moisPrecedent2, date: `${moisPrecedent2.slice(0, 7)}-05`, montant: 120000 },
+    { periode: moisPrecedent1, date: `${moisPrecedent1.slice(0, 7)}-05`, montant: 120000 },
+    { periode: moisCourant, date: datePartielle, montant: 60000 },
+  ]
+
+  for (const definition of definitions) {
+    let paiement = await paiementExistant(bailId, definition.periode, definition.montant, definition.date)
+    if (!paiement) {
+      const { data: paiementId, error } = await sessionPro.rpc('creer_paiement_brouillon', {
+        p_bail_id: bailId,
+        p_date_paiement: definition.date,
+        p_montant: definition.montant,
+        p_periode_debut: definition.periode,
+        p_mode_paiement: 'Virement bancaire',
+        p_type_paiement: 'Loyer',
+      })
+      assurerSansErreur(error, `création du brouillon de paiement (${definition.periode}) via le parcours réel impossible`)
+      if (typeof paiementId !== 'string') refuser(`la RPC n’a pas retourné le paiement ${definition.periode}`)
+      paiement = { id: paiementId, statut: 'Brouillon' }
+    }
+
+    const { data: documentExistant, error: erreurDocument } = await admin.from('quittances')
+      .select('id,pdf_chemin,hash_sha256')
+      .eq('paiement_id', paiement.id)
+      .maybeSingle()
+    assurerSansErreur(erreurDocument, 'lecture du document financier local impossible')
+    if (paiement.statut === 'Validé' && documentExistant?.pdf_chemin && documentExistant.hash_sha256) continue
+
+    await genererDocumentPaiement(pro.id, paiement.id, paiement.statut === 'Brouillon')
+  }
+  await sessionPro.auth.signOut()
+}
+
+async function genererDocumentPaiement(acteur: string, paiementId: string, valider: boolean): Promise<void> {
+  const { data, error } = await admin.rpc('preparer_emission_quittance', {
+    p_acteur: acteur,
+    p_paiement: paiementId,
+    p_valider: valider,
+  })
+  assurerSansErreur(error, 'préparation du document par la RPC métier Sikaloc impossible')
+  if (!data || typeof data !== 'object') refuser('la RPC de préparation documentaire n’a retourné aucun instantané')
+  const emission = data as {
+    jeton?: string
+    contexte?: Record<string, any>
+    quittance?: Record<string, any>
+    deja_publiee?: boolean
+    en_cours?: boolean
+  }
+  if (emission.deja_publiee) return
+  if (emission.en_cours) refuser('une émission PDF locale est encore en cours; attendez quelques minutes puis relancez demo:seed')
+  if (!emission.jeton || !emission.contexte || !emission.quittance) refuser('réponse de génération documentaire incomplète')
+
+  const contexte = emission.contexte
+  const paiement = contexte.paiement
+  const bailleur = contexte.bailleur
+  const locataire = contexte.locataire
+  const logement = contexte.logement
+  const bail = contexte.bail
+  const finances = contexte.finances
+  if (!paiement || !bailleur || !locataire || !logement || !bail || !finances) {
+    refuser('instantané financier incomplet; aucun document n’a été publié')
+  }
+
+  const donnees: DonneesQuittance = {
+    // L'apparence est le vrai template. Le libellé EXEMPLE rend explicites les données synthétiques.
+    modeDocument: 'exemple',
+    signaturesExemple: false,
+    numeroDocument: String(emission.quittance.numero_document ?? ''),
+    type: emission.quittance.type === 'Reçu' ? 'Reçu' : 'Quittance',
+    dateGeneration: String(emission.quittance.date_generation ?? new Date().toISOString()),
+    pays: String(logement.pays ?? 'Bénin'),
+    bailleurNom: String(bailleur.nom),
+    bailleurTelephone: String(bailleur.telephone ?? ''),
+    bailleurAdresse: bailleur.adresse ? String(bailleur.adresse) : null,
+    locataireNom: String(locataire.nom),
+    locataireTelephone: String(locataire.telephone ?? ''),
+    logementAdresse: String(logement.adresse),
+    logementVille: String(logement.ville),
+    logementPays: String(logement.pays ?? 'Bénin'),
+    logementType: String(logement.type),
+    loyerMensuel: Number(finances.loyer_mensuel ?? bail.loyer_mensuel),
+    montantCumule: Number(finances.cumul_loyer),
+    montantExcedentaire: Number(finances.trop_percu ?? 0),
+    periodeDebut: String(finances.periode_debut),
+    periodeFin: String(finances.periode_fin),
+    montant: Number(finances.montant),
+    datePaiement: String(finances.date_paiement),
+    modePaiement: String(finances.mode_paiement),
+    typePaiement: finances.type_paiement,
+    estPartiel: Boolean(finances.est_partiel),
+    signatureDataUri: null,
+    signatureLocataireDataUri: null,
+    signatureBailleurEtat: 'non-apposee',
+    signatureLocataireEtat: 'non-apposee',
+  }
+  const element = createElement(DocumentQuittance, donnees) as Parameters<typeof renderToBuffer>[0]
+  const pdf = Buffer.from(await renderToBuffer(element))
+  const hash = createHash('sha256').update(pdf).digest('hex')
+  const cheminPdf = `${acteur}/${emission.quittance.numero_document}-${emission.jeton}.pdf`
+  const { error: erreurDepot } = await admin.storage.from('quittances').upload(cheminPdf, pdf, {
+    contentType: 'application/pdf',
+    upsert: false,
+  })
+  assurerSansErreur(erreurDepot, 'archivage du PDF généré par le template officiel impossible')
+
+  const { error: erreurPublication } = await admin.rpc('publier_emission_quittance', {
+    p_acteur: acteur,
+    p_paiement: paiementId,
+    p_jeton: emission.jeton,
+    p_hash: hash,
+    p_snapshot: null,
+    p_hash_signature: null,
+  })
+  assurerSansErreur(erreurPublication, 'publication du PDF par la transaction documentaire Sikaloc impossible')
+}
+
+async function preparerAnnonceFind(pro: CompteDemo, candidat: CompteDemo): Promise<{ reference: string }> {
+  const description =
+    'DÉMONSTRATION LOCALE — logement et annonce entièrement fictifs. Photographie générée à titre illustratif ; aucune offre réelle. ' +
+    'Studio clair et bien ventilé, avec espace nuit, coin cuisine, douche intérieure et accès pratique aux commerces du quartier.'
+  await insererSiAbsente('annonces', {
+    id: IDS.annonce,
+    bailleur_id: pro.id,
+    logement_id: IDS.logementAnnonce,
+    statut: 'brouillon',
+    motif_cloture: null,
+    type: 'Studio',
+    ville: 'Abomey-Calavi',
+    quartier: 'Zogbadjè',
+    chambres: 0,
+    surface_m2: 28,
+    loyer: 65000,
+    charges: 5000,
+    depot_garantie: 65000,
+    avance_mois: 1,
+    equipements: [
+      'eau_courante',
+      'electricite',
+      'compteur_electrique_individuel',
+      'douche_interieure',
+      'wc_interieur',
+      'cuisine_interieure',
+    ],
     description,
     disponible_le: null,
-  }
-  await insererLignesAbsentes('annonces', [annonce])
+  }, pro.id)
 
-  const chemin = `${proprietaireId}/${idAnnonce}/${idPhoto}.jpg`
-  const jpeg = await sharp(Buffer.from(svgIllustration(logement, index)))
-    .jpeg({ quality: 86, mozjpeg: true })
-    .toBuffer()
-  const { error: erreurUpload } = await supabase.storage.from('annonces').upload(chemin, jpeg, {
+  const photo = await readFile(CHEMIN_PHOTO)
+  const metadata = await sharp(photo).metadata()
+  if (metadata.format !== 'jpeg' || !metadata.width || !metadata.height) {
+    refuser('la photographie locale Find n’est pas un JPEG optimisé exploitable')
+  }
+  const chemin = `${pro.id}/${IDS.annonce}/${IDS.photo}.jpg`
+  const { error: erreurDepot } = await admin.storage.from('annonces').upload(chemin, photo, {
     contentType: 'image/jpeg',
     upsert: true,
   })
-  if (erreurUpload) refuser('dépôt d’une illustration dans le stockage local impossible')
+  assurerSansErreur(erreurDepot, 'dépôt de la photographie fictive dans le bucket Demo annonces impossible')
 
-  await insererLignesAbsentes('annonce_photos', [{
-    id: idPhoto,
-    annonce_id: idAnnonce,
-    bailleur_id: proprietaireId,
+  await insererSiAbsente('annonce_photos', {
+    id: IDS.photo,
+    annonce_id: IDS.annonce,
+    bailleur_id: pro.id,
     chemin,
     position: 0,
-    largeur: 1200,
-    hauteur: 900,
+    largeur: metadata.width,
+    hauteur: metadata.height,
     type_mime: 'image/jpeg',
-    poids: jpeg.length,
-  }])
+    poids: photo.length,
+  }, pro.id)
 
-  const { data: etatAnnonce, error: erreurEtat } = await supabase
-    .from('annonces')
-    .select('statut')
-    .eq('id', idAnnonce)
+  const { data: annonce, error: erreurAnnonce } = await admin.from('annonces')
+    .select('id,reference,statut,bailleur_id,logement_id')
+    .eq('id', IDS.annonce)
     .single()
-  if (erreurEtat) refuser('lecture de l’état d’une annonce locale impossible')
-
-  if (etatAnnonce.statut === 'brouillon') {
-    const { error } = await supabase.from('annonces').update({ statut: 'publiee' }).eq('id', idAnnonce)
-    if (error) refuser('publication locale refusée; vérifier la cohérence annonce/logement/photo')
-    annoncesParLogement.set(logement.id, idAnnonce)
-  } else if (etatAnnonce.statut === 'publiee') {
-    annoncesParLogement.set(logement.id, idAnnonce)
+  assurerSansErreur(erreurAnnonce, 'lecture de l’annonce Find de démonstration impossible')
+  if (annonce.bailleur_id !== pro.id || annonce.logement_id !== IDS.logementAnnonce) {
+    refuser('l’annonce de démonstration n’est pas liée au logement attendu')
   }
-  imagesAnnonce += 1
+  if (annonce.statut === 'brouillon') {
+    const { error } = await admin.from('annonces').update({ statut: 'publiee', publiee_le: new Date().toISOString() }).eq('id', IDS.annonce)
+    assurerSansErreur(error, 'publication de l’annonce locale via ses contrôles de cohérence impossible')
+  } else if (annonce.statut !== 'publiee') {
+    refuser('l’annonce de démonstration a été clôturée ou suspendue; elle n’est pas réactivée automatiquement')
+  }
+
+  // Vérifier que le troisième compte reste un candidat ordinaire, sans dossier prérempli.
+  const { data: profilCandidat, error: erreurProfil } = await admin.from('candidats').select('id').eq('id', candidat.id).maybeSingle()
+  assurerSansErreur(erreurProfil, 'lecture du profil candidat impossible')
+  if (!profilCandidat) refuser('le compte Find n’a pas de profil candidat')
+  const { count, error: erreurCandidatures } = await admin.from('candidatures')
+    .select('id', { count: 'exact', head: true })
+    .eq('candidat_id', candidat.id)
+  assurerSansErreur(erreurCandidatures, 'vérification du compte candidat sans candidature préremplie impossible')
+  if (count) refuser('le candidat possède déjà une candidature; reconstruction complète nécessaire pour préserver un état initial vierge')
+
+  return { reference: annonce.reference }
 }
 
-const statutsCandidature: Record<string, string> = {
-  nouvelle: 'envoyee',
-  a_etudier: 'en_etude',
-  acceptee: 'acceptee',
-  refusee: 'refusee',
+async function verifierVolumes(comptes: Map<'pro' | 'me' | 'find', CompteDemo>): Promise<void> {
+  const utilisateurs = await tousLesUtilisateurs()
+  if (utilisateurs.length !== 3 || utilisateurs.some((u) => u.app_metadata?.sikaloc_demo !== MARQUEUR_DEMO)) {
+    refuser(`le nombre final de comptes Auth n’est pas exactement trois (${utilisateurs.length})`)
+  }
+  const pro = comptes.get('pro')!
+  const me = comptes.get('me')!
+  const find = comptes.get('find')!
+  const demandes: Array<[string, string, string]> = [
+    ['logements', 'bailleur_id', pro.id],
+    ['locataires', 'bailleur_id', pro.id],
+    ['baux', 'bailleur_id', pro.id],
+    ['paiements', 'bailleur_id', pro.id],
+    ['quittances', 'bailleur_id', pro.id],
+    ['annonces', 'bailleur_id', pro.id],
+    ['annonce_photos', 'bailleur_id', pro.id],
+  ]
+  const volumes: Record<string, number> = {}
+  for (const [table, colonne, compteId] of demandes) {
+    const { count, error } = await admin.from(table).select('id', { count: 'exact', head: true }).eq(colonne, compteId)
+    assurerSansErreur(error, `vérification du volume final ${table} impossible`)
+    volumes[table] = count ?? 0
+  }
+  if (
+    volumes.logements !== 2 || volumes.locataires !== 1 || volumes.baux !== 1 ||
+    volumes.paiements !== 3 || volumes.quittances !== 3 || volumes.annonces !== 1 ||
+    volumes.annonce_photos !== 1
+  ) {
+    refuser(`les volumes du jeu Demo diffèrent de la configuration attendue (${JSON.stringify(volumes)})`)
+  }
+  const { data: lien, error } = await admin.from('locataires').select('compte_id').eq('id', IDS.locataire).single()
+  assurerSansErreur(error, 'vérification du rattachement Me impossible')
+  if (lien.compte_id !== me.id) refuser('le compte Me n’est pas lié par l’invitation au bail de démonstration')
+  const { data: profilsCroises, error: erreurProfils } = await admin.from('bailleurs').select('id').in('id', [me.id, find.id])
+  assurerSansErreur(erreurProfils, 'vérification des rôles Pro/Me/Find impossible')
+  if (profilsCroises?.length) refuser('le compte Me ou Find possède un profil bailleur inattendu')
 }
 
-const candidatures = jeu.candidatures.flatMap((candidature) => {
-  const annonceId = annoncesParLogement.get(candidature.logementId)
-  const candidat = comptes.get(candidature.candidatId)
-  if (!annonceId || !candidat) return []
-  const statut = statutsCandidature[candidature.statut]
-  const repondue = statut === 'acceptee' || statut === 'refusee'
-  return [{
-    id: uuidStable(`candidature/${candidature.id}`),
-    candidat_id: candidat.id,
-    annonce_id: annonceId,
-    statut,
-    message: `DÉMONSTRATION — ${candidature.message}`,
-    repondue_le: repondue ? `${candidature.date}T12:00:00.000Z` : null,
-    created_at: `${candidature.date}T10:00:00.000Z`,
-  }]
+function construireFicheAcces(comptes: Map<'pro' | 'me' | 'find', CompteDemo>, reference: string): string {
+  const pro = comptes.get('pro')!
+  const me = comptes.get('me')!
+  const find = comptes.get('find')!
+  return `# Accès privés — Sikaloc Demo locale\n\n` +
+    `Instance isolée : Supabase local sur 127.0.0.1:54821. Données entièrement fictives.\n` +
+    `Ne pas partager ce fichier : il contient des mots de passe.\n\n` +
+    `## Pro — bailleur\n- Nom : ${pro.nom}\n- Email : ${pro.email}\n- Mot de passe : ${pro.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- À montrer : tableau de bord, les deux logements (un loué et une annonce Find), l'unique bail, paiements et documents.\n\n` +
+    `## Me — locataire invité\n- Nom : ${me.nom}\n- Email : ${me.email}\n- Mot de passe : ${me.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- Relation : bail actif de démonstration à Cotonou, rattaché par la RPC d’acceptation d’invitation.\n\n` +
+    `## Find — candidat\n- Nom : ${find.nom}\n- Email : ${find.email}\n- Mot de passe : ${find.motDePasse}\n- Connexion : http://localhost:3000/connexion\n- Annonce conseillée : Studio à Zogbadjè, Abomey-Calavi (référence ${reference}).\n- Aucune candidature n’est précréée : utilisez le parcours réel pour la déposer.\n\n` +
+    `Téléphone des profils : valeur fictive non joignable. Les emails/SMS, paiements réels et notifications externes sont désactivés.\n`
+}
+
+async function main(): Promise<void> {
+  const coffre = await lireCoffre()
+  if (MODE === 'rebuild') {
+    const comptesRestants = await tousLesUtilisateurs()
+    if (comptesRestants.length !== 0) {
+      refuser('la transaction de nettoyage Demo doit se terminer avant le peuplement; aucun compte Auth ne sera supprimé par le seed')
+    }
+    coffre.comptes = {}
+    await ecrirePrive(FICHIER_PRIVE!, `${JSON.stringify(coffre, null, 2)}\n`)
+  }
+  const comptes = await preparerCoherenceAuth(coffre)
+  const { debutBail, referenceAnnonce } = await creerDossierMetier(comptes)
+  await verifierVolumes(comptes)
+
+  await ecrirePrive(FICHIER_PRIVE!, `${JSON.stringify(coffre, null, 2)}\n`)
+  await ecrirePrive(FICHIER_ACCES!, construireFicheAcces(comptes, referenceAnnonce))
+  console.log('Jeu Sikaloc Demo prêt : 3 comptes Auth (Pro, Me et candidat Find).')
+  console.log('Pro : 2 logements (1 loué et 1 annoncé), 1 locataire, 1 bail actif, 3 paiements et 3 PDF générés par le parcours documentaire réel.')
+  console.log(`Me : compte lié au bail par l’invitation et la RPC accepter_invitation; bail depuis ${debutBail}.`)
+  console.log(`Find : 1 annonce fictive publiée avec 1 photographie IA optimisée; aucune candidature préremplie (référence ${referenceAnnonce}).`)
+  console.log(`Identifiants privés : ${FICHIER_ACCES}; coffre local : ${FICHIER_PRIVE}. Aucun mot de passe n’est affiché.`)
+}
+
+main().catch((cause) => {
+  const message = cause instanceof Error ? cause.message : 'opération de démonstration interrompue'
+  console.error(`Seed local Sikaloc Demo : ${message}`)
+  process.exitCode = 1
 })
-await insererLignesAbsentes('candidatures', candidatures)
-
-console.log(
-  `Jeu local prêt : ${profilsPro.length} bailleurs, ${lignesLocataires.length} fiches locataires, ` +
-  `${jeu.logements.length} logements, ${jeu.baux.length} baux, ${jeu.periodes.length} périodes, ` +
-  `${lignesPaiements.length} versements, ${imagesAnnonce} illustrations d’annonces, ${candidatures.length} candidatures.`,
-)
-console.log(`Comptes Auth bailleurs/candidats : ${definitionsComptes.length}. Accès privés : ${FICHIER_PRIVE}`)
-console.log('Les locataires ne sont pas liés directement : leurs comptes Me se créent via les invitations réelles de Sikaloc.')
-console.log('Aucun PDF de quittance ou de reçu n’est fabriqué; ils se génèrent depuis les parcours Pro réels.')

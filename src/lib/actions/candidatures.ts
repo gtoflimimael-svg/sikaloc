@@ -34,7 +34,7 @@ import { poserTemoinVerification } from '@/lib/verification/temoin'
  * ─── Pourquoi une inscription à part ───────────────────────────────────────
  *
  * `/inscription` fabrique un bailleur : parrainage, nombre de logements,
- * avatar, et un profil créé par le déclencheur. Y greffer un choix de rôle,
+ * et un profil créé par le déclencheur. Y greffer un choix de rôle,
  * c'est toucher au chemin par lequel passent toutes les créations de compte.
  *
  * Le projet a déjà tranché autrement pour les locataires : leur inscription
@@ -69,7 +69,6 @@ export async function inscrireCandidat(
     telephone: donnees.get('telephone'),
     motDePasse: donnees.get('motDePasse'),
     codeParrain: '',
-    avatar: '',
   })
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 

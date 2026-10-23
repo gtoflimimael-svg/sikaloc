@@ -44,15 +44,13 @@ export async function inscrire(
     motDePasse: donnees.get('motDePasse'),
     codeParrain: donnees.get('codeParrain') ?? '',
     nbLogements: donnees.get('nbLogements') || undefined,
-    avatar: donnees.get('avatar') ?? '',
   })
 
   if (!analyse.success) {
     return { erreursChamps: erreursChamps(analyse.error) }
   }
 
-  const { nom, email, telephone, motDePasse, codeParrain, nbLogements, avatar } =
-    analyse.data
+  const { nom, email, telephone, motDePasse, codeParrain, nbLogements } = analyse.data
   const supabase = await creerClientServeur()
 
   const { data, error } = await supabase.auth.signUp({
@@ -72,8 +70,6 @@ export async function inscrire(
         telephone,
         code_parrain: codeParrain ? codeParrain.toUpperCase() : null,
         nb_logements: nbLogements ?? null,
-        // Recopié dans public.bailleurs par `prive.gerer_nouvel_utilisateur`.
-        avatar: avatar || null,
       },
     },
   })

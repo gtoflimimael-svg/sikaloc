@@ -4,7 +4,6 @@ import { ESPACE_PRO } from '@/lib/roles'
 import Link from 'next/link'
 
 import { IllustrationMarque } from '@/components/ui/illustration-marque'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { CarteMetrique } from '@/components/app/carte-metrique'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { TableauListe } from '@/components/ui/listes'
@@ -224,9 +223,7 @@ export default async function PageTableauDeBord({
                 key={`${impaye.bail_id}-${impaye.periode_debut}`}
                 className="flex flex-wrap items-center justify-between gap-md rounded-lg border border-hairline border-l-4 border-l-negative bg-surface-card p-lg"
               >
-                <div className="flex min-w-0 items-center gap-md">
-                  <AvatarPeep id={impaye.locataire_id} nom={impaye.locataire_nom} />
-                  <div className="min-w-0">
+                <div className="min-w-0">
                     <p className="truncate text-body-md font-semibold text-ink">
                       {impaye.locataire_nom}
                     </p>
@@ -235,7 +232,6 @@ export default async function PageTableauDeBord({
                       {impaye.jours_de_retard > 1 ? 's' : ''} de retard ·{' '}
                       {impaye.logement_adresse}
                     </p>
-                  </div>
                 </div>
 
                 <div className="flex items-center gap-md">

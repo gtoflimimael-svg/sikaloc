@@ -115,19 +115,6 @@ const montant = z.coerce
 
 // ─── Authentification ───────────────────────────────────────────────────────
 
-/**
- * Un avatar est une suite d'index « tenue-coiffure-visage-pilosite-accessoire ».
- * Cette valeur finit dans un segment d'URL : le motif est donc strict, et
- * n'accepte que des chiffres et des tirets. Il double la contrainte CHECK posée
- * en base — la validation la plus proche de la donnée reste celle de Postgres.
- */
-export const avatarOptionnel = z
-  .string()
-  .trim()
-  .regex(/^\d{1,3}(-\d{1,3}){4}$/, 'Avatar invalide.')
-  .optional()
-  .or(z.literal(''))
-
 export const schemaInscription = z
   .object({
     nom: texteObligatoire('Le nom', 2, 120),
@@ -136,7 +123,6 @@ export const schemaInscription = z
     motDePasse,
     codeParrain: z.string().trim().max(20).optional().or(z.literal('')),
     nbLogements: z.coerce.number().int().min(0).max(1000).optional(),
-    avatar: avatarOptionnel,
   })
   .superRefine((valeurs, contexte) =>
     refuserMotDePasseContextuel(valeurs, contexte, [
@@ -198,7 +184,6 @@ export const schemaLocataire = z.object({
     message:
       'Vous devez attester avoir informé le locataire de la collecte de ses données.',
   }),
-  avatar: avatarOptionnel,
 })
 
 export const schemaLogement = z.object({

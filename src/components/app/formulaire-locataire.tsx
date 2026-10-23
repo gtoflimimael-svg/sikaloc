@@ -1,8 +1,7 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState } from 'react'
 
-import { SelecteurAvatar } from '@/components/ui/selecteur-avatar'
 import { ActionsFormulaire, FormulaireMetier, SectionFormulaire } from '@/components/ui/formulaire-metier'
 import { ChampTelephone } from '@/components/ui/champ-telephone'
 import { ChampCase, ChampTexte } from '@/components/ui/champs'
@@ -20,20 +19,6 @@ export function FormulaireLocataire({
 }) {
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
   const modification = Boolean(locataire)
-  // Amorce figée : un locataire pas encore créé n'a pas d'identifiant. Fixe le
-  // temps de l'hydratation (`Math.random()` y donnerait une valeur différente
-  // au rendu serveur et au premier rendu client — mésappariement d'hydratation,
-  // voir le même correctif dans `formulaires.tsx`), puis remplacée par un vrai
-  // hasard une fois montée ; la `key` sur <SelecteurAvatar> le fait recalculer
-  // l'avatar à partir de cette nouvelle graine.
-  const [grainePremierAvatar, setGrainePremierAvatar] = useState('sikaloc')
-
-  // `Math.random()` au rendu donnerait deux valeurs différentes côté serveur
-  // et côté client : c'est la correction de la divergence d'hydratation nº 418.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!locataire) setGrainePremierAvatar(Math.random().toString(36).slice(2))
-  }, [locataire])
 
   return (
     <FormulaireMetier action={envoyer} etat={etat} titre="Informations du locataire">
@@ -86,18 +71,6 @@ export function FormulaireLocataire({
         />
       )}
 
-      <details className="rounded-lg border border-hairline p-md">
-        <summary className="cursor-pointer text-body-sm font-semibold text-ink">Personnaliser l’avatar (facultatif)</summary>
-        <div className="mt-lg">
-          <SelecteurAvatar
-            key={locataire?.id ?? grainePremierAvatar}
-            nom="avatar"
-            identifiant={locataire?.id ?? grainePremierAvatar}
-            valeurInitiale={locataire?.avatar}
-            taille={88}
-          />
-        </div>
-      </details>
       <ActionsFormulaire annulerVers="/pro/locataires">
         {modification ? 'Enregistrer les modifications' : 'Créer le locataire'}
       </ActionsFormulaire>

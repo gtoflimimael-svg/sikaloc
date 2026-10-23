@@ -32,7 +32,7 @@ export const SECTIONS_PARAMETRES: SectionParametre[] = [
     cle: 'profil',
     titre: 'Profil',
     details:
-      'Votre avatar, votre nom, votre téléphone et votre mot de passe. Ces informations figurent sur vos quittances.',
+      'Votre nom, votre téléphone et votre mot de passe. Ces informations figurent sur vos quittances.',
     description: 'Votre identité de bailleur et vos identifiants de connexion.',
   },
   {
