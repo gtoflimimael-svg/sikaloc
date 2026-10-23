@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { House } from 'lucide-react'
 
 import { ResumeListe } from '@/components/ui/listes'
 import { IllustrationMarque } from '@/components/ui/illustration-marque'
@@ -96,14 +97,20 @@ export default async function PageLogements() {
             return (
               <li key={logement.id} className="card list-card property-list-card flex flex-col" aria-labelledby={`logement-${logement.id}`}>
                 <div className="property-list-heading flex items-start justify-between gap-md">
-                  <span className="property-list-mark" aria-hidden="true">{String(logement.type).slice(0, 1).toUpperCase()}</span>
+                  <span className="property-list-mark" aria-hidden="true">
+                    <House size={22} strokeWidth={1.8} />
+                  </span>
                   <div className="min-w-0">
                     <h2 id={`logement-${logement.id}`} className="list-title">{logement.adresse}</h2>
                     <p className="mt-xxs text-body-sm text-mute">
-                      {logement.ville}, {logement.pays}
+                      {logement.type} · {logement.ville}, {logement.pays}
                     </p>
                   </div>
-                  <Badge ton="neutral">{logement.type}</Badge>
+                  <div className="property-list-badges">
+                    <Badge ton={bailActif ? 'positive' : 'neutral'}>
+                      {bailActif ? 'Loué' : 'Sans bail actif'}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="property-list-tenancy mt-md flex flex-wrap items-start justify-between gap-xs border-t border-hairline-soft pt-md">

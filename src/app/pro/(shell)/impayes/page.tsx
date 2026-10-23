@@ -61,10 +61,10 @@ export default async function PageImpayes() {
       ) : (
         <>
           <ResumeListe>
-            <span className="text-mute">
+            <span className="arrears-summary-count text-mute">
               {impayes.length} loyer{impayes.length > 1 ? 's' : ''} en retard
             </span>
-            <strong className="money text-body-lg font-semibold text-negative-darkest">
+            <strong className="arrears-summary-total money text-body-lg font-semibold text-negative-darkest">
               {formaterFCFA(total)}<span className="ml-xs text-body-sm font-normal text-mute">à recouvrer</span>
             </strong>
           </ResumeListe>
@@ -123,7 +123,7 @@ export default async function PageImpayes() {
                         ) : null}
                     </div>
 
-                    <div className="list-aside">
+                    <div className="list-aside arrears-card-aside">
                       <Badge ton="negative">Impayé</Badge>
                       <p className="money text-body-lg font-semibold text-ink">
                         {formaterFCFA(impaye.montant_du)}

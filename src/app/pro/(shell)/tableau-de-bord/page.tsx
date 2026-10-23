@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { Banknote, CircleDollarSign, House, TriangleAlert } from 'lucide-react'
 
 import { ESPACE_PRO } from '@/lib/roles'
-import Link from 'next/link'
-
 import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { CarteMetrique } from '@/components/app/carte-metrique'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
@@ -149,6 +149,7 @@ export default async function PageTableauDeBord({
           label="Taux d'occupation"
           valeur={`${Number(metriques?.taux_occupation ?? 0).toLocaleString('fr-FR')} %`}
           detail={`${metriques?.nb_baux_actifs ?? 0} bail(s) actif(s) · ${metriques?.nb_logements ?? 0} logement(s)`}
+          icone={<House size={19} strokeWidth={1.8} />}
         />
         <CarteMetrique
           label="Taux de recouvrement"
@@ -158,6 +159,7 @@ export default async function PageTableauDeBord({
               ? `${formaterFCFA(metriques.loyers_percus_mois)} sur ${formaterFCFA(metriques.loyers_attendus_mois)} attendus`
               : 'Aucun loyer exigible ce mois-ci'
           }
+          icone={<CircleDollarSign size={19} strokeWidth={1.8} />}
         />
         <CarteMetrique
           label="Impayés"
@@ -168,12 +170,14 @@ export default async function PageTableauDeBord({
               ? `${formaterFCFA(metriques?.montant_impaye_total ?? 0)} à recouvrer`
               : 'Aucun loyer en retard'
           }
+          icone={<TriangleAlert size={19} strokeWidth={1.8} />}
         />
         <CarteMetrique
           label="CA du mois"
           valeur={formaterFCFA(metriques?.ca_du_mois ?? 0)}
           ton="primary"
           detail="Paiements encaissés ce mois-ci"
+          icone={<Banknote size={19} strokeWidth={1.8} />}
         />
       </section>}
 
@@ -191,39 +195,38 @@ export default async function PageTableauDeBord({
         </div>
       </section>
 
-      {/* ── Impayés ────────────────────────────────────────────────────── */}
-      <section>
-        <div className="mb-md flex flex-wrap items-center justify-between gap-sm">
-          <h2 className="section-title">
-            Loyers en retard
-          </h2>
-          {impayes.length > 0 ? (
-            <Link href="/pro/impayes" className="text-body-sm font-semibold text-ink underline">
-              Tout voir
-            </Link>
-          ) : null}
-        </div>
-
-        {impayesReponse.error ? (
-          <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
-        ) : impayes.length === 0 ? (
-          <div className="rounded-lg bg-positive-pale p-xl">
-            <p className="text-body-md font-semibold text-positive-deep">
-              Aucun loyer en retard.
-            </p>
-            <p className="mt-xs text-body-sm text-body">
-              Aucun retard confirmé n&apos;apparaît, tolérance comprise. Les périodes
-              historiques indéterminées ne sont pas comptées comme impayées.
-            </p>
+      <div className="dashboard-detail-grid">
+        {/* ── Impayés ──────────────────────────────────────────────────── */}
+        <section>
+          <div className="dashboard-section-heading">
+            <h2 className="section-title">Loyers en retard</h2>
+            {impayes.length > 0 ? (
+              <Link href="/pro/impayes" className="text-body-sm font-semibold text-ink underline">
+                Tout voir
+              </Link>
+            ) : null}
           </div>
-        ) : (
-          <div className="space-y-md">
-            {impayes.map((impaye) => (
-              <div
-                key={`${impaye.bail_id}-${impaye.periode_debut}`}
-                className="flex flex-wrap items-center justify-between gap-md rounded-lg border border-hairline border-l-4 border-l-negative bg-surface-card p-lg"
-              >
-                <div className="min-w-0">
+
+          {impayesReponse.error ? (
+            <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+          ) : impayes.length === 0 ? (
+            <div className="dashboard-no-arrears">
+              <p className="text-body-md font-semibold text-positive-deep">
+                Aucun loyer en retard.
+              </p>
+              <p className="mt-xs text-body-sm text-body">
+                Aucun retard confirmé n&apos;apparaît, tolérance comprise. Les périodes
+                historiques indéterminées ne sont pas comptées comme impayées.
+              </p>
+            </div>
+          ) : (
+            <div className="dashboard-arrears-list">
+              {impayes.map((impaye) => (
+                <div
+                  key={`${impaye.bail_id}-${impaye.periode_debut}`}
+                  className="dashboard-arrears-item"
+                >
+                  <div className="min-w-0">
                     <p className="truncate text-body-md font-semibold text-ink">
                       {impaye.locataire_nom}
                     </p>
@@ -232,95 +235,94 @@ export default async function PageTableauDeBord({
                       {impaye.jours_de_retard > 1 ? 's' : ''} de retard ·{' '}
                       {impaye.logement_adresse}
                     </p>
+                  </div>
+
+                  <div className="dashboard-arrears-aside">
+                    <span className="text-body-md font-semibold tabular text-ink">
+                      {formaterFCFA(impaye.montant_du)}
+                    </span>
+                    <Badge ton="negative">Impayé</Badge>
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </section>
 
-                <div className="flex items-center gap-md">
-                  <span className="text-body-md font-semibold tabular text-ink">
-                    {formaterFCFA(impaye.montant_du)}
-                  </span>
-                  <Badge ton="negative">Impayé</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ── Derniers paiements ─────────────────────────────────────────── */}
-      <section>
-        <div className="mb-md flex flex-wrap items-center justify-between gap-sm">
-          <h2 className="section-title">
-            Derniers paiements
-          </h2>
-          {paiements.length > 0 ? (
-            <Link
-              href="/pro/paiements"
-              className="text-body-sm font-semibold text-ink underline"
-            >
-              Historique complet
-            </Link>
-          ) : null}
-        </div>
-
-        {paiementsReponse.error ? (
-          <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
-        ) : paiements.length === 0 ? (
-          <EtatVide
-            icone={<IllustrationMarque variante="ecosysteme" />}
-            titre="Aucun paiement enregistré"
-            description="Après validation d’un paiement, Sikaloc produit le reçu ou la quittance correspondant à sa nature et au solde de la période."
-            action={
-              <Link href="/pro/paiements/nouveau" className="btn btn-primary">
-                Enregistrer un paiement
+        {/* ── Derniers paiements ─────────────────────────────────────── */}
+        <section>
+          <div className="dashboard-section-heading">
+            <h2 className="section-title">Derniers paiements</h2>
+            {paiements.length > 0 ? (
+              <Link
+                href="/pro/paiements"
+                className="text-body-sm font-semibold text-ink underline"
+              >
+                Historique complet
               </Link>
-            }
-          />
-        ) : (
-          <TableauListe id="derniers-paiements" libelle="Derniers paiements">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th scope="col">Locataire</th>
-                  <th scope="col">Période</th>
-                  <th scope="col" className="hidden sm:table-cell">
-                    Date
-                  </th>
-                  <th scope="col" className="hidden md:table-cell">
-                    Mode
-                  </th>
-                  <th scope="col" className="text-right">
-                    Montant
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paiements.map((paiement) => {
-                  const bail = paiement.bail as unknown as
-                    | { locataire?: { nom?: string } | { nom?: string }[] }
-                    | null
-                  const locataire = Array.isArray(bail?.locataire)
-                    ? bail?.locataire[0]
-                    : bail?.locataire
+            ) : null}
+          </div>
 
-                  return (
-                    <tr key={paiement.id}>
-                      <td className="font-semibold">{locataire?.nom ?? '—'}</td>
-                      <td>{formaterPeriode(paiement.periode_debut)}</td>
-                      <td className="hidden sm:table-cell">
-                        {formaterDateCourte(paiement.date_paiement)}
-                      </td>
-                      <td className="hidden md:table-cell">{paiement.mode_paiement}</td>
-                      <td className="text-right font-semibold tabular">
-                        {formaterFCFA(paiement.montant)}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </TableauListe>
-        )}
-      </section>
+          {paiementsReponse.error ? (
+            <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+          ) : paiements.length === 0 ? (
+            <EtatVide
+              icone={<IllustrationMarque variante="ecosysteme" />}
+              titre="Aucun paiement enregistré"
+              description="Après validation d’un paiement, Sikaloc produit le reçu ou la quittance correspondant à sa nature et au solde de la période."
+              action={
+                <Link href="/pro/paiements/nouveau" className="btn btn-primary">
+                  Enregistrer un paiement
+                </Link>
+              }
+            />
+          ) : (
+            <TableauListe id="derniers-paiements" libelle="Derniers paiements">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Locataire</th>
+                    <th scope="col">Période</th>
+                    <th scope="col" className="hidden sm:table-cell">
+                      Date
+                    </th>
+                    <th scope="col" className="hidden md:table-cell">
+                      Mode
+                    </th>
+                    <th scope="col" className="text-right">
+                      Montant
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paiements.map((paiement) => {
+                    const bail = paiement.bail as unknown as
+                      | { locataire?: { nom?: string } | { nom?: string }[] }
+                      | null
+                    const locataire = Array.isArray(bail?.locataire)
+                      ? bail?.locataire[0]
+                      : bail?.locataire
+
+                    return (
+                      <tr key={paiement.id}>
+                        <td className="font-semibold">{locataire?.nom ?? '—'}</td>
+                        <td>{formaterPeriode(paiement.periode_debut)}</td>
+                        <td className="hidden sm:table-cell">
+                          {formaterDateCourte(paiement.date_paiement)}
+                        </td>
+                        <td className="hidden md:table-cell">{paiement.mode_paiement}</td>
+                        <td className="text-right font-semibold tabular">
+                          {formaterFCFA(paiement.montant)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </TableauListe>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

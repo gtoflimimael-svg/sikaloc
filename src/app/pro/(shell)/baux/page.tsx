@@ -105,7 +105,7 @@ export default async function PageBaux({
                         {logement?.adresse ?? '—'}
                         {logement?.ville ? `, ${logement.ville}` : ''}
                       </p>
-                      <p className="mt-sm text-body-sm text-body">
+                      <p className="lease-list-dates mt-sm text-body-sm text-body">
                         Depuis le {formaterDate(bail.date_debut)} · échéance le{' '}
                         {bail.jour_echeance} du mois · tolérance {bail.tolerance_jours} j
                       </p>

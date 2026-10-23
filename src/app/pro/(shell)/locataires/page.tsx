@@ -71,6 +71,11 @@ export default async function PageLocataires() {
           {liste.map((locataire) => {
             const baux = (locataire.baux ?? []) as unknown as { id: string; statut: string }[]
             const actifs = baux.filter((b) => b.statut === 'Actif').length
+            const accesMe = locataire.compte_id
+              ? { libelle: 'Espace Me activé', ton: 'positive' as const }
+              : enAttente.has(locataire.id)
+                ? { libelle: 'Invitation en attente', ton: 'warning' as const }
+                : { libelle: 'Sans accès Me', ton: 'neutral' as const }
 
             return (
               <li key={locataire.id} className="card list-card tenant-list-card" aria-labelledby={`locataire-${locataire.id}`}>
@@ -83,7 +88,8 @@ export default async function PageLocataires() {
                         {formaterTelephone(locataire.telephone)}
                         {locataire.email ? <span className="block">{locataire.email}</span> : null}
                       </p>
-                      <div className="mt-sm">
+                      <div className="tenant-list-meta mt-sm">
+                        <Badge ton={accesMe.ton}>{accesMe.libelle}</Badge>
                         {actifs > 0 ? (
                           <Badge ton="neutral">
                             {actifs} {actifs > 1 ? 'baux' : 'bail'} actif{actifs > 1 ? 's' : ''}

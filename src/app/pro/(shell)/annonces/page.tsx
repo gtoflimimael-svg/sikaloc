@@ -92,7 +92,7 @@ export default async function PageAnnonces() {
           }
         />
       ) : (
-        <div className="listing-management-grid grid gap-md md:grid-cols-2">
+        <div className="listing-management-grid">
           {annonces.map((annonce) => {
             const principale = annonce.annonce_photos.find((p) => p.position === 0)
             const nbPhotos = annonce.annonce_photos.length
@@ -102,26 +102,26 @@ export default async function PageAnnonces() {
               <Link
                 key={annonce.id}
                 href={`/pro/annonces/${annonce.id}`}
-                className="card listing-management-card flex gap-lg transition-colors hover:border-hairline-strong"
+                className="card listing-management-card"
               >
-                <div className="listing-management-photo size-24 shrink-0 overflow-hidden rounded-md border border-hairline bg-canvas-soft">
+                <div className="listing-management-photo">
                   {principale ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={`/api/annonces/photos/${principale.id}`}
                       alt=""
                       loading="lazy"
-                      className="size-full object-cover"
+                      className="listing-management-image"
                     />
                   ) : (
-                    <span className="flex size-full items-center justify-center text-caption text-mute">
+                    <span className="listing-management-no-photo text-caption text-mute">
                       Sans photo
                     </span>
                   )}
                 </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-sm">
+                <div className="listing-management-content">
+                  <div className="listing-management-meta">
                     <Badge ton={TON_STATUT[annonce.statut]}>
                       {annonce.statut === 'cloturee' && annonce.motif_cloture
                         ? `${LIBELLES_STATUT.cloturee} · ${LIBELLES_MOTIF[annonce.motif_cloture]}`
@@ -130,39 +130,50 @@ export default async function PageAnnonces() {
                     <span className="text-caption text-mute">Réf. {annonce.reference}</span>
                   </div>
 
-                  <p className="mt-sm text-body-md font-semibold text-ink">
+                  <h2 className="listing-management-title">
                     {libelleChambres(annonce.chambres) ?? annonce.type}
                     <span className="font-normal text-mute"> · {annonce.type}</span>
-                  </p>
-                  <p className="text-body-sm text-mute">
+                  </h2>
+                  <p className="listing-management-location text-body-sm text-mute">
                     {annonce.quartier ? `${annonce.quartier}, ` : ''}
                     {annonce.ville}
                   </p>
 
-                  <p className="mt-sm text-body-sm text-body">
-                    {annonce.loyer !== null ? `${formaterFCFA(annonce.loyer)}/mois` : 'Loyer à renseigner'}
-                    {' · '}
-                    {nbPhotos} photo{nbPhotos > 1 ? 's' : ''}
-                  </p>
-                  <p className="text-caption text-mute">
-                    {annonce.statut === 'cloturee'
-                      ? `Clôturée le ${formaterDate(annonce.cloturee_le)}`
-                      : annonce.disponible_le
-                        ? `Disponible le ${formaterDate(annonce.disponible_le)}`
-                        : 'Disponible dès maintenant'}
-                  </p>
+                  <dl className="listing-management-facts">
+                    <div>
+                      <dt>Loyer mensuel</dt>
+                      <dd className="money">
+                        {annonce.loyer !== null ? formaterFCFA(annonce.loyer) : 'À renseigner'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Disponibilité</dt>
+                      <dd>
+                        {annonce.statut === 'cloturee'
+                          ? `Clôturée le ${formaterDate(annonce.cloturee_le)}`
+                          : annonce.disponible_le
+                            ? formaterDate(annonce.disponible_le)
+                            : 'Dès maintenant'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Photos</dt>
+                      <dd>{nbPhotos}</dd>
+                    </div>
+                    {candidatures ? (
+                      <div>
+                        <dt>Candidatures</dt>
+                        <dd>
+                          {candidatures.total}
+                          {candidatures.nouvelles > 0 ? ` · ${candidatures.nouvelles} sans réponse` : ''}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
 
-                  {candidatures ? (
-                    <p className="mt-sm text-body-sm font-semibold text-ink">
-                      {candidatures.total} candidature{candidatures.total > 1 ? 's' : ''}
-                      {candidatures.nouvelles > 0 ? (
-                        <span className="font-normal text-mute">
-                          {' · '}
-                          {candidatures.nouvelles} sans réponse
-                        </span>
-                      ) : null}
-                    </p>
-                  ) : null}
+                  <span className="listing-management-open">
+                    Gérer l’annonce <span aria-hidden="true">↗</span>
+                  </span>
                 </div>
               </Link>
             )

@@ -88,10 +88,10 @@ function LiensNavigation({
   onNavigation?: () => void
 }) {
   return (
-    <nav aria-label="Navigation Sikaloc Pro" className="space-y-md">
+    <nav aria-label="Navigation Sikaloc Pro" className="pro-nav space-y-lg">
       {GROUPES_NAV.map((groupe) => (
-        <section key={groupe.id} aria-labelledby={`nav-pro-${groupe.id}`}>
-          <h2 id={`nav-pro-${groupe.id}`} className="px-md pb-xs text-caption font-semibold uppercase tracking-wide text-mute-soft">
+        <section key={groupe.id} aria-labelledby={`nav-pro-${groupe.id}`} className="pro-nav-group">
+          <h2 id={`nav-pro-${groupe.id}`} className="pro-nav-group-title px-md pb-xs text-caption font-semibold text-mute-soft">
             {groupe.titre}
           </h2>
           <ul className="space-y-xxs">
@@ -273,7 +273,7 @@ export function EnTeteMobile({
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-xs border-b border-hairline bg-canvas/95 px-md backdrop-blur lg:hidden">
+      <header className="pro-mobile-topbar sticky top-0 z-40 flex h-16 items-center justify-between gap-xs border-b border-hairline bg-canvas/95 px-md backdrop-blur lg:hidden">
         <button
           type="button"
           onClick={() => setOuvert(true)}

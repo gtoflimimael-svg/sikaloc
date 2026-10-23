@@ -66,7 +66,7 @@ export default async function LayoutApplication({
   const plan = abonnementActif(bailleur) ? 'Standard' : 'Gratuit'
 
   return (
-    <div className="flex min-h-screen bg-canvas-soft">
+    <div className="pro-shell flex min-h-screen">
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <BarreLaterale impayes={impayes} />
 
@@ -80,7 +80,7 @@ export default async function LayoutApplication({
 
         <BandeauAbonnement bailleur={bailleur} />
 
-        <header className="hidden h-16 shrink-0 items-center justify-between gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
+        <header className="pro-topbar hidden h-16 shrink-0 items-center justify-between gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
           <ContextePro />
           <Link
             href="/pro/paiements/nouveau"
@@ -99,7 +99,7 @@ export default async function LayoutApplication({
           />
         </header>
 
-        <main id="contenu-principal" tabIndex={-1} className="app-main flex-1">
+        <main id="contenu-principal" tabIndex={-1} className="app-main pro-main flex-1">
           <div className="mx-auto max-w-[1100px]">
             <TransitionPage>{children}</TransitionPage>
           </div>
