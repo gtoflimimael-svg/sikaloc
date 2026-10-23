@@ -64,14 +64,15 @@ export default function PageRejoindre() {
           <div className="me-join-hero-copy">
             <p className="me-join-eyebrow">Sikaloc Me · Espace locataire</p>
             <h1 id="me-join-title" className="me-join-title">
-              Votre location, à portée de main.
+              <span className="me-join-title-line">Votre location,</span>{' '}
+              <span className="me-join-title-line">à portée de main.</span>
             </h1>
             <p className="me-join-lead">
               Retrouvez votre bail, vos paiements et vos quittances dans un espace
               personnel accessible sur invitation de votre bailleur.
             </p>
             <div className="me-join-hero-actions">
-              <Link href="/connexion" className="me-join-button me-join-button-primary">
+              <Link href="/connexion?suite=%2Fme" className="me-join-button me-join-button-primary">
                 Se connecter <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <a href="#fonctionnement" className="me-join-button me-join-button-secondary">
@@ -82,11 +83,11 @@ export default function PageRejoindre() {
 
           <figure className="me-join-photo">
             <Image
-              src="/images/home/sikaloc-me-editorial.webp"
-              alt="Scène illustrative : une locataire consulte sereinement son téléphone dans son logement lumineux."
-              width={1536}
-              height={1024}
-              sizes="(max-width: 900px) 100vw, (max-width: 1200px) 52vw, 620px"
+              src="/images/me/sikaloc-me-rejoindre-editorial.webp"
+              alt="Photographie illustrative d’un jeune homme ouest-africain consultant son téléphone dans un salon lumineux."
+              width={1440}
+              height={960}
+              sizes="(max-width: 900px) 100vw, (max-width: 1200px) 48vw, 600px"
               priority
             />
           </figure>
@@ -133,7 +134,7 @@ export default function PageRejoindre() {
           <div className="me-join-next-grid">
             <div className="me-join-next-item">
               <p>Vous avez déjà activé votre accès ?</p>
-              <Link href="/connexion">
+              <Link href="/connexion?suite=%2Fme">
                 Se connecter <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
