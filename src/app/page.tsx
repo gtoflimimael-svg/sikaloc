@@ -152,10 +152,10 @@ export default async function PageAccueil() {
 
               <figure className="home-hero-art">
                 <Image
-                  src="/illustrations/home-01-sculpture.png"
-                  alt="Sculpture architecturale de trois maisons en marbre crème et vert, reliées par des passerelles courbes"
-                  width={1536}
-                  height={1024}
+                  src="/illustrations/home-01-villas.webp"
+                  alt="Cinq villas contemporaines indépendantes, aux façades claires et aux accents verts, alignées côte à côte"
+                  width={1774}
+                  height={887}
                   priority
                   sizes="(max-width: 639px) 100vw, (max-width: 1199px) 94vw, 1100px"
                   className="home-hero-image"
