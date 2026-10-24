@@ -4,6 +4,11 @@
  */
 export type EtatDashboardPro = 'demarrage' | 'intermediaire' | 'operationnel'
 export type ActionPrincipaleDemarrage = 'logement' | 'find' | 'bail'
+export type ActionContextuelleDashboard =
+  | 'enregistrer-paiement'
+  | 'creer-bail'
+  | 'preparer-annonce'
+  | 'aucune'
 
 export function determinerEtatDashboardPro(
   nbLogements: number,
@@ -49,4 +54,30 @@ export function peutCreerBail({
   nbLocataires: number
 }): boolean {
   return nbLogementsLibres > 0 && nbLocataires > 0
+}
+
+/**
+ * Propose une seule prochaine action à partir de situations déjà établies.
+ * Les retards et brouillons sont traités dans la file « À surveiller » ; cette
+ * fonction ne transforme jamais un manque de recouvrement en impayé.
+ */
+export function determinerActionContextuelleDashboard({
+  nbBauxActifs,
+  nbLogementsLibres,
+  nbLocataires,
+  loyerAttendu,
+  loyerPercu,
+  logementLibreSansAnnonce,
+}: {
+  nbBauxActifs: number
+  nbLogementsLibres: number
+  nbLocataires: number
+  loyerAttendu: number
+  loyerPercu: number
+  logementLibreSansAnnonce: boolean
+}): ActionContextuelleDashboard {
+  if (nbBauxActifs > 0 && loyerAttendu > loyerPercu) return 'enregistrer-paiement'
+  if (peutCreerBail({ nbLogementsLibres, nbLocataires })) return 'creer-bail'
+  if (nbLogementsLibres > 0 && logementLibreSansAnnonce) return 'preparer-annonce'
+  return 'aucune'
 }

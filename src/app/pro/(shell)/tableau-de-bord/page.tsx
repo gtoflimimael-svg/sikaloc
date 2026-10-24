@@ -1,17 +1,17 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Banknote, Check, CircleDollarSign, House, ReceiptText, TriangleAlert } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, Banknote, Check, House, ReceiptText, TriangleAlert } from 'lucide-react'
 
 import { ReprendreVisite } from '@/components/app/reprendre-visite'
 import { CarteMetrique } from '@/components/app/carte-metrique'
-import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
+import { Alerte, EnTetePage } from '@/components/ui/retours'
 import { TableauListe } from '@/components/ui/listes'
 import { bailleurOnboarde } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
-import type { Impaye, MetriquesDashboard, StatutAnnonce } from '@/lib/types/database'
-import { compterEtapesConfigurees, determinerActionPrincipaleDemarrage, determinerEtatDashboardPro, peutCreerBail } from '@/lib/dashboard/etat'
+import type { Echeance, Impaye, MetriquesDashboard, StatutAnnonce } from '@/lib/types/database'
+import { compterEtapesConfigurees, determinerActionContextuelleDashboard, determinerActionPrincipaleDemarrage, determinerEtatDashboardPro, peutCreerBail } from '@/lib/dashboard/etat'
 import { formaterDateCourte, formaterFCFA, formaterPeriode } from '@/lib/format'
 
 export const metadata: Metadata = { title: { absolute: 'Tableau de bord · Sikaloc Pro' } }
@@ -28,12 +28,30 @@ type LogementDashboard = {
 type PaiementDashboard = {
   id: string
   montant: number
-  date_paiement: string
+  date_paiement: string | null
   periode_debut: string
   statut: string
   mode_paiement: string
   bail: { locataire?: { nom?: string } | { nom?: string }[] } | null
 }
+
+type PaiementBrouillonDashboard = {
+  id: string
+  montant: number
+  periode_debut: string
+  type_paiement: string
+  bail: { locataire?: { nom?: string } | { nom?: string }[] } | null
+}
+
+type EcheanceDashboard = Pick<
+  Echeance,
+  'bail_id' | 'periode_debut' | 'date_echeance' | 'montant_du' | 'locataire_nom' | 'logement_adresse'
+>
+
+type ImpayeDashboard = Pick<
+  Impaye,
+  'bail_id' | 'periode_debut' | 'montant_du' | 'jours_de_retard' | 'locataire_nom' | 'logement_adresse'
+>
 
 function logementOccupe(logement: LogementDashboard) {
   return logement.baux?.some((bail) => bail.statut === 'Actif') ?? false
@@ -41,6 +59,119 @@ function logementOccupe(logement: LogementDashboard) {
 
 function annonceVivante(logement: LogementDashboard) {
   return logement.annonces?.find((annonce) => annonce.statut !== 'cloturee')
+}
+
+function nomLocataire(
+  bail: { locataire?: { nom?: string } | { nom?: string }[] } | null | undefined,
+) {
+  const locataire = Array.isArray(bail?.locataire) ? bail.locataire[0] : bail?.locataire
+  return locataire?.nom ?? 'Locataire'
+}
+
+function MoisCourant() {
+  return new Intl.DateTimeFormat('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Africa/Porto-Novo',
+  }).format(new Date())
+}
+
+function SyntheseRecouvrement({ metriques }: { metriques: MetriquesDashboard }) {
+  const attendu = Number(metriques.loyers_attendus_mois)
+  const percu = Number(metriques.loyers_percus_mois)
+  const taux = attendu > 0 ? Math.round((percu / attendu) * 100) : null
+  const barre = taux === null ? 0 : Math.max(0, Math.min(taux, 100))
+
+  return (
+    <section className="dashboard-collection" aria-labelledby="recouvrement-mois">
+      <div className="dashboard-collection-heading">
+        <div>
+          <p className="dashboard-eyebrow">Recouvrement · {MoisCourant()}</p>
+          <h2 id="recouvrement-mois" className="dashboard-collection-title">
+            {taux === null ? '—' : `${taux} %`}
+          </h2>
+          <p className="dashboard-collection-caption">
+            {attendu > 0 ? 'des loyers attendus sont validés' : 'aucun loyer exigible ce mois-ci'}
+          </p>
+        </div>
+        <div className="dashboard-collection-totals" aria-label="Montants du mois">
+          <div>
+            <span>Validé</span>
+            <strong>{formaterFCFA(percu)}</strong>
+          </div>
+          <div>
+            <span>Attendu</span>
+            <strong>{formaterFCFA(attendu)}</strong>
+          </div>
+        </div>
+      </div>
+      {attendu > 0 ? (
+        <div
+          className="dashboard-collection-progress"
+          role="progressbar"
+          aria-label="Progression du recouvrement mensuel"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={barre}
+          aria-valuetext={`${taux}% validés, ${formaterFCFA(percu)} sur ${formaterFCFA(attendu)}`}
+        >
+          <span style={{ width: `${barre}%` }} />
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function ActionContextuelle({
+  type,
+  nbLogementsLibres,
+  nbLocataires,
+  montantRestant,
+  logementSansAnnonce,
+}: {
+  type: 'enregistrer-paiement' | 'creer-bail' | 'preparer-annonce'
+  nbLogementsLibres: number
+  nbLocataires: number
+  montantRestant: number
+  logementSansAnnonce?: LogementDashboard
+}) {
+  const contenu = {
+    'enregistrer-paiement': {
+      titre: 'Compléter le suivi du mois',
+      description: `${formaterFCFA(montantRestant)} restent à enregistrer sur les loyers attendus.`,
+      href: '/pro/paiements/nouveau',
+      action: 'Enregistrer un paiement',
+    },
+    'creer-bail': {
+      titre: 'Un logement et un locataire sont prêts',
+      description: `${nbLogementsLibres} logement${nbLogementsLibres > 1 ? 's' : ''} libre${nbLogementsLibres > 1 ? 's' : ''} · ${nbLocataires} fiche${nbLocataires > 1 ? 's' : ''} locataire.`,
+      href: '/pro/baux/nouveau',
+      action: 'Créer un bail',
+    },
+    'preparer-annonce': {
+      titre: 'Proposer un logement disponible',
+      description: logementSansAnnonce
+        ? `${logementSansAnnonce.type} · ${logementSansAnnonce.ville}`
+        : 'Préparez une annonce depuis un logement libre.',
+      href: logementSansAnnonce
+        ? `/pro/annonces/nouvelle?logement=${encodeURIComponent(logementSansAnnonce.id)}`
+        : '/pro/annonces',
+      action: 'Préparer une annonce',
+    },
+  }[type]
+
+  return (
+    <section className="dashboard-next-action" aria-labelledby="dashboard-next-action-title">
+      <div>
+        <p className="dashboard-eyebrow">À faire maintenant</p>
+        <h2 id="dashboard-next-action-title">{contenu.titre}</h2>
+        <p>{contenu.description}</p>
+      </div>
+      <Link href={contenu.href} className="btn btn-primary" data-visite={type === 'enregistrer-paiement' ? 'bouton-paiement' : undefined}>
+        {contenu.action} <ArrowRight size={16} aria-hidden="true" />
+      </Link>
+    </section>
+  )
 }
 
 function EnteteDemarrage({
@@ -390,11 +521,11 @@ export default async function PageTableauDeBord({
     )
   }
 
-  const [metriquesReponse, impayesReponse, paiementsReponse] = await Promise.all([
+  const [metriquesReponse, impayesReponse, paiementsReponse, brouillonsReponse, echeancesReponse] = await Promise.all([
     supabase.from('v_metriques_dashboard').select('*').eq('bailleur_id', bailleur.id).maybeSingle(),
     supabase
       .from('v_impayes')
-      .select('*')
+      .select('bail_id, periode_debut, montant_du, jours_de_retard, locataire_nom, logement_adresse', { count: 'exact' })
       .eq('bailleur_id', bailleur.id)
       .order('periode_debut', { ascending: true })
       .limit(4),
@@ -406,31 +537,53 @@ export default async function PageTableauDeBord({
       .order('date_paiement', { ascending: false, nullsFirst: false })
       .order('periode_debut', { ascending: false })
       .limit(5),
+    supabase
+      .from('paiements')
+      .select('id, montant, periode_debut, type_paiement, bail:baux(locataire:locataires(nom))', { count: 'exact' })
+      .eq('bailleur_id', bailleur.id)
+      .eq('statut', 'Brouillon')
+      .order('created_at', { ascending: false })
+      .limit(4),
+    supabase
+      .from('v_echeances')
+      .select('bail_id, periode_debut, date_echeance, montant_du, locataire_nom, logement_adresse, etat')
+      .eq('bailleur_id', bailleur.id)
+      .eq('etat', 'À venir')
+      .order('date_echeance', { ascending: true })
+      .limit(3),
   ])
 
   const metriques = (metriquesReponse.data ?? null) as MetriquesDashboard | null
-  const impayes = (impayesReponse.data ?? []) as Impaye[]
+  const impayes = (impayesReponse.data ?? []) as ImpayeDashboard[]
   const paiements = (paiementsReponse.data ?? []) as unknown as PaiementDashboard[]
+  const brouillons = (brouillonsReponse.data ?? []) as unknown as PaiementBrouillonDashboard[]
+  const echeances = (echeancesReponse.data ?? []) as EcheanceDashboard[]
   const nbBauxActifs = logements.reduce(
     (total, logement) => total + (logement.baux?.filter((bail) => bail.statut === 'Actif').length ?? 0),
     0,
   )
   const nbLogementsLibres = logements.filter((logement) => !logementOccupe(logement)).length
 
-  const tauxRecouvrement =
-    metriques && Number(metriques.loyers_attendus_mois) > 0
-      ? Math.round((Number(metriques.loyers_percus_mois) / Number(metriques.loyers_attendus_mois)) * 100)
-      : null
-
-  const actionSecondaire = nbLogementsLibres > 0 && nbLocataires > 0
-    ? { href: '/pro/baux/nouveau', libelle: 'Créer un bail' }
-    : { href: '/pro/logements', libelle: 'Gérer les logements' }
+  const logementLibreSansAnnonce = logements.find(
+    (logement) => !logementOccupe(logement) && !annonceVivante(logement),
+  )
+  const suiviUrgentConnu = !impayesReponse.error && !brouillonsReponse.error
+  const actionContextuelle = metriques && suiviUrgentConnu && impayes.length === 0 && brouillons.length === 0
+    ? determinerActionContextuelleDashboard({
+        nbBauxActifs,
+        nbLogementsLibres,
+        nbLocataires,
+        loyerAttendu: Number(metriques.loyers_attendus_mois),
+        loyerPercu: Number(metriques.loyers_percus_mois),
+        logementLibreSansAnnonce: Boolean(logementLibreSansAnnonce),
+      })
+    : 'aucune'
 
   return (
     <div className="dashboard-home dashboard-operational">
       <EnTetePage
         titre="Tableau de bord"
-        description="Votre activité locative en temps réel."
+        description="Suivez les loyers attendus, les paiements validés et les opérations à mener."
         action={actionVisite}
       />
 
@@ -439,103 +592,132 @@ export default async function PageTableauDeBord({
       ) : !metriques ? (
         <Alerte ton="attention">Les indicateurs ne sont pas disponibles pour le moment.</Alerte>
       ) : (
-        <section data-visite="metriques" className="grid gap-md sm:grid-cols-2" aria-label="Indicateurs locatifs">
-          <CarteMetrique
-            label="Taux d’occupation"
-            valeur={`${Number(metriques.taux_occupation).toLocaleString('fr-FR')} %`}
-            detail={`${Number(metriques.nb_baux_actifs)} bail${Number(metriques.nb_baux_actifs) === 1 ? '' : 's'} actif${Number(metriques.nb_baux_actifs) === 1 ? '' : 's'} · ${Number(metriques.nb_logements)} logement${Number(metriques.nb_logements) === 1 ? '' : 's'}`}
-            icone={<House size={19} strokeWidth={1.8} />}
-          />
-          <CarteMetrique
-            label="Taux de recouvrement"
-            valeur={tauxRecouvrement === null ? '—' : `${tauxRecouvrement} %`}
-            detail={
-              Number(metriques.loyers_attendus_mois) > 0
-                ? `${formaterFCFA(metriques.loyers_percus_mois)} sur ${formaterFCFA(metriques.loyers_attendus_mois)} attendus`
-                : 'Aucun loyer exigible ce mois-ci'
-            }
-            icone={<CircleDollarSign size={19} strokeWidth={1.8} />}
-          />
-          <CarteMetrique
-            label="Impayés"
-            valeur={String(Number(metriques.nb_impayes))}
-            ton={Number(metriques.nb_impayes) > 0 ? 'alerte' : 'neutre'}
-            detail={
-              Number(metriques.nb_impayes) > 0
+        <>
+          <SyntheseRecouvrement metriques={metriques} />
+          <section data-visite="metriques" className="dashboard-supporting-metrics" aria-label="Indicateurs locatifs complémentaires">
+            <CarteMetrique
+              label="Occupation"
+              valeur={`${Number(metriques.taux_occupation).toLocaleString('fr-FR')} %`}
+              detail={`${Number(metriques.nb_baux_actifs)} bail${Number(metriques.nb_baux_actifs) === 1 ? '' : 's'} actif${Number(metriques.nb_baux_actifs) === 1 ? '' : 's'} sur ${Number(metriques.nb_logements)} logement${Number(metriques.nb_logements) === 1 ? '' : 's'}`}
+              icone={<House size={19} strokeWidth={1.8} />}
+            />
+            <CarteMetrique
+              label="Impayés"
+              valeur={String(Number(metriques.nb_impayes))}
+              ton={Number(metriques.nb_impayes) > 0 ? 'alerte' : 'neutre'}
+              detail={Number(metriques.nb_impayes) > 0
                 ? `${formaterFCFA(metriques.montant_impaye_total)} à recouvrer`
-                : 'Aucun loyer en retard'
-            }
-            icone={<TriangleAlert size={19} strokeWidth={1.8} />}
-          />
-          <CarteMetrique
-            label="CA du mois"
-            valeur={formaterFCFA(metriques.ca_du_mois)}
-            ton="primary"
-            detail="Paiements validés ce mois-ci"
-            icone={<Banknote size={19} strokeWidth={1.8} />}
-          />
-        </section>
+                : 'Aucun loyer en retard'}
+              icone={<TriangleAlert size={19} strokeWidth={1.8} />}
+            />
+            <CarteMetrique
+              label="Versements validés"
+              valeur={formaterFCFA(metriques.ca_du_mois)}
+              detail="Tous types · ce mois-ci"
+              icone={<Banknote size={19} strokeWidth={1.8} />}
+            />
+          </section>
+        </>
       )}
 
-      {impayesReponse.error ? (
-        <section className="dashboard-content-section" aria-labelledby="impayes-title">
-          <h2 id="impayes-title" className="section-title">Loyers en retard</h2>
-          <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
-        </section>
-      ) : impayes.length > 0 ? (
-        <section className="dashboard-content-section dashboard-overdue-section" aria-labelledby="impayes-title">
+      {actionContextuelle !== 'aucune' ? (
+        <ActionContextuelle
+          type={actionContextuelle}
+          nbLogementsLibres={nbLogementsLibres}
+          nbLocataires={nbLocataires}
+          montantRestant={Math.max(0, Number(metriques?.loyers_attendus_mois ?? 0) - Number(metriques?.loyers_percus_mois ?? 0))}
+          logementSansAnnonce={logementLibreSansAnnonce}
+        />
+      ) : null}
+
+      {impayesReponse.error || brouillonsReponse.error || impayes.length > 0 || brouillons.length > 0 ? (
+        <section className="dashboard-content-section dashboard-watch-section" aria-labelledby="surveiller-title">
           <div className="dashboard-section-heading">
             <div>
-              <h2 id="impayes-title" className="section-title">Loyers en retard</h2>
-              <p className="text-body-sm text-mute">Les périodes qui demandent votre attention.</p>
+              <h2 id="surveiller-title" className="section-title">À surveiller</h2>
+              <p className="text-body-sm text-mute">Les opérations qui demandent une vérification.</p>
             </div>
           </div>
-          <div className="dashboard-arrears-list">
-            {impayes.map((impaye) => (
-              <div key={`${impaye.bail_id}-${impaye.periode_debut}`} className="dashboard-arrears-item">
-                <div className="min-w-0">
-                  <p className="truncate text-body-md font-semibold text-ink">{impaye.locataire_nom}</p>
-                  <p className="truncate text-body-sm text-mute">
-                    {formaterPeriode(impaye.periode_debut)} · {impaye.jours_de_retard} jour{impaye.jours_de_retard > 1 ? 's' : ''} de retard · {impaye.logement_adresse}
-                  </p>
-                </div>
-                <div className="dashboard-arrears-aside">
-                  <span className="text-body-md font-semibold tabular text-ink">{formaterFCFA(impaye.montant_du)}</span>
-                  <Badge ton="negative">Impayé</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
+          {brouillonsReponse.error ? <Alerte ton="erreur">Les paiements à confirmer ne peuvent pas être chargés.</Alerte> : null}
+          {impayesReponse.error ? <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés.</Alerte> : null}
+          <ul className="dashboard-watch-list">
+            {!brouillonsReponse.error ? brouillons.map((brouillon) => (
+              <li key={brouillon.id}>
+                <Link href={`/pro/paiements/${encodeURIComponent(brouillon.id)}/confirmer`} className="dashboard-watch-row">
+                  <span className="dashboard-watch-icon is-pending"><ReceiptText size={17} aria-hidden="true" /></span>
+                  <span className="dashboard-watch-copy">
+                    <strong>Paiement à confirmer · {nomLocataire(brouillon.bail)}</strong>
+                    <span>{formaterPeriode(brouillon.periode_debut)} · {brouillon.type_paiement}</span>
+                  </span>
+                  <span className="dashboard-watch-amount">{formaterFCFA(brouillon.montant)}</span>
+                  <span className="dashboard-watch-link">Confirmer <ArrowRight size={15} aria-hidden="true" /></span>
+                </Link>
+              </li>
+            )) : null}
+            {!impayesReponse.error ? impayes.map((impaye) => (
+              <li key={`${impaye.bail_id}-${impaye.periode_debut}`}>
+                <Link href="/pro/impayes" className="dashboard-watch-row">
+                  <span className="dashboard-watch-icon is-alert"><TriangleAlert size={17} aria-hidden="true" /></span>
+                  <span className="dashboard-watch-copy">
+                    <strong>{impaye.locataire_nom}</strong>
+                    <span>{formaterPeriode(impaye.periode_debut)} · {impaye.jours_de_retard} jour{impaye.jours_de_retard > 1 ? 's' : ''} de retard · {impaye.logement_adresse}</span>
+                  </span>
+                  <span className="dashboard-watch-amount">{formaterFCFA(impaye.montant_du)}</span>
+                  <span className="dashboard-watch-link">Voir <ArrowRight size={15} aria-hidden="true" /></span>
+                </Link>
+              </li>
+            )) : null}
+          </ul>
+          {(Number(impayesReponse.count ?? 0) > impayes.length || Number(brouillonsReponse.count ?? 0) > brouillons.length) ? (
+            <Link href={impayes.length < Number(impayesReponse.count ?? 0) ? '/pro/impayes' : '/pro/paiements'} className="dashboard-section-more">
+              Voir tout le suivi <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          ) : null}
         </section>
       ) : null}
 
-      <section className="dashboard-quick-actions" aria-labelledby="actions-rapides">
-        <div className="dashboard-quick-actions-copy">
-          <h2 id="actions-rapides">Actions rapides</h2>
-          <p>Les opérations utiles à votre activité.</p>
-        </div>
-        <div className="dashboard-quick-actions-links">
-          {nbBauxActifs > 0 && (paiements.length > 0 || Boolean(paiementsReponse.error)) ? (
-            <Link href="/pro/paiements/nouveau" data-visite="bouton-paiement" className="btn btn-primary">
-              Enregistrer un paiement <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          ) : null}
-          <Link href={actionSecondaire.href} className="btn btn-secondary">{actionSecondaire.libelle}</Link>
-          {impayes.length > 0 ? (
-            <Link href="/pro/impayes" className="dashboard-overdue-link">Suivre les retards</Link>
-          ) : null}
-        </div>
-      </section>
+      {echeancesReponse.error ? (
+        <section className="dashboard-content-section" aria-labelledby="echeances-title">
+          <h2 id="echeances-title" className="section-title">Échéances de loyer</h2>
+          <Alerte ton="erreur">Les échéances ne peuvent pas être chargées. Actualisez la page pour réessayer.</Alerte>
+        </section>
+      ) : echeances.length > 0 ? (
+        <section className="dashboard-content-section" aria-labelledby="echeances-title">
+          <div className="dashboard-section-heading">
+            <div>
+              <h2 id="echeances-title" className="section-title">Échéances à suivre</h2>
+              <p className="text-body-sm text-mute">État calculé selon le bail et les versements validés.</p>
+            </div>
+            <Link href="/pro/paiements" className="dashboard-section-more">Paiements <ArrowRight size={15} aria-hidden="true" /></Link>
+          </div>
+          <ul className="dashboard-watch-list dashboard-due-list">
+            {echeances.map((echeance) => (
+              <li key={`${echeance.bail_id}-${echeance.periode_debut}`}>
+                <Link href={`/pro/baux/${encodeURIComponent(echeance.bail_id)}`} className="dashboard-watch-row">
+                  <span className="dashboard-watch-icon"><ArrowDownRight size={17} aria-hidden="true" /></span>
+                  <span className="dashboard-watch-copy">
+                    <strong>{echeance.locataire_nom} · {formaterPeriode(echeance.periode_debut)}</strong>
+                    <span>Échéance {formaterDateCourte(echeance.date_echeance)} · {echeance.logement_adresse}</span>
+                  </span>
+                  <span className="dashboard-watch-amount">{formaterFCFA(echeance.montant_du)}</span>
+                  <span className="dashboard-watch-link">Voir le bail <ArrowRight size={15} aria-hidden="true" /></span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="dashboard-content-section" aria-labelledby="paiements-recents">
         <div className="dashboard-section-heading">
           <div>
             <h2 id="paiements-recents" className="section-title">Derniers paiements</h2>
-            <p className="text-body-sm text-mute">Les derniers versements validés dans votre espace.</p>
+            <p className="text-body-sm text-mute">Versements validés récemment dans votre espace.</p>
           </div>
           {paiements.length > 0 ? (
-            <Link href="/pro/paiements" className="text-body-sm font-semibold text-ink underline">
+            <Link href="/pro/paiements" className="dashboard-section-more">
               Historique complet
+              <ArrowRight size={15} aria-hidden="true" />
             </Link>
           ) : null}
         </div>
@@ -546,46 +728,50 @@ export default async function PageTableauDeBord({
           <div className="dashboard-payments-empty">
             <ReceiptText size={24} strokeWidth={1.7} aria-hidden="true" className="dashboard-payments-empty-icon" />
             <div>
-              <h3>Aucun paiement enregistré</h3>
+              <h3>Aucun paiement validé pour le moment</h3>
               <p>Les versements validés apparaîtront ici avec leur période et leur montant.</p>
             </div>
-            {nbBauxActifs > 0 ? (
-              <Link href="/pro/paiements/nouveau" data-visite="bouton-paiement" className="btn btn-primary">
-                Enregistrer un paiement
-              </Link>
-            ) : null}
           </div>
         ) : (
-          <TableauListe id="derniers-paiements" libelle="Derniers paiements">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th scope="col">Locataire</th>
-                  <th scope="col">Période</th>
-                  <th scope="col" className="hidden sm:table-cell">Date</th>
-                  <th scope="col" className="hidden md:table-cell">Mode</th>
-                  <th scope="col" className="text-right">Montant</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paiements.map((paiement) => {
-                  const locataire = Array.isArray(paiement.bail?.locataire)
-                    ? paiement.bail?.locataire[0]
-                    : paiement.bail?.locataire
-
-                  return (
-                    <tr key={paiement.id}>
-                      <td className="font-semibold">{locataire?.nom ?? '—'}</td>
-                      <td>{formaterPeriode(paiement.periode_debut)}</td>
-                      <td className="hidden sm:table-cell">{formaterDateCourte(paiement.date_paiement)}</td>
-                      <td className="hidden md:table-cell">{paiement.mode_paiement}</td>
-                      <td className="text-right font-semibold tabular">{formaterFCFA(paiement.montant)}</td>
+          <>
+            <div className="hidden sm:block">
+              <TableauListe id="derniers-paiements" libelle="Derniers paiements">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Locataire</th>
+                      <th scope="col">Période</th>
+                      <th scope="col" className="hidden sm:table-cell">Date</th>
+                      <th scope="col" className="hidden md:table-cell">Mode</th>
+                      <th scope="col" className="text-right">Montant</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </TableauListe>
+                  </thead>
+                  <tbody>
+                    {paiements.map((paiement) => (
+                      <tr key={paiement.id}>
+                        <td className="font-semibold">{nomLocataire(paiement.bail)}</td>
+                        <td>{formaterPeriode(paiement.periode_debut)}</td>
+                        <td className="hidden sm:table-cell">{formaterDateCourte(paiement.date_paiement)}</td>
+                        <td className="hidden md:table-cell">{paiement.mode_paiement}</td>
+                        <td className="text-right font-semibold tabular">{formaterFCFA(paiement.montant)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableauListe>
+            </div>
+            <ul className="dashboard-payments-mobile-list sm:hidden" aria-label="Derniers paiements validés">
+              {paiements.map((paiement) => (
+                <li key={paiement.id}>
+                  <div>
+                    <strong>{nomLocataire(paiement.bail)}</strong>
+                    <span>{formaterPeriode(paiement.periode_debut)} · {formaterDateCourte(paiement.date_paiement)}</span>
+                  </div>
+                  <strong className="dashboard-watch-amount">{formaterFCFA(paiement.montant)}</strong>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </div>

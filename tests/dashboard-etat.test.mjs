@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   compterEtapesConfigurees,
+  determinerActionContextuelleDashboard,
   determinerActionPrincipaleDemarrage,
   determinerEtatDashboardPro,
   peutCreerBail,
@@ -37,4 +38,50 @@ test('un logement vacant sans locataire met Find en avant sans imposer de fiche 
   assert.equal(determinerActionPrincipaleDemarrage({ nbLogements: 0, nbLocataires: 0 }), 'logement')
   assert.equal(determinerActionPrincipaleDemarrage({ nbLogements: 1, nbLocataires: 0 }), 'find')
   assert.equal(determinerActionPrincipaleDemarrage({ nbLogements: 1, nbLocataires: 1 }), 'bail')
+})
+
+test('le dashboard priorise un versement à enregistrer seulement pour un bail actif et un écart réel', () => {
+  assert.equal(determinerActionContextuelleDashboard({
+    nbBauxActifs: 1,
+    nbLogementsLibres: 0,
+    nbLocataires: 1,
+    loyerAttendu: 80000,
+    loyerPercu: 30000,
+    logementLibreSansAnnonce: false,
+  }), 'enregistrer-paiement')
+  assert.equal(determinerActionContextuelleDashboard({
+    nbBauxActifs: 0,
+    nbLogementsLibres: 0,
+    nbLocataires: 0,
+    loyerAttendu: 80000,
+    loyerPercu: 0,
+    logementLibreSansAnnonce: false,
+  }), 'aucune')
+})
+
+test('la prochaine action suit les vrais prérequis du logement vacant', () => {
+  assert.equal(determinerActionContextuelleDashboard({
+    nbBauxActifs: 0,
+    nbLogementsLibres: 1,
+    nbLocataires: 1,
+    loyerAttendu: 0,
+    loyerPercu: 0,
+    logementLibreSansAnnonce: true,
+  }), 'creer-bail')
+  assert.equal(determinerActionContextuelleDashboard({
+    nbBauxActifs: 0,
+    nbLogementsLibres: 1,
+    nbLocataires: 0,
+    loyerAttendu: 0,
+    loyerPercu: 0,
+    logementLibreSansAnnonce: true,
+  }), 'preparer-annonce')
+  assert.equal(determinerActionContextuelleDashboard({
+    nbBauxActifs: 0,
+    nbLogementsLibres: 0,
+    nbLocataires: 1,
+    loyerAttendu: 0,
+    loyerPercu: 0,
+    logementLibreSansAnnonce: false,
+  }), 'aucune')
 })

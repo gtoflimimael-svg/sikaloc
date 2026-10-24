@@ -81,9 +81,15 @@ test('les actions de page et les tableaux restent utilisables sur petits écrans
   assert.match(retours, /className="page-header-actions shrink-0"/)
 })
 
-test('le tableau de bord décrit les actions réelles sans promettre une relance automatique', async () => {
+test('le tableau de bord priorise un suivi réel sans promettre une relance automatique', async () => {
   const dashboard = await lire('src/app/pro/(shell)/tableau-de-bord/page.tsx')
-  assert.match(dashboard, /Suivre les retards/)
+  assert.match(dashboard, /À surveiller/)
+  assert.match(dashboard, /Paiement à confirmer/)
+  assert.match(dashboard, /suiviUrgentConnu && impayes\.length === 0 && brouillons\.length === 0/)
+  assert.match(dashboard, /determinerActionContextuelleDashboard/)
+  assert.match(dashboard, /from\('v_echeances'\)/)
+  assert.match(dashboard, /Versements validés/)
+  assert.match(dashboard, /metriquesReponse\.error/)
   assert.doesNotMatch(dashboard, /Envoyer une relance/)
   assert.match(dashboard, /TableauListe id="derniers-paiements"/)
 })
