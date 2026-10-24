@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { House } from 'lucide-react'
 
 import { FormulaireNouvelleAnnonce } from '@/components/app/formulaire-nouvelle-annonce'
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { creerAnnonce } from '@/lib/actions/annonces'
 import { LIBELLES_STATUT, TON_STATUT } from '@/lib/annonces/libelles'
@@ -61,7 +61,7 @@ export default async function PageNouvelleAnnonce({
         </Alerte>
       ) : logements.length === 0 ? (
         <EtatVide
-          icone={<IllustrationMarque variante="habitat" />}
+          icone={<House size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre="Aucun logement enregistré"
           description="Une annonce se rattache à un logement. Enregistrez-le d’abord."
           action={

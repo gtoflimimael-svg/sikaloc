@@ -7,9 +7,8 @@ import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
 import './globals.css'
 
 /**
- * Inter est servie localement, sans accès réseau au build ni au navigateur.
- * Le design officiel prévoit Manrope pour les grands titres ; en son absence
- * locale, les titres utilisent explicitement Inter et non une police distante.
+ * Inter est servie localement pour le texte global, sans accès réseau au build
+ * ni au navigateur. Le shell Pro charge localement Manrope pour ses titres.
  */
 const inter = localFont({
   src: './fonts/Inter-Variable.ttf',

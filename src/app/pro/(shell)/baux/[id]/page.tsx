@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Receipt } from 'lucide-react'
 
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
 import { TableauListe } from '@/components/ui/listes'
@@ -244,7 +244,7 @@ export default async function PageDetailBail({
           <Alerte ton="erreur">L’historique des paiements n’a pas pu être chargé.</Alerte>
         ) : listePaiements.length === 0 ? (
           <EtatVide
-            icone={<IllustrationMarque variante="habitat" />}
+            icone={<Receipt size={24} strokeWidth={1.8} aria-hidden="true" />}
             titre="Aucun paiement sur ce bail"
             description="Après validation, chaque paiement reçoit le document correspondant à sa nature et au solde de la période."
             action={

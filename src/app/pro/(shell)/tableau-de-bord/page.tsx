@@ -8,7 +8,6 @@ import { ReprendreVisite } from '@/components/app/reprendre-visite'
 import { CarteMetrique } from '@/components/app/carte-metrique'
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { TableauListe } from '@/components/ui/listes'
-import { ESPACE_PRO } from '@/lib/roles'
 import { bailleurOnboarde } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -16,7 +15,7 @@ import type { Impaye, MetriquesDashboard, StatutAnnonce } from '@/lib/types/data
 import { compterEtapesConfigurees, determinerActionPrincipaleDemarrage, determinerEtatDashboardPro, peutCreerBail } from '@/lib/dashboard/etat'
 import { formaterDateCourte, formaterFCFA, formaterPeriode } from '@/lib/format'
 
-export const metadata: Metadata = { title: { absolute: `Tableau de bord · ${ESPACE_PRO.nom}` } }
+export const metadata: Metadata = { title: { absolute: 'Tableau de bord · Sikaloc Pro' } }
 
 type LogementDashboard = {
   id: string

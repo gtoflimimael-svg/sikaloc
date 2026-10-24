@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { Receipt } from 'lucide-react'
 
 import { ResumeListe, TableauListe } from '@/components/ui/listes'
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import {
   formaterDateCourte,
@@ -137,7 +137,7 @@ export default async function PageHistoriquePaiements({
         <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<IllustrationMarque variante="ecosysteme" />}
+          icone={<Receipt size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre={bailFiltre || statut ? "Aucun paiement pour ces filtres" : "Aucun paiement"}
           description={bailFiltre || statut ? "Modifiez les filtres pour consulter les autres paiements." : "Les paiements enregistrés apparaîtront ici, avec leur quittance."}
           action={

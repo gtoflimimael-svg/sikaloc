@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import localFont from 'next/font/local'
 
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
 import { MenuCompte } from '@/components/app/menu-compte'
@@ -9,17 +10,29 @@ import { abonnementActif } from '@/lib/plan'
 import { bailleurCourant } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
-import { ESPACE_PRO } from '@/lib/roles'
+
+const manropePro = localFont({
+  src: [
+    { path: '../../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
+    { path: '../../fonts/Manrope-PDF-Medium.ttf', weight: '500' },
+    { path: '../../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
+    { path: '../../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
+    { path: '../../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
+  ],
+  variable: '--font-pro-display',
+  display: 'swap',
+  preload: false,
+})
 
 /**
  * Le titre des onglets de l'espace bailleur.
  *
- * Le gabarit de la racine dit « … · Sikaloc ». Ici il dit « … · Sikaloc_Pro » :
+ * Le gabarit de la racine dit « … · Sikaloc ». Ici il dit « … · Sikaloc Pro » :
  * sur un navigateur qui porte les deux espaces ouverts côte à côte, c'est
  * l'onglet qui les distingue.
  */
 export const metadata: Metadata = {
-  title: { template: `%s · ${ESPACE_PRO.nom}`, default: ESPACE_PRO.nom },
+  title: { template: '%s · Sikaloc Pro', default: 'Sikaloc Pro' },
 }
 
 export default async function LayoutApplication({
@@ -65,7 +78,7 @@ export default async function LayoutApplication({
   const plan = abonnementActif(bailleur) ? 'Standard' : 'Gratuit'
 
   return (
-    <div className="pro-shell flex min-h-screen">
+    <div className={`${manropePro.variable} pro-shell flex min-h-screen`}>
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <BarreLaterale impayes={impayes} />
 

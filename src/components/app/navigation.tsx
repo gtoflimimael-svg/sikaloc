@@ -128,56 +128,39 @@ function LiensNavigation({
   )
 }
 
-function titreContexte(chemin: string): { groupe: string; page: string } {
-  if (chemin === '/pro/tableau-de-bord') return { groupe: 'Pilotage', page: 'Tableau de bord' }
-  if (chemin.startsWith('/pro/impayes')) return { groupe: 'Pilotage', page: 'Loyers en retard' }
-  if (chemin.startsWith('/pro/logements')) {
-    return { groupe: 'Gestion locative', page: chemin.endsWith('/nouveau') ? 'Nouveau logement' : chemin.endsWith('/modifier') ? 'Modifier un logement' : 'Logements' }
-  }
-  if (chemin.startsWith('/pro/locataires')) {
-    return { groupe: 'Gestion locative', page: chemin.endsWith('/nouveau') ? 'Nouveau locataire' : chemin.endsWith('/modifier') ? 'Modifier un locataire' : 'Locataires' }
-  }
-  if (chemin.startsWith('/pro/baux')) {
-    const page = chemin.endsWith('/historique') ? 'Historique des loyers' : chemin.endsWith('/modifier') ? 'Modifier le bail' : chemin.endsWith('/nouveau') ? 'Nouveau bail' : chemin === '/pro/baux' ? 'Baux' : 'Détail du bail'
-    return { groupe: 'Gestion locative', page }
-  }
-  if (chemin.startsWith('/pro/paiements')) {
-    const page = chemin.endsWith('/confirmer') ? 'Confirmation du paiement' : chemin.endsWith('/modifier') ? 'Corriger le paiement' : chemin.endsWith('/nouveau') ? 'Nouveau paiement' : 'Paiements'
-    return { groupe: 'Gestion locative', page }
-  }
-  if (chemin.startsWith('/pro/annonces')) {
-    const page = chemin.endsWith('/candidatures') ? 'Candidatures reçues' : chemin.endsWith('/nouvelle') ? 'Nouvelle annonce' : chemin === '/pro/annonces' ? 'Annonces' : 'Détail de l’annonce'
-    return { groupe: 'Commercialisation', page }
-  }
-  if (chemin.startsWith('/pro/quittances')) return { groupe: 'Gestion locative', page: 'Document locatif' }
-  if (chemin.startsWith('/pro/parametres/abonnement')) return { groupe: 'Compte', page: 'Abonnement' }
-  if (chemin.startsWith('/pro/parametres/preferences')) return { groupe: 'Compte', page: 'Préférences' }
-  if (chemin.startsWith('/pro/parametres/profil')) return { groupe: 'Compte', page: 'Profil' }
-  if (chemin.startsWith('/pro/parametres/signature')) return { groupe: 'Compte', page: 'Signature' }
-  if (chemin.startsWith('/pro/parametres/parrainage')) return { groupe: 'Compte', page: 'Parrainage' }
-  if (chemin.startsWith('/pro/parametres/donnees')) return { groupe: 'Compte', page: 'Données personnelles' }
-  return { groupe: 'Compte', page: 'Paramètres' }
+function groupeContexte(chemin: string): string {
+  if (chemin === ESPACE_PRO.tableauDeBord || chemin.startsWith('/pro/impayes')) return 'Pilotage'
+  if (/^\/pro\/(logements|locataires|baux|paiements|quittances)(\/|$)/.test(chemin)) return 'Gestion locative'
+  if (chemin.startsWith('/pro/annonces')) return 'Commercialisation'
+  return 'Compte'
 }
 
 export function ContextePro() {
   const chemin = usePathname()
-  const contexte = titreContexte(chemin)
+  const groupe = groupeContexte(chemin)
 
   return (
     <div className="mr-auto hidden min-w-0 lg:block" aria-live="polite">
-      <p className="text-caption text-mute">Sikaloc Pro · {contexte.groupe}</p>
-      <p className="truncate text-body-sm font-semibold text-ink">{contexte.page}</p>
+      <p className="text-caption font-medium text-mute">Sikaloc Pro <span aria-hidden="true">/</span> {groupe}</p>
     </div>
   )
+}
+
+function afficherRaccourciPaiement(chemin: string, aBauxActifs: boolean) {
+  if (!aBauxActifs || chemin === ESPACE_PRO.tableauDeBord) return false
+  if (chemin.startsWith('/pro/paiements') || chemin.startsWith('/pro/impayes')) return false
+
+  const segmentsBail = chemin.split('/').filter(Boolean)
+  return !(segmentsBail[0] === 'pro' && segmentsBail[1] === 'baux' && segmentsBail.length >= 3 && segmentsBail[2] !== 'nouveau')
 }
 
 /** Le raccourci de paiement n'apparaît que si un bail actif le permet. */
 export function ActionPaiementTopbar({ aBauxActifs }: { aBauxActifs: boolean }) {
   const chemin = usePathname()
-  if (!aBauxActifs || chemin === ESPACE_PRO.tableauDeBord) return null
+  if (!afficherRaccourciPaiement(chemin, aBauxActifs)) return null
 
   return (
-    <Link href="/pro/paiements/nouveau" data-visite="bouton-paiement" className="btn btn-primary btn-sm">
+    <Link href="/pro/paiements/nouveau" data-visite="bouton-paiement" className="btn btn-secondary btn-sm">
       Enregistrer un paiement
     </Link>
   )
@@ -303,7 +286,7 @@ export function EnTeteMobile({
         <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
-          {aBauxActifs && chemin !== ESPACE_PRO.tableauDeBord ? (
+          {afficherRaccourciPaiement(chemin, aBauxActifs) ? (
             <Link
               href="/pro/paiements/nouveau"
               aria-label="Enregistrer un paiement"

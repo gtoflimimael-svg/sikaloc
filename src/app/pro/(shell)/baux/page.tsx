@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ScrollText } from 'lucide-react'
 
 import { ResumeListe } from '@/components/ui/listes'
 import { LienFiltre } from '@/components/ui/lien-filtre'
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
@@ -73,7 +73,7 @@ export default async function PageBaux({
         <Alerte ton="erreur">Les baux ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<IllustrationMarque variante="habitat" />}
+          icone={<ScrollText size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre={filtre ? `Aucun bail ${filtre.toLowerCase()}` : 'Aucun bail enregistré'}
           description="Un bail relie un logement à un locataire. C’est lui qui déclenche le suivi des loyers et la détection des impayés."
           action={

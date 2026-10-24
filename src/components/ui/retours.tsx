@@ -61,7 +61,7 @@ export function EtatVide({
   )
 }
 
-/** Titre de page — Copernicus Book, taille responsive commune aux espaces. */
+/** Titre de page — Manrope, taille responsive commune aux espaces. */
 export function EnTetePage({
   titre,
   description,

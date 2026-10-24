@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Users } from 'lucide-react'
 
 import { ResumeListe } from '@/components/ui/listes'
 import { BoutonInvitation } from '@/components/app/bouton-invitation'
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { supprimerLocataire } from '@/lib/actions/locataires'
@@ -41,7 +41,7 @@ export default async function PageLocataires() {
     <div className="tenants-page">
       <EnTetePage
         titre="Locataires"
-        description="Les personnes à qui vous louez. Invitez-les sur Sikaloc_Me pour qu’elles suivent leurs loyers et leurs quittances."
+        description="Les personnes à qui vous louez. Invitez-les sur Sikaloc Me pour qu’elles suivent leurs loyers et leurs quittances."
         action={
           <Link href="/pro/locataires/nouveau" className="btn btn-primary">
             Nouveau locataire
@@ -55,7 +55,7 @@ export default async function PageLocataires() {
         <Alerte ton="erreur">Les locataires ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<IllustrationMarque variante="locataire" />}
+          icone={<Users size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre="Aucun locataire enregistré"
           description="Ajoutez un locataire, puis rattachez-lui un bail pour commencer à suivre ses loyers."
           action={

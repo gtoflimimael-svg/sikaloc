@@ -164,13 +164,13 @@ export default async function PageCandidaturesRecues({
 /** Ce qu'il faut dire quand la liste est vide, selon l'état de l'annonce. */
 function attente(statut: StatutAnnonce): string {
   if (statut === 'publiee') {
-    return 'Les candidatures reçues depuis Sikaloc_Find apparaîtront ici.'
+    return 'Les candidatures reçues depuis Sikaloc Find apparaîtront ici.'
   }
   if (statut === 'brouillon') {
     return 'Cette annonce est encore un brouillon : elle n’est visible par personne. Publiez-la pour recevoir des candidatures.'
   }
   if (statut === 'suspendue') {
-    return 'Cette annonce est suspendue : elle ne figure plus dans Sikaloc_Find, et ne reçoit donc plus de candidature. Reprenez la publication quand vous le souhaitez.'
+    return 'Cette annonce est suspendue : elle ne figure plus dans Sikaloc Find, et ne reçoit donc plus de candidature. Reprenez la publication quand vous le souhaitez.'
   }
   return `Cette annonce est ${LIBELLES_STATUT.cloturee.toLowerCase()} : elle ne reçoit plus de candidature.`
 }

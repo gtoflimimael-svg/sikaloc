@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { House } from 'lucide-react'
 
 import { ResumeListe } from '@/components/ui/listes'
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { supprimerLogement } from '@/lib/actions/logements'
@@ -64,7 +63,7 @@ export default async function PageLogements() {
         <Alerte ton="erreur">Les logements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<IllustrationMarque variante="habitat" />}
+          icone={<House size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre="Aucun logement enregistré"
           description="Ajoutez un logement, puis créez le bail qui le rattache à un locataire."
           action={

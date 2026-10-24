@@ -79,7 +79,7 @@ export default async function PageAnnonce({
   const titre = `${libelleChambres(annonce.chambres) ?? annonce.type}${annonce.quartier ? ` · ${annonce.quartier}` : ''}`
 
   const confirmationPublication =
-    'Elle rejoindra le catalogue public de Sikaloc_Find : type, ville, quartier, prix, équipements, description, disponibilité et photos. L’adresse exacte, votre téléphone et votre email ne sont jamais publiés.'
+    'Elle rejoindra le catalogue public de Sikaloc Find : type, ville, quartier, prix, équipements, description, disponibilité et photos. L’adresse exacte, votre téléphone et votre email ne sont jamais publiés.'
 
   return (
     <div className="listing-detail-page mx-auto max-w-[56rem] space-y-xl">
@@ -117,12 +117,12 @@ export default async function PageAnnonce({
       {annonce.statut === 'publiee' ? (
         <Alerte ton="succes">
           Publiée le {formaterDate(annonce.publiee_le)} : elle figure dans le catalogue public de
-          Sikaloc_Find, où chacun peut la consulter et candidater.
+          Sikaloc Find, où chacun peut la consulter et candidater.
         </Alerte>
       ) : null}
       {annonce.statut === 'suspendue' ? (
         <Alerte ton="attention">
-          Suspendue : elle n’est plus visible dans Sikaloc_Find. Ses photos, ses informations et sa
+          Suspendue : elle n’est plus visible dans Sikaloc Find. Ses photos, ses informations et sa
           référence sont conservées ; reprenez la publication quand vous le souhaitez.
         </Alerte>
       ) : null}
@@ -186,7 +186,7 @@ export default async function PageAnnonce({
               variante="secondary"
               compact={false}
               titreConfirmation="Suspendre cette annonce ?"
-              messageConfirmation="Elle disparaîtra de Sikaloc_Find. Vous pourrez la reprendre plus tard, telle quelle."
+              messageConfirmation="Elle disparaîtra de Sikaloc Find. Vous pourrez la reprendre plus tard, telle quelle."
               libelleConfirmation="Suspendre"
             />
           </div>

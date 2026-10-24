@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Megaphone } from 'lucide-react'
 
-import { IllustrationMarque } from '@/components/ui/illustration-marque'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { LIBELLES_MOTIF, LIBELLES_STATUT, TON_STATUT, libelleChambres } from '@/lib/annonces/libelles'
 import { formaterDate, formaterFCFA } from '@/lib/format'
@@ -62,7 +62,7 @@ export default async function PageAnnonces() {
     <div className="listings-page">
       <EnTetePage
         titre="Annonces"
-        description="Vos logements mis en location sur Sikaloc_Find."
+        description="Vos logements mis en location sur Sikaloc Find."
         action={
           <Link href="/pro/annonces/nouvelle" className="btn btn-primary">
             Créer une annonce
@@ -82,7 +82,7 @@ export default async function PageAnnonces() {
         </Alerte>
       ) : annonces.length === 0 ? (
         <EtatVide
-          icone={<IllustrationMarque variante="recherche" />}
+          icone={<Megaphone size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre="Aucune annonce"
           description="Un logement libre, ou qui le sera bientôt, peut être proposé à la location : préparez son annonce, ajoutez des photos, puis publiez-la."
           action={

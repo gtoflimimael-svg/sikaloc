@@ -44,6 +44,29 @@ test('la navigation Pro est regroupée par tâche et marque la route courante', 
   assert.match(navigation, /chemin === lien\.href \? 'page' : actif \? 'location'/)
 })
 
+test('le bandeau ne répète pas le titre de page et le raccourci de paiement évite les doublons', async () => {
+  const navigation = await lire('src/components/app/navigation.tsx')
+  assert.match(navigation, /function groupeContexte\(chemin: string\)/)
+  assert.doesNotMatch(navigation, /contexte\.page/)
+  assert.match(navigation, /function afficherRaccourciPaiement\(chemin: string, aBauxActifs: boolean\)/)
+  assert.match(navigation, /chemin\.startsWith\('\/pro\/paiements'\) \|\| chemin\.startsWith\('\/pro\/impayes'\)/)
+  assert.match(navigation, /className="btn btn-secondary btn-sm"/)
+})
+
+test('les états vides métier Pro ne réutilisent pas les anciennes illustrations 3D', async () => {
+  const pages = [
+    'src/app/pro/(shell)/logements/page.tsx',
+    'src/app/pro/(shell)/locataires/page.tsx',
+    'src/app/pro/(shell)/baux/page.tsx',
+    'src/app/pro/(shell)/baux/[id]/page.tsx',
+    'src/app/pro/(shell)/paiements/page.tsx',
+    'src/app/pro/(shell)/annonces/page.tsx',
+    'src/app/pro/(shell)/annonces/nouvelle/page.tsx',
+  ]
+  const contenus = await Promise.all(pages.map(lire))
+  for (const contenu of contenus) assert.doesNotMatch(contenu, /IllustrationMarque/)
+})
+
 test('les actions de page et les tableaux restent utilisables sur petits écrans et au clavier', async () => {
   const styles = await lire('src/app/globals.css')
   const listes = await lire('src/components/ui/listes.tsx')
