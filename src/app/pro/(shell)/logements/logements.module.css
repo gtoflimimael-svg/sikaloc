@@ -66,7 +66,7 @@
   gap: 4px 14px;
   margin: 0;
   color: var(--color-mute);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
 }
@@ -129,10 +129,10 @@
 }
 
 .identity > p {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
   color: var(--color-mute);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .statusLine {
@@ -145,8 +145,8 @@
 
 .advertStatus {
   color: var(--color-mute);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .advertStatus[data-tone='positive'] { color: var(--color-positive-deep); }
@@ -163,8 +163,8 @@
   min-width: 0;
   margin-top: 8px;
   color: var(--color-mute);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .tenant a {
@@ -188,8 +188,8 @@
 
 .rent > span {
   color: var(--color-mute);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .rent > p {
@@ -199,8 +199,8 @@
   gap: 3px 6px;
   margin: 0;
   color: var(--color-mute);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.45;
   font-variant-numeric: tabular-nums;
 }
 
@@ -226,8 +226,8 @@
   gap: 5px 14px;
   margin-top: 9px;
   color: var(--color-mute);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .actions {
@@ -240,12 +240,12 @@
 
 .rowAction {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 42px;
   align-items: center;
-  padding: 5px 7px;
+  padding: 6px 8px;
   border-radius: 4px;
   color: var(--color-ink-deep);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 620;
   line-height: 1.35;
   text-decoration: none;
@@ -270,11 +270,11 @@
 
 .moreActions summary {
   display: inline-flex;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
-  padding: 5px 8px;
+  padding: 6px 8px;
   border-radius: 4px;
   color: var(--color-mute);
   cursor: pointer;

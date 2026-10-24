@@ -121,7 +121,7 @@ export default async function PageLogements() {
                 const locataire = premiereRelation(bailActif?.locataire)
                 const annonce = trouverAnnonceVivante(logement.annonces ?? [])
                 const statutAnnonce = annonce ? presenterStatutAnnonce(annonce.statut) : null
-                const actionAnnonce = presenterActionAnnonce(annonce?.id, Boolean(bailActif), logement.id)
+                const actionAnnonce = presenterActionAnnonce(annonce?.id, logement.id)
                 const suppressionPossible = peutSupprimerLogement(baux.length, Boolean(annonce))
 
                 return (

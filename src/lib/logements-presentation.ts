@@ -48,10 +48,9 @@ export function presenterQuotaLogements(
   return `Plan ${plan} · ${nombre} ${logement} sur ${limite}`
 }
 
-/** Le bail actif ne bloque qu'une publication ; le brouillon prépare une disponibilité future. */
+/** Ouvre la gestion d'une annonce existante ou le vrai parcours de création d'un brouillon. */
 export function presenterActionAnnonce(
   annonceId: string | undefined,
-  bailActif: boolean,
   logementId: string,
 ): { href: string; libelle: string } {
   if (annonceId) {
@@ -60,7 +59,7 @@ export function presenterActionAnnonce(
 
   return {
     href: `/pro/annonces/nouvelle?logement=${encodeURIComponent(logementId)}`,
-    libelle: bailActif ? 'Préparer une annonce future' : 'Préparer une annonce',
+    libelle: 'Préparer une annonce',
   }
 }
 

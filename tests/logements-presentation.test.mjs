@@ -54,17 +54,17 @@ test('présente les états d’annonce sans confondre publication et disponibili
   assert.equal(presenterStatutAnnonce('cloturee'), null)
 })
 
-test('annonce existante s’ouvre et un logement loué prépare explicitement une disponibilité future', () => {
-  assert.deepEqual(presenterActionAnnonce('annonce-1', true, 'logement-1'), {
+test('une annonce existante se gère et un nouveau logement ouvre le parcours réel de préparation', () => {
+  assert.deepEqual(presenterActionAnnonce('annonce-1', 'logement-1'), {
     href: '/pro/annonces/annonce-1',
     libelle: 'Gérer l’annonce',
   })
-  assert.deepEqual(presenterActionAnnonce(undefined, true, 'logement-1'), {
+  assert.deepEqual(presenterActionAnnonce(undefined, 'logement-1'), {
     href: '/pro/annonces/nouvelle?logement=logement-1',
-    libelle: 'Préparer une annonce future',
+    libelle: 'Préparer une annonce',
   })
-  assert.deepEqual(presenterActionAnnonce(undefined, false, 'logement-1'), {
-    href: '/pro/annonces/nouvelle?logement=logement-1',
+  assert.deepEqual(presenterActionAnnonce(undefined, 'logement-2'), {
+    href: '/pro/annonces/nouvelle?logement=logement-2',
     libelle: 'Préparer une annonce',
   })
 })
