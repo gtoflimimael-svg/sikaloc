@@ -8,6 +8,7 @@ import {
   FormulaireMessageCandidature,
   FormulaireProfilCandidat,
 } from '@/components/find/candidature'
+import { ExperienceInscription } from '@/components/auth/experience-inscription'
 import { EnTeteFind, PiedDePageFind } from '@/components/find/navigation'
 import { Alerte, Badge } from '@/components/ui/retours'
 import {
@@ -18,7 +19,7 @@ import {
 import { LIBELLES_STATUT_CANDIDATURE, TON_STATUT_CANDIDATURE } from '@/lib/candidatures/messages'
 import { libelleChambres } from '@/lib/annonces/libelles'
 import { formaterFCFA } from '@/lib/format'
-import { lienConnexion } from '@/lib/auth-contexte'
+import { lienConnexion, lienMotDePasseOublie } from '@/lib/auth-contexte'
 import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
 import type { AnnoncePublique, CandidatureDuCandidat } from '@/lib/types/database'
@@ -103,97 +104,112 @@ export default async function PageCandidater({
     <div className="find-application-page min-h-screen bg-canvas-soft">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
-      <main id="contenu" className="mx-auto max-w-[48rem] app-main">
-        <Link href={`/find/${reference}`} className="text-body-sm text-mute hover:text-ink">
-          ← Revenir à l’annonce
-        </Link>
+      {!utilisateur ? (
+        <ExperienceInscription
+          espace="Find"
+          label="Sikaloc Find · Candidature"
+          titreEditorial="Votre prochain logement commence ici."
+          descriptionEditorial="Créez votre accès candidat pour envoyer votre demande et retrouver son évolution."
+          image="/images/home/sikaloc-find-editorial.webp"
+          imageAlt="Deux adultes découvrent ensemble un appartement lumineux et contemporain."
+          titreFormulaire="Créer votre compte candidat"
+          descriptionFormulaire="Votre email et votre téléphone ne sont pas transmis au bailleur."
+          retour={{ href: `/find/${reference}`, libelle: 'Revenir à l’annonce' }}
+          detailFormulaire={
+            <div className="signup-listing-summary">
+              <p className="signup-listing-kicker">Votre candidature · Réf. {annonce.reference}</p>
+              <p className="signup-listing-title">{titre}</p>
+              <p className="signup-listing-meta">{lieu} · {formaterFCFA(annonce.loyer)} / mois</p>
+            </div>
+          }
+        >
+          <FormulaireInscriptionCandidat
+            action={inscrireCandidat.bind(null, reference)}
+            connexion={lienConnexion('find', `/find/${reference}/candidater`)}
+            motDePasseOublie={lienMotDePasseOublie('find', `/find/${reference}/candidater`)}
+          />
+        </ExperienceInscription>
+      ) : (
+        <main id="contenu" className="mx-auto max-w-[48rem] app-main">
+          <Link href={`/find/${reference}`} className="text-body-sm text-mute hover:text-ink">
+            ← Revenir à l’annonce
+          </Link>
 
-        <section className="find-application-context mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
-          <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre candidature · Réf. {annonce.reference}</p>
-          <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
-          <p className="mt-sm list-copy text-body-md text-on-dark-mute">
-            {lieu} · {formaterFCFA(annonce.loyer)} / mois · Réf. {annonce.reference}
-          </p>
-        </section>
+          <section className="find-application-context mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
+            <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre candidature · Réf. {annonce.reference}</p>
+            <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
+            <p className="mt-sm list-copy text-body-md text-on-dark-mute">
+              {lieu} · {formaterFCFA(annonce.loyer)} / mois · Réf. {annonce.reference}
+            </p>
+          </section>
 
-        <section aria-label="Étape de la candidature" className="mt-lg card card-lg">
-          {!utilisateur ? (
-            <>
-              <h2 className="section-title">Créez votre compte</h2>
-              <p className="mt-sm mb-lg text-body-md text-body">
-                Il vous permet de suivre vos candidatures. Votre email et votre téléphone ne sont
-                pas transmis au bailleur.
-              </p>
-              <FormulaireInscriptionCandidat
-                action={inscrireCandidat.bind(null, reference)}
-                connexion={lienConnexion('find', `/find/${reference}/candidater`)}
-              />
-            </>
-          ) : !profilCandidat ? (
-            <>
-              <h2 className="section-title">Complétez votre profil</h2>
-              <p className="mt-sm mb-lg text-body-md text-body">
-                Deux informations suffisent pour candidater.
-              </p>
-              <FormulaireProfilCandidat action={enregistrerProfilCandidat.bind(null, reference)} />
-            </>
-          ) : candidature ? (
-            <>
-              <div className="flex items-start gap-md rounded-md border border-positive/30 bg-positive-pale p-lg">
-                <CheckCircle2 size={20} aria-hidden="true" className="mt-xxs shrink-0 text-positive-deep" />
-                <p className="text-body-sm text-positive-deep">
-                  {envoyee === '1'
-                    ? 'Votre candidature est envoyée. Le bailleur la verra dans son espace.'
-                    : 'Vous avez déjà candidaté à cette annonce.'}
+          <section aria-label="Étape de la candidature" className="mt-lg card card-lg">
+            {!profilCandidat ? (
+              <>
+                <h2 className="section-title">Complétez votre profil</h2>
+                <p className="mt-sm mb-lg text-body-md text-body">
+                  Deux informations suffisent pour candidater.
                 </p>
-              </div>
-              <div className="mt-lg flex flex-wrap items-center gap-md">
-                <Badge ton={TON_STATUT_CANDIDATURE[candidature.statut]}>
-                  {LIBELLES_STATUT_CANDIDATURE[candidature.statut]}
-                </Badge>
-                <span className="text-body-sm text-mute">
-                  Envoyée le {new Date(candidature.deposee_le).toLocaleDateString('fr-FR')}
-                </span>
-              </div>
-              <p className="mt-lg text-body-sm text-body">
-                Sikaloc ne garantit pas de réponse : c’est le bailleur qui décide, et quand il le
-                décide. Vous retrouverez l’état de votre candidature à tout moment. Une acceptation
-                ne crée pas automatiquement un bail.
-              </p>
-              <div className="mt-lg flex flex-wrap gap-md">
-                <Link href="/me/candidatures" className="btn btn-primary">
-                  Mes candidatures
-                </Link>
-                <Link href="/find" className="btn btn-secondary">
-                  Voir d’autres logements
-                </Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <h2 className="section-title">Votre candidature</h2>
-              <p className="mt-sm mb-lg text-body-md text-body">
-                Le bailleur verra votre nom et votre message. <strong>Ni votre téléphone, ni
-                votre email</strong> ne lui sont transmis.
-              </p>
-              <FormulaireMessageCandidature action={envoyerCandidature.bind(null, reference)} />
-              <Alerte ton="info">
-                Une candidature s’envoie une seule fois par annonce. Vous pourrez la retirer, mais
-                pas en déposer une seconde.
-              </Alerte>
-              {nom ? (
-                <p className="mt-lg text-caption text-mute">
-                  Vous candidatez en tant que {nom}
-                  {telephone ? ` · ${telephone}` : ''}.{' '}
-                  <Link href="/me/candidatures" className="underline">
-                    Modifier mon profil
+                <FormulaireProfilCandidat action={enregistrerProfilCandidat.bind(null, reference)} />
+              </>
+            ) : candidature ? (
+              <>
+                <div className="flex items-start gap-md rounded-md border border-positive/30 bg-positive-pale p-lg">
+                  <CheckCircle2 size={20} aria-hidden="true" className="mt-xxs shrink-0 text-positive-deep" />
+                  <p className="text-body-sm text-positive-deep">
+                    {envoyee === '1'
+                      ? 'Votre candidature est envoyée. Le bailleur la verra dans son espace.'
+                      : 'Vous avez déjà candidaté à cette annonce.'}
+                  </p>
+                </div>
+                <div className="mt-lg flex flex-wrap items-center gap-md">
+                  <Badge ton={TON_STATUT_CANDIDATURE[candidature.statut]}>
+                    {LIBELLES_STATUT_CANDIDATURE[candidature.statut]}
+                  </Badge>
+                  <span className="text-body-sm text-mute">
+                    Envoyée le {new Date(candidature.deposee_le).toLocaleDateString('fr-FR')}
+                  </span>
+                </div>
+                <p className="mt-lg text-body-sm text-body">
+                  Sikaloc ne garantit pas de réponse : c’est le bailleur qui décide, et quand il le
+                  décide. Vous retrouverez l’état de votre candidature à tout moment. Une acceptation
+                  ne crée pas automatiquement un bail.
+                </p>
+                <div className="mt-lg flex flex-wrap gap-md">
+                  <Link href="/me/candidatures" className="btn btn-primary">
+                    Mes candidatures
                   </Link>
+                  <Link href="/find" className="btn btn-secondary">
+                    Voir d’autres logements
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="section-title">Votre candidature</h2>
+                <p className="mt-sm mb-lg text-body-md text-body">
+                  Le bailleur verra votre nom et votre message. <strong>Ni votre téléphone, ni
+                  votre email</strong> ne lui sont transmis.
                 </p>
-              ) : null}
-            </>
-          )}
-        </section>
-      </main>
+                <FormulaireMessageCandidature action={envoyerCandidature.bind(null, reference)} />
+                <Alerte ton="info">
+                  Une candidature s’envoie une seule fois par annonce. Vous pourrez la retirer, mais
+                  pas en déposer une seconde.
+                </Alerte>
+                {nom ? (
+                  <p className="mt-lg text-caption text-mute">
+                    Vous candidatez en tant que {nom}
+                    {telephone ? ` · ${telephone}` : ''}.{' '}
+                    <Link href="/me/candidatures" className="underline">
+                      Modifier mon profil
+                    </Link>
+                  </p>
+                ) : null}
+              </>
+            )}
+          </section>
+        </main>
+      )}
 
       <PiedDePageFind />
     </div>

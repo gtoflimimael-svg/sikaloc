@@ -43,14 +43,13 @@ export async function inscrire(
     telephone: donnees.get('telephone'),
     motDePasse: donnees.get('motDePasse'),
     codeParrain: donnees.get('codeParrain') ?? '',
-    nbLogements: donnees.get('nbLogements') || undefined,
   })
 
   if (!analyse.success) {
     return { erreursChamps: erreursChamps(analyse.error) }
   }
 
-  const { nom, email, telephone, motDePasse, codeParrain, nbLogements } = analyse.data
+  const { nom, email, telephone, motDePasse, codeParrain } = analyse.data
   const supabase = await creerClientServeur()
 
   const { data, error } = await supabase.auth.signUp({
@@ -69,16 +68,16 @@ export async function inscrire(
         nom,
         telephone,
         code_parrain: codeParrain ? codeParrain.toUpperCase() : null,
-        nb_logements: nbLogements ?? null,
       },
     },
   })
 
   if (error) {
-    if (error.message.toLowerCase().includes('already registered')) {
-      return { erreur: 'Un compte existe déjà avec cette adresse email.' }
+    // Même réponse pour les adresses déjà inscrites et les autres refus Auth :
+    // l'écran propose toujours les liens de connexion et de récupération.
+    return {
+      erreur: 'Nous n’avons pas pu créer le compte. Vérifiez les informations ou réessayez dans un instant.',
     }
-    return { erreur: `La création du compte a échoué : ${error.message}` }
   }
 
   // ── Vers la vérification, pas vers l'application ────────────────────────

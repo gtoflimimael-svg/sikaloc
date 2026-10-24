@@ -45,13 +45,11 @@ export function AssistantOnboarding({
   nomBailleur,
   telephoneBailleur,
   emailBailleur,
-  nbLogementsDeclare,
   signatureExistante,
 }: {
   nomBailleur: string
   telephoneBailleur: string
   emailBailleur: string
-  nbLogementsDeclare: number | null
   signatureExistante: boolean
 }) {
   const [etape, setEtape] = useState<Etape>(1)
@@ -86,12 +84,6 @@ export function AssistantOnboarding({
             <Ligne terme="Nom" definition={nomBailleur} />
             <Ligne terme="Téléphone" definition={formaterTelephone(telephoneBailleur)} />
             <Ligne terme="Email" definition={emailBailleur} />
-            <Ligne
-              terme="Logements gérés"
-              definition={
-                nbLogementsDeclare !== null ? String(nbLogementsDeclare) : 'Non précisé'
-              }
-            />
           </dl>
 
           <div className="mt-2xl flex flex-wrap gap-md">

@@ -36,17 +36,22 @@ const texteObligatoire = (champ: string, min = 2, max = 200) =>
  * La migration 20260912000600 a converti les numéros déjà enregistrés : plus
  * aucun formulaire ne se rouvre sur huit chiffres.
  */
-const telephone = z
-  .string()
-  .trim()
-  .transform((v, ctx) => {
-    const verdict = validerTelephone(v, { obligatoire: true })
-    if (!verdict.valide) {
-      ctx.addIssue({ code: 'custom', message: MESSAGES_TELEPHONE[verdict.motif!] })
-      return z.NEVER
-    }
-    return verdict.canonique!
-  })
+function schemaTelephone(options: { exigerPrefixeActuel?: boolean } = {}) {
+  return z
+    .string()
+    .trim()
+    .transform((v, ctx) => {
+      const verdict = validerTelephone(v, { obligatoire: true, ...options })
+      if (!verdict.valide) {
+        ctx.addIssue({ code: 'custom', message: MESSAGES_TELEPHONE[verdict.motif!] })
+        return z.NEVER
+      }
+      return verdict.canonique!
+    })
+}
+
+const telephone = schemaTelephone()
+const telephoneInscription = schemaTelephone({ exigerPrefixeActuel: true })
 
 /**
  * La mesure vient de `@/lib/mot-de-passe-evaluation` : la jauge affichée pendant
@@ -117,12 +122,11 @@ const montant = z.coerce
 
 export const schemaInscription = z
   .object({
-    nom: texteObligatoire('Le nom', 2, 120),
+    nom: z.string().transform((valeur) => valeur.trim().replace(/\s+/g, ' ')).pipe(texteObligatoire('Le nom', 2, 120)),
     email: z.email('Adresse email invalide.').trim().toLowerCase(),
-    telephone,
+    telephone: telephoneInscription,
     motDePasse,
     codeParrain: z.string().trim().max(20).optional().or(z.literal('')),
-    nbLogements: z.coerce.number().int().min(0).max(1000).optional(),
   })
   .superRefine((valeurs, contexte) =>
     refuserMotDePasseContextuel(valeurs, contexte, [

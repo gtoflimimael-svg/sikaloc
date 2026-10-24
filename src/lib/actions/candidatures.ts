@@ -33,8 +33,8 @@ import { poserTemoinVerification } from '@/lib/verification/temoin'
  *
  * ─── Pourquoi une inscription à part ───────────────────────────────────────
  *
- * `/inscription` fabrique un bailleur : parrainage, nombre de logements,
- * et un profil créé par le déclencheur. Y greffer un choix de rôle,
+ * `/inscription` fabrique un bailleur : parrainage et profil créé par le
+ * déclencheur. Y greffer un choix de rôle,
  * c'est toucher au chemin par lequel passent toutes les créations de compte.
  *
  * Le projet a déjà tranché autrement pour les locataires : leur inscription
@@ -87,13 +87,10 @@ export async function inscrireCandidat(
   })
 
   if (error) {
-    if (error.message.toLowerCase().includes('already registered')) {
-      return {
-        erreur:
-          'Un compte existe déjà avec cette adresse. Connectez-vous, puis revenez à cette annonce.',
-      }
+    return {
+      erreur:
+        'Nous n’avons pas pu créer le compte. Vérifiez les informations ou connectez-vous si vous avez déjà un accès.',
     }
-    return { erreur: 'La création du compte a échoué. Réessayez dans un instant.' }
   }
 
   // Deux témoins : l'adresse, pour l'écran de saisie du code ; l'annonce, pour

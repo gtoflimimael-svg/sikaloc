@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import Link from 'next/link'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
@@ -107,7 +108,7 @@ export function FormulaireAcceptation({
           id="email"
           name="email"
           type="email"
-          autoComplete="username"
+          autoComplete="email"
           value={email}
           readOnly
           aria-describedby="invitation-email-aide"
@@ -121,6 +122,7 @@ export function FormulaireAcceptation({
       <ChampTelephone
         nom="telephone"
         libelle="Votre téléphone"
+        exigerPrefixeActuel
         aide="Votre bailleur l’utilise déjà pour vous joindre."
         requis
         erreur={etatRejoindre.erreursChamps?.telephone}
@@ -141,8 +143,9 @@ export function FormulaireAcceptation({
       </BoutonSoumettre>
 
       <p className="text-caption text-mute">
-        En créant un compte, vous acceptez les conditions d’utilisation et la
-        politique de confidentialité de Sikaloc.
+        En créant un compte, vous acceptez les{' '}
+        <Link href="/legal/conditions" className="underline">conditions d’utilisation</Link>{' '}
+        et la <Link href="/legal/confidentialite" className="underline">politique de confidentialité</Link>.
       </p>
     </form>
   )

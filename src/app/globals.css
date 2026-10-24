@@ -2871,6 +2871,216 @@
   .connexion-page *, .connexion-page *::before, .connexion-page *::after { scroll-behavior: auto !important; }
 }
 
+/* Inscription — une même structure éditoriale, avec trois parcours métier distincts. */
+.signup-experience {
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: clamp(24px, 4vw, 56px);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+.signup-experience-grid {
+  display: grid;
+  width: min(100%, 1360px);
+  min-height: calc(100svh - clamp(48px, 8vw, 112px));
+  grid-template-columns: minmax(0, 1.08fr) minmax(390px, .88fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 92px);
+  margin-inline: auto;
+}
+.signup-editorial {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 48px);
+}
+.signup-backlink,
+.signup-home-link {
+  width: fit-content;
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.5;
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+.signup-backlink:hover,
+.signup-home-link:hover { color: var(--color-ink); text-decoration: underline; }
+.signup-backlink:focus-visible,
+.signup-home-link:focus-visible,
+.signup-form-bottom a:focus-visible,
+.signup-form-content a:focus-visible {
+  border-radius: 3px;
+  outline: 3px solid var(--color-ink-deep);
+  outline-offset: 4px;
+}
+.signup-editorial-copy { max-width: 650px; }
+.signup-eyebrow {
+  margin: 0;
+  color: var(--color-ink-deep);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .055em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+.signup-editorial-copy h1 {
+  max-width: 12ch;
+  margin: 17px 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+  font-size: clamp(46px, 5.1vw, 72px);
+  font-weight: 800;
+  letter-spacing: -.066em;
+  line-height: 1.015;
+  text-wrap: balance;
+}
+.signup-editorial-description {
+  max-width: 52ch;
+  margin: 18px 0 0;
+  color: var(--color-body);
+  font-size: clamp(16px, 1.25vw, 18px);
+  line-height: 1.65;
+}
+.signup-photo {
+  position: relative;
+  width: 100%;
+  max-height: 430px;
+  overflow: hidden;
+  aspect-ratio: 1.5;
+  margin: 0;
+  border-radius: var(--radius-xl);
+  background: var(--color-canvas-sage);
+  box-shadow: 0 20px 48px -38px rgb(17 24 16 / .44);
+}
+.signup-photo img { object-fit: cover; object-position: center 48%; }
+.signup-form-side {
+  min-width: 0;
+  border-left: 1px solid var(--color-hairline-soft);
+  padding-left: clamp(28px, 4.3vw, 62px);
+}
+.signup-form-inner { width: min(100%, 450px); margin-inline: auto; }
+.signup-return-mobile { display: none; }
+.signup-mobile-title { display: none; }
+.signup-brand { margin-bottom: clamp(24px, 3vw, 34px); }
+.signup-form-heading h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+  font-size: clamp(29px, 2.8vw, 36px);
+  font-weight: 750;
+  letter-spacing: -.05em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.signup-form-heading p {
+  margin: 10px 0 0;
+  color: var(--color-mute);
+  font-size: 14px;
+  line-height: 1.58;
+}
+.signup-form-content { margin-top: 25px; }
+.signup-form-content .field-label { color: var(--color-body-strong); }
+.signup-form-content .input { min-height: 52px; background: var(--color-surface-card); }
+.signup-form-content .input:focus-visible {
+  border-color: var(--color-ink-deep);
+  outline: 3px solid color-mix(in srgb, var(--color-ink-deep) 22%, transparent);
+  outline-offset: 2px;
+}
+.signup-form-content a,
+.signup-form-bottom a { color: var(--color-ink-deep); text-underline-offset: 3px; }
+.signup-form-detail { margin-top: 21px; }
+.signup-listing-summary,
+.signup-invitation-detail {
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--color-canvas-sage);
+  padding: 14px 16px;
+}
+.signup-listing-kicker,
+.signup-invitation-kicker {
+  margin: 0;
+  color: var(--color-ink-deep);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .045em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.signup-listing-title {
+  margin: 7px 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -.025em;
+  line-height: 1.35;
+}
+.signup-listing-meta { margin: 4px 0 0; color: var(--color-body); font-size: 13px; line-height: 1.5; }
+.signup-invitation-detail dl { display: grid; gap: 8px; margin: 10px 0 0; }
+.signup-form-bottom {
+  display: grid;
+  gap: 7px;
+  margin-top: 22px;
+  padding-top: 17px;
+  border-top: 1px solid var(--color-hairline-soft);
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.signup-form-bottom p { margin: 0; }
+.signup-form-bottom a { font-weight: 700; }
+.signup-home-link { display: inline-block; margin-top: 17px; }
+
+@media (max-width: 980px) {
+  .signup-experience { padding: 30px 28px 40px; }
+  .signup-experience-grid {
+    width: min(100%, 640px);
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 38px;
+  }
+  .signup-form-side { grid-row: 1; border-left: 0; padding-left: 0; }
+  .signup-editorial { grid-row: 2; gap: 24px; }
+  .signup-editorial-copy h1 { max-width: 14ch; font-size: clamp(42px, 7vw, 58px); }
+  .signup-photo { max-height: 360px; aspect-ratio: 1.7; }
+  .signup-form-inner { width: 100%; }
+}
+@media (max-width: 640px) {
+  .signup-experience { padding: 22px 20px 30px; }
+  .signup-experience-grid { gap: 28px; }
+  .signup-editorial { display: none; }
+  .signup-return-mobile {
+    display: inline-block;
+    margin-bottom: 18px;
+    color: var(--color-mute);
+    font-size: 13px;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .signup-mobile-title {
+    display: block;
+    margin: 0 0 20px;
+    color: var(--color-ink);
+    font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+    font-size: clamp(31px, 8vw, 38px);
+    font-weight: 800;
+    letter-spacing: -.06em;
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+  .signup-brand { margin-bottom: 21px; }
+  .signup-form-heading h2 { font-size: 30px; }
+  .signup-form-heading p { font-size: 14px; }
+  .signup-form-content { margin-top: 22px; }
+  .signup-form-content .input { min-height: 52px; font-size: 16px; }
+  .signup-form-bottom { margin-top: 19px; padding-top: 15px; }
+  .signup-home-link { margin-top: 13px; }
+}
+@media (max-width: 360px) {
+  .signup-experience { padding-inline: 16px; }
+}
+
 /* ── Sikaloc Find : catalogue public ─────────────────────────────────────── */
 .find-catalog-page {
   background: var(--color-canvas);

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampMotDePasse } from '@/components/ui/champ-mot-de-passe'
@@ -71,14 +71,41 @@ export function FormulaireConnexion({
 
 /** Inscription simple : les informations nécessaires au compte bailleur. */
 export function FormulaireInscription({ codeParrain }: { codeParrain?: string }) {
-  const [etat, action] = useActionState(inscrire, ETAT_INITIAL)
+  const [etat, action, enCours] = useActionState(inscrire, ETAT_INITIAL)
+  const formulaire = useRef<HTMLFormElement>(null)
+  const [valeurs, setValeurs] = useState<{ nom?: string; email?: string }>({})
+
+  useEffect(() => {
+    if (!etat.erreur && !Object.keys(etat.erreursChamps ?? {}).length) return
+    const cible = formulaire.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
+      ?? formulaire.current?.querySelector<HTMLElement>('[role="alert"]')
+    if (cible) {
+      if (!cible.hasAttribute('aria-invalid')) cible.tabIndex = -1
+      cible.focus()
+    }
+  }, [etat])
+
+  const retenirChamps = (evenement: FormEvent<HTMLFormElement>) => {
+    const cible = evenement.target as HTMLInputElement
+    const champ = cible.name || cible.id
+    if (champ === 'nom' || champ === 'email') {
+      setValeurs((precedentes) => ({ ...precedentes, [champ]: cible.value }))
+    }
+  }
 
   if (etat.succes) {
     return <Alerte ton="succes">{etat.succes}</Alerte>
   }
 
   return (
-    <form action={action} className="space-y-lg">
+    <form
+      ref={formulaire}
+      action={action}
+      onChange={retenirChamps}
+      onReset={(evenement) => evenement.preventDefault()}
+      aria-busy={enCours}
+      className="space-y-lg"
+    >
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
       {codeParrain ? (
@@ -91,9 +118,10 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
       <div className="space-y-lg">
         <ChampTexte
           nom="nom"
-          libelle="Votre nom complet"
+          libelle="Nom complet"
+          valeurDefaut={valeurs.nom}
           autoComplete="name"
-          placeholder="Koffi Adjovi"
+          placeholder="Ex. Koffi Adjovi"
           requis
           erreur={etat.erreursChamps?.nom}
         />
@@ -101,7 +129,8 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
         <ChampTelephone
           nom="telephone"
           libelle="Téléphone"
-          aide="Utilisé sur vos quittances et pour vous joindre. Sa saisie ne le marque pas comme vérifié."
+          exigerPrefixeActuel
+          aide="Ce numéro peut figurer sur vos quittances. Il n'est pas vérifié par SMS."
           requis
           erreur={etat.erreursChamps?.telephone}
         />
@@ -110,7 +139,9 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
           nom="email"
           libelle="Adresse email"
           type="email"
-          autoComplete="username"
+          autoComplete="email"
+          inputMode="email"
+          valeurDefaut={valeurs.email}
           placeholder="vous@exemple.bj"
           requis
           erreur={etat.erreursChamps?.email}
@@ -131,19 +162,8 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
           erreur={etat.erreursChamps?.motDePasse}
         />
 
-        <ChampTexte
-          nom="nbLogements"
-          libelle="Combien de logements gérez-vous ?"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={1000}
-          placeholder="5"
-          erreur={etat.erreursChamps?.nbLogements}
-        />
-
         <BoutonSoumettre pleineLargeur libelleEnCours="Création…">
-          Créer mon compte
+          Créer mon compte bailleur
         </BoutonSoumettre>
       </div>
 

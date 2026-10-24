@@ -5,9 +5,11 @@ import { useId, useRef, useState } from 'react'
 import {
   INDICATIF_AFFICHE,
   LONGUEUR_NATIONALE,
+  MESSAGES_TELEPHONE,
   chiffresSaisis,
   formaterTelephone,
   normaliserTelephone,
+  validerTelephone,
 } from '@/lib/telephone'
 
 /**
@@ -37,6 +39,7 @@ export function ChampTelephone({
   erreur,
   aide,
   requis,
+  exigerPrefixeActuel,
   autoComplete = 'tel-national',
 }: {
   nom: string
@@ -45,14 +48,22 @@ export function ChampTelephone({
   erreur?: string
   aide?: string
   requis?: boolean
+  exigerPrefixeActuel?: boolean
   autoComplete?: string
 }) {
   const [chiffres, setChiffres] = useState(() => chiffresDepart(valeurDefaut))
+  const [touche, setTouche] = useState(false)
   const champ = useRef<HTMLInputElement>(null)
   const idAide = useId()
 
   const affiche = groupes(chiffres)
   const complet = chiffres.length === LONGUEUR_NATIONALE
+  const verdict = validerTelephone(chiffres ? `${INDICATIF_AFFICHE}${chiffres}` : '', {
+    obligatoire: requis,
+    exigerPrefixeActuel,
+  })
+  const erreurLocale = touche && !verdict.valide ? MESSAGES_TELEPHONE[verdict.motif!] : undefined
+  const erreurActive = touche && verdict.valide ? undefined : erreurLocale ?? erreur
 
   /** Chiffres situés avant une position donnée dans le texte affiché. */
   const chiffresAvant = (texte: string, position: number) =>
@@ -137,7 +148,7 @@ export function ChampTelephone({
         atteignable au clavier ni à la souris.
       */}
       <div
-        className={`input flex items-center gap-xs p-0 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${erreur ? 'border-negative' : ''}`}
+        className={`input flex items-center gap-xs p-0 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${erreurActive ? 'border-negative' : ''}`}
         onClick={() => champ.current?.focus()}
       >
         <span
@@ -157,9 +168,10 @@ export function ChampTelephone({
           value={affiche}
           onChange={surSaisie}
           onKeyDown={surTouche}
+          onBlur={() => setTouche(true)}
           required={requis}
-          aria-invalid={erreur ? true : undefined}
-          aria-describedby={erreur ? `${idAide}-erreur` : aide ? idAide : undefined}
+          aria-invalid={erreurActive ? true : undefined}
+          aria-describedby={erreurActive ? `${idAide}-erreur` : aide ? idAide : undefined}
           // L'indicatif est décoratif : les lecteurs d'écran le liraient comme
           // du texte détaché du champ. On le remet dans le nom accessible.
           aria-label={`${libelle}, indicatif ${INDICATIF_AFFICHE}`}
@@ -177,14 +189,14 @@ export function ChampTelephone({
         value={complet ? `${INDICATIF_AFFICHE}${chiffres}` : chiffres}
       />
 
-      {aide && !erreur ? (
+      {aide && !erreurActive ? (
         <p id={idAide} className="field-hint">
           {aide}
         </p>
       ) : null}
-      {erreur ? (
+      {erreurActive ? (
         <p id={`${idAide}-erreur`} className="field-error" role="alert">
-          {erreur}
+          {erreurActive}
         </p>
       ) : null}
     </div>

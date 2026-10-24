@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { CarteAuth } from '@/components/auth/carte-auth'
+import { ExperienceInscription } from '@/components/auth/experience-inscription'
 import { FormulaireAcceptation } from '@/components/me/formulaire-acceptation'
 import { Alerte } from '@/components/ui/retours'
+import { lienConnexion, lienMotDePasseOublie } from '@/lib/auth-contexte'
 import { empreinteJeton, MESSAGES_INVITATION, secretPresent } from '@/lib/invitations'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -102,35 +104,88 @@ export default async function PageInvitation({
     data: { user },
   } = await supabase.auth.getUser()
 
-  return (
-    <CarteAuth
-      titre="Votre espace locataire"
-      description={`${bailleur?.nom ?? 'Votre bailleur'} vous invite à suivre votre logement sur Sikaloc_Me.`}
-    >
-      <div className="space-y-xl">
-        <div className="rounded-lg border border-hairline bg-canvas-sage p-lg">
-          <p className="mb-md text-body-sm font-semibold text-ink">Vérifiez que cette invitation vous concerne avant de continuer.</p>
-          <dl className="space-y-sm text-body-sm">
-            <Ligne terme="Invitation de" definition={bailleur?.nom ?? '—'} />
-            <Ligne terme="Pour" definition={locataire?.nom ?? '—'} />
-            <Ligne terme="Adresse email" definition={invitation.email} />
-          </dl>
-        </div>
+  const contenuInvitation = (
+    <div className="space-y-xl">
+      <div className="rounded-lg border border-hairline bg-canvas-sage p-lg">
+        <p className="mb-md text-body-sm font-semibold text-ink">Vérifiez que cette invitation vous concerne avant de continuer.</p>
+        <dl className="space-y-sm text-body-sm">
+          <Ligne terme="Invitation de" definition={bailleur?.nom ?? '—'} />
+          <Ligne terme="Pour" definition={locataire?.nom ?? '—'} />
+          <Ligne terme="Adresse email" definition={invitation.email} />
+        </dl>
+      </div>
 
+      <FormulaireAcceptation
+        jeton={jeton}
+        email={invitation.email}
+        nom={locataire?.nom ?? ''}
+        dejaConnecte={Boolean(user)}
+        memeAdresse={user?.email?.toLowerCase() === invitation.email.toLowerCase()}
+        emailConnecte={user?.email ?? null}
+      />
+
+      <p className="rounded-lg border border-hairline bg-canvas p-md text-caption text-mute">
+        Vous ne connaissez pas {bailleur?.nom ?? 'cette personne'} ? N’acceptez
+        pas cette invitation, et ignorez le message qui vous l’a transmise.
+      </p>
+    </div>
+  )
+
+  if (!user) {
+    return (
+      <ExperienceInscription
+        espace="Me"
+        label="Sikaloc Me · Espace locataire"
+        titreEditorial="Votre location, à portée de main."
+        descriptionEditorial="Activez l’accès que votre bailleur vous a envoyé pour retrouver les informations et documents partagés de votre location."
+        image="/images/me/sikaloc-me-connexion-editorial.webp"
+        imageAlt="Un locataire ouest-africain se tient près d’une fenêtre lumineuse et consulte son téléphone dans son appartement."
+        titreFormulaire="Accepter votre invitation"
+        descriptionFormulaire="Créez votre accès avec l’adresse email à laquelle votre bailleur vous a invité."
+        detailFormulaire={
+          <div className="signup-invitation-detail">
+            <p className="signup-invitation-kicker">Invitation personnelle</p>
+            <dl>
+              <Ligne terme="Invitation de" definition={bailleur?.nom ?? '—'} />
+              <Ligne terme="Pour" definition={locataire?.nom ?? '—'} />
+              <Ligne terme="Adresse email" definition={invitation.email} />
+            </dl>
+          </div>
+        }
+        bas={
+          <>
+            <p>
+              Vous avez déjà un compte ?{' '}
+              <Link href={lienConnexion('me', '/me')}>Connectez-vous</Link>, puis rouvrez le lien de cette invitation.
+            </p>
+            <p>
+              <Link href={lienMotDePasseOublie('me', '/me')}>Mot de passe oublié ?</Link>
+            </p>
+            <p>
+              Vous ne connaissez pas {bailleur?.nom ?? 'cette personne'} ? N’acceptez pas cette
+              invitation et ignorez le message qui vous l’a transmise.
+            </p>
+          </>
+        }
+      >
         <FormulaireAcceptation
           jeton={jeton}
           email={invitation.email}
           nom={locataire?.nom ?? ''}
-          dejaConnecte={Boolean(user)}
-          memeAdresse={user?.email?.toLowerCase() === invitation.email.toLowerCase()}
-          emailConnecte={user?.email ?? null}
+          dejaConnecte={false}
+          memeAdresse={false}
+          emailConnecte={null}
         />
+      </ExperienceInscription>
+    )
+  }
 
-        <p className="rounded-lg border border-hairline bg-canvas p-md text-caption text-mute">
-          Vous ne connaissez pas {bailleur?.nom ?? 'cette personne'} ? N’acceptez
-          pas cette invitation, et ignorez le message qui vous l’a transmise.
-        </p>
-      </div>
+  return (
+    <CarteAuth
+      titre="Votre espace locataire"
+      description={`${bailleur?.nom ?? 'Votre bailleur'} vous invite à suivre votre logement sur Sikaloc Me.`}
+    >
+      {contenuInvitation}
     </CarteAuth>
   )
 }

@@ -12,8 +12,8 @@ export const metadata: Metadata = { title: 'Bienvenue' }
  * Onboarding guidé en 4 étapes (§6.1.2).
  *
  * L'étape 1 (« Votre activité ») est déjà remplie par le formulaire
- * d'inscription : nom, téléphone, email, mot de passe et nombre de logements y
- * sont collectés. On la montre en lecture, cochée, plutôt que de la redemander.
+ * d'inscription : nom, téléphone et email y sont collectés. On les montre en
+ * lecture, plutôt que de les redemander.
  *
  * L'étape 2 recueille la signature. Elle ne peut pas vivre dans le formulaire
  * d'inscription : à ce moment-là le compte n'existe pas encore, et il n'y a
@@ -35,7 +35,6 @@ export default async function PageOnboarding() {
           nomBailleur={bailleur.nom}
           telephoneBailleur={bailleur.telephone}
           emailBailleur={bailleur.email}
-          nbLogementsDeclare={bailleur.nb_logements_declare}
           signatureExistante={Boolean(bailleur.signature_chemin)}
         />
       </main>
