@@ -8,6 +8,7 @@ import { supprimerPaiement, validerPaiement } from '@/lib/actions/paiements'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { apercuDocumentPaiement } from '@/lib/documents-paiement'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
+import { estCorrigeable } from '@/lib/paiement-utils'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -27,7 +28,7 @@ export default async function PageConfirmationPaiement({
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const [, { data: paiement }] = await Promise.all([
+  const [, reponsePaiement] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('paiements')
@@ -38,6 +39,15 @@ export default async function PageConfirmationPaiement({
       .maybeSingle(),
   ])
 
+  if (reponsePaiement.error) {
+    return (
+      <Alerte ton="erreur">
+        Le paiement n’a pas pu être chargé. Actualisez la page pour réessayer.
+      </Alerte>
+    )
+  }
+
+  const paiement = reponsePaiement.data
   if (!paiement) notFound()
 
   const quittance = Array.isArray(paiement.quittance)
@@ -54,6 +64,7 @@ export default async function PageConfirmationPaiement({
   const locataire = Array.isArray(bail?.locataire) ? bail?.locataire[0] : bail?.locataire
 
   const paiementDejaValide = paiement.statut === 'Validé'
+  const actionsCorrectionDisponibles = estCorrigeable(paiement.valide_le, paiement.statut)
   const montant = Number(paiement.montant)
   const { data: echeance, error: erreurEcheance } = paiement.type_paiement === 'Loyer'
     ? await supabase
@@ -80,10 +91,13 @@ export default async function PageConfirmationPaiement({
   return (
     <div className="payment-confirmation-page mx-auto max-w-[42rem] space-y-xl">
       <div>
-        <Link href={`/pro/paiements/${paiement.id}/modifier`} className="text-body-sm text-mute hover:text-ink">
-          ← Modifier la saisie
+        <Link
+          href={actionsCorrectionDisponibles ? `/pro/paiements/${paiement.id}/modifier` : '/pro/paiements'}
+          className="text-body-sm text-mute hover:text-ink"
+        >
+          {actionsCorrectionDisponibles ? '← Modifier la saisie' : '← Historique des paiements'}
         </Link>
-        <EnTetePage titre="Confirmer le paiement"
+        <EnTetePage titre={paiementDejaValide ? 'Document du paiement' : 'Confirmer le paiement'}
           description={paiementDejaValide
             ? 'Le paiement est déjà validé. Cette étape permet de reprendre la génération de son document.'
             : 'Vérifiez avant de valider. Après confirmation, vous disposerez de 5 minutes pour corriger.'} />
@@ -170,12 +184,14 @@ export default async function PageConfirmationPaiement({
           libelle={paiementDejaValide ? 'Générer le document' : 'Confirmer et générer le document'}
           libelleEnCours="Génération…"
         />
-        <BoutonAction
-          action={supprimerPaiement.bind(null, id)}
-          libelle="Abandonner"
-          libelleEnCours="Suppression…"
-          variante="secondary"
-        />
+        {actionsCorrectionDisponibles ? (
+          <BoutonAction
+            action={supprimerPaiement.bind(null, id)}
+            libelle="Abandonner"
+            libelleEnCours="Suppression…"
+            variante="secondary"
+          />
+        ) : null}
       </GroupeActions>
     </div>
   )

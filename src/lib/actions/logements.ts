@@ -96,8 +96,7 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
   if (error) {
     if (error.code === '23503') {
       return {
-        erreur:
-          'Ce logement porte un bail. Supprimez le bail associé avant de retirer le logement.',
+        erreur: 'Ce logement est associé à un bail et ne peut pas être supprimé tant que ce bail existe.',
       }
     }
     // Une annonce vivante (brouillon, publiée, suspendue) retient son

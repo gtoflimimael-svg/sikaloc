@@ -92,8 +92,7 @@ export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
     // FK RESTRICT depuis `baux` : un locataire sous bail n'est pas supprimable.
     if (error.code === '23503') {
       return {
-        erreur:
-          'Ce locataire est rattaché à un bail. Résiliez puis supprimez le bail avant de le retirer.',
+        erreur: 'Ce locataire est rattaché à un bail et ne peut pas être supprimé tant que ce bail existe.',
       }
     }
     return { erreur: `Suppression impossible : ${error.message}` }

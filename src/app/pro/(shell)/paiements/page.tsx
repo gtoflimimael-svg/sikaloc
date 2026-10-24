@@ -10,6 +10,7 @@ import {
   formaterFCFA,
   formaterPeriode,
 } from '@/lib/format'
+import { libelleActionDocumentManquant } from '@/lib/paiement-utils'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -251,10 +252,10 @@ export default async function PageHistoriquePaiements({
                         ) : (
                           <Link
                             href={`/pro/paiements/${paiement.id}/confirmer`}
-                            aria-label={`À confirmer — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}
+                            aria-label={`${libelleActionDocumentManquant(paiement.statut)} — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}
                             className="font-semibold text-warning-content underline"
                           >
-                            À confirmer
+                            {libelleActionDocumentManquant(paiement.statut)}
                           </Link>
                         )}
                       </td>

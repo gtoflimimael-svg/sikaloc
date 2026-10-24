@@ -91,12 +91,15 @@ test('l’aperçu d’une quittance préfère le snapshot et ne confond pas char
   )
 })
 
-test('le retour « modifier la saisie » rouvre le paiement concerné, sans en créer un autre', async () => {
+test('la confirmation ne propose la modification que pendant la fenêtre autorisée', async () => {
   const confirmation = await readFile(
     new URL('src/app/pro/(shell)/paiements/[id]/confirmer/page.tsx', racine),
     'utf8',
   )
-  assert.match(confirmation, /href=\{`\/pro\/paiements\/\$\{paiement\.id\}\/modifier`\}/)
+  assert.match(
+    confirmation,
+    /actionsCorrectionDisponibles \? `\/pro\/paiements\/\$\{paiement\.id\}\/modifier` : '\/pro\/paiements'/,
+  )
 })
 
 test('l’aperçu de quittance utilise la lecture SQL autorisée et les données figées', async () => {

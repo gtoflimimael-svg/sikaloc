@@ -48,14 +48,23 @@ export function presenterQuotaLogements(
   return `Plan ${plan} · ${nombre} ${logement} sur ${limite}`
 }
 
-/** Ouvre la gestion d'une annonce existante ou le vrai parcours de création d'un brouillon. */
+/**
+ * Une annonce existante reste gérable, quel que soit l'état du logement.
+ * Sans annonce, la remise en location ordinaire n'est proposée que si aucun
+ * bail actif n'est connu. La préparation d'une disponibilité future reste
+ * accessible depuis le parcours Annonces, qui en explique explicitement les
+ * conditions.
+ */
 export function presenterActionAnnonce(
   annonceId: string | undefined,
   logementId: string,
-): { href: string; libelle: string } {
+  bailActif: boolean,
+): { href: string; libelle: string } | null {
   if (annonceId) {
     return { href: `/pro/annonces/${annonceId}`, libelle: 'Gérer l’annonce' }
   }
+
+  if (bailActif) return null
 
   return {
     href: `/pro/annonces/nouvelle?logement=${encodeURIComponent(logementId)}`,

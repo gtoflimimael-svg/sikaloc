@@ -167,17 +167,11 @@
   line-height: 1.5;
 }
 
-.tenant a {
+.tenant > strong {
   overflow-wrap: anywhere;
   color: var(--color-ink);
   font-size: 14px;
   font-weight: 590;
-  text-decoration: none;
-}
-
-.tenant a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .rent {

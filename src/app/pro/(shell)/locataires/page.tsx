@@ -10,6 +10,7 @@ import { supprimerLocataire } from '@/lib/actions/locataires'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { bailleurOnboarde } from '@/lib/session'
 import { formaterTelephone } from '@/lib/telephone'
+import { peutSupprimerLocataire } from '@/lib/locataires-presentation'
 
 export const metadata: Metadata = { title: 'Locataires' }
 
@@ -121,14 +122,20 @@ export default async function PageLocataires() {
                     >
                       Modifier
                     </Link>
-                    <ActionConfirmee
-                      action={supprimerLocataire.bind(null, locataire.id)}
-                      libelle="Supprimer"
-                      varianteDeclencheur="tertiary"
-                      titreConfirmation={`Supprimer ${locataire.nom} ?`}
-                      messageConfirmation="Cette action est définitive. Elle échouera si le locataire est rattaché à un bail — c'est la protection de vos historiques de paiement."
-                      libelleConfirmation="Supprimer définitivement"
-                    />
+                    {peutSupprimerLocataire(baux.length) ? (
+                      <ActionConfirmee
+                        action={supprimerLocataire.bind(null, locataire.id)}
+                        libelle="Supprimer"
+                        varianteDeclencheur="tertiary"
+                        titreConfirmation={`Supprimer ${locataire.nom} ?`}
+                        messageConfirmation="Cette action est définitive."
+                        libelleConfirmation="Supprimer définitivement"
+                      />
+                    ) : (
+                      <span className="text-caption text-mute" role="note">
+                        Suppression indisponible · bail associé
+                      </span>
+                    )}
                   </div>
                 </div>
               </li>

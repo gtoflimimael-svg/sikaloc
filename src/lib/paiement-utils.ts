@@ -26,3 +26,8 @@ export function tempsRestantCorrection(valideLe: string | null): number {
 
   return Math.max(0, FENETRE_CORRECTION_MS - (Date.now() - new Date(valideLe).getTime()))
 }
+
+/** Action honnête quand le paiement existe mais que son document manque. */
+export function libelleActionDocumentManquant(statut: StatutPaiement): string {
+  return statut === 'Validé' ? 'Générer le document' : 'À confirmer'
+}

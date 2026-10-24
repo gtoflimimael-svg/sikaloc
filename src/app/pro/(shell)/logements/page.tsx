@@ -121,7 +121,7 @@ export default async function PageLogements() {
                 const locataire = premiereRelation(bailActif?.locataire)
                 const annonce = trouverAnnonceVivante(logement.annonces ?? [])
                 const statutAnnonce = annonce ? presenterStatutAnnonce(annonce.statut) : null
-                const actionAnnonce = presenterActionAnnonce(annonce?.id, logement.id)
+                const actionAnnonce = presenterActionAnnonce(annonce?.id, logement.id, Boolean(bailActif))
                 const suppressionPossible = peutSupprimerLogement(baux.length, Boolean(annonce))
 
                 return (
@@ -148,9 +148,7 @@ export default async function PageLogements() {
                       {bailActif ? (
                         <p className={styles.tenant}>
                           <span>Locataire</span>
-                          <Link href={`/pro/baux/${bailActif.id}`}>
-                            {locataire?.nom ?? 'Consulter le bail'}
-                          </Link>
+                          <strong>{locataire?.nom ?? 'Locataire associé'}</strong>
                         </p>
                       ) : (
                         <div className={styles.vacancySummary}>
@@ -179,9 +177,20 @@ export default async function PageLogements() {
                       <Link href={`/pro/logements/${logement.id}/modifier`} className={styles.rowAction}>
                         Modifier
                       </Link>
-                      <Link href={actionAnnonce.href} className={styles.rowAction}>
-                        {actionAnnonce.libelle}
-                      </Link>
+                      {bailActif ? (
+                        <Link
+                          href={`/pro/baux/${bailActif.id}`}
+                          className={styles.rowAction}
+                          aria-label={`Voir le bail de ${locataire?.nom ?? 'ce logement'}`}
+                        >
+                          Voir le bail
+                        </Link>
+                      ) : null}
+                      {actionAnnonce ? (
+                        <Link href={actionAnnonce.href} className={styles.rowAction}>
+                          {actionAnnonce.libelle}
+                        </Link>
+                      ) : null}
                       {suppressionPossible ? (
                         <details className={styles.moreActions}>
                           <summary aria-label={`Autres actions pour ${logement.adresse}`}>

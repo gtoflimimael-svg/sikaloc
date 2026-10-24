@@ -7,6 +7,7 @@ import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
 import { TableauListe } from '@/components/ui/listes'
 import { reactiverBail, resilierBail, supprimerBail } from '@/lib/actions/baux'
+import { peutSupprimerBail } from '@/lib/baux-presentation'
 import {
   formaterDate,
   formaterDateCourte,
@@ -91,6 +92,7 @@ export default async function PageDetailBail({
   const listePaiements = paiements ?? []
   const listeImpayes = (impayes ?? []) as Impaye[]
   const listeExcedents = excedents ?? []
+  const suppressionBailPossible = peutSupprimerBail(listePaiements.length, !erreurPaiements)
 
   return (
     <div className="space-y-2xl">
@@ -360,13 +362,21 @@ export default async function PageDetailBail({
             />
           )}
 
-          <ActionConfirmee
-            action={supprimerBail.bind(null, id)}
-            libelle="Supprimer le bail"
-            titreConfirmation="Supprimer ce bail définitivement ?"
-            messageConfirmation="Action irréversible. Elle échouera si des paiements y sont rattachés — dans ce cas, préférez la résiliation."
-            libelleConfirmation="Supprimer définitivement"
-          />
+          {suppressionBailPossible ? (
+            <ActionConfirmee
+              action={supprimerBail.bind(null, id)}
+              libelle="Supprimer le bail"
+              titreConfirmation="Supprimer ce bail définitivement ?"
+              messageConfirmation="Action irréversible. Les baux associés à des paiements ne peuvent pas être supprimés."
+              libelleConfirmation="Supprimer définitivement"
+            />
+          ) : (
+            <p className="text-body-sm text-mute" role="note">
+              {erreurPaiements
+                ? 'Suppression indisponible : l’historique des paiements n’a pas pu être vérifié.'
+                : 'Ce bail conserve des paiements et ne peut pas être supprimé. Résiliez-le pour préserver son historique.'}
+            </p>
+          )}
         </div>
       </section>
     </div>

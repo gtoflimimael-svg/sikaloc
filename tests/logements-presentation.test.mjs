@@ -54,16 +54,23 @@ test('présente les états d’annonce sans confondre publication et disponibili
   assert.equal(presenterStatutAnnonce('cloturee'), null)
 })
 
-test('une annonce existante se gère et un nouveau logement ouvre le parcours réel de préparation', () => {
-  assert.deepEqual(presenterActionAnnonce('annonce-1', 'logement-1'), {
+test('une annonce existante reste gérable même si le logement est occupé', () => {
+  assert.deepEqual(presenterActionAnnonce('annonce-1', 'logement-1', true), {
     href: '/pro/annonces/annonce-1',
     libelle: 'Gérer l’annonce',
   })
-  assert.deepEqual(presenterActionAnnonce(undefined, 'logement-1'), {
+})
+
+test('un logement occupé sans annonce ne reçoit pas de CTA ordinaire de mise en location', () => {
+  assert.equal(presenterActionAnnonce(undefined, 'logement-1', true), null)
+})
+
+test('un logement sans bail actif ouvre le parcours réel de préparation d’annonce', () => {
+  assert.deepEqual(presenterActionAnnonce(undefined, 'logement-1', false), {
     href: '/pro/annonces/nouvelle?logement=logement-1',
     libelle: 'Préparer une annonce',
   })
-  assert.deepEqual(presenterActionAnnonce(undefined, 'logement-2'), {
+  assert.deepEqual(presenterActionAnnonce(undefined, 'logement-2', false), {
     href: '/pro/annonces/nouvelle?logement=logement-2',
     libelle: 'Préparer une annonce',
   })
