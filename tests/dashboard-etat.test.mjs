@@ -6,7 +6,9 @@ import {
   determinerActionContextuelleDashboard,
   determinerActionPrincipaleDemarrage,
   determinerEtatDashboardPro,
+  periodeCouranteDashboard,
   peutCreerBail,
+  presenterRecouvrementDashboard,
 } from '../src/lib/dashboard/etat.ts'
 
 test('un bailleur sans logement voit l’état de démarrage', () => {
@@ -59,6 +61,20 @@ test('le dashboard priorise un versement à enregistrer seulement pour un bail a
   }), 'aucune')
 })
 
+test('la prochaine action n’invite pas à enregistrer un second paiement à confirmer', () => {
+  const contexte = {
+    nbBauxActifs: 1,
+    nbLogementsLibres: 0,
+    nbLocataires: 1,
+    loyerAttendu: 80000,
+    loyerPercu: 0,
+    logementLibreSansAnnonce: false,
+  }
+  assert.equal(determinerActionContextuelleDashboard({ ...contexte, nbBrouillons: 1 }), 'aucune')
+  assert.equal(determinerActionContextuelleDashboard({ ...contexte, nbImpayes: 1 }), 'aucune')
+  assert.equal(determinerActionContextuelleDashboard({ ...contexte, suiviUrgentConnu: false }), 'aucune')
+})
+
 test('la prochaine action suit les vrais prérequis du logement vacant', () => {
   assert.equal(determinerActionContextuelleDashboard({
     nbBauxActifs: 0,
@@ -84,4 +100,43 @@ test('la prochaine action suit les vrais prérequis du logement vacant', () => {
     loyerPercu: 0,
     logementLibreSansAnnonce: false,
   }), 'aucune')
+})
+
+test('le recouvrement distingue absence d’attendu, zéro, partiel et règlement complet', () => {
+  assert.deepEqual(presenterRecouvrementDashboard(0, 0), {
+    attendu: 0,
+    valide: 0,
+    taux: null,
+    progression: null,
+    reste: 0,
+    excedent: 0,
+  })
+  assert.equal(presenterRecouvrementDashboard(20000, 0)?.taux, 0)
+  assert.equal(presenterRecouvrementDashboard(20000, 0)?.progression, 0)
+  assert.equal(presenterRecouvrementDashboard(20000, 8000)?.taux, 40)
+  assert.equal(presenterRecouvrementDashboard(20000, 8000)?.reste, 12000)
+  assert.equal(presenterRecouvrementDashboard(20000, 20000)?.taux, 100)
+  assert.equal(presenterRecouvrementDashboard(20000, 20000)?.progression, 100)
+})
+
+test('un excédent reste visible sans faire dépasser la barre de son échelle', () => {
+  assert.deepEqual(presenterRecouvrementDashboard(20000, 25000), {
+    attendu: 20000,
+    valide: 25000,
+    taux: 125,
+    progression: 100,
+    reste: 0,
+    excedent: 5000,
+  })
+})
+
+test('une valeur financière indisponible ne devient pas un zéro d’affichage', () => {
+  assert.equal(presenterRecouvrementDashboard(null, 0), null)
+  assert.equal(presenterRecouvrementDashboard(10000, Number.NaN), null)
+  assert.equal(presenterRecouvrementDashboard(0, 4000)?.taux, null)
+})
+
+test('le libellé du mois suit la date civile UTC utilisée par la vue mensuelle', () => {
+  assert.equal(periodeCouranteDashboard(new Date('2026-11-01T00:30:00+01:00')), '2026-10-01')
+  assert.equal(periodeCouranteDashboard(new Date('2026-11-01T00:30:00Z')), '2026-11-01')
 })

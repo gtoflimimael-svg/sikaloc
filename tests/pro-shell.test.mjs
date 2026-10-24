@@ -85,13 +85,32 @@ test('le tableau de bord priorise un suivi réel sans promettre une relance auto
   const dashboard = await lire('src/app/pro/(shell)/tableau-de-bord/page.tsx')
   assert.match(dashboard, /À surveiller/)
   assert.match(dashboard, /Paiement à confirmer/)
-  assert.match(dashboard, /suiviUrgentConnu && impayes\.length === 0 && brouillons\.length === 0/)
+  assert.match(dashboard, /suiviUrgentConnu,/)
+  assert.match(dashboard, /nbImpayes: Number\(impayesReponse\.count/)
+  assert.match(dashboard, /nbBrouillons: Number\(brouillonsReponse\.count/)
   assert.match(dashboard, /determinerActionContextuelleDashboard/)
   assert.match(dashboard, /from\('v_echeances'\)/)
   assert.match(dashboard, /Versements validés/)
   assert.match(dashboard, /metriquesReponse\.error/)
   assert.doesNotMatch(dashboard, /Envoyer une relance/)
   assert.match(dashboard, /TableauListe id="derniers-paiements"/)
+})
+
+test('les données du dashboard restent bornées au bailleur et les vues conservent RLS', async () => {
+  const dashboard = await lire('src/app/pro/(shell)/tableau-de-bord/page.tsx')
+  const migration = await lire('supabase/migrations/20261020185126_fiabiliser_loyers_echeances.sql')
+  assert.match(dashboard, /bailleurOnboarde\(\)/)
+  assert.equal((dashboard.match(/\.eq\('bailleur_id', bailleur\.id\)/g) ?? []).length, 9)
+  assert.match(migration, /create or replace view public\.v_metriques_dashboard[\s\S]*?security_invoker = true/)
+  assert.match(migration, /create or replace view public\.v_echeances[\s\S]*?security_invoker = true/)
+})
+
+test('les paiements récents ne montrent les justificatifs que s’ils sont réellement liés', async () => {
+  const dashboard = await lire('src/app/pro/(shell)/tableau-de-bord/page.tsx')
+  assert.match(dashboard, /\.eq\('statut', 'Validé'\)/)
+  assert.match(dashboard, /quittance:quittances\(id, type\)/)
+  assert.match(dashboard, /\/pro\/quittances\/\$\{encodeURIComponent\(/)
+  assert.match(dashboard, /Voir le justificatif/)
 })
 
 test('le détail d’un bail expose son historique de paiements dans une région accessible', async () => {

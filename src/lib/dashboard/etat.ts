@@ -10,6 +10,48 @@ export type ActionContextuelleDashboard =
   | 'preparer-annonce'
   | 'aucune'
 
+export type RecouvrementDashboard = {
+  attendu: number
+  valide: number
+  taux: number | null
+  progression: number | null
+  reste: number
+  excedent: number
+}
+
+/**
+ * Prépare l'affichage des métriques déjà calculées par la vue métier.
+ * Aucun montant n'est recalculé depuis les paiements côté interface.
+ */
+export function presenterRecouvrementDashboard(
+  attenduSource: number | string | null | undefined,
+  valideSource: number | string | null | undefined,
+): RecouvrementDashboard | null {
+  if (attenduSource == null || valideSource == null || attenduSource === '' || valideSource === '') return null
+
+  const attendu = Number(attenduSource)
+  const valide = Number(valideSource)
+  if (!Number.isFinite(attendu) || !Number.isFinite(valide) || attendu < 0 || valide < 0) return null
+
+  const taux = attendu > 0 ? Math.round((valide / attendu) * 100) : null
+  return {
+    attendu,
+    valide,
+    taux,
+    progression: taux === null ? null : Math.max(0, Math.min(taux, 100)),
+    reste: Math.max(0, attendu - valide),
+    excedent: Math.max(0, valide - attendu),
+  }
+}
+
+/**
+ * La vue mensuelle utilise `current_date` dans PostgreSQL (UTC par défaut).
+ * Son libellé doit suivre le même mois, notamment à la frontière de fuseau.
+ */
+export function periodeCouranteDashboard(date: Date = new Date()): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-01`
+}
+
 export function determinerEtatDashboardPro(
   nbLogements: number,
   nbBaux: number,
@@ -68,6 +110,9 @@ export function determinerActionContextuelleDashboard({
   loyerAttendu,
   loyerPercu,
   logementLibreSansAnnonce,
+  suiviUrgentConnu = true,
+  nbImpayes = 0,
+  nbBrouillons = 0,
 }: {
   nbBauxActifs: number
   nbLogementsLibres: number
@@ -75,7 +120,13 @@ export function determinerActionContextuelleDashboard({
   loyerAttendu: number
   loyerPercu: number
   logementLibreSansAnnonce: boolean
+  suiviUrgentConnu?: boolean
+  nbImpayes?: number
+  nbBrouillons?: number
 }): ActionContextuelleDashboard {
+  // Ne pas proposer un nouvel enregistrement tant qu'un versement attend déjà
+  // confirmation, qu'un retard requiert le suivi, ou que ces données manquent.
+  if (!suiviUrgentConnu || nbImpayes > 0 || nbBrouillons > 0) return 'aucune'
   if (nbBauxActifs > 0 && loyerAttendu > loyerPercu) return 'enregistrer-paiement'
   if (peutCreerBail({ nbLogementsLibres, nbLocataires })) return 'creer-bail'
   if (nbLogementsLibres > 0 && logementLibreSansAnnonce) return 'preparer-annonce'

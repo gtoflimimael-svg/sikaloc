@@ -11,7 +11,7 @@ import { bailleurOnboarde } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Echeance, Impaye, MetriquesDashboard, StatutAnnonce } from '@/lib/types/database'
-import { compterEtapesConfigurees, determinerActionContextuelleDashboard, determinerActionPrincipaleDemarrage, determinerEtatDashboardPro, peutCreerBail } from '@/lib/dashboard/etat'
+import { compterEtapesConfigurees, determinerActionContextuelleDashboard, determinerActionPrincipaleDemarrage, determinerEtatDashboardPro, periodeCouranteDashboard, peutCreerBail, presenterRecouvrementDashboard } from '@/lib/dashboard/etat'
 import { formaterDateCourte, formaterFCFA, formaterPeriode } from '@/lib/format'
 
 export const metadata: Metadata = { title: { absolute: 'Tableau de bord · Sikaloc Pro' } }
@@ -33,6 +33,7 @@ type PaiementDashboard = {
   statut: string
   mode_paiement: string
   bail: { locataire?: { nom?: string } | { nom?: string }[] } | null
+  quittance: { id: string; type: string } | { id: string; type: string }[] | null
 }
 
 type PaiementBrouillonDashboard = {
@@ -68,36 +69,62 @@ function nomLocataire(
   return locataire?.nom ?? 'Locataire'
 }
 
-function MoisCourant() {
-  return new Intl.DateTimeFormat('fr-FR', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'Africa/Porto-Novo',
-  }).format(new Date())
+function documentPaiement(
+  quittance: PaiementDashboard['quittance'],
+): { id: string; type: string } | null {
+  return Array.isArray(quittance) ? quittance[0] ?? null : quittance
 }
 
-function SyntheseRecouvrement({ metriques }: { metriques: MetriquesDashboard }) {
-  const attendu = Number(metriques.loyers_attendus_mois)
-  const percu = Number(metriques.loyers_percus_mois)
-  const taux = attendu > 0 ? Math.round((percu / attendu) * 100) : null
-  const barre = taux === null ? 0 : Math.max(0, Math.min(taux, 100))
+function LienJustificatifPaiement({ paiement }: { paiement: PaiementDashboard }) {
+  const document = documentPaiement(paiement.quittance)
+  if (!document) return null
+
+  return (
+    <Link
+      href={`/pro/quittances/${encodeURIComponent(document.id)}`}
+      className="dashboard-payment-document"
+      aria-label={`Voir ${document.type.toLowerCase()} — ${nomLocataire(paiement.bail)}, ${formaterPeriode(paiement.periode_debut)}`}
+    >
+      Voir le justificatif
+    </Link>
+  )
+}
+
+function SyntheseRecouvrement({
+  recouvrement,
+  periode,
+}: {
+  recouvrement: NonNullable<ReturnType<typeof presenterRecouvrementDashboard>>
+  periode: string
+}) {
+  const { attendu, valide, taux, progression, excedent } = recouvrement
+  const libellePeriode = formaterPeriode(periode)
+  const description = attendu === 0
+    ? valide > 0
+      ? 'Des loyers ont été validés, sans montant attendu sur cette période.'
+      : 'Aucun loyer attendu sur cette période.'
+    : excedent > 0
+      ? `Tous les loyers attendus sont couverts · ${formaterFCFA(excedent)} au-delà du montant attendu.`
+      : taux === 100
+        ? 'Tous les loyers attendus sont validés.'
+        : taux === 0
+          ? 'Aucun loyer attendu n’a encore été validé.'
+          : 'des loyers attendus sont validés.'
 
   return (
     <section className="dashboard-collection" aria-labelledby="recouvrement-mois">
+      <p className="dashboard-eyebrow">Recouvrement · {libellePeriode}</p>
       <div className="dashboard-collection-heading">
         <div>
-          <p className="dashboard-eyebrow">Recouvrement · {MoisCourant()}</p>
           <h2 id="recouvrement-mois" className="dashboard-collection-title">
             {taux === null ? '—' : `${taux} %`}
           </h2>
-          <p className="dashboard-collection-caption">
-            {attendu > 0 ? 'des loyers attendus sont validés' : 'aucun loyer exigible ce mois-ci'}
-          </p>
+          <p className="dashboard-collection-caption">{description}</p>
         </div>
-        <div className="dashboard-collection-totals" aria-label="Montants du mois">
+        <div className="dashboard-collection-totals" aria-label={`Montants de ${libellePeriode}`}>
           <div>
             <span>Validé</span>
-            <strong>{formaterFCFA(percu)}</strong>
+            <strong>{formaterFCFA(valide)}</strong>
           </div>
           <div>
             <span>Attendu</span>
@@ -105,17 +132,19 @@ function SyntheseRecouvrement({ metriques }: { metriques: MetriquesDashboard }) 
           </div>
         </div>
       </div>
-      {attendu > 0 ? (
+      {progression !== null ? (
         <div
           className="dashboard-collection-progress"
           role="progressbar"
           aria-label="Progression du recouvrement mensuel"
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-valuenow={barre}
-          aria-valuetext={`${taux}% validés, ${formaterFCFA(percu)} sur ${formaterFCFA(attendu)}`}
+          aria-valuenow={progression}
+          aria-valuetext={excedent > 0
+            ? `${formaterFCFA(valide)} validés pour ${formaterFCFA(attendu)} attendus, montant supérieur à 100 %`
+            : `${taux}% validés, ${formaterFCFA(valide)} sur ${formaterFCFA(attendu)}`}
         >
-          <span style={{ width: `${barre}%` }} />
+          <span style={{ width: `${progression}%` }} />
         </div>
       ) : null}
     </section>
@@ -137,8 +166,8 @@ function ActionContextuelle({
 }) {
   const contenu = {
     'enregistrer-paiement': {
-      titre: 'Compléter le suivi du mois',
-      description: `${formaterFCFA(montantRestant)} restent à enregistrer sur les loyers attendus.`,
+      titre: 'Suivre les loyers du mois',
+      description: `${formaterFCFA(montantRestant)} de loyers attendus ne sont pas encore couverts par un versement validé.`,
       href: '/pro/paiements/nouveau',
       action: 'Enregistrer un paiement',
     },
@@ -531,7 +560,7 @@ export default async function PageTableauDeBord({
       .limit(4),
     supabase
       .from('paiements')
-      .select('id, montant, date_paiement, periode_debut, statut, mode_paiement, bail:baux(locataire:locataires(nom))')
+      .select('id, montant, date_paiement, periode_debut, statut, mode_paiement, bail:baux(locataire:locataires(nom)), quittance:quittances(id, type)')
       .eq('bailleur_id', bailleur.id)
       .eq('statut', 'Validé')
       .order('date_paiement', { ascending: false, nullsFirst: false })
@@ -558,6 +587,10 @@ export default async function PageTableauDeBord({
   const paiements = (paiementsReponse.data ?? []) as unknown as PaiementDashboard[]
   const brouillons = (brouillonsReponse.data ?? []) as unknown as PaiementBrouillonDashboard[]
   const echeances = (echeancesReponse.data ?? []) as EcheanceDashboard[]
+  const periodeCourante = periodeCouranteDashboard()
+  const recouvrement = metriques
+    ? presenterRecouvrementDashboard(metriques.loyers_attendus_mois, metriques.loyers_percus_mois)
+    : null
   const nbBauxActifs = logements.reduce(
     (total, logement) => total + (logement.baux?.filter((bail) => bail.statut === 'Actif').length ?? 0),
     0,
@@ -568,14 +601,17 @@ export default async function PageTableauDeBord({
     (logement) => !logementOccupe(logement) && !annonceVivante(logement),
   )
   const suiviUrgentConnu = !impayesReponse.error && !brouillonsReponse.error
-  const actionContextuelle = metriques && suiviUrgentConnu && impayes.length === 0 && brouillons.length === 0
+  const actionContextuelle = metriques && recouvrement
     ? determinerActionContextuelleDashboard({
         nbBauxActifs,
         nbLogementsLibres,
         nbLocataires,
-        loyerAttendu: Number(metriques.loyers_attendus_mois),
-        loyerPercu: Number(metriques.loyers_percus_mois),
+        loyerAttendu: recouvrement.attendu,
+        loyerPercu: recouvrement.valide,
         logementLibreSansAnnonce: Boolean(logementLibreSansAnnonce),
+        suiviUrgentConnu,
+        nbImpayes: Number(impayesReponse.count ?? impayes.length),
+        nbBrouillons: Number(brouillonsReponse.count ?? brouillons.length),
       })
     : 'aucune'
 
@@ -583,17 +619,17 @@ export default async function PageTableauDeBord({
     <div className="dashboard-home dashboard-operational">
       <EnTetePage
         titre="Tableau de bord"
-        description="Suivez les loyers attendus, les paiements validés et les opérations à mener."
+        description="Vos loyers, vos paiements et les actions à suivre."
         action={actionVisite}
       />
 
       {metriquesReponse.error ? (
         <Alerte ton="erreur">Les indicateurs ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
-      ) : !metriques ? (
+      ) : !metriques || !recouvrement ? (
         <Alerte ton="attention">Les indicateurs ne sont pas disponibles pour le moment.</Alerte>
       ) : (
         <>
-          <SyntheseRecouvrement metriques={metriques} />
+          <SyntheseRecouvrement recouvrement={recouvrement} periode={periodeCourante} />
           <section data-visite="metriques" className="dashboard-supporting-metrics" aria-label="Indicateurs locatifs complémentaires">
             <CarteMetrique
               label="Occupation"
@@ -613,7 +649,7 @@ export default async function PageTableauDeBord({
             <CarteMetrique
               label="Versements validés"
               valeur={formaterFCFA(metriques.ca_du_mois)}
-              detail="Tous types · ce mois-ci"
+              detail={`Tous types · date de règlement · ${formaterPeriode(periodeCourante)}`}
               icone={<Banknote size={19} strokeWidth={1.8} />}
             />
           </section>
@@ -625,7 +661,7 @@ export default async function PageTableauDeBord({
           type={actionContextuelle}
           nbLogementsLibres={nbLogementsLibres}
           nbLocataires={nbLocataires}
-          montantRestant={Math.max(0, Number(metriques?.loyers_attendus_mois ?? 0) - Number(metriques?.loyers_percus_mois ?? 0))}
+          montantRestant={recouvrement?.reste ?? 0}
           logementSansAnnonce={logementLibreSansAnnonce}
         />
       ) : null}
@@ -753,7 +789,10 @@ export default async function PageTableauDeBord({
                         <td>{formaterPeriode(paiement.periode_debut)}</td>
                         <td className="hidden sm:table-cell">{formaterDateCourte(paiement.date_paiement)}</td>
                         <td className="hidden md:table-cell">{paiement.mode_paiement}</td>
-                        <td className="text-right font-semibold tabular">{formaterFCFA(paiement.montant)}</td>
+                        <td className="text-right font-semibold tabular">
+                          <span className="dashboard-payment-amount">{formaterFCFA(paiement.montant)}</span>
+                          <LienJustificatifPaiement paiement={paiement} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -766,6 +805,7 @@ export default async function PageTableauDeBord({
                   <div>
                     <strong>{nomLocataire(paiement.bail)}</strong>
                     <span>{formaterPeriode(paiement.periode_debut)} · {formaterDateCourte(paiement.date_paiement)}</span>
+                    <LienJustificatifPaiement paiement={paiement} />
                   </div>
                   <strong className="dashboard-watch-amount">{formaterFCFA(paiement.montant)}</strong>
                 </li>
