@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 
 import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
 import { normaliserSuiteConnexion } from '@/lib/auth-contexte'
+import { LONGUEUR_MAXIMALE, LONGUEUR_MINIMALE } from '@/lib/mot-de-passe'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import {
   erreursChamps,
@@ -31,6 +32,75 @@ async function adresseIp(): Promise<string | null> {
   return enTetes.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null
 }
 
+function reponseErreurInscription(error: {
+  status: number
+  code?: string
+  message: string
+}): EtatFormulaire {
+  const code = error.code ?? ''
+  const messageTechnique = error.message.toLowerCase()
+  const codeJournal = /^[a-z0-9_-]{1,64}$/i.test(code) ? code : 'other'
+
+  // Ne journalise ni le message brut, ni l'adresse, ni le mot de passe. Les
+  // journaux restent utiles pour distinguer un refus Auth d'une panne.
+  console.error('[auth.signup] Supabase Auth rejected signup', {
+    status: error.status,
+    code: codeJournal,
+  })
+
+  if (
+    error.status === 422 &&
+    /password should contain|password.*(letter|digit|character|length)|mot de passe/.test(
+      messageTechnique,
+    )
+  ) {
+    return {
+      erreursChamps: {
+        motDePasse:
+          `Le mot de passe doit contenir entre ${LONGUEUR_MINIMALE} et ${LONGUEUR_MAXIMALE} caractères, avec au moins une lettre latine et un chiffre.`,
+      },
+    }
+  }
+
+  if (error.status === 422 && /password|mot de passe/.test(messageTechnique)) {
+    return {
+      erreursChamps: {
+        motDePasse:
+          'Le service a refusé ce mot de passe. Choisissez-en un inédit, conforme aux critères affichés et difficile à deviner.',
+      },
+    }
+  }
+
+  if (
+    ['email_exists', 'user_already_exists', 'user_exists'].includes(code) ||
+    /already registered|already exists/.test(messageTechnique)
+  ) {
+    return {
+      erreur:
+        'Nous ne pouvons pas finaliser cette inscription avec ces informations. Si vous avez déjà un compte, connectez-vous ou utilisez la récupération du mot de passe depuis la page de connexion.',
+    }
+  }
+
+  if (error.status === 429 || code === 'over_email_send_rate_limit') {
+    return {
+      erreur:
+        'Trop de demandes ont été effectuées en peu de temps. Patientez quelques minutes avant de réessayer.',
+    }
+  }
+
+  if (error.status >= 500) {
+    return {
+      erreur:
+        'Le service n’a pas pu confirmer l’issue de l’inscription. Vérifiez votre boîte e-mail avant de réessayer ; le compte a peut-être déjà été créé.',
+    }
+  }
+
+  return {
+    erreur:
+      'L’inscription n’a pas pu aboutir. Vérifiez les champs signalés ou réessayez ; si vous avez déjà un compte, connectez-vous.',
+  }
+}
+
 // ─── Inscription ────────────────────────────────────────────────────────────
 
 export async function inscrire(
@@ -50,35 +120,43 @@ export async function inscrire(
   }
 
   const { nom, email, telephone, motDePasse, codeParrain } = analyse.data
-  const supabase = await creerClientServeur()
+  let erreurAuth: { status: number; code?: string; message: string } | null = null
+  let requeteAuthLancee = false
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password: motDePasse,
-    options: {
-      // Le gabarit d'email n'envoie plus de lien de confirmation mais un code
-      // à six chiffres (voir `supabase/templates/confirmation.html`). Cette
-      // adresse de retour n'est conservée que pour le bouton « Saisir mon
-      // code » du message, qui ouvre l'écran de saisie sans rien valider.
-      emailRedirectTo: `${await urlDeBase()}/verification`,
-      // Données de profil uniquement : le trigger `creer_profil_bailleur` les
-      // recopie dans public.bailleurs. Aucune n'entre dans une décision
-      // d'autorisation — `plan` reste 'Gratuit' par défaut côté base.
-      data: {
-        nom,
-        telephone,
-        code_parrain: codeParrain ? codeParrain.toUpperCase() : null,
+  try {
+    const supabase = await creerClientServeur()
+    const emailRedirectTo = `${await urlDeBase()}/verification`
+    requeteAuthLancee = true
+    const resultat = await supabase.auth.signUp({
+      email,
+      password: motDePasse,
+      options: {
+        // Le gabarit d'email envoie un code à six chiffres. L'inscription
+        // continue vers l'écran existant de vérification, sans ouvrir l'accès.
+        emailRedirectTo,
+        // Le trigger crée le profil avec le plan Gratuit par défaut ; ces
+        // métadonnées ne déterminent aucune autorisation.
+        data: {
+          nom,
+          telephone,
+          code_parrain: codeParrain ? codeParrain.toUpperCase() : null,
+        },
       },
-    },
-  })
-
-  if (error) {
-    // Même réponse pour les adresses déjà inscrites et les autres refus Auth :
-    // l'écran propose toujours les liens de connexion et de récupération.
+    })
+    erreurAuth = resultat.error
+  } catch (cause) {
+    console.error('[auth.signup] Signup request could not be confirmed', {
+      name: cause instanceof Error ? cause.name : 'UnknownError',
+      phase: requeteAuthLancee ? 'auth_request' : 'setup',
+    })
     return {
-      erreur: 'Nous n’avons pas pu créer le compte. Vérifiez les informations ou réessayez dans un instant.',
+      erreur: requeteAuthLancee
+        ? 'La réponse du service d’inscription n’a pas pu être confirmée. Vérifiez votre boîte e-mail avant de réessayer ; le compte a peut-être déjà été créé.'
+        : 'Le service d’inscription n’a pas pu démarrer. Vos informations n’ont pas été envoyées ; réessayez dans un instant.',
     }
   }
+
+  if (erreurAuth) return reponseErreurInscription(erreurAuth)
 
   // ── Vers la vérification, pas vers l'application ────────────────────────
   //
@@ -94,10 +172,6 @@ export async function inscrire(
 
   revalidatePath('/', 'layout')
 
-  // `data.session` peut être renseignée si la confirmation d'email est
-  // désactivée côté projet. Le garde serveur `bailleurCourant()` contrôle quand
-  // même `email_confirmed_at` avant tout accès à l'espace bailleur.
-  void data
   redirect('/verification')
 }
 

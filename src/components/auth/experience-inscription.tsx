@@ -30,6 +30,7 @@ export function ExperienceInscription({
   detailFormulaire,
   retour,
   bas,
+  afficherAccueilBas = true,
   children,
 }: {
   espace: SuffixeEspace
@@ -43,10 +44,14 @@ export function ExperienceInscription({
   detailFormulaire?: ReactNode
   retour?: { href: string; libelle: string }
   bas?: ReactNode
+  afficherAccueilBas?: boolean
   children: ReactNode
 }) {
   return (
-    <main id="contenu" className={`signup-experience ${manropeInscription.variable}`}>
+    <main
+      id="contenu"
+      className={`signup-experience signup-experience-${espace.toLowerCase()} ${manropeInscription.variable}`}
+    >
       <a href="#signup-form-title" className="skip-link">Passer au formulaire</a>
       <div className="signup-experience-grid">
         <section className="signup-editorial" aria-label={`Présentation de Sikaloc ${espace}`}>
@@ -79,11 +84,9 @@ export function ExperienceInscription({
 
         <section className="signup-form-side" aria-labelledby="signup-form-title">
           <div className="signup-form-inner">
-            {retour ? (
-              <Link className="signup-return-mobile" href={retour.href}>
-                ← {retour.libelle}
-              </Link>
-            ) : null}
+            <Link className="signup-return-mobile" href={retour?.href ?? '/'}>
+              ← {retour?.libelle ?? 'Accueil Sikaloc'}
+            </Link>
             <div className="signup-brand">
               <SikalocSpaceBrand href="/" espace={espace} taille="md" />
             </div>
@@ -95,9 +98,11 @@ export function ExperienceInscription({
             {detailFormulaire ? <div className="signup-form-detail">{detailFormulaire}</div> : null}
             <div className="signup-form-content">{children}</div>
             {bas ? <div className="signup-form-bottom">{bas}</div> : null}
-            <Link href="/" className="signup-home-link">
-              Retour à l’accueil Sikaloc
-            </Link>
+            {afficherAccueilBas ? (
+              <Link href="/" className="signup-home-link">
+                Retour à l’accueil Sikaloc
+              </Link>
+            ) : null}
           </div>
         </section>
       </div>

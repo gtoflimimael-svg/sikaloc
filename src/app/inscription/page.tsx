@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import { ExperienceInscription } from '@/components/auth/experience-inscription'
 import { FormulaireInscription } from '@/components/auth/formulaires'
-import { lienConnexion, lienMotDePasseOublie } from '@/lib/auth-contexte'
+import { lienConnexion } from '@/lib/auth-contexte'
 
 export const metadata: Metadata = { title: 'Créer un compte' }
 
@@ -24,16 +24,12 @@ export default async function PageInscription({
       imageAlt="Image illustrative : une propriétaire ouest-africaine évalue la lumière naturelle d’un logement qu’elle prépare à louer."
       titreFormulaire="Créer votre compte bailleur"
       descriptionFormulaire="Quelques informations suffisent pour ouvrir votre espace Sikaloc Pro."
+      afficherAccueilBas={false}
       bas={
         <>
           <p>
             Vous avez déjà un compte ?{' '}
             <Link href={lienConnexion('pro', '/pro/tableau-de-bord')}>Se connecter</Link>
-          </p>
-          <p>
-            <Link href={lienMotDePasseOublie('pro', '/pro/tableau-de-bord')}>
-              Mot de passe oublié ?
-            </Link>
           </p>
         </>
       }

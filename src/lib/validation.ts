@@ -62,13 +62,15 @@ const telephoneInscription = schemaTelephone({ exigerPrefixeActuel: true })
  * saisie et rien d'autre : il tourne sur la machine de l'utilisateur, donc sous
  * son contrôle. Une requête forgée qui contournerait la page passe ici.
  *
- * 72 caractères est la limite de bcrypt, utilisé par GoTrue : au-delà, la fin du
- * mot de passe serait silencieusement ignorée.
+ * Ces règles reflètent GoTrue (`letters_digits`, minimum 8) et le plafond bcrypt
+ * de 72 caractères. L'évaluation de robustesse reste un contrôle distinct.
  */
 const motDePasse = z
   .string()
+  .min(1, 'Le mot de passe est obligatoire.')
   .max(LONGUEUR_MAXIMALE, `Le mot de passe ne peut pas dépasser ${LONGUEUR_MAXIMALE} caractères.`)
   .superRefine((valeur, contexte) => {
+    if (!valeur) return
     const force = evaluerMotDePasse(valeur)
     if (force.acceptable) return
 

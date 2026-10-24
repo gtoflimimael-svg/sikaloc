@@ -3,7 +3,12 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
-import { LIBELLES, LONGUEUR_MINIMALE, type ForceMotDePasse } from '@/lib/mot-de-passe'
+import {
+  LIBELLES,
+  LONGUEUR_MAXIMALE,
+  LONGUEUR_MINIMALE,
+  type ForceMotDePasse,
+} from '@/lib/mot-de-passe'
 
 /**
  * Champ mot de passe — bascule d'affichage et, en option, jauge de robustesse.
@@ -73,7 +78,9 @@ export function ChampMotDePasse({
   const [force, setForce] = useState<ForceMotDePasse | null>(null)
   const champ = useRef<HTMLInputElement>(null)
   const evaluateur = useRef<Evaluateur | null>(null)
+  const idExigences = useId()
   const idRetour = useId()
+  const idErreur = useId()
 
   /** Indices tirés des champs voisins, à l'instant de la mesure. */
   const indices = useCallback((): string[] => {
@@ -128,6 +135,14 @@ export function ChampMotDePasse({
 
   const montrerJauge = jauge && valeur.length > 0
   const niveau = force?.niveau ?? 0
+  const exigences = autoComplete === 'new-password'
+  const descriptions = [
+    exigences ? idExigences : null,
+    montrerJauge ? idRetour : null,
+    erreur ? idErreur : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div>
@@ -147,11 +162,12 @@ export function ChampMotDePasse({
           required={requis}
           // `minLength` fait partie du contrat que lisent les gestionnaires de
           // mots de passe pour composer une proposition acceptable du premier coup.
-          minLength={autoComplete === 'new-password' ? LONGUEUR_MINIMALE : undefined}
+          minLength={exigences ? LONGUEUR_MINIMALE : undefined}
+          maxLength={exigences ? LONGUEUR_MAXIMALE : undefined}
           value={valeur}
           onChange={(e) => setValeur(e.target.value)}
           aria-invalid={erreur ? true : undefined}
-          aria-describedby={montrerJauge ? idRetour : undefined}
+          aria-describedby={descriptions || undefined}
           className="input pr-[44px]"
         />
         <button
@@ -167,6 +183,14 @@ export function ChampMotDePasse({
           )}
         </button>
       </div>
+
+      {exigences ? (
+        <p id={idExigences} className="field-hint password-requirements">
+          Obligatoire : {LONGUEUR_MINIMALE} à {LONGUEUR_MAXIMALE} caractères, au moins une lettre
+          latine (A–Z) et un chiffre (0–9). La jauge évalue séparément la robustesse ; le serveur
+          refuse aussi les mots de passe trop faciles à deviner.
+        </p>
+      ) : null}
 
       {montrerJauge ? (
         <div className="mt-sm anim-apparait" id={idRetour}>
@@ -201,6 +225,24 @@ export function ChampMotDePasse({
             </p>
           ) : null}
 
+          {force?.tropLong ? (
+            <p className="mt-xs text-caption text-negative-darkest">
+              Le mot de passe ne peut pas dépasser {LONGUEUR_MAXIMALE} caractères.
+            </p>
+          ) : null}
+
+          {force?.manqueLettre ? (
+            <p className="mt-xs text-caption text-negative-darkest">
+              Ajoutez au moins une lettre latine (A–Z).
+            </p>
+          ) : null}
+
+          {force?.manqueChiffre ? (
+            <p className="mt-xs text-caption text-negative-darkest">
+              Ajoutez au moins un chiffre (0–9).
+            </p>
+          ) : null}
+
           {force?.avertissement ? (
             <p className="mt-xs text-caption text-warning-content">{force.avertissement}</p>
           ) : null}
@@ -223,7 +265,7 @@ export function ChampMotDePasse({
 
       {aide && !erreur && !montrerJauge ? <p className="field-hint">{aide}</p> : null}
       {erreur ? (
-        <p className="field-error" role="alert">
+        <p id={idErreur} className="field-error" role="alert">
           {erreur}
         </p>
       ) : null}

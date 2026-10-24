@@ -2905,8 +2905,10 @@
   text-underline-offset: 3px;
 }
 .signup-backlink:hover,
+.signup-return-mobile:hover,
 .signup-home-link:hover { color: var(--color-ink); text-decoration: underline; }
 .signup-backlink:focus-visible,
+.signup-return-mobile:focus-visible,
 .signup-home-link:focus-visible,
 .signup-form-bottom a:focus-visible,
 .signup-form-content a:focus-visible {
@@ -2982,6 +2984,13 @@
 .signup-form-content { margin-top: 25px; }
 .signup-form-content .field-label { color: var(--color-body-strong); }
 .signup-form-content .input { min-height: 52px; background: var(--color-surface-card); }
+.signup-form-content .password-requirements {
+  max-width: 54ch;
+  margin-top: 9px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.signup-experience-pro .signup-form-content .field-error { line-height: 1.5; }
 .signup-form-content .input:focus-visible {
   border-color: var(--color-ink-deep);
   outline: 3px solid color-mix(in srgb, var(--color-ink-deep) 22%, transparent);
@@ -2989,6 +2998,23 @@
 }
 .signup-form-content a,
 .signup-form-bottom a { color: var(--color-ink-deep); text-underline-offset: 3px; }
+.signup-registration-form { display: grid; gap: 19px; }
+.signup-registration-fields { display: grid; gap: 17px; }
+.signup-terms {
+  margin: 0;
+  color: var(--color-mute);
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+.signup-terms a { font-weight: 600; }
+.signup-experience-pro .signup-editorial-copy h1 {
+  max-width: 18ch;
+  font-size: clamp(44px, 4.8vw, 70px);
+}
+.signup-experience-pro .signup-brand { margin-bottom: clamp(20px, 2.4vw, 28px); }
+.signup-experience-pro .signup-form-heading p { margin-top: 8px; }
+.signup-experience-pro .signup-form-content { margin-top: 22px; }
 .signup-form-detail { margin-top: 21px; }
 .signup-listing-summary,
 .signup-invitation-detail {
@@ -3043,6 +3069,7 @@
   .signup-form-side { grid-row: 1; border-left: 0; padding-left: 0; }
   .signup-editorial { grid-row: 2; gap: 24px; }
   .signup-editorial-copy h1 { max-width: 14ch; font-size: clamp(42px, 7vw, 58px); }
+  .signup-experience-pro .signup-editorial-copy h1 { max-width: 19ch; }
   .signup-photo { max-height: 360px; aspect-ratio: 1.7; }
   .signup-form-inner { width: 100%; }
 }
@@ -3073,6 +3100,10 @@
   .signup-form-heading h2 { font-size: 30px; }
   .signup-form-heading p { font-size: 14px; }
   .signup-form-content { margin-top: 22px; }
+  .signup-experience-pro .signup-brand { margin-bottom: 18px; }
+  .signup-experience-pro .signup-form-content { margin-top: 20px; }
+  .signup-registration-form { gap: 17px; }
+  .signup-registration-fields { gap: 16px; }
   .signup-form-content .input { min-height: 52px; font-size: 16px; }
   .signup-form-bottom { margin-top: 19px; padding-top: 15px; }
   .signup-home-link { margin-top: 13px; }

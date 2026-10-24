@@ -27,8 +27,9 @@
  *      l'alphabet **n'importe où** dans la chaîne, si bien que tout mot de passe
  *      contenant « cdef », « mnop » ou « stuv » était rejeté.
  *
- * Compter des classes de caractères mesure la forme, pas la difficulté à
- * deviner. zxcvbn mesure la seconde, ce qui est la seule qui compte.
+ * Compter des classes de caractères ne mesure pas la difficulté à deviner.
+ * zxcvbn couvre cette dimension ; les contraintes techniques de composition
+ * imposées par GoTrue sont vérifiées séparément dans `interpreter`.
  */
 
 /** Plancher de longueur. En deçà, aucun score ne rachète un mot de passe. */
@@ -94,6 +95,10 @@ export interface ForceMotDePasse {
   conseils: string[]
   tropCourt: boolean
   tropLong: boolean
+  manqueLettre: boolean
+  manqueChiffre: boolean
+  /** Contraintes de longueur et de composition exigées par GoTrue. */
+  conformeAuxExigences: boolean
   /**
    * Vrai si le serveur acceptera ce mot de passe.
    *
@@ -117,6 +122,15 @@ export function interpreter(
 ): ForceMotDePasse {
   const tropCourt = valeur.length > 0 && valeur.length < LONGUEUR_MINIMALE
   const tropLong = valeur.length > LONGUEUR_MAXIMALE
+  // GoTrue est configuré en `letters_digits` : il demande au moins une lettre
+  // latine ASCII et un chiffre. Cette règle est indépendante du score zxcvbn.
+  const manqueLettre = valeur.length > 0 && !/[a-z]/i.test(valeur)
+  const manqueChiffre = valeur.length > 0 && !/[0-9]/.test(valeur)
+  const conformeAuxExigences =
+    valeur.length >= LONGUEUR_MINIMALE &&
+    valeur.length <= LONGUEUR_MAXIMALE &&
+    !manqueLettre &&
+    !manqueChiffre
 
   return {
     niveau: score,
@@ -126,9 +140,11 @@ export function interpreter(
     conseils: conseils.slice(0, 2),
     tropCourt,
     tropLong,
+    manqueLettre,
+    manqueChiffre,
+    conformeAuxExigences,
     acceptable:
-      valeur.length >= LONGUEUR_MINIMALE &&
-      valeur.length <= LONGUEUR_MAXIMALE &&
+      conformeAuxExigences &&
       score >= SCORE_MINIMAL,
   }
 }
@@ -136,10 +152,8 @@ export function interpreter(
 /**
  * Message rendu par le serveur quand il refuse.
  *
- * Il dit ce qui bloque plutôt que d'énumérer des règles de composition — il n'y
- * en a plus. Un bailleur à qui l'on répond « il manque une majuscule » ajoute
- * une majuscule à la fin ; à qui l'on répond « ce mot de passe se devine », il
- * en change.
+ * Les critères obligatoires sont signalés avant la robustesse afin que le
+ * formulaire distingue une règle Auth d'un conseil de sécurité.
  */
 export function messageRefus(force: ForceMotDePasse): string {
   if (force.tropCourt) {
@@ -148,6 +162,14 @@ export function messageRefus(force: ForceMotDePasse): string {
 
   if (force.tropLong) {
     return `Le mot de passe ne peut pas dépasser ${LONGUEUR_MAXIMALE} caractères.`
+  }
+
+  if (force.manqueLettre) {
+    return 'Ajoutez au moins une lettre latine (A–Z) au mot de passe.'
+  }
+
+  if (force.manqueChiffre) {
+    return 'Ajoutez au moins un chiffre (0–9) au mot de passe.'
   }
 
   const conseil = force.conseils[0]

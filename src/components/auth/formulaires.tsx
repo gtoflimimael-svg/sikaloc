@@ -104,7 +104,7 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
       onChange={retenirChamps}
       onReset={(evenement) => evenement.preventDefault()}
       aria-busy={enCours}
-      className="space-y-lg"
+      className="signup-registration-form"
     >
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
@@ -115,7 +115,7 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
         </Alerte>
       ) : null}
 
-      <div className="space-y-lg">
+      <div className="signup-registration-fields">
         <ChampTexte
           nom="nom"
           libelle="Nom complet"
@@ -147,11 +147,10 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
           erreur={etat.erreursChamps?.email}
         />
 
-        {/* `new-password` : c'est cette valeur qui fait proposer au navigateur
-            un mot de passe fort, puis l'enregistrement du compte. `contexteDepuis`
-            passe le nom, l'email et le téléphone déjà saisis à la mesure de
-            robustesse — « MoussaAdjovi1! » n'est un bon mot de passe pour
-            personne d'autre que Moussa Adjovi. */}
+        {/* `new-password` permet aux gestionnaires de proposer/enregistrer un
+            secret. `contexteDepuis` pénalise les mots liés au nom, à l'email ou
+            au téléphone ; les règles composées du serveur sont affichées dans
+            le champ et vérifiées avant l'appel Auth. */}
         <ChampMotDePasse
           nom="motDePasse"
           libelle="Mot de passe"
@@ -169,7 +168,7 @@ export function FormulaireInscription({ codeParrain }: { codeParrain?: string })
 
       <input type="hidden" name="codeParrain" value={codeParrain ?? ''} />
 
-      <p className="text-caption text-mute">
+      <p className="signup-terms">
         En créant un compte, vous acceptez les{' '}
         <Link href="/legal/conditions" className="underline">
           conditions d&apos;utilisation
