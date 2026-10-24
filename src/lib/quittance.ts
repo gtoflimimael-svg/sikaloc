@@ -4,7 +4,11 @@ import { createHash } from 'node:crypto'
 import { createElement } from 'react'
 import sharp from 'sharp'
 
-import { DocumentQuittance, type DonneesQuittance } from '@/lib/pdf/document-quittance'
+import {
+  DocumentQuittance,
+  type DonneesQuittance,
+  type VersementPdf,
+} from '@/lib/pdf/document-quittance'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { bailleurAvecEcriture } from '@/lib/session'
@@ -92,6 +96,7 @@ interface ContexteQuittance {
     trop_percu?: number
     est_partiel: boolean; periode_debut: string; periode_fin: string;
     date_paiement: string; mode_paiement: string; type_paiement: TypePaiement
+    versements?: { id: string; empreinte: string }[]
   }
 }
 
@@ -139,6 +144,66 @@ async function donneesDuContexte(
   const montantCumule = typePaiement === 'Loyer' && finances
     ? Number(finances.cumul_loyer)
     : undefined
+  const versementCourant: VersementPdf = {
+    montant: Number(finances?.montant ?? paiement.montant),
+    datePaiement: finances?.date_paiement ?? paiement.date_paiement!,
+    modePaiement: finances?.mode_paiement ?? paiement.mode_paiement,
+  }
+  const estQuittanceComplete = typePaiement === 'Loyer' && !estPartiel
+  let versements: VersementPdf[] = [versementCourant]
+
+  if (estQuittanceComplete) {
+    const instantane = finances?.versements ?? []
+    const ids = instantane.map((versement) => versement.id)
+
+    if (new Set(ids).size !== ids.length || ids.some((id) => !UUID.test(id))) {
+      throw new Error(REFUS_QUITTANCE)
+    }
+    if (ids.length > 0 && !ids.includes(paiement.id)) {
+      throw new Error(REFUS_QUITTANCE)
+    }
+
+    if (ids.length === 1) {
+      if (Math.abs((montantCumule ?? versementCourant.montant) - versementCourant.montant) > 0.001) {
+        throw new Error(REFUS_QUITTANCE)
+      }
+    } else if (ids.length > 1) {
+      // Les identifiants viennent de l'instantané financier produit par la RPC
+      // autorisée. Cette lecture serveur n'élargit ni les droits ni les règles :
+      // elle ne récupère que les lignes nécessaires à leur représentation PDF.
+      const { data, error } = await creerClientAdmin()
+        .from('paiements')
+        .select('id,montant,date_paiement,mode_paiement,type_paiement,statut,bail_id,bailleur_id,periode_debut')
+        .in('id', ids)
+        .eq('bail_id', bail.id)
+        .eq('bailleur_id', bailleur.id)
+        .eq('periode_debut', finances?.periode_debut ?? paiement.periode_debut)
+        .eq('type_paiement', 'Loyer')
+        .eq('statut', 'Validé')
+
+      if (error || !data || data.length !== ids.length) throw new Error(REFUS_QUITTANCE)
+
+      const lignes = data.map((ligne) => ({
+        montant: Number(ligne.montant),
+        datePaiement: ligne.date_paiement,
+        modePaiement: ligne.mode_paiement,
+      }))
+      const totalVersements = lignes.reduce((total, ligne) => total + ligne.montant, 0)
+      if (
+        data.some((ligne) => !ids.includes(ligne.id)) ||
+        Math.abs(totalVersements - (montantCumule ?? 0)) > 0.001
+      ) throw new Error(REFUS_QUITTANCE)
+
+      versements = lignes.sort((a, b) =>
+        (a.datePaiement ?? '').localeCompare(b.datePaiement ?? ''),
+      )
+    } else if (Math.abs((montantCumule ?? versementCourant.montant) - versementCourant.montant) > 0.001) {
+      // Pas de détail de versements fiable : ne pas émettre une quittance qui
+      // afficherait un total collectif sans pouvoir l'expliquer.
+      throw new Error(REFUS_QUITTANCE)
+    }
+  }
+
   return {
     modeDocument: 'reel',
     numeroDocument: options.numeroDocument ?? '',
@@ -158,9 +223,10 @@ async function donneesDuContexte(
       ? Number(finances?.trop_percu ?? Math.max(0, (montantCumule ?? Number(paiement.montant)) - loyerMensuel))
       : 0,
     periodeDebut: finances?.periode_debut ?? paiement.periode_debut, periodeFin: finances?.periode_fin ?? paiement.periode_fin,
-    montant: Number(finances?.montant ?? paiement.montant), datePaiement: finances?.date_paiement ?? paiement.date_paiement!,
+    montant: versementCourant.montant, datePaiement: versementCourant.datePaiement,
     modePaiement: finances?.mode_paiement ?? paiement.mode_paiement, typePaiement,
     estPartiel,
+    versements,
     signatureDataUri: signatureBailleur.dataUri,
     signatureBailleurEtat: signatureBailleur.etat,
   }
@@ -185,10 +251,14 @@ export async function rassemblerDonnees(
   if (refus || !data) return null
   const document = data as unknown as DocumentAutorise
   if (document.signee || document.quittance.hash_sha256 || document.quittance.pdf_chemin) return null
-  return donneesDuContexte(document.contexte, {
-    numeroDocument: document.quittance.numero_document ?? '',
-    dateGeneration: document.quittance.date_generation,
-  })
+  try {
+    return await donneesDuContexte(document.contexte, {
+      numeroDocument: document.quittance.numero_document ?? '',
+      dateGeneration: document.quittance.date_generation,
+    })
+  } catch {
+    return null
+  }
 }
 
 /** Rend le PDF en mémoire. */

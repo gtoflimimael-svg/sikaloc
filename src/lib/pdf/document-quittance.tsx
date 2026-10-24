@@ -8,8 +8,9 @@ import {
 } from '@react-pdf/renderer'
 import type { ReactNode } from 'react'
 
-import { formaterDate, formaterFCFA, formaterHorodatage, formaterPeriode } from '@/lib/format'
+import { formaterFCFA, formaterPeriode } from '@/lib/format'
 import { couleurs, LogoMarque } from '@/lib/pdf/base'
+import { formaterDateDocument, formaterHorodatageDocument } from '@/lib/pdf/dates'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
 import { formaterTelephone } from '@/lib/telephone'
 import type { TypePaiement } from '@/lib/types/database'
@@ -17,8 +18,8 @@ import type { TypePaiement } from '@/lib/types/database'
 /** Mise en page documentaire commune aux quittances et reçus Sikaloc. */
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 34,
-    paddingBottom: 48,
+    paddingTop: 32,
+    paddingBottom: 52,
     paddingHorizontal: 46,
     fontFamily: 'Inter',
     fontSize: 9.4,
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 7,
     paddingHorizontal: 10,
-    marginBottom: 16,
+    marginBottom: 14,
     backgroundColor: couleurs.canvasSoft,
     borderLeftWidth: 2,
     borderLeftColor: couleurs.primary,
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: 12,
-    marginBottom: 20,
+    marginBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: couleurs.hairline,
   },
@@ -77,15 +78,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   dateEmission: { marginTop: 2, fontSize: 8, color: couleurs.mute },
-  intro: { marginBottom: 15 },
-  typeDocument: {
-    marginBottom: 5,
-    fontSize: 7.5,
-    fontWeight: 700,
-    color: couleurs.primary,
-    letterSpacing: 0.9,
-    textTransform: 'uppercase',
-  },
+  intro: { marginBottom: 14 },
   title: {
     fontFamily: 'Manrope',
     fontWeight: 800,
@@ -103,7 +96,7 @@ const styles = StyleSheet.create({
   recap: {
     flexDirection: 'row',
     overflow: 'hidden',
-    marginBottom: 18,
+    marginBottom: 16,
     borderRadius: 6,
     backgroundColor: couleurs.primaryPale,
   },
@@ -134,7 +127,7 @@ const styles = StyleSheet.create({
   recapValueEmphasis: { fontSize: 14.2, color: couleurs.primary },
   parties: {
     flexDirection: 'row',
-    marginBottom: 18,
+    marginBottom: 16,
   },
   partie: {
     flex: 1,
@@ -161,7 +154,7 @@ const styles = StyleSheet.create({
     color: couleurs.ink,
   },
   partieInfo: { marginTop: 2, fontSize: 8.2, color: couleurs.mute },
-  details: { flexDirection: 'row', marginBottom: 15 },
+  details: { flexDirection: 'row', marginBottom: 14 },
   detailColumn: { flex: 1, minWidth: 0, paddingRight: 13 },
   detailColumnSecond: {
     paddingRight: 0,
@@ -175,6 +168,36 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     fontSize: 10.2,
     color: couleurs.ink,
+  },
+  paymentTableHeader: {
+    flexDirection: 'row',
+    paddingBottom: 4,
+    borderBottomWidth: 0.8,
+    borderBottomColor: couleurs.hairline,
+  },
+  paymentTableRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 4,
+    borderBottomWidth: 0.6,
+    borderBottomColor: couleurs.hairline,
+  },
+  paymentDate: { width: '29%', paddingRight: 6, fontSize: 8, color: couleurs.body },
+  paymentMode: { flex: 1, minWidth: 0, paddingRight: 8, fontSize: 8, color: couleurs.body },
+  paymentAmount: {
+    width: '28%',
+    fontFamily: 'Manrope',
+    fontWeight: 700,
+    fontSize: 8.4,
+    color: couleurs.ink,
+    textAlign: 'right',
+  },
+  paymentHead: {
+    fontSize: 7.2,
+    fontWeight: 700,
+    color: couleurs.mute,
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
   },
   row: {
     flexDirection: 'row',
@@ -210,7 +233,13 @@ const styles = StyleSheet.create({
   },
   statementAmount: { fontFamily: 'Manrope', fontWeight: 700, color: couleurs.primary },
   statementNote: { marginTop: 4, fontSize: 8.4, lineHeight: 1.4, color: couleurs.mute },
-  signatures: { flexDirection: 'row', marginBottom: 11 },
+  signatureExampleNote: {
+    marginTop: -3,
+    marginBottom: 7,
+    fontSize: 7.6,
+    color: couleurs.mute,
+  },
+  signatures: { flexDirection: 'row', marginBottom: 13 },
   signature: { flex: 1, minWidth: 0, paddingRight: 14 },
   signatureSecond: { paddingRight: 0, paddingLeft: 14 },
   signatureLabel: {
@@ -220,7 +249,7 @@ const styles = StyleSheet.create({
     color: couleurs.mute,
   },
   signatureArea: {
-    height: 31,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -246,7 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.warningPale,
   },
   stampText: { fontSize: 7.7, lineHeight: 1.35, color: couleurs.warningContent },
-  legal: { marginBottom: 4, fontSize: 7.7, lineHeight: 1.38, color: couleurs.mute },
+  legal: { marginBottom: 5, fontSize: 8, lineHeight: 1.42, color: couleurs.mute },
   footer: {
     position: 'absolute',
     bottom: 22,
@@ -258,10 +287,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: couleurs.hairline,
   },
-  footerText: { fontSize: 7.5, color: couleurs.muteSoft },
+  footerText: { fontSize: 7.7, color: couleurs.muteSoft },
 })
 
 export type EtatSignaturePdf = 'apposee' | 'non-apposee' | 'indisponible'
+
+export interface VersementPdf {
+  datePaiement: string | null
+  modePaiement: string
+  montant: number
+}
 
 interface DonneesQuittanceCommunes {
   numeroDocument: string
@@ -287,6 +322,8 @@ interface DonneesQuittanceCommunes {
   estPartiel: boolean
   /** Cumul validé du loyer de la période au moment de l'émission. */
   montantCumule?: number
+  /** Versements validés pris en compte dans une quittance de loyer complète. */
+  versements?: VersementPdf[]
   /** Excédent de cette période, non reporté automatiquement. */
   montantExcedentaire?: number
   /** Signature du bailleur chargée après vérification de l'autorisation. */
@@ -320,7 +357,7 @@ function SectionDetails({
   seconde?: boolean
 }) {
   return (
-    <View style={[styles.detailColumn, seconde ? styles.detailColumnSecond : undefined]} wrap={false}>
+    <View style={[styles.detailColumn, seconde ? styles.detailColumnSecond : undefined]}>
       <Text style={styles.detailHeading}>{titre}</Text>
       {children}
     </View>
@@ -336,6 +373,15 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
   const excedent = estLoyer
     ? Math.max(0, donnees.montantExcedentaire ?? cumul - donnees.loyerMensuel)
     : 0
+
+  if (estQuittance && (donnees.estPartiel || cumul < donnees.loyerMensuel)) {
+    throw new Error('Une quittance ne peut pas être rendue avec un solde de loyer restant.')
+  }
+
+  const versementsDocument = donnees.versements?.length
+    ? donnees.versements
+    : [{ datePaiement: donnees.datePaiement, modePaiement: donnees.modePaiement, montant: donnees.montant }]
+  const plusieursVersements = estQuittance && versementsDocument.length > 1
 
   // Présentation conservée: seuil, taux et conditions restent ceux du template
   // historique. Aucune modification de calcul ou de règle fiscale ici.
@@ -363,10 +409,10 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
   const signatureLocataire = estExemple ? null : donnees.signatureLocataireDataUri
 
   const declaration = estQuittance
-    ? `Le bailleur reconnaît que le loyer de la période du ${formaterDate(donnees.periodeDebut)} au ${formaterDate(donnees.periodeFin)} a été intégralement réglé.`
+    ? `Le bailleur reconnaît que le loyer de la période du ${formaterDateDocument(donnees.periodeDebut)} au ${formaterDateDocument(donnees.periodeFin)} a été intégralement réglé.`
     : estLoyer
-      ? `Le bailleur reconnaît avoir reçu du locataire le versement enregistré le ${formaterDate(donnees.datePaiement)} au titre du loyer de la période du ${formaterDate(donnees.periodeDebut)} au ${formaterDate(donnees.periodeFin)}.`
-      : `Le bailleur reconnaît avoir reçu du locataire un versement au titre de ${donnees.typePaiement.toLowerCase()}, enregistré le ${formaterDate(donnees.datePaiement)}.`
+      ? `Le bailleur reconnaît avoir reçu du locataire le versement enregistré le ${formaterDateDocument(donnees.datePaiement)} au titre du loyer de la période du ${formaterDateDocument(donnees.periodeDebut)} au ${formaterDateDocument(donnees.periodeFin)}.`
+      : `Le bailleur reconnaît avoir reçu du locataire un versement au titre de ${donnees.typePaiement.toLowerCase()}, enregistré le ${formaterDateDocument(donnees.datePaiement)}.`
 
   return (
     <Document
@@ -393,21 +439,18 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           <View style={styles.reference}>
             <Text style={styles.referenceLabel}>Référence du document</Text>
             <Text style={styles.referenceValue}>{donnees.numeroDocument}</Text>
-            <Text style={styles.dateEmission}>Émis le {formaterHorodatage(donnees.dateGeneration)}</Text>
+            <Text style={styles.dateEmission}>Émis le {formaterHorodatageDocument(donnees.dateGeneration)}</Text>
           </View>
         </View>
 
         <View style={styles.intro} wrap={false}>
-          <Text style={styles.typeDocument}>
-            {estLoyer && donnees.estPartiel ? 'Reçu · versement partiel' : donnees.type}
-          </Text>
           <Text style={styles.title}>
             {estQuittance ? 'Quittance de loyer' : 'Reçu de paiement'}
           </Text>
           <Text style={styles.period}>
             {estLoyer
-              ? `Loyer du ${formaterDate(donnees.periodeDebut)} au ${formaterDate(donnees.periodeFin)}`
-              : `Paiement enregistré le ${formaterDate(donnees.datePaiement)}`}
+              ? `Loyer du ${formaterDateDocument(donnees.periodeDebut)} au ${formaterDateDocument(donnees.periodeFin)}`
+              : `Paiement enregistré le ${formaterDateDocument(donnees.datePaiement)}`}
           </Text>
         </View>
 
@@ -419,7 +462,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
                 <Text style={styles.recapValue}>{formaterFCFA(donnees.loyerMensuel)}</Text>
               </View>
               <View style={styles.recapCell}>
-                <Text style={styles.recapLabel}>Total réglé</Text>
+                <Text style={styles.recapLabel}>{estQuittance ? 'Total réglé' : 'Total validé à date'}</Text>
                 <Text style={[styles.recapValue, styles.recapValueEmphasis]}>{formaterFCFA(cumul)}</Text>
               </View>
               <View style={[styles.recapCell, styles.recapCellLast]}>
@@ -473,12 +516,29 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
             <Ligne etiquette="Type de bien" valeur={donnees.logementType} />
             {estLoyer ? <Ligne etiquette="Loyer contractuel" valeur={formaterFCFA(donnees.loyerMensuel)} /> : null}
           </SectionDetails>
-          <SectionDetails titre="Versement associé" seconde>
-            <Ligne etiquette="Date" valeur={formaterDate(donnees.datePaiement)} />
-            <Ligne etiquette="Mode" valeur={donnees.modePaiement} />
-            <Ligne etiquette="Nature" valeur={donnees.typePaiement} />
-            {estLoyer ? <Ligne etiquette="Montant du versement" valeur={formaterFCFA(donnees.montant)} /> : null}
-          </SectionDetails>
+          {plusieursVersements ? (
+            <SectionDetails titre="Versements pris en compte" seconde>
+              <View style={styles.paymentTableHeader} wrap={false}>
+                <Text style={[styles.paymentDate, styles.paymentHead]}>Date</Text>
+                <Text style={[styles.paymentMode, styles.paymentHead]}>Mode</Text>
+                <Text style={[styles.paymentAmount, styles.paymentHead]}>Montant</Text>
+              </View>
+              {versementsDocument.map((versement, index) => (
+                <View key={`${versement.datePaiement}-${versement.modePaiement}-${index}`} style={styles.paymentTableRow} wrap={false}>
+                  <Text style={styles.paymentDate}>{formaterDateDocument(versement.datePaiement)}</Text>
+                  <Text style={styles.paymentMode}>{versement.modePaiement}</Text>
+                  <Text style={styles.paymentAmount}>{formaterFCFA(versement.montant)}</Text>
+                </View>
+              ))}
+            </SectionDetails>
+          ) : (
+            <SectionDetails titre={donnees.type === 'Reçu' ? 'Versement associé' : 'Règlement'} seconde>
+              <Ligne etiquette="Date" valeur={formaterDateDocument(donnees.datePaiement)} />
+              <Ligne etiquette="Mode" valeur={donnees.modePaiement} />
+              <Ligne etiquette="Nature" valeur={donnees.typePaiement} />
+              <Ligne etiquette={donnees.type === 'Reçu' ? 'Montant de ce reçu' : 'Montant du versement'} valeur={formaterFCFA(donnees.montant)} />
+            </SectionDetails>
+          )}
         </View>
 
         <View style={styles.statement}>
@@ -491,7 +551,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           </Text>
           {estLoyer && donnees.type === 'Reçu' ? (
             <Text style={styles.statementNote}>
-              {`Ce reçu porte uniquement sur le versement indiqué. Il n'atteste pas le règlement intégral de la période. Solde restant : ${formaterFCFA(soldeRestant)}.`}
+              {`Ce reçu porte uniquement sur le versement indiqué et n'atteste pas le règlement intégral de la période. Solde restant : ${formaterFCFA(soldeRestant)}. Les informations reflètent les données enregistrées dans Sikaloc, sans confirmation indépendante d'un prestataire de paiement.`}
             </Text>
           ) : null}
           {estLoyer && excedent > 0 ? (
@@ -501,11 +561,14 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           ) : null}
           {!estQuittance && !estLoyer ? (
             <Text style={styles.statementNote}>
-              Cette mention porte sur le versement enregistré dans Sikaloc et ne constitue pas une confirmation par un prestataire de paiement.
+              Cette mention porte sur le versement enregistré dans Sikaloc et ne constitue pas une confirmation indépendante par un prestataire de paiement.
             </Text>
           ) : null}
         </View>
 
+        {estExemple ? (
+          <Text style={styles.signatureExampleNote}>Exemple fictif · aucune signature réelle n’est reproduite.</Text>
+        ) : null}
         <View style={styles.signatures} wrap={false}>
           <View style={styles.signature}>
             <Text style={styles.signatureLabel}>Signature du bailleur</Text>
@@ -515,7 +578,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
               ) : (
                 <Text style={styles.signatureStatus}>
                   {estExemple
-                    ? 'Aucune signature réelle reproduite sur cet exemple'
+                    ? 'Espace non signé'
                     : etatBailleur === 'indisponible' ? 'Signature indisponible' : 'Aucune signature apposée'}
                 </Text>
               )}
@@ -532,7 +595,7 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
               ) : (
                 <Text style={styles.signatureStatus}>
                   {estExemple
-                    ? 'Aucune signature réelle reproduite sur cet exemple'
+                    ? 'Espace non signé'
                     : etatLocataire === 'indisponible' ? 'Signature indisponible' : 'Aucune signature apposée'}
                 </Text>
               )}
@@ -561,11 +624,13 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           </Text>
           <Text style={styles.legal}>
             Document généré électroniquement par Sikaloc sous la responsabilité
-            de {donnees.bailleurNom}, le {formaterHorodatage(donnees.dateGeneration)}.
+            de {donnees.bailleurNom}, le {formaterHorodatageDocument(donnees.dateGeneration)}.
           </Text>
-          {!estExemple ? (
+          {!estExemple && (etatBailleur === 'indisponible' || etatLocataire === 'indisponible') ? (
             <Text style={styles.legal}>
-              {[mentionEtatSignature('bailleur', etatBailleur), mentionEtatSignature('locataire', etatLocataire)].join(' ')}
+              {[mentionEtatSignature('bailleur', etatBailleur), mentionEtatSignature('locataire', etatLocataire)]
+                .filter((mention) => mention.includes('indisponible'))
+                .join(' ')}
             </Text>
           ) : null}
         </View>
