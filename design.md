@@ -88,7 +88,8 @@ les noms de spacing entrent en collision avec ces largeurs ; employer une largeu
 explicite (`max-w-[42rem]`) ou les classes de conteneur documentées.
 
 - `.app-main` : gouttière 16 px au mobile, 32 px à partir de 640 px ; vertical 24/32 px.
-- Pro : contenu plafonné à 1100 px ; Me : 900 px ; formulaire : 42 rem.
+- Pro : zone de travail jusqu’à 1440 px, largeur affinée par famille de contenu ;
+  formulaires autour de 42 rem ; Me : 900 px.
 - Carte `.card` : 20 px de padding, 24 px à partir de 640 ; `.card-lg` : 20/32 px.
 - Espacement entre sections 24–32 px ; entre champs 24 px ; label → champ 8 px.
 - Rayon champ/bouton 8 px ; carte/tableau 12 px ; menu 12 px ; badge seul en pilule.
@@ -153,10 +154,12 @@ Le chargement de soumission conserve le libellé et bloque les doubles clics.
 
 ## Navigation, dialogues et clavier
 
-Pro bureau : barre latérale stable, ligne active sauge, `aria-current=page`,
+Pro bureau : barre latérale stable, ligne active surlignée par une surface neutre, `aria-current=page`,
 aucun décalage horizontal au survol. Le bandeau supérieur porte le groupe de
-navigation, pas une seconde copie du titre H1. Le shell conserve une largeur de
-contenu de 1100 px. Lien d’évitement vers le contenu du shell.
+navigation, pas une seconde copie du titre H1. Les actions de paiement sont
+contextuelles aux pages qui les utilisent ; elles ne persistent pas dans le shell.
+Le contenu peut s’étendre jusqu’à 1440 px, tandis que les formulaires et détails
+gardent leur largeur de lecture. Lien d’évitement vers le contenu du shell.
 Pro mobile : bouton nommé, `aria-expanded` et `aria-controls`, tiroir natif modal
 `dialog`. À l’ouverture le focus entre dans le tiroir ; Tab reste dans le modal,
 Échap ou fond ferment, le focus revient au déclencheur. Le fond ne défile pas.
@@ -165,9 +168,6 @@ Changer de route ou passer en vue bureau referme le tiroir.
 Menu compte : premier item focalisé, flèches haut/bas et Home/End naviguent,
 Échap ferme et revient au déclencheur ; Tab sort et ferme, clic extérieur ferme.
 Les liens gardent leurs destinations et la déconnexion garde sa Server Action.
-Le raccourci secondaire d’enregistrement d’un paiement n’est présenté que lorsqu’il
-reste utile ; il est masqué sur le tableau de bord, les pages de paiement, les impayés
-et les détails d’un bail, où une action locale existe ou serait redondante.
 Me : onglets nommés, défilement horizontal local, cible active visible au clavier.
 Find : conserver la recherche et les liens publics ; pas de shell Pro ajouté.
 Les confirmations métier en place restent en place ; ne pas imposer un modal à une
@@ -211,9 +211,15 @@ la référence. La recette finale H intégrera D2 et les parcours non pilotes.
   de l’historique utilise `.table-paiements`, pas une règle globale sur les tableaux.
 - `LienFiltre` garde un lien GET existant, `aria-current` et un indicateur d’attente
   Next dans une boîte de taille fixe ; aucune nouvelle logique de filtre.
-- `.card.list-card` reprend la carte E avec padding compact de 20 px. `.list-row`
-  empile au mobile et sépare identité/actions à partir de 768 px. `.list-actions`
-  distingue les commandes ; `.list-aside` met en évidence statut et montant.
+- `.card.list-card` garde son padding de carte dans les espaces où une surface est
+  utile. Dans Pro, les rangées de gestion sont ouvertes et séparées par des filets ;
+  `.list-row` empile au mobile et sépare identité/actions dès que la largeur le permet.
+  `.list-actions` distingue les commandes ; `.list-aside` met en évidence statut et montant.
+- Dans l’espace Pro, les cartes statiques ne sont conservées que lorsqu’elles portent
+  une surface fonctionnelle ou un signal métier ; les autres listes s’appuient sur
+  la typographie et les séparateurs. Le tableau de bord présente les KPI en bandeau
+  typographique, et les paramètres forment une table de matières ouverte en deux
+  colonnes, sans six cartes répétées.
 - `.list-title` et `.list-copy` permettent les noms, adresses et emails longs.
   `.money` utilise les chiffres tabulaires sans troncature ni retour dans un montant.
 - Une erreur auxiliaire (ex. liste des baux du filtre) est signalée sans masquer les

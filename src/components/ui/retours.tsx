@@ -74,15 +74,15 @@ export function EnTetePage({
   surTitre?: string
 }) {
   const famille = surTitre ?? (
-    /tableau de bord/i.test(titre) ? 'PILOTAGE' :
-    /impay/i.test(titre) ? 'RECOUVREMENT' :
-    /logement/i.test(titre) ? 'PARC IMMOBILIER' :
-    /locataire/i.test(titre) ? 'RELATIONS LOCATAIRES' :
-    /bail/i.test(titre) ? 'CONTRATS LOCATIFS' :
-    /annonce|candidature/i.test(titre) ? 'DIFFUSION LOCATIVE' :
-    /paiement|quittance|reçu/i.test(titre) ? 'FINANCES' :
-    /paramètre|profil|préférence|signature|abonnement|parrainage|donnée/i.test(titre) ? 'CONFIGURATION' :
-    'ESPACE PRO'
+    /tableau de bord/i.test(titre) ? 'Pilotage' :
+    /impay/i.test(titre) ? 'Recouvrement' :
+    /logement/i.test(titre) ? 'Parc immobilier' :
+    /locataire/i.test(titre) ? 'Relations locataires' :
+    /bail/i.test(titre) ? 'Contrats locatifs' :
+    /annonce|candidature/i.test(titre) ? 'Diffusion locative' :
+    /paiement|quittance|reçu/i.test(titre) ? 'Finances' :
+    /paramètre|profil|préférence|signature|abonnement|parrainage|donnée/i.test(titre) ? 'Configuration' :
+    'Espace Pro'
   )
 
   return (

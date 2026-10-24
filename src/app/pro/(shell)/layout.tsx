@@ -3,7 +3,7 @@ import localFont from 'next/font/local'
 
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
 import { MenuCompte } from '@/components/app/menu-compte'
-import { ActionPaiementTopbar, BarreLaterale, ContextePro, EnTeteMobile } from '@/components/app/navigation'
+import { BarreLaterale, ContextePro, EnTeteMobile } from '@/components/app/navigation'
 import { VisiteGuidee } from '@/components/app/visite-guidee'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { abonnementActif } from '@/lib/plan'
@@ -48,14 +48,8 @@ export default async function LayoutApplication({
     bailleurCourant(),
     supabase.from('v_impayes').select('bail_id', { count: 'exact', head: true }),
   ])
-  const bauxActifsReponse = await supabase
-    .from('baux')
-    .select('id', { count: 'exact', head: true })
-    .eq('bailleur_id', bailleur.id)
-    .eq('statut', 'Actif')
 
   const impayes = count ?? 0
-  const aBauxActifs = !bauxActifsReponse.error && (bauxActifsReponse.count ?? 0) > 0
 
   // La progression n'est lue que tant que la visite peut encore servir. Pour un
   // bailleur qui l'a terminée — le cas de tous les jours — ce layout, qui
@@ -85,7 +79,6 @@ export default async function LayoutApplication({
       <div className="flex min-w-0 flex-1 flex-col">
         <EnTeteMobile
           impayes={impayes}
-          aBauxActifs={aBauxActifs}
           nomBailleur={bailleur.nom}
           emailBailleur={bailleur.email}
           plan={plan}
@@ -95,7 +88,6 @@ export default async function LayoutApplication({
 
         <header className="pro-topbar hidden h-16 shrink-0 items-center justify-between gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
           <ContextePro />
-          <ActionPaiementTopbar aBauxActifs={aBauxActifs} />
           <MenuCompte
             nom={bailleur.nom}
             email={bailleur.email}
@@ -104,7 +96,7 @@ export default async function LayoutApplication({
         </header>
 
         <main id="contenu-principal" tabIndex={-1} className="app-main pro-main flex-1">
-          <div className="mx-auto max-w-[1100px]">
+          <div className="pro-content-frame">
             <TransitionPage>{children}</TransitionPage>
           </div>
         </main>

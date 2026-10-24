@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Banknote, Check, CircleDollarSign, House, TriangleAlert } from 'lucide-react'
+import { ArrowRight, Banknote, Check, CircleDollarSign, House, ReceiptText, TriangleAlert } from 'lucide-react'
 
 import { ReprendreVisite } from '@/components/app/reprendre-visite'
 import { CarteMetrique } from '@/components/app/carte-metrique'
@@ -545,12 +544,7 @@ export default async function PageTableauDeBord({
           <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
         ) : paiements.length === 0 ? (
           <div className="dashboard-payments-empty">
-            <Image
-              src="/images/illustrations/paiement-justificatif.svg"
-              alt="Un reçu de paiement stylisé avec un versement et une validation."
-              width={132}
-              height={102}
-            />
+            <ReceiptText size={24} strokeWidth={1.7} aria-hidden="true" className="dashboard-payments-empty-icon" />
             <div>
               <h3>Aucun paiement enregistré</h3>
               <p>Les versements validés apparaîtront ici avec leur période et leur montant.</p>

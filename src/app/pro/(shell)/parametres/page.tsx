@@ -52,34 +52,27 @@ export default async function PageParametres({
         description="Votre profil, votre signature, vos préférences et votre abonnement."
       />
 
-      <div className="settings-section-list grid gap-lg sm:grid-cols-2">
-        {SECTIONS_PARAMETRES.map((section, index) => {
+      <div className="settings-section-list">
+        {SECTIONS_PARAMETRES.map((section) => {
           const Icone = ICONES[section.cle]
 
           return (
             <Link
               key={section.cle}
               href={`/pro/parametres/${section.cle}`}
-              style={{ '--delai': `${index * 45}ms` } as React.CSSProperties}
-              className="settings-link-card anim-monte group flex flex-col gap-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              className="settings-link-card group"
             >
-              <span className="settings-link-icon flex items-center justify-center bg-primary-pale text-ink-deep transition-colors duration-200 group-hover:bg-primary">
+              <span className="settings-link-icon" aria-hidden="true">
                 <Icone size={21} strokeWidth={1.8} aria-hidden="true" />
               </span>
 
-              <span className="flex items-center justify-between gap-sm">
-                <span className="text-title-lg font-semibold text-ink">
+              <span className="settings-link-copy">
+                <span className="settings-link-title">
                   {section.titre}
                 </span>
-                <ChevronRight
-                  size={18}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                  className="shrink-0 text-mute transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-ink"
-                />
+                <span className="settings-link-description">{section.details}</span>
               </span>
-
-              <span className="text-body-sm text-mute">{section.details}</span>
+              <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" className="settings-link-arrow" />
             </Link>
           )
         })}

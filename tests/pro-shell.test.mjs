@@ -44,13 +44,17 @@ test('la navigation Pro est regroupée par tâche et marque la route courante', 
   assert.match(navigation, /chemin === lien\.href \? 'page' : actif \? 'location'/)
 })
 
-test('le bandeau ne répète pas le titre de page et le raccourci de paiement évite les doublons', async () => {
+test('le shell ne duplique pas le titre ni les actions de paiement propres aux pages', async () => {
   const navigation = await lire('src/components/app/navigation.tsx')
+  const layout = await lire('src/app/pro/(shell)/layout.tsx')
+  const tableauDeBord = await lire('src/app/pro/(shell)/tableau-de-bord/page.tsx')
+  const paiements = await lire('src/app/pro/(shell)/paiements/page.tsx')
   assert.match(navigation, /function groupeContexte\(chemin: string\)/)
   assert.doesNotMatch(navigation, /contexte\.page/)
-  assert.match(navigation, /function afficherRaccourciPaiement\(chemin: string, aBauxActifs: boolean\)/)
-  assert.match(navigation, /chemin\.startsWith\('\/pro\/paiements'\) \|\| chemin\.startsWith\('\/pro\/impayes'\)/)
-  assert.match(navigation, /className="btn btn-secondary btn-sm"/)
+  assert.doesNotMatch(navigation, /ActionPaiementTopbar|afficherRaccourciPaiement|bouton-paiement/)
+  assert.doesNotMatch(layout, /ActionPaiementTopbar|Enregistrer un paiement/)
+  assert.match(tableauDeBord, /Enregistrer un paiement/)
+  assert.match(paiements, /Nouveau paiement/)
 })
 
 test('les états vides métier Pro ne réutilisent pas les anciennes illustrations 3D', async () => {

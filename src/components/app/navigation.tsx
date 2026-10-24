@@ -7,7 +7,6 @@ import {
   LogOut,
   Megaphone,
   Menu,
-  Plus,
   ScrollText,
   Settings,
   TriangleAlert,
@@ -146,31 +145,11 @@ export function ContextePro() {
   )
 }
 
-function afficherRaccourciPaiement(chemin: string, aBauxActifs: boolean) {
-  if (!aBauxActifs || chemin === ESPACE_PRO.tableauDeBord) return false
-  if (chemin.startsWith('/pro/paiements') || chemin.startsWith('/pro/impayes')) return false
-
-  const segmentsBail = chemin.split('/').filter(Boolean)
-  return !(segmentsBail[0] === 'pro' && segmentsBail[1] === 'baux' && segmentsBail.length >= 3 && segmentsBail[2] !== 'nouveau')
-}
-
-/** Le raccourci de paiement n'apparaît que si un bail actif le permet. */
-export function ActionPaiementTopbar({ aBauxActifs }: { aBauxActifs: boolean }) {
-  const chemin = usePathname()
-  if (!afficherRaccourciPaiement(chemin, aBauxActifs)) return null
-
-  return (
-    <Link href="/pro/paiements/nouveau" data-visite="bouton-paiement" className="btn btn-secondary btn-sm">
-      Enregistrer un paiement
-    </Link>
-  )
-}
-
 export function BarreLaterale({ impayes }: { impayes: number }) {
   const chemin = usePathname()
 
   return (
-    <aside className="pro-sidebar hidden w-[248px] shrink-0 border-r border-hairline bg-canvas lg:block">
+    <aside className="pro-sidebar hidden w-[240px] shrink-0 border-r border-hairline bg-canvas lg:block">
       <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto p-md">
         <div className="mb-xl px-md pt-sm">
           <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
@@ -195,21 +174,17 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
 /**
  * En-tête et tiroir mobile.
  *
- * Le tiroir porte tout ce que la barre latérale et l'en-tête de bureau
- * offrent : l'action principale, la navigation, le thème, et surtout le bloc
- * compte avec la déconnexion. Une application où l'on ne peut pas se
- * déconnecter depuis son téléphone n'est pas « adaptée au mobile », elle est
- * amputée.
+ * Le tiroir porte la navigation, le thème et le bloc compte avec la
+ * déconnexion. Les actions métier restent dans les pages où elles s'appliquent,
+ * plutôt que de persister dans le chrome de toutes les routes.
  */
 export function EnTeteMobile({
   impayes,
-  aBauxActifs,
   nomBailleur,
   emailBailleur,
   plan,
 }: {
   impayes: number
-  aBauxActifs: boolean
   nomBailleur: string
   emailBailleur: string
   plan: string
@@ -286,18 +261,6 @@ export function EnTeteMobile({
         <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
-          {afficherRaccourciPaiement(chemin, aBauxActifs) ? (
-            <Link
-              href="/pro/paiements/nouveau"
-              aria-label="Enregistrer un paiement"
-              data-visite="bouton-paiement"
-              className="btn btn-primary size-9 rounded-pill p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-md"
-            >
-              <Plus size={17} strokeWidth={2.2} aria-hidden="true" />
-              <span className="hidden sm:inline">Paiement</span>
-            </Link>
-          ) : null}
-
           <button
             type="button"
             onClick={() => setOuvert(true)}
@@ -348,16 +311,6 @@ export function EnTeteMobile({
               </div>
               <span className="badge badge-neutral mt-sm">Plan {plan}</span>
             </div>
-
-            {aBauxActifs ? (
-              <Link
-                href="/pro/paiements/nouveau"
-                onClick={() => setOuvert(false)}
-                className="btn btn-primary mb-lg w-full"
-              >
-                Enregistrer un paiement
-              </Link>
-            ) : null}
 
             <LiensNavigation
               chemin={chemin}

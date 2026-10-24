@@ -35,7 +35,6 @@ export function EnteteParametre({ cle }: { cle: CleParametre }) {
         </ol>
       </nav>
 
-      <p className="page-header-kicker">CENTRE DE PARAMÈTRES</p>
       <h1 className="page-title text-display-md font-extrabold tracking-tight text-ink">
         {section.titre}
       </h1>

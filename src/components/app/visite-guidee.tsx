@@ -415,13 +415,13 @@ export function VisiteGuidee({
             left: position.halo.gauche,
             width: position.halo.largeur,
             height: position.halo.hauteur,
-            boxShadow: '0 0 0 9999px rgb(21 21 24 / 0.55)',
+            boxShadow: '0 0 0 9999px rgb(21 21 24 / 0.36)',
             outline: '2px solid var(--color-primary)',
             outlineOffset: '-1px',
           }}
         />
       ) : surPlace ? null : (
-        <div aria-hidden="true" className="absolute inset-0 bg-surface-dark/45" />
+        <div aria-hidden="true" className="absolute inset-0 bg-surface-dark/30" />
       )}
 
       {/*
@@ -448,7 +448,7 @@ export function VisiteGuidee({
         ref={bulle}
         // `pointer-events-auto` : la bulle est le seul élément interactif de la
         // couche. Tout le reste des clics traverse vers l'application.
-        className={`pointer-events-auto anim-monte w-[min(23rem,calc(100vw-1.5rem))] rounded-xl bg-canvas p-lg shadow-xl ${
+        className={`pro-tour-popover pointer-events-auto anim-monte w-[min(23rem,calc(100vw-1.5rem))] ${
           surPlace
             ? 'absolute bottom-lg left-1/2 -translate-x-1/2 lg:left-lg lg:translate-x-0'
             : centree
