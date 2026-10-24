@@ -171,6 +171,18 @@ export function ContextePro() {
   )
 }
 
+/** Le raccourci de paiement n'apparaît que si un bail actif le permet. */
+export function ActionPaiementTopbar({ aBauxActifs }: { aBauxActifs: boolean }) {
+  const chemin = usePathname()
+  if (!aBauxActifs || chemin === ESPACE_PRO.tableauDeBord) return null
+
+  return (
+    <Link href="/pro/paiements/nouveau" data-visite="bouton-paiement" className="btn btn-primary btn-sm">
+      Enregistrer un paiement
+    </Link>
+  )
+}
+
 export function BarreLaterale({ impayes }: { impayes: number }) {
   const chemin = usePathname()
 
@@ -208,11 +220,13 @@ export function BarreLaterale({ impayes }: { impayes: number }) {
  */
 export function EnTeteMobile({
   impayes,
+  aBauxActifs,
   nomBailleur,
   emailBailleur,
   plan,
 }: {
   impayes: number
+  aBauxActifs: boolean
   nomBailleur: string
   emailBailleur: string
   plan: string
@@ -289,15 +303,17 @@ export function EnTeteMobile({
         <SikalocSpaceBrand href={ESPACE_PRO.tableauDeBord} taille="sm" espace="Pro" />
 
         <div className="flex items-center gap-xs">
-          <Link
-            href="/pro/paiements/nouveau"
-            aria-label="Enregistrer un paiement"
-            data-visite="bouton-paiement"
-            className="btn btn-primary size-9 rounded-pill p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-md"
-          >
-            <Plus size={17} strokeWidth={2.2} aria-hidden="true" />
-            <span className="hidden sm:inline">Paiement</span>
-          </Link>
+          {aBauxActifs && chemin !== ESPACE_PRO.tableauDeBord ? (
+            <Link
+              href="/pro/paiements/nouveau"
+              aria-label="Enregistrer un paiement"
+              data-visite="bouton-paiement"
+              className="btn btn-primary size-9 rounded-pill p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-md"
+            >
+              <Plus size={17} strokeWidth={2.2} aria-hidden="true" />
+              <span className="hidden sm:inline">Paiement</span>
+            </Link>
+          ) : null}
 
           <button
             type="button"
@@ -350,13 +366,15 @@ export function EnTeteMobile({
               <span className="badge badge-neutral mt-sm">Plan {plan}</span>
             </div>
 
-            <Link
-              href="/pro/paiements/nouveau"
-              onClick={() => setOuvert(false)}
-              className="btn btn-primary mb-lg w-full"
-            >
-              Enregistrer un paiement
-            </Link>
+            {aBauxActifs ? (
+              <Link
+                href="/pro/paiements/nouveau"
+                onClick={() => setOuvert(false)}
+                className="btn btn-primary mb-lg w-full"
+              >
+                Enregistrer un paiement
+              </Link>
+            ) : null}
 
             <LiensNavigation
               chemin={chemin}
