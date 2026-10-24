@@ -7,6 +7,7 @@ import { creerLogement } from '@/lib/actions/logements'
 import { capacites, messageLimiteLogements } from '@/lib/plan'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
+import styles from '../logements.module.css'
 
 export const metadata: Metadata = { title: 'Nouveau logement' }
 
@@ -22,32 +23,29 @@ export default async function PageNouveauLogement() {
   const enregistres = count ?? 0
   const plafondAtteint = limite !== null && enregistres >= limite
   const restants = limite === null ? null : Math.max(0, limite - enregistres)
+  const quotaIndisponible = Boolean(erreurCompteur) || count === null
 
   return (
-    <div className="property-form-page mx-auto max-w-[42rem]">
+    <div className={`${styles.formPage} property-form-page`}>
       <EnTetePage
         titre="Nouveau logement"
-        description={
-          plafondAtteint || restants === null
-            ? undefined
-            : `${enregistres} logement${enregistres > 1 ? 's' : ''} sur ${limite} enregistré${
-                enregistres > 1 ? 's' : ''
-              } — il vous en reste ${restants}.`
-        }
+        description="Décrivez le bien pour le retrouver dans votre parc, puis le rattacher à un bail ou préparer une annonce."
       />
 
-      {erreurCompteur ? (
-        <Alerte ton="erreur">
-          La limite de votre plan ne peut pas être vérifiée. Le formulaire est momentanément
-          indisponible ; actualisez la page pour réessayer.
-        </Alerte>
+      {quotaIndisponible ? (
+        <section className={styles.capacityState} aria-label="Vérification du quota">
+          <div className={styles.formError}>
+            <Alerte ton="erreur">
+              Le nombre de logements ne peut pas être vérifié. Le formulaire reste indisponible ; actualisez la page pour réessayer.
+            </Alerte>
+          </div>
+          <Link href="/pro/logements" className="btn btn-secondary">Retour aux logements</Link>
+        </section>
       ) : plafondAtteint ? (
-        <div className="card card-lg space-y-lg anim-monte">
-          {/* Le décompte est dit explicitement : « limité à 2 » sans rappeler
-              qu'on en a déjà 2 laisse croire qu'il en reste. */}
-          <Alerte ton="attention">{messageLimiteLogements(enregistres)}</Alerte>
-
-          <div className="flex flex-wrap gap-md">
+        <section className={styles.capacityState} aria-labelledby="quota-reached-title">
+          <h2 id="quota-reached-title">Votre capacité actuelle est atteinte.</h2>
+          <p>{messageLimiteLogements(enregistres)}</p>
+          <div className={styles.capacityStateActions}>
             <Link href="/pro/parametres/abonnement" className="btn btn-primary">
               Passer au plan Standard
             </Link>
@@ -55,9 +53,16 @@ export default async function PageNouveauLogement() {
               Retour aux logements
             </Link>
           </div>
-        </div>
+        </section>
       ) : (
-        <FormulaireLogement action={creerLogement} />
+        <>
+          {limite !== null && restants !== null ? (
+            <p className={styles.formCapacity}>
+              Votre plan Gratuit comprend {limite} logements. Il vous en reste {restants}.
+            </p>
+          ) : null}
+          <FormulaireLogement action={creerLogement} />
+        </>
       )}
     </div>
   )

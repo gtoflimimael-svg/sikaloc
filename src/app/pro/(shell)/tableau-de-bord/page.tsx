@@ -108,7 +108,7 @@ function SyntheseRecouvrement({
       : taux === 100
         ? 'Tous les loyers attendus sont validés.'
         : taux === 0
-          ? 'Aucun loyer attendu n’a encore été validé.'
+          ? 'Aucun paiement validé sur les loyers attendus.'
           : 'des loyers attendus sont validés.'
 
   return (
@@ -649,7 +649,7 @@ export default async function PageTableauDeBord({
             <CarteMetrique
               label="Versements validés"
               valeur={formaterFCFA(metriques.ca_du_mois)}
-              detail={`Tous types · date de règlement · ${formaterPeriode(periodeCourante)}`}
+              detail={`Paiements validés en ${formaterPeriode(periodeCourante)}`}
               icone={<Banknote size={19} strokeWidth={1.8} />}
             />
           </section>

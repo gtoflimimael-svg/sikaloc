@@ -1,0 +1,399 @@
+.page {
+  width: 100%;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  min-height: 190px;
+  padding: 30px 0;
+  border-top: 1px solid var(--color-hairline);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.emptyCopy {
+  max-width: 38rem;
+}
+
+.empty h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(25px, 3.1vw, 36px);
+  font-weight: 720;
+  letter-spacing: -.045em;
+  line-height: 1.13;
+}
+
+.empty p {
+  max-width: 48ch;
+  margin: 11px 0 0;
+  color: var(--color-mute);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.collectionHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 2px 0 12px;
+}
+
+.dataNotice {
+  margin: 0 0 18px;
+}
+
+.collectionHeading h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 680;
+  letter-spacing: -.03em;
+}
+
+.collectionHeading p {
+  margin: 0;
+  color: var(--color-mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.capacity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 18px;
+  margin: 0 0 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-hairline-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.capacity p {
+  margin: 0;
+}
+
+.capacity a,
+.vacancySummary a {
+  color: var(--color-ink-deep);
+  font-weight: 620;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-ink-deep) 36%, transparent);
+  text-underline-offset: 3px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.capacity a:hover,
+.vacancySummary a:hover {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
+.capacity a:focus-visible,
+.vacancySummary a:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--color-ink-deep);
+  outline-offset: 3px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-hairline);
+  list-style: none;
+}
+
+.property {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(250px, .86fr) max-content;
+  align-items: center;
+  gap: 24px clamp(20px, 2.4vw, 34px);
+  min-width: 0;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.identity,
+.overview {
+  min-width: 0;
+}
+
+.identity h3 {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(17px, 1.55vw, 20px);
+  font-weight: 680;
+  letter-spacing: -.025em;
+  line-height: 1.3;
+}
+
+.identity > p {
+  margin: 6px 0 0;
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.statusLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 10px;
+  min-height: 26px;
+}
+
+.advertStatus {
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.advertStatus[data-tone='positive'] { color: var(--color-positive-deep); }
+.advertStatus[data-tone='warning'] { color: var(--color-warning-deep); }
+
+.leaseSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 9px 18px;
+  margin-top: 9px;
+}
+
+.leaseSummary > p,
+.vacancySummary > p {
+  margin: 0;
+}
+
+.leaseSummary > p:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.leaseSummary > p:first-child a {
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 590;
+  text-decoration: none;
+}
+
+.leaseSummary > p:first-child a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 5px;
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.rent strong {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 680;
+}
+
+.vacancySummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 14px;
+  margin-top: 9px;
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.actions :global(.btn) {
+  min-height: 36px;
+  padding-inline: 10px;
+  white-space: nowrap;
+}
+
+.deleteAction {
+  flex: 0 0 auto;
+}
+
+.deleteAction :global(.space-y-md > :last-child) {
+  max-width: min(100%, 21rem);
+}
+
+.formPage {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+.capacityState {
+  padding: 25px 0;
+  border-top: 1px solid var(--color-hairline);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.capacityState h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 690;
+  letter-spacing: -.03em;
+  line-height: 1.25;
+}
+
+.capacityState p {
+  max-width: 58ch;
+  margin: 8px 0 0;
+  color: var(--color-mute);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.capacityStateActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.formCapacity {
+  margin: -7px 0 22px;
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.formError {
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1199px) {
+  .property {
+    grid-template-columns: minmax(0, 1.1fr) minmax(230px, .9fr);
+    gap: 16px 24px;
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-hairline-soft);
+  }
+}
+
+@media (max-width: 679px) {
+  .empty {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 21px;
+    min-height: 0;
+    padding-block: 25px;
+  }
+
+  .empty h2 {
+    max-width: 18ch;
+    font-size: clamp(25px, 7.5vw, 32px);
+  }
+
+  .empty p {
+    max-width: 40ch;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+
+  .empty :global(.btn) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .property {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+    padding-block: 19px;
+  }
+
+  .overview,
+  .actions {
+    grid-column: 1;
+  }
+
+  .overview {
+    padding-top: 1px;
+  }
+
+  .leaseSummary {
+    align-items: start;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    gap: 4px;
+    padding-top: 11px;
+  }
+
+  .actions :global(.btn) {
+    min-height: 40px;
+    padding-inline: 9px;
+  }
+
+  .deleteAction {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+
+  .deleteAction :global([role='group']) {
+    width: 100%;
+  }
+
+  .capacityStateActions :global(.btn) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 359px) {
+  .actions :global(.btn) {
+    white-space: normal;
+  }
+
+  .rent {
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capacity a,
+  .vacancySummary a {
+    transition: none;
+  }
+}
