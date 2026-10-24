@@ -1,4 +1,4 @@
-import type { StatutAnnonce } from '@/lib/types/database'
+import type { PlanAbonnement, StatutAnnonce } from '@/lib/types/database'
 
 /** Une relation Supabase peut être sérialisée comme objet ou comme tableau. */
 export function premiereRelation<T>(relation: T | T[] | null | undefined): T | undefined {
@@ -32,4 +32,39 @@ export function presenterStatutAnnonce(statut: StatutAnnonce): {
     case 'cloturee':
       return null
   }
+}
+
+/** Texte de quota concis, fondé sur le plan effectif et la liste visible. */
+export function presenterQuotaLogements(
+  plan: PlanAbonnement,
+  nombre: number,
+  limite: number | null,
+): string {
+  const logement = nombre === 1 ? 'logement' : 'logements'
+
+  if (limite === null) return `Plan ${plan} · ${nombre} ${logement}`
+  if (nombre === 0) return `Plan ${plan} · 0 sur ${limite} logements`
+
+  return `Plan ${plan} · ${nombre} ${logement} sur ${limite}`
+}
+
+/** Le bail actif ne bloque qu'une publication ; le brouillon prépare une disponibilité future. */
+export function presenterActionAnnonce(
+  annonceId: string | undefined,
+  bailActif: boolean,
+  logementId: string,
+): { href: string; libelle: string } {
+  if (annonceId) {
+    return { href: `/pro/annonces/${annonceId}`, libelle: 'Gérer l’annonce' }
+  }
+
+  return {
+    href: `/pro/annonces/nouvelle?logement=${encodeURIComponent(logementId)}`,
+    libelle: bailActif ? 'Préparer une annonce future' : 'Préparer une annonce',
+  }
+}
+
+/** La suppression est bloquée par les baux (même terminés) et les annonces vivantes. */
+export function peutSupprimerLogement(nombreBaux: number, annonceVivante: boolean): boolean {
+  return nombreBaux === 0 && !annonceVivante
 }

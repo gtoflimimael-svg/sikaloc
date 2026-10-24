@@ -17,7 +17,8 @@
   max-width: 38rem;
 }
 
-.empty h2 {
+.empty h2,
+.empty h3 {
   margin: 0;
   color: var(--color-ink);
   font-family: var(--font-display);
@@ -39,8 +40,9 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
-  margin: 2px 0 12px;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 28px 0 14px;
 }
 
 .dataNotice {
@@ -56,30 +58,17 @@
   letter-spacing: -.03em;
 }
 
-.collectionHeading p {
-  margin: 0;
-  color: var(--color-mute);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
 .capacity {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 6px 18px;
-  margin: 0 0 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--color-hairline-soft);
-  border-bottom: 1px solid var(--color-hairline-soft);
-  color: var(--color-mute);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.capacity p {
+  justify-content: flex-end;
+  gap: 4px 14px;
   margin: 0;
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
 
 .capacity a,
@@ -114,16 +103,17 @@
 
 .property {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(250px, .86fr) max-content;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.12fr) minmax(9.25rem, .8fr) minmax(17rem, max-content);
   align-items: center;
-  gap: 24px clamp(20px, 2.4vw, 34px);
+  gap: 20px clamp(18px, 1.9vw, 28px);
   min-width: 0;
-  padding: 22px 0;
+  padding: 23px 0;
   border-bottom: 1px solid var(--color-hairline-soft);
 }
 
 .identity,
-.overview {
+.occupation,
+.rent {
   min-width: 0;
 }
 
@@ -149,7 +139,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 7px 10px;
+  gap: 6px 10px;
   min-height: 26px;
 }
 
@@ -162,30 +152,22 @@
 .advertStatus[data-tone='positive'] { color: var(--color-positive-deep); }
 .advertStatus[data-tone='warning'] { color: var(--color-warning-deep); }
 
-.leaseSummary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 9px 18px;
-  margin-top: 9px;
-}
-
-.leaseSummary > p,
+.tenant,
 .vacancySummary > p {
   margin: 0;
 }
 
-.leaseSummary > p:first-child {
+.tenant {
   display: grid;
   gap: 2px;
   min-width: 0;
+  margin-top: 8px;
   color: var(--color-mute);
   font-size: 12px;
   line-height: 1.45;
 }
 
-.leaseSummary > p:first-child a {
+.tenant a {
   overflow-wrap: anywhere;
   color: var(--color-ink);
   font-size: 14px;
@@ -193,16 +175,29 @@
   text-decoration: none;
 }
 
-.leaseSummary > p:first-child a:hover {
+.tenant a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .rent {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.rent > span {
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rent > p {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 3px 5px;
+  gap: 3px 6px;
+  margin: 0;
   color: var(--color-mute);
   font-size: 12px;
   line-height: 1.4;
@@ -210,10 +205,18 @@
 }
 
 .rent strong {
+  white-space: nowrap;
   color: var(--color-ink);
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: clamp(15px, 1.4vw, 18px);
   font-weight: 680;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rentMissing {
+  color: var(--color-mute-soft) !important;
+  font-size: 15px !important;
 }
 
 .vacancySummary {
@@ -232,21 +235,95 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: 4px 7px;
 }
 
-.actions :global(.btn) {
-  min-height: 36px;
-  padding-inline: 10px;
-  white-space: nowrap;
+.rowAction {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 5px 7px;
+  border-radius: 4px;
+  color: var(--color-ink-deep);
+  font-size: 13px;
+  font-weight: 620;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: color 150ms ease, background-color 150ms ease;
 }
 
-.deleteAction {
+.rowAction:hover {
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+}
+
+.rowAction:focus-visible,
+.moreActions summary:focus-visible {
+  outline: 2px solid var(--color-ink-deep);
+  outline-offset: 2px;
+}
+
+.moreActions {
+  position: relative;
   flex: 0 0 auto;
 }
 
-.deleteAction :global(.space-y-md > :last-child) {
+.moreActions summary {
+  display: inline-flex;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: var(--color-mute);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 590;
+  line-height: 1.35;
+  list-style: none;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.moreActions summary::-webkit-details-marker {
+  display: none;
+}
+
+.moreActions summary::marker {
+  content: '';
+}
+
+.moreActions summary:hover,
+.moreActions[open] summary {
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+}
+
+.actionMenu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(19rem, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 9px;
+  background: var(--color-canvas);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+.actionMenu :global([role='group'][aria-labelledby]) {
+  max-width: 100%;
+  padding: 12px;
+}
+
+.actionMenu :global(.space-y-md > :last-child) {
   max-width: min(100%, 21rem);
+}
+
+.property:has(.moreActions[open]) {
+  position: relative;
+  z-index: 2;
 }
 
 .formPage {
@@ -297,17 +374,20 @@
   margin-bottom: 22px;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 1279px) {
   .property {
-    grid-template-columns: minmax(0, 1.1fr) minmax(230px, .9fr);
-    gap: 16px 24px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 18px 28px;
   }
 
   .actions {
     grid-column: 1 / -1;
     justify-content: flex-start;
-    padding-top: 12px;
-    border-top: 1px solid var(--color-hairline-soft);
+  }
+
+  .rent {
+    align-self: center;
   }
 }
 
@@ -320,7 +400,8 @@
     padding-block: 25px;
   }
 
-  .empty h2 {
+  .empty h2,
+  .empty h3 {
     max-width: 18ch;
     font-size: clamp(25px, 7.5vw, 32px);
   }
@@ -338,41 +419,44 @@
 
   .property {
     grid-template-columns: minmax(0, 1fr);
-    gap: 13px;
+    gap: 14px;
     padding-block: 19px;
   }
 
-  .overview,
+  .occupation,
+  .rent,
   .actions {
     grid-column: 1;
   }
 
-  .overview {
-    padding-top: 1px;
+  .rent {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
   }
 
-  .leaseSummary {
-    align-items: start;
+  .rent > p {
+    gap: 4px 6px;
   }
 
   .actions {
     justify-content: flex-start;
-    gap: 4px;
+    gap: 3px 6px;
     padding-top: 11px;
+    border-top: 1px solid var(--color-hairline-soft);
   }
 
-  .actions :global(.btn) {
-    min-height: 40px;
-    padding-inline: 9px;
+  .rowAction,
+  .moreActions summary {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 8px;
   }
 
-  .deleteAction {
-    flex-basis: 100%;
-    max-width: 100%;
-  }
-
-  .deleteAction :global([role='group']) {
-    width: 100%;
+  .actionMenu {
+    right: 0;
+    left: auto;
   }
 
   .capacityStateActions :global(.btn) {
@@ -382,18 +466,22 @@
 }
 
 @media (max-width: 359px) {
-  .actions :global(.btn) {
-    white-space: normal;
+  .rent {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 
-  .rent {
+  .rent > p {
     flex-basis: 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .capacity a,
-  .vacancySummary a {
+  .vacancySummary a,
+  .rowAction,
+  .moreActions summary {
     transition: none;
   }
 }

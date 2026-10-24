@@ -2,6 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  presenterActionAnnonce,
+  presenterQuotaLogements,
+  peutSupprimerLogement,
   premiereRelation,
   presenterStatutAnnonce,
   trouverAnnonceVivante,
@@ -49,4 +52,32 @@ test('présente les états d’annonce sans confondre publication et disponibili
     ton: 'warning',
   })
   assert.equal(presenterStatutAnnonce('cloturee'), null)
+})
+
+test('annonce existante s’ouvre et un logement loué prépare explicitement une disponibilité future', () => {
+  assert.deepEqual(presenterActionAnnonce('annonce-1', true, 'logement-1'), {
+    href: '/pro/annonces/annonce-1',
+    libelle: 'Gérer l’annonce',
+  })
+  assert.deepEqual(presenterActionAnnonce(undefined, true, 'logement-1'), {
+    href: '/pro/annonces/nouvelle?logement=logement-1',
+    libelle: 'Préparer une annonce future',
+  })
+  assert.deepEqual(presenterActionAnnonce(undefined, false, 'logement-1'), {
+    href: '/pro/annonces/nouvelle?logement=logement-1',
+    libelle: 'Préparer une annonce',
+  })
+})
+
+test('présente le plan effectif et le quota sans inventer une limite Standard', () => {
+  assert.equal(presenterQuotaLogements('Gratuit', 0, 2), 'Plan Gratuit · 0 sur 2 logements')
+  assert.equal(presenterQuotaLogements('Gratuit', 1, 2), 'Plan Gratuit · 1 logement sur 2')
+  assert.equal(presenterQuotaLogements('Gratuit', 2, 2), 'Plan Gratuit · 2 logements sur 2')
+  assert.equal(presenterQuotaLogements('Standard', 3, null), 'Plan Standard · 3 logements')
+})
+
+test('ne propose la suppression que lorsque les relations connues ne la bloquent pas', () => {
+  assert.equal(peutSupprimerLogement(0, false), true)
+  assert.equal(peutSupprimerLogement(1, false), false)
+  assert.equal(peutSupprimerLogement(0, true), false)
 })

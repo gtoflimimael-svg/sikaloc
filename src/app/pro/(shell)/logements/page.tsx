@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { MoreHorizontal } from 'lucide-react'
 
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
@@ -12,6 +13,9 @@ import type { StatutAnnonce, TypeLogement } from '@/lib/types/database'
 import {
   premiereRelation,
   presenterStatutAnnonce,
+  presenterActionAnnonce,
+  presenterQuotaLogements,
+  peutSupprimerLogement,
   trouverAnnonceVivante,
   trouverBailActif,
 } from '@/lib/logements-presentation'
@@ -56,9 +60,12 @@ export default async function PageLogements() {
 
   const { data: logements, error: erreurLogements } = logementsReponse
   const liste = (logements ?? []) as unknown as LogementAvecRelations[]
-  const limite = capacites(bailleur).maxLogements
+  const capacitesBailleur = capacites(bailleur)
+  const limite = capacitesBailleur.maxLogements
   const plafondAtteint = limite !== null && liste.length >= limite
   const locataireDisponible = !locatairesReponse.error && (locatairesReponse.data?.length ?? 0) > 0
+  const actionLocataireIndisponible =
+    Boolean(locatairesReponse.error) && liste.some((logement) => !trouverBailActif(logement.baux ?? []))
 
   return (
     <div className={styles.page}>
@@ -76,19 +83,9 @@ export default async function PageLogements() {
         <Alerte ton="erreur">
           Vos logements n’ont pas pu être chargés. Actualisez la page pour réessayer.
         </Alerte>
-      ) : liste.length === 0 ? (
-        <section className={styles.empty} aria-labelledby="empty-properties-title">
-          <div className={styles.emptyCopy}>
-            <h2 id="empty-properties-title">Ajoutez votre premier logement.</h2>
-            <p>Commencez par enregistrer un bien pour organiser sa location.</p>
-          </div>
-          <Link href="/pro/logements/nouveau" className="btn btn-primary">
-            Ajouter un logement
-          </Link>
-        </section>
       ) : (
         <>
-          {locatairesReponse.error ? (
+          {actionLocataireIndisponible ? (
             <div className={styles.dataNotice}>
               <Alerte ton="info">
                 La disponibilité des locataires n’a pas pu être vérifiée. La création d’un bail depuis cette liste est momentanément masquée.
@@ -98,117 +95,117 @@ export default async function PageLogements() {
 
           <div className={styles.collectionHeading}>
             <h2>Votre parc</h2>
-            <p>{liste.length} logement{liste.length === 1 ? '' : 's'}</p>
-          </div>
-
-          {limite !== null ? (
-            <div className={styles.capacity}>
-              <p>
-                {plafondAtteint
-                  ? `Vous avez enregistré ${liste.length} logements sur les ${limite} du plan Gratuit.`
-                  : `Il vous reste ${limite - liste.length} place${limite - liste.length === 1 ? '' : 's'} sur les ${limite} logements du plan Gratuit.`}
-              </p>
+            <p className={styles.capacity}>
+              {presenterQuotaLogements(capacitesBailleur.plan, liste.length, limite)}
               {plafondAtteint ? (
                 <Link href="/pro/parametres/abonnement">Découvrir le plan Standard</Link>
               ) : null}
-            </div>
-          ) : null}
+            </p>
+          </div>
 
-          <ul className={styles.list} aria-label="Logements enregistrés">
-            {liste.map((logement) => {
-              const baux = logement.baux ?? []
-              const bailActif = trouverBailActif(baux)
-              const locataire = premiereRelation(bailActif?.locataire)
-              const annonce = trouverAnnonceVivante(logement.annonces ?? [])
-              const statutAnnonce = annonce ? presenterStatutAnnonce(annonce.statut) : null
+          {liste.length === 0 ? (
+            <section className={styles.empty} aria-labelledby="empty-properties-title">
+              <div className={styles.emptyCopy}>
+                <h3 id="empty-properties-title">Ajoutez votre premier logement.</h3>
+                <p>Commencez par enregistrer un bien pour organiser sa location.</p>
+              </div>
+              <Link href="/pro/logements/nouveau" className="btn btn-primary">
+                Ajouter un logement
+              </Link>
+            </section>
+          ) : (
+            <ul className={styles.list} aria-label="Logements enregistrés">
+              {liste.map((logement) => {
+                const baux = logement.baux ?? []
+                const bailActif = trouverBailActif(baux)
+                const locataire = premiereRelation(bailActif?.locataire)
+                const annonce = trouverAnnonceVivante(logement.annonces ?? [])
+                const statutAnnonce = annonce ? presenterStatutAnnonce(annonce.statut) : null
+                const actionAnnonce = presenterActionAnnonce(annonce?.id, Boolean(bailActif), logement.id)
+                const suppressionPossible = peutSupprimerLogement(baux.length, Boolean(annonce))
 
-              return (
-                <li key={logement.id} className={styles.property}>
-                  <div className={styles.identity}>
-                    <h3>{logement.adresse}</h3>
-                  <p>
-                    {logement.type} <span aria-hidden="true">·</span> {logement.ville}, {logement.pays}
-                  </p>
-                  </div>
-
-                  <div className={styles.overview}>
-                    <div className={styles.statusLine}>
-                      <Badge ton={bailActif ? 'positive' : 'neutral'}>
-                        {bailActif ? 'Occupé' : 'Libre'}
-                      </Badge>
-                      {statutAnnonce ? (
-                        <span className={styles.advertStatus} data-tone={statutAnnonce.ton}>
-                          {statutAnnonce.libelle}
-                        </span>
-                      ) : null}
+                return (
+                  <li key={logement.id} className={styles.property}>
+                    <div className={styles.identity}>
+                      <h3>{logement.adresse}</h3>
+                      <p>
+                        {logement.type} <span aria-hidden="true">·</span> {logement.ville}, {logement.pays}
+                      </p>
                     </div>
 
-                    {bailActif ? (
-                      <div className={styles.leaseSummary}>
-                        <p>
+                    <div className={styles.occupation}>
+                      <div className={styles.statusLine}>
+                        <Badge ton={bailActif ? 'positive' : 'neutral'}>
+                          {bailActif ? 'Occupé' : 'Libre'}
+                        </Badge>
+                        {statutAnnonce ? (
+                          <span className={styles.advertStatus} data-tone={statutAnnonce.ton}>
+                            {statutAnnonce.libelle}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {bailActif ? (
+                        <p className={styles.tenant}>
                           <span>Locataire</span>
                           <Link href={`/pro/baux/${bailActif.id}`}>
-                            {locataire?.nom ?? 'Voir le bail'}
-                            {locataire?.nom ? <span className="sr-only"> — consulter le bail</span> : null}
+                            {locataire?.nom ?? 'Consulter le bail'}
                           </Link>
                         </p>
-                        <p className={styles.rent}>
+                      ) : (
+                        <div className={styles.vacancySummary}>
+                          <p>Sans bail actif</p>
+                          {locataireDisponible ? <Link href="/pro/baux/nouveau">Créer un bail</Link> : null}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.rent}>
+                      <span>Loyer contractuel</span>
+                      {bailActif ? (
+                        <p>
                           <strong>{formaterFCFA(bailActif.loyer_mensuel)}</strong>
                           <span>/ mois</span>
                         </p>
-                      </div>
-                    ) : (
-                      <div className={styles.vacancySummary}>
-                        <p>Sans bail actif</p>
-                        {locataireDisponible ? (
-                          <Link href="/pro/baux/nouveau">Créer un bail</Link>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
+                      ) : (
+                        <p className={styles.rentMissing}>
+                          <span aria-hidden="true">—</span>
+                          <span className="sr-only">Aucun loyer contractuel sans bail actif</span>
+                        </p>
+                      )}
+                    </div>
 
-                  <div
-                    className={styles.actions}
-                    role="group"
-                    aria-label={`Actions pour ${logement.adresse}`}
-                  >
-                    <Link
-                      href={`/pro/logements/${logement.id}/modifier`}
-                      className="btn btn-tertiary btn-sm"
-                    >
-                      Modifier
-                    </Link>
-                    {annonce ? (
-                      <Link
-                        href={`/pro/annonces/${annonce.id}`}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        Gérer l’annonce
+                    <div className={styles.actions} role="group" aria-label={`Actions pour ${logement.adresse}`}>
+                      <Link href={`/pro/logements/${logement.id}/modifier`} className={styles.rowAction}>
+                        Modifier
                       </Link>
-                    ) : (
-                      <Link
-                        href={`/pro/annonces/nouvelle?logement=${encodeURIComponent(logement.id)}`}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        Préparer une annonce
+                      <Link href={actionAnnonce.href} className={styles.rowAction}>
+                        {actionAnnonce.libelle}
                       </Link>
-                    )}
-                    <span className={styles.deleteAction}>
-                      <ActionConfirmee
-                        action={supprimerLogement.bind(null, logement.id)}
-                        libelle="Supprimer"
-                        variante="danger"
-                        varianteDeclencheur="tertiary"
-                        titreConfirmation="Supprimer ce logement ?"
-                        messageConfirmation="Cette action est définitive. Elle échouera si un bail ou une annonce en cours y est rattaché."
-                        libelleConfirmation="Supprimer définitivement"
-                      />
-                    </span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+                      {suppressionPossible ? (
+                        <details className={styles.moreActions}>
+                          <summary aria-label={`Autres actions pour ${logement.adresse}`}>
+                            <MoreHorizontal size={18} aria-hidden="true" />
+                          </summary>
+                          <div className={styles.actionMenu}>
+                            <ActionConfirmee
+                              action={supprimerLogement.bind(null, logement.id)}
+                              libelle="Supprimer le logement"
+                              variante="danger"
+                              varianteDeclencheur="tertiary"
+                              titreConfirmation="Supprimer ce logement ?"
+                              messageConfirmation="Cette action est définitive. Si un bail ou une annonce en cours vient d’être associé, la suppression sera refusée."
+                              libelleConfirmation="Supprimer définitivement"
+                            />
+                          </div>
+                        </details>
+                      ) : null}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </>
       )}
     </div>
