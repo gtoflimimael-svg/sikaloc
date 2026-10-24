@@ -3,7 +3,6 @@ import type { DonneesQuittance } from '@/lib/pdf/document-quittance'
 /** Données fictives uniques servant à générer le PDF public de démonstration. */
 export const donneesExempleQuittance: DonneesQuittance = {
   modeDocument: 'exemple',
-  signaturesExemple: true,
   numeroDocument: 'EXEMPLE-SIKALOC',
   type: 'Quittance',
   dateGeneration: '2026-03-05T10:30:00.000Z',

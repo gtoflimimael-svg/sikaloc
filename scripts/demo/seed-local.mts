@@ -597,7 +597,6 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
   const donnees: DonneesQuittance = {
     // L'apparence est le vrai template. Le libellé EXEMPLE rend explicites les données synthétiques.
     modeDocument: 'exemple',
-    signaturesExemple: false,
     numeroDocument: String(emission.quittance.numero_document ?? ''),
     type: emission.quittance.type === 'Reçu' ? 'Reçu' : 'Quittance',
     dateGeneration: String(emission.quittance.date_generation ?? new Date().toISOString()),
