@@ -1,19 +1,22 @@
 # Sikaloc — système visuel de référence
 
-Version lot E, 16 octobre 2026. Ce document guide le lot F. Les valeurs exécutables
-sont dans `src/app/globals.css`, avec Tailwind 4 et les composants maison existants.
-Aucune nouvelle bibliothèque UI, police ou illustration n’est nécessaire.
+Version harmonisée au 24 octobre 2026. Les valeurs exécutables sont dans
+`src/app/globals.css`, avec Tailwind 4 et les composants existants. Aucune nouvelle
+bibliothèque UI n’est nécessaire. Les espaces publics et le shell Pro connecté
+utilisent les signatures Sikaloc et les polices locales officielles.
 
 ## Direction et identité
 
 SaaS de gestion immobilière au Bénin : lecture des montants, des échéances et des
-statuts avant la décoration. Conserver le logotype des espaces, l’indigo historique
-`#5555bc`, le sol lavande, Copernicus et StyreneB. Copernicus porte les titres de
-page, StyreneB les contrôles, informations et nombres. Les illustrations existantes
-accompagnent les états vides ; elles ne repoussent pas l’action principale.
+statuts avant la décoration. Conserver le logotype officiel et la palette Sikaloc :
+vert signature `#B8F36D`, vert profond `#17311C`, encre `#111810`, sauge `#EAF1E7`
+et blanc. Manrope porte les titres et valeurs éditoriales ; Inter porte le texte
+courant et les contrôles. Dans le shell Pro connecté, Manrope est chargée localement
+et limitée à cet espace. Les états vides utilisent un repère métier sobre, sans
+réutiliser les anciennes scènes 3D de maisons reliées.
 
 Les pilotes sont le tableau de bord Pro, la modification d’un logement et
-l’accueil Me. Find adoptera les mêmes fondations sans reprendre le shell de gestion.
+l’accueil Me. Find suit les mêmes fondations sans reprendre le shell de gestion.
 La structure de Pro reste une barre latérale sur bureau et un tiroir sur mobile ;
 Me conserve ses onglets. Ces différences répondent aux usages, pas à deux marques.
 
@@ -26,49 +29,49 @@ qui décale les liens. Ne pas uniformiser toutes les informations en grandes car
 
 Les primitifs existants restent compatibles. Les tokens sémantiques donnent le
 sens, les tokens de composant règlent dimensions et densité. Utiliser les utilitaires
-Tailwind correspondants, sans hex dans les composants. Conserver les alias historiques
-pour éviter une réécriture générale au lot E.
+Tailwind correspondants, sans hex dans les composants. Les exceptions locales sont
+réservées aux composants documentés ou aux ressources de marque.
 
 | Rôle / token | Clair | Sombre |
 |---|---|---|
-| Marque / `primary` | `#5555bc` | `#8f8fe8` |
-| Survol marque / `primary-active` | `#3e3ea9` | `#a5a5f0` |
-| Texte bouton / `on-primary` | `#ffffff` | `#131314` |
-| Sol / `canvas-soft` | `#efeff8` | `#151518` |
-| Surface / `canvas`, `surface-card` | `#fafaff` | `#1e1e24`, `#24242c` |
-| Surface secondaire / `surface-soft` | `#e8e8f5` | `#1b1b21` |
-| Titre / `ink` | `#131314` | `#f2f2f7` |
-| Texte / `body` | `#3a3a3d` | `#c8c8d2` |
-| Secondaire / `mute` | `#616169` | `#aaaaba` |
-| Aide / `mute-soft` | `#6c6c7a` | `#aaaaba` |
-| Séparation / `hairline` | `#d8d8e6` | `#33333d` |
-| Limite de contrôle / `control-border` | `#888898` | `#747485` |
-| Succès texte/fond | `#2f6b3f` / `#e3f3e7` | `#a8e0b8` / `#1c2f22` |
-| Attention texte/fond | `#6b5210` / `#faf0d4` | `#f2d78f` / `#332a12` |
-| Erreur texte/fond | `#a63a3a` / `#f7e3e3` | `#f4a8a8` / `#341d1d` |
+| Marque / `primary` | `#B8F36D` | `#B8F36D` |
+| Survol marque / `primary-active` | `#A4E951` | `#A4E951` |
+| Texte bouton / `on-primary` | `#111810` | `#111810` |
+| Sol / `canvas-soft` | `#EAF1E7` | `#111810` |
+| Surface / `canvas`, `surface-card` | `#FFFFFF` | `#1B2E20`, `#203726` |
+| Surface secondaire / `surface-soft` | `#EAF1E7` | `#203726` |
+| Titre / `ink` | `#111810` | `#F2F2F7` |
+| Texte / `body` | `#424940` | `#C8C8D2` |
+| Secondaire / `mute` | `#636D63` | `#AAAABA` |
+| Aide / `mute-soft` | `#637267` | `#AAAABA` |
+| Séparation / `hairline` | `#D6E0D2` | `#36523A` |
+| Limite de contrôle / `control-border` | `#758A77` | `#747485` |
+| Succès texte/fond | `#125B32` / `#E4F5E8` | `#A8E0B8` / `#1C2F22` |
+| Attention texte/fond | `#3E2D0A` / `#FFF3D8` | `#F2D78F` / `#332A12` |
+| Erreur texte/fond | `#8F1E27` / `#FFF0EF` | `#F4A8A8` / `#341D1D` |
 | Action dangereuse texte / `on-negative` | blanc | `#211013` |
 
 `positive` et `warning` ne sont pas des couleurs de texte sur fond clair : employer
 `positive-deep` et `warning-content`. Les textes d’erreur utilisent `negative-darkest`
 ou `negative` selon leur support. Le statut ne repose jamais sur la seule couleur.
 Le filet décoratif peut être discret ; le contour d’un champ doit rester identifiable.
-Ne pas employer les alias `accent-teal` et `accent-amber` comme promesse de teintes :
-ils sont historiquement indigo ; préférer les rôles sémantiques.
+Les accents de marque ne remplacent pas les couleurs sémantiques des états.
 
 ## Typographie
 
-Les fichiers de `src/app/fonts/` sont conservés. Le layout charge leurs variantes
-existantes avec `next/font`. Inter reste le repli des glyphes français absents de
-StyreneB ; Georgia reste le repli serif. Ne pas supprimer les accents pour contourner
-un problème de fonte. Les textes français, ligatures, guillemets et espaces FCFA
+Les fichiers de `src/app/fonts/` sont chargés localement avec `next/font`. Inter est
+la police de lecture ; Manrope est la police d'affichage. Le shell Pro connecté
+charge les variantes locales Manrope dans son layout, sans dépendance réseau.
+Georgia reste le repli serif. Ne pas supprimer les accents pour contourner un
+problème de fonte. Les textes français, ligatures, guillemets et espaces FCFA
 doivent être contrôlés dans le navigateur.
 
 | Usage | Police et taille | Poids / interligne |
 |---|---|---|
-| Titre de page `.page-title` | Copernicus, 28 → 36 px | 400 / 1,2 |
-| Section d’application `.section-title` | StyreneB, 18 px | 500 / 1,4 |
-| Chiffre de synthèse `.metric-value` | StyreneB, 28 → 32 px | 500 / 1,2 |
-| Corps et champ | StyreneB + repli, 16 px | 400 / 1,55 |
+| Titre de page `.page-title` | Manrope, 28 → 36 px | 700–800 / 1,12 |
+| Section d’application `.section-title` | Manrope, 18 px | 650–750 / 1,4 |
+| Chiffre de synthèse `.metric-value` | Manrope, 28 → 32 px | 700–800 / 1,2 |
+| Corps et champ | Inter, 16 px | 400 / 1,55 |
 | Ligne dense et bouton | 14 px | 400 ou 500 / ≥ 1,4 |
 | Aide et légende | 13 px | 400 / 1,4 |
 
@@ -111,7 +114,7 @@ contraintes natives et contrats existants. Chaque label est relié au champ. Les
 ont un id `nom-aide`, les erreurs `nom-erreur`. `aria-describedby` référence uniquement
 les textes réellement présents ; l’erreur remplace l’aide comme avant. `aria-invalid`
 est posé en présence d’erreur et le message est annoncé. Conserver un texte explicite,
-pas seulement un bord rouge. Champ 44 px / texte 16 px, contour visible et focus indigo.
+pas seulement un bord rouge. Champ 44 px / texte 16 px, contour visible et focus vert profond.
 Les validations serveur restent l’autorité ; l’état vide ne remplace jamais une erreur.
 
 Le formulaire pilote regroupe visuellement les informations et isole sa barre d’actions.
@@ -125,7 +128,7 @@ leur harmonisation détaillée par parcours relève de F/H.
 
 `.card` = surface lisible avec filet ; `.card-sage` = mise en avant secondaire ;
 `.card-dark` = contraste intentionnel. `CarteMetrique` = label, valeur tabulaire,
-détail ; le fond indigo reste limité à la métrique principale. Une colonne au mobile,
+détail ; le fond vert profond reste limité à la métrique principale. Une colonne au mobile,
 deux dès 640 px pour ne pas comprimer les montants FCFA insécables. Ne pas réduire
 la police jusqu’à rendre un nombre illisible pour obtenir quatre colonnes.
 
@@ -140,8 +143,9 @@ Les listes métiers peuvent garder leur structure ; éviter de les convertir en 
 
 `Alerte` fournit ton, icône et annonce : erreur = alert, autres = status.
 `Badge` conserve un libellé de statut, sans dépendre uniquement de la couleur.
-`EtatVide` propose une prochaine action quand elle existe ; illustrations plafonnées,
-padding mesuré. Le pilote Pro affiche une alerte par lecture en échec (indicateurs, loyers en retard,
+`EtatVide` propose une prochaine action quand elle existe ; dans le shell Pro, le
+repère est un pictogramme métier compact, pas une ancienne illustration 3D de maisons
+reliées. Le pilote Pro affiche une alerte par lecture en échec (indicateurs, loyers en retard,
 paiements) ; il ne transforme plus ces erreurs en zéros ou en états vides.
 Les squelettes existants ne servent qu’à une attente réelle, jamais
 à masquer une erreur serveur. Les messages d’échec ne deviennent pas des états vides.
@@ -149,8 +153,10 @@ Le chargement de soumission conserve le libellé et bloque les doubles clics.
 
 ## Navigation, dialogues et clavier
 
-Pro bureau : barre latérale stable, ligne active indigo pâle, `aria-current=page`,
-aucun décalage horizontal au survol. Lien d’évitement vers le contenu du shell.
+Pro bureau : barre latérale stable, ligne active sauge, `aria-current=page`,
+aucun décalage horizontal au survol. Le bandeau supérieur porte le groupe de
+navigation, pas une seconde copie du titre H1. Le shell conserve une largeur de
+contenu de 1100 px. Lien d’évitement vers le contenu du shell.
 Pro mobile : bouton nommé, `aria-expanded` et `aria-controls`, tiroir natif modal
 `dialog`. À l’ouverture le focus entre dans le tiroir ; Tab reste dans le modal,
 Échap ou fond ferment, le focus revient au déclencheur. Le fond ne défile pas.
@@ -159,6 +165,9 @@ Changer de route ou passer en vue bureau referme le tiroir.
 Menu compte : premier item focalisé, flèches haut/bas et Home/End naviguent,
 Échap ferme et revient au déclencheur ; Tab sort et ferme, clic extérieur ferme.
 Les liens gardent leurs destinations et la déconnexion garde sa Server Action.
+Le raccourci secondaire d’enregistrement d’un paiement n’est présenté que lorsqu’il
+reste utile ; il est masqué sur le tableau de bord, les pages de paiement, les impayés
+et les détails d’un bail, où une action locale existe ou serait redondante.
 Me : onglets nommés, défilement horizontal local, cible active visible au clavier.
 Find : conserver la recherche et les liens publics ; pas de shell Pro ajouté.
 Les confirmations métier en place restent en place ; ne pas imposer un modal à une
@@ -225,8 +234,9 @@ la référence. La recette finale H intégrera D2 et les parcours non pilotes.
 - `ActionsFormulaire` isole Enregistrer / Annuler avec un filet, boutons empilés
   sous 480 px. Pendant l’envoi : champs et bouton désactivés, lien Annuler neutralisé,
   attente annoncée. Ne pas perdre la saisie ni lancer une seconde action.
-- L’avatar facultatif du locataire vient après les coordonnées, dans un `details`
-  natif accessible. Les onglets utilisent flèches, Home/End et un seul arrêt Tab.
+- Aucun avatar n’est ajouté aux profils ou formulaires ; les identités restent
+  textuelles et les contrôles de profil déjà existants sont conservés. Les onglets
+  utilisent flèches, Home/End et un seul arrêt Tab.
   Le consentement déjà attesté est transmis par le formulaire de modification ;
   la validation serveur reste obligatoire et inchangée.
 - Le récapitulatif de paiement distingue montant à confirmer, loyer, cumul et solde

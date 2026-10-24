@@ -70,3 +70,50 @@ Total : 58 routes uniques (17 publiques/Auth, 3 Find, 8 Me, 30 Pro). Les statuts
 Branche `codex/consolidation-livraison-3`, issue de `76037c70626c078f34d661d00df047dc321d417c`. Les huit pages Pro qui affichent un état vide (tableau de bord, logements, locataires, baux, détail d'un bail, annonces, nouvelle annonce sans logement et paiements) utilisent désormais des images WebP éditoriales Sikaloc à la place du SVG Transhumans. Le bandeau du composant commun de formulaire a également été épuré. Les autres interventions mentionnées ci-dessus sont l'historique des lots précédents ; elles ne signifient pas qu'une page est visuellement ou fonctionnellement recettée.
 
 À la demande de l'utilisateur, aucune validation technique ou visuelle n'a été exécutée pour cette consolidation. Les colonnes V/F/S demeurent **NV** pour les 58 routes. Voir `ETAT-FINAL-SIKALOC.md` pour le relevé historique page par page et `REGISTRE-RESERVES.md` pour les conditions bloquantes.
+
+## Addendum — audit de cohérence de l’espace Pro connecté
+
+Branche `codex/mvp-sika-integrated`, 24 octobre 2026. Les 30 routes Pro ont été
+réinventoriées dans le code. Les améliorations de cette intervention portent sur
+le shell partagé (Manrope locale, largeur commune, contexte d’en-tête sans titre
+dupliqué, raccourci de paiement non concurrent) et les libellés/états vides concernés.
+Les illustrations 3D historiques restent disponibles aux autres expériences, mais
+ne sont plus utilisées dans les états vides Pro listés ci-dessous. Cet audit source
+ne vaut pas recette visuelle ou parcours métier : V/F/S restent NV jusqu’à revue
+authentifiée dans le navigateur.
+
+| Sous-route Pro | Route | État du code | Constat de cohérence | V | F | S |
+|---|---|---|---|---|---|---|
+| Sous-route Pro | `/pro/tableau-de-bord` | Présent | Tableau de bord existant, non redessiné dans cet addendum | NV | NV | NV |
+| Sous-route Pro | `/pro/impayes` | Présent | Raccourci global de paiement masqué sur cette page | NV | NV | NV |
+| Sous-route Pro | `/pro/logements` | Présent | État vide avec icône métier, visuel ancien retiré | NV | NV | NV |
+| Sous-route Pro | `/pro/logements/nouveau` | Présent | Formulaire existant, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/logements/[id]/modifier` | Présent | Formulaire existant, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/locataires` | Présent | Marque Me normalisée, icône métier à l’état vide | NV | NV | NV |
+| Sous-route Pro | `/pro/locataires/nouveau` | Présent | Formulaire existant, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/locataires/[id]/modifier` | Présent | Formulaire existant, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/baux` | Présent | État vide avec icône métier | NV | NV | NV |
+| Sous-route Pro | `/pro/baux/nouveau` | Présent | Formulaire existant, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/baux/[id]` | Présent | Raccourci global masqué, état paiement avec icône métier | NV | NV | NV |
+| Sous-route Pro | `/pro/baux/[id]/modifier` | Présent | Raccourci global masqué sur le détail du bail | NV | NV | NV |
+| Sous-route Pro | `/pro/baux/[id]/historique` | Présent | Raccourci global masqué sur le détail du bail | NV | NV | NV |
+| Sous-route Pro | `/pro/paiements` | Présent | Raccourci redondant masqué, état vide avec icône métier | NV | NV | NV |
+| Sous-route Pro | `/pro/paiements/nouveau` | Présent | Raccourci redondant masqué | NV | NV | NV |
+| Sous-route Pro | `/pro/paiements/[id]/modifier` | Présent | Raccourci redondant masqué | NV | NV | NV |
+| Sous-route Pro | `/pro/paiements/[id]/confirmer` | Présent | Raccourci redondant masqué | NV | NV | NV |
+| Sous-route Pro | `/pro/annonces` | Présent | Marque Find normalisée, icône métier à l’état vide | NV | NV | NV |
+| Sous-route Pro | `/pro/annonces/nouvelle` | Présent | État vide logement avec icône métier | NV | NV | NV |
+| Sous-route Pro | `/pro/annonces/[id]` | Présent | Marque Find normalisée dans les textes visibles | NV | NV | NV |
+| Sous-route Pro | `/pro/annonces/[id]/candidatures` | Présent | Marque Find normalisée dans les textes visibles | NV | NV | NV |
+| Sous-route Pro | `/pro/quittances/[id]` | Présent | Accès documentaire, non vérifié dans le navigateur | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres` | Présent | Page de paramètres existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres/profil` | Présent | Page de profil existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres/preferences` | Présent | Page de préférences existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres/signature` | Présent | Page de signature existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres/abonnement` | Présent | Page d’abonnement existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres/parrainage` | Présent | Page de parrainage existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/parametres/donnees` | Présent | Page de données existante, revue source seulement | NV | NV | NV |
+| Sous-route Pro | `/pro/onboarding` | Présent | Parcours existant, revue source seulement | NV | NV | NV |
+
+Les contrôles réalisés pour cet addendum sont consignés dans le rapport de livraison ;
+aucune donnée Demo n’a été modifiée.
