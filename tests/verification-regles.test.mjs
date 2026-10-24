@@ -67,7 +67,8 @@ test('les étapes et le compteur ne présentent pas le téléphone comme obligat
 test('l’inscription crée un compte Auth sans écrire un marqueur de téléphone vérifié', async () => {
   const source = await readFile(new URL('src/lib/actions/auth.ts', racine), 'utf8')
   assert.match(source, /supabase\.auth\.signUp\(/)
-  assert.match(source, /emailRedirectTo:.*\/verification/s)
+  assert.match(source, /const emailRedirectTo = `\$\{await urlDeBase\(\)\}\/verification`/)
+  assert.match(source, /options:\s*\{[\s\S]*emailRedirectTo,/)
   assert.doesNotMatch(source, /telephone_verifie_le\s*:/)
 })
 

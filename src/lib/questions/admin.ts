@@ -2,8 +2,6 @@ import 'server-only'
 
 import type { User } from '@supabase/supabase-js'
 
-import { obtenirUtilisateur } from '@/lib/supabase/serveur'
-
 /** Liste explicite d'identifiants Auth, jamais de rôle fourni par le client. */
 export function identifiantsAdminQuestions(): Set<string> {
   return new Set(

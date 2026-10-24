@@ -144,9 +144,11 @@ async function donneesDuContexte(
   const montantCumule = typePaiement === 'Loyer' && finances
     ? Number(finances.cumul_loyer)
     : undefined
+  const datePaiement = finances?.date_paiement ?? paiement.date_paiement
+  if (!datePaiement) throw new Error(REFUS_QUITTANCE)
   const versementCourant: VersementPdf = {
     montant: Number(finances?.montant ?? paiement.montant),
-    datePaiement: finances?.date_paiement ?? paiement.date_paiement!,
+    datePaiement,
     modePaiement: finances?.mode_paiement ?? paiement.mode_paiement,
   }
   const estQuittanceComplete = typePaiement === 'Loyer' && !estPartiel
@@ -223,7 +225,7 @@ async function donneesDuContexte(
       ? Number(finances?.trop_percu ?? Math.max(0, (montantCumule ?? Number(paiement.montant)) - loyerMensuel))
       : 0,
     periodeDebut: finances?.periode_debut ?? paiement.periode_debut, periodeFin: finances?.periode_fin ?? paiement.periode_fin,
-    montant: versementCourant.montant, datePaiement: versementCourant.datePaiement,
+    montant: versementCourant.montant, datePaiement,
     modePaiement: finances?.mode_paiement ?? paiement.mode_paiement, typePaiement,
     estPartiel,
     versements,
@@ -253,8 +255,8 @@ export async function rassemblerDonnees(
   if (document.signee || document.quittance.hash_sha256 || document.quittance.pdf_chemin) return null
   try {
     return await donneesDuContexte(document.contexte, {
-      numeroDocument: document.quittance.numero_document ?? '',
-      dateGeneration: document.quittance.date_generation,
+      numeroDocument: options.numeroDocument ?? document.quittance.numero_document ?? '',
+      dateGeneration: options.dateGeneration ?? document.quittance.date_generation,
     })
   } catch {
     return null

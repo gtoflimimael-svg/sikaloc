@@ -20,12 +20,12 @@ function route(chemin) {
   return '/' + segments.filter((segment) => !/^\(.*\)$/.test(segment)).join('/')
 }
 
-test('les 56 routes ont chacune une entrée unique dans la matrice', () => {
+test('les 58 routes ont chacune une entrée unique dans la matrice', () => {
   const routes = pages(racine).map(route)
-  assert.equal(routes.length, 56)
-  assert.equal(new Set(routes).size, 56)
+  assert.equal(routes.length, 58)
+  assert.equal(new Set(routes).size, 58)
   const lignes = matrice.split('\n').filter((ligne) => /^\| (Public|Auth|Find|Me|Pro) \| `\//.test(ligne))
   const routesMatrice = lignes.map((ligne) => ligne.match(/\| `([^`]+)` \|/)?.[1])
-  assert.equal(routesMatrice.length, 56)
+  assert.equal(routesMatrice.length, 58)
   assert.deepEqual([...routesMatrice].sort(), [...routes].sort())
 })

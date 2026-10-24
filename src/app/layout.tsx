@@ -122,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="fr"
+      data-scroll-behavior="smooth"
       // Le script anti-flash pose data-theme avant l’hydratation, volontairement.
       suppressHydrationWarning
       className={inter.variable}

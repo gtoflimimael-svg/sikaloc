@@ -1,4 +1,4 @@
-# Sikaloc — matrice de recette des 56 pages
+# Sikaloc — matrice de recette des 58 pages
 
 État au 21 octobre 2026, branche `codex/refonte-recette-finale-5`. « Code » signifie seulement qu'un fichier `page.tsx` existe. V = inspection visuelle réelle ; F = parcours fonctionnel réel ; S = essai d'autorisation réel. `NV` signifie non vérifié, jamais PASS. Les pages authentifiées requièrent un environnement jetable avec sessions fictives ; les données de Sikaloc-Test ne sont pas présumées jetables. Cette matrice n'est pas une attestation de publication.
 
@@ -6,6 +6,8 @@
 |---|---|---|---|---|---|---|---|
 | Public | `/` | Présent | Fondations du lot 1 conservées ; parcours non rejoué | NV | NV | NV | Réserve |
 | Public | `/pro` | Présent | Offre et captures à revérifier avec données de démonstration | NV | NV | NV | Réserve |
+| Public | `/questions` | Présent | Formulaire public ; réception et réponse non rejouées | NV | NV | NV | Réserve |
+| Auth | `/questions/gestion` | Présent | Espace interne protégé par identifiants admin explicites | NV | NV | NV | Réserve |
 | Public | `/blog` | Présent | Liste conservée ; lecture non rejouée | NV | NV | NV | Réserve |
 | Public | `/blog/[slug]` | Présent | Article conservé ; lecture non rejouée | NV | NV | NV | Réserve |
 | Public | `/guide/confirmer` | Présent | État de confirmation non rejoué | NV | NV | NV | Réserve |
@@ -61,10 +63,10 @@
 | Pro | `/pro/parametres/parrainage` | Présent | Crédits non rejoués | NV | NV | NV | Réserve |
 | Pro | `/pro/parametres/donnees` | Présent | Export non rejoué | NV | NV | NV | Réserve |
 
-Total : 56 routes uniques (15 publiques/Auth, 3 Find, 8 Me, 30 Pro). Les statuts « Réserve » signalent l'absence de recette, pas un défaut démontré. Aucune inspection visuelle authentifiée des 56 pages n'a été réalisée dans ce lot ; les largeurs 320/390/768/1024/1440 restent donc non validées. Voir `REGISTRE-RESERVES.md`.
+Total : 58 routes uniques (17 publiques/Auth, 3 Find, 8 Me, 30 Pro). Les statuts « Réserve » signalent l'absence de recette, pas un défaut démontré. Aucune inspection visuelle authentifiée des 58 pages n'a été réalisée dans ce lot ; les largeurs 320/390/768/1024/1440 restent donc non validées. Voir `REGISTRE-RESERVES.md`.
 
 ## Addendum — consolidation visuelle locale
 
 Branche `codex/consolidation-livraison-3`, issue de `76037c70626c078f34d661d00df047dc321d417c`. Les huit pages Pro qui affichent un état vide (tableau de bord, logements, locataires, baux, détail d'un bail, annonces, nouvelle annonce sans logement et paiements) utilisent désormais des images WebP éditoriales Sikaloc à la place du SVG Transhumans. Le bandeau du composant commun de formulaire a également été épuré. Les autres interventions mentionnées ci-dessus sont l'historique des lots précédents ; elles ne signifient pas qu'une page est visuellement ou fonctionnellement recettée.
 
-À la demande de l'utilisateur, aucune validation technique ou visuelle n'a été exécutée pour cette consolidation. Les colonnes V/F/S demeurent **NV** pour les 56 routes. Voir `ETAT-FINAL-SIKALOC.md` pour le relevé page par page et `REGISTRE-RESERVES.md` pour les conditions bloquantes.
+À la demande de l'utilisateur, aucune validation technique ou visuelle n'a été exécutée pour cette consolidation. Les colonnes V/F/S demeurent **NV** pour les 58 routes. Voir `ETAT-FINAL-SIKALOC.md` pour le relevé historique page par page et `REGISTRE-RESERVES.md` pour les conditions bloquantes.

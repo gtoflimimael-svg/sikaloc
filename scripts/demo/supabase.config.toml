@@ -78,6 +78,17 @@ max_frequency = "1s"
 otp_length = 6
 otp_expiry = 3600
 
+# Le formulaire /verification attend un code saisi par l'utilisateur, pas un
+# lien qui ouvrirait une session. Ces gabarits sont copiés dans l'instance
+# privée Demo par scripts/demo/local.mjs avant le démarrage de Supabase.
+[auth.email.template.confirmation]
+subject = "Sikaloc — confirmez votre compte"
+content_path = "./templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Sikaloc — réinitialisez votre mot de passe"
+content_path = "./templates/recovery.html"
+
 [auth.sms]
 enable_signup = false
 enable_confirmations = false

@@ -11,6 +11,7 @@ import { createElement } from 'react'
 
 import { DocumentQuittance, type DonneesQuittance } from '../../src/lib/pdf/document-quittance'
 import { enregistrerPolicesPdf } from '../../src/lib/pdf/polices'
+import type { TypePaiement } from '../../src/lib/types/database'
 
 const URL_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
 const CLE_ANONYME = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -54,6 +55,25 @@ type FixtureAnnonceFind = {
   avanceMois: number
   equipements: string[]
   description: string
+}
+type ObjetJson = Record<string, unknown>
+
+function objetJson(valeur: unknown): ObjetJson | null {
+  return valeur !== null && typeof valeur === 'object' && !Array.isArray(valeur)
+    ? valeur as ObjetJson
+    : null
+}
+
+function texteRequis(objet: ObjetJson, cle: string, contexte: string): string {
+  const valeur = objet[cle]
+  if (typeof valeur !== 'string' || !valeur.trim()) {
+    refuser(`champ ${contexte}.${cle} absent de l’instantané documentaire`)
+  }
+  return valeur
+}
+
+function typePaiementValide(valeur: unknown): valeur is TypePaiement {
+  return valeur === 'Loyer' || valeur === 'Charges' || valeur === 'Dépôt de garantie'
 }
 
 const DEFINITIONS: DefinitionCompte[] = [
@@ -571,35 +591,39 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
     p_valider: valider,
   })
   assurerSansErreur(error, 'préparation du document par la RPC métier Sikaloc impossible')
-  if (!data || typeof data !== 'object') refuser('la RPC de préparation documentaire n’a retourné aucun instantané')
-  const emission = data as {
-    jeton?: string
-    contexte?: Record<string, any>
-    quittance?: Record<string, any>
-    deja_publiee?: boolean
-    en_cours?: boolean
-  }
-  if (emission.deja_publiee) return
+  const emission = objetJson(data)
+  if (!emission) refuser('la RPC de préparation documentaire n’a retourné aucun instantané')
+  if (emission.deja_publiee === true) return
   if (emission.en_cours) refuser('une émission PDF locale est encore en cours; attendez quelques minutes puis relancez demo:seed')
-  if (!emission.jeton || !emission.contexte || !emission.quittance) refuser('réponse de génération documentaire incomplète')
+  const jeton = typeof emission.jeton === 'string' ? emission.jeton : null
+  const contexte = objetJson(emission.contexte)
+  const quittance = objetJson(emission.quittance)
+  if (!jeton || !contexte || !quittance) refuser('réponse de génération documentaire incomplète')
 
-  const contexte = emission.contexte
-  const paiement = contexte.paiement
-  const bailleur = contexte.bailleur
-  const locataire = contexte.locataire
-  const logement = contexte.logement
-  const bail = contexte.bail
-  const finances = contexte.finances
+  const paiement = objetJson(contexte.paiement)
+  const bailleur = objetJson(contexte.bailleur)
+  const locataire = objetJson(contexte.locataire)
+  const logement = objetJson(contexte.logement)
+  const bail = objetJson(contexte.bail)
+  const finances = objetJson(contexte.finances)
   if (!paiement || !bailleur || !locataire || !logement || !bail || !finances) {
     refuser('instantané financier incomplet; aucun document n’a été publié')
   }
+  const typePaiement = finances.type_paiement
+  if (!typePaiementValide(typePaiement)) refuser('type de paiement absent de l’instantané documentaire')
+  const datePaiement = texteRequis(finances, 'date_paiement', 'finances')
+  const periodeDebut = texteRequis(finances, 'periode_debut', 'finances')
+  const periodeFin = texteRequis(finances, 'periode_fin', 'finances')
+  const numeroDocument = texteRequis(quittance, 'numero_document', 'quittance')
 
   const donnees: DonneesQuittance = {
     // L'apparence est le vrai template. Le libellé EXEMPLE rend explicites les données synthétiques.
     modeDocument: 'exemple',
-    numeroDocument: String(emission.quittance.numero_document ?? ''),
-    type: emission.quittance.type === 'Reçu' ? 'Reçu' : 'Quittance',
-    dateGeneration: String(emission.quittance.date_generation ?? new Date().toISOString()),
+    numeroDocument,
+    type: quittance.type === 'Reçu' ? 'Reçu' : 'Quittance',
+    dateGeneration: typeof quittance.date_generation === 'string'
+      ? quittance.date_generation
+      : new Date().toISOString(),
     pays: String(logement.pays ?? 'Bénin'),
     bailleurNom: String(bailleur.nom),
     bailleurTelephone: String(bailleur.telephone ?? ''),
@@ -613,12 +637,12 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
     loyerMensuel: Number(finances.loyer_mensuel ?? bail.loyer_mensuel),
     montantCumule: Number(finances.cumul_loyer),
     montantExcedentaire: Number(finances.trop_percu ?? 0),
-    periodeDebut: String(finances.periode_debut),
-    periodeFin: String(finances.periode_fin),
+    periodeDebut,
+    periodeFin,
     montant: Number(finances.montant),
-    datePaiement: String(finances.date_paiement),
+    datePaiement,
     modePaiement: String(finances.mode_paiement),
-    typePaiement: finances.type_paiement,
+    typePaiement,
     estPartiel: Boolean(finances.est_partiel),
     signatureDataUri: null,
     signatureLocataireDataUri: null,
@@ -628,7 +652,7 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
   const element = createElement(DocumentQuittance, donnees) as Parameters<typeof renderToBuffer>[0]
   const pdf = Buffer.from(await renderToBuffer(element))
   const hash = createHash('sha256').update(pdf).digest('hex')
-  const cheminPdf = `${acteur}/${emission.quittance.numero_document}-${emission.jeton}.pdf`
+  const cheminPdf = `${acteur}/${numeroDocument}-${jeton}.pdf`
   const { error: erreurDepot } = await admin.storage.from('quittances').upload(cheminPdf, pdf, {
     contentType: 'application/pdf',
     upsert: false,

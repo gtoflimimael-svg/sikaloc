@@ -56,7 +56,7 @@ test('les actions de page et les tableaux restent utilisables sur petits écrans
 
 test('le tableau de bord décrit les actions réelles sans promettre une relance automatique', async () => {
   const dashboard = await lire('src/app/pro/(shell)/tableau-de-bord/page.tsx')
-  assert.match(dashboard, /Consulter les impayés/)
+  assert.match(dashboard, /Suivre les retards/)
   assert.doesNotMatch(dashboard, /Envoyer une relance/)
   assert.match(dashboard, /TableauListe id="derniers-paiements"/)
 })

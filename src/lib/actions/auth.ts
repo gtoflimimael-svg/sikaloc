@@ -33,10 +33,11 @@ async function adresseIp(): Promise<string | null> {
 }
 
 function reponseErreurInscription(error: {
-  status: number
+  status?: number
   code?: string
   message: string
 }): EtatFormulaire {
+  const status = error.status ?? 0
   const code = error.code ?? ''
   const messageTechnique = error.message.toLowerCase()
   const codeJournal = /^[a-z0-9_-]{1,64}$/i.test(code) ? code : 'other'
@@ -44,12 +45,12 @@ function reponseErreurInscription(error: {
   // Ne journalise ni le message brut, ni l'adresse, ni le mot de passe. Les
   // journaux restent utiles pour distinguer un refus Auth d'une panne.
   console.error('[auth.signup] Supabase Auth rejected signup', {
-    status: error.status,
+    status,
     code: codeJournal,
   })
 
   if (
-    error.status === 422 &&
+    status === 422 &&
     /password should contain|password.*(letter|digit|character|length)|mot de passe/.test(
       messageTechnique,
     )
@@ -62,7 +63,7 @@ function reponseErreurInscription(error: {
     }
   }
 
-  if (error.status === 422 && /password|mot de passe/.test(messageTechnique)) {
+  if (status === 422 && /password|mot de passe/.test(messageTechnique)) {
     return {
       erreursChamps: {
         motDePasse:
@@ -81,14 +82,14 @@ function reponseErreurInscription(error: {
     }
   }
 
-  if (error.status === 429 || code === 'over_email_send_rate_limit') {
+  if (status === 429 || code === 'over_email_send_rate_limit') {
     return {
       erreur:
         'Trop de demandes ont été effectuées en peu de temps. Patientez quelques minutes avant de réessayer.',
     }
   }
 
-  if (error.status >= 500) {
+  if (status >= 500) {
     return {
       erreur:
         'Le service n’a pas pu confirmer l’issue de l’inscription. Vérifiez votre boîte e-mail avant de réessayer ; le compte a peut-être déjà été créé.',
@@ -120,7 +121,7 @@ export async function inscrire(
   }
 
   const { nom, email, telephone, motDePasse, codeParrain } = analyse.data
-  let erreurAuth: { status: number; code?: string; message: string } | null = null
+  let erreurAuth: { status?: number; code?: string; message: string } | null = null
   let requeteAuthLancee = false
 
   try {
@@ -201,8 +202,23 @@ export async function connecter(
     }
   }
 
-  const supabase = await creerClientServeur()
-  const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse })
+  let error: { message: string } | null = null
+  try {
+    const supabase = await creerClientServeur()
+    const resultat = await supabase.auth.signInWithPassword({ email, password: motDePasse })
+    error = resultat.error
+  } catch (cause) {
+    // Une panne de transport ou de configuration ne doit pas devenir une
+    // réponse HTML 500 illisible par le protocole des Server Actions.
+    console.error('[auth.login] Supabase Auth request failed', {
+      name: cause instanceof Error ? cause.name : 'UnknownError',
+      phase: cause instanceof Error ? 'auth_request' : 'setup',
+    })
+    return {
+      erreur:
+        'Le service de connexion est momentanément indisponible. Vérifiez votre connexion puis réessayez.',
+    }
+  }
 
   if (error) {
     // Email non confirmé : GoTrue refuse la connexion, et ce n'est pas un

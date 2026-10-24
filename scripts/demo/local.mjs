@@ -28,6 +28,7 @@ const fichierSecrets = path.join(dossierPrive, 'secrets.json')
 const fichierAcces = path.join(dossierPrive, 'acces-demo.md')
 const fichierNettoyage = path.join(dossierPrive, 'nettoyage-demo-en-attente.json')
 const repertoireSupabase = path.join(dossierPrive, 'supabase')
+const repertoireModelesAuth = path.join(dossierPrive, 'templates')
 const binaireSupabase = path.join(racine, 'node_modules', '.bin', 'supabase')
 const binaireTsx = path.join(racine, 'node_modules', '.bin', 'tsx')
 const binaireNext = path.join(racine, 'node_modules', 'next', 'dist', 'bin', 'next')
@@ -147,9 +148,15 @@ async function preparerProjetPrive() {
 
   await mkdir(repertoireSupabase, { recursive: true, mode: 0o700 })
   await mkdir(path.join(repertoireSupabase, 'migrations'), { recursive: true, mode: 0o700 })
+  await mkdir(repertoireModelesAuth, { recursive: true, mode: 0o700 })
   await chmod(repertoireSupabase, 0o700)
   await chmod(path.join(repertoireSupabase, 'migrations'), 0o700)
+  await chmod(repertoireModelesAuth, 0o700)
   await cp(path.join(racine, 'supabase', 'migrations'), path.join(repertoireSupabase, 'migrations'), {
+    recursive: true,
+    force: true,
+  })
+  await cp(path.join(racine, 'supabase', 'templates'), repertoireModelesAuth, {
     recursive: true,
     force: true,
   })

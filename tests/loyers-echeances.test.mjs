@@ -56,7 +56,9 @@ test('charges et dépôt donnent toujours un reçu, jamais une quittance de loye
   assert.match(migration, /if v_type <> 'Loyer'::public\.type_paiement then\s+new\.type := 'Reçu'/)
   assert.match(confirmation, /apercuDocumentPaiement\(/)
   assert.match(confirmation, /ne constitue pas une quittance de loyer/)
-  assert.match(pdf, /estLoyer && donnees\.estPartiel[\s\S]*'Reçu de paiement partiel'[\s\S]*'Reçu de paiement'/)
+  assert.match(pdf, /estLoyer && donnees\.type === 'Reçu'/)
+  assert.match(pdf, /'Reçu de paiement'/)
+  assert.match(pdf, /n'atteste pas le règlement intégral de la période/)
   assert.match(pdf, /au titre de \$\{donnees\.typePaiement\.toLowerCase\(\)\}/)
 })
 

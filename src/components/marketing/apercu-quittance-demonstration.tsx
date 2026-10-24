@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type {
   PDFDocumentLoadingTask,
-  PDFDocumentProxy,
   PDFPageProxy,
   RenderTask,
 } from 'pdfjs-dist'
@@ -30,7 +29,6 @@ export function ApercuQuittanceDemonstration() {
     let monte = true
     let demandeLancee = false
     let chargement: PDFDocumentLoadingTask | null = null
-    let documentPdf: PDFDocumentProxy | null = null
     let pagePdf: PDFPageProxy | null = null
     let rendu: RenderTask | null = null
     let revisionRendu = 0
@@ -70,7 +68,7 @@ export function ApercuQuittanceDemonstration() {
       if (!contexte) throw new Error('Le rendu du PDF nécessite un canvas 2D.')
 
       const tache = page.render({
-        canvasContext: contexte,
+        canvas: surface,
         viewport,
         transform: [echelleEcran, 0, 0, echelleEcran, 0, 0],
       })
@@ -101,9 +99,8 @@ export function ApercuQuittanceDemonstration() {
         chargement = pdfjs.getDocument({
           url: SOURCE_PDF,
           disableRange: true,
-          isEvalSupported: false,
         })
-        documentPdf = await chargement.promise
+        const documentPdf = await chargement.promise
         if (!monte) return
         if (documentPdf.numPages < 1) throw new Error('Le PDF ne contient aucune page.')
 
@@ -148,7 +145,6 @@ export function ApercuQuittanceDemonstration() {
       observateurTaille?.disconnect()
       rendu?.cancel()
       if (chargement) void chargement.destroy()
-      else void documentPdf?.destroy()
     }
   }, [])
 
