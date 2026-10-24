@@ -212,7 +212,7 @@ export default async function PagePresentationPro({
               <Link href="/inscription" className="pro-sales-text-link">Organiser mes locations <span aria-hidden="true">↗</span></Link>
             </div>
             <figure className="pro-sales-feature-photo pro-sales-photo-tall">
-              <Image src="/images/pro/sikaloc-pro-organisation.webp" alt="Une propriétaire béninoise organise des dossiers de location à son domicile. Illustration éditoriale, sans données personnelles lisibles." width={1500} height={1200} sizes="(max-width: 900px) 100vw, 52vw" />
+              <Image src="/images/pro/sikaloc-pro-organisation-corridor.webp" alt="Image illustrative d’un couloir lumineux de résidence contemporaine, avec plusieurs entrées de logements distinctes." width={1500} height={1200} sizes="(max-width: 900px) 100vw, 52vw" />
               <figcaption>Les informations d’une location, réunies au même endroit.</figcaption>
             </figure>
           </div>

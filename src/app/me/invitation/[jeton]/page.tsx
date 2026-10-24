@@ -138,8 +138,8 @@ export default async function PageInvitation({
         label="Sikaloc Me · Espace locataire"
         titreEditorial="Votre location, à portée de main."
         descriptionEditorial="Activez l’accès que votre bailleur vous a envoyé pour retrouver les informations et documents partagés de votre location."
-        image="/images/me/sikaloc-me-connexion-editorial.webp"
-        imageAlt="Un locataire ouest-africain se tient près d’une fenêtre lumineuse et consulte son téléphone dans son appartement."
+        image="/images/me/sikaloc-me-invitation-welcome-home.webp"
+        imageAlt="Image illustrative d’un coin d’entrée accueillant dans un appartement contemporain, avec une plante et des sandales."
         titreFormulaire="Accepter votre invitation"
         descriptionFormulaire="Créez votre accès avec l’adresse email à laquelle votre bailleur vous a invité."
         detailFormulaire={

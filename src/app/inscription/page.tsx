@@ -20,8 +20,8 @@ export default async function PageInscription({
       label="Sikaloc Pro · Gestion locative"
       titreEditorial="Votre gestion locative commence simplement."
       descriptionEditorial="Un espace clair pour organiser vos logements, suivre les paiements enregistrés et retrouver vos documents."
-      image="/images/pro/sikaloc-pro-inscription-editorial.webp"
-      imageAlt="Photographie illustrative d’un bailleur ouest-africain organisant ses locations sur un ordinateur dans un intérieur lumineux."
+      image="/images/pro/sikaloc-pro-inscription-property-review.webp"
+      imageAlt="Image illustrative : une propriétaire ouest-africaine évalue la lumière naturelle d’un logement qu’elle prépare à louer."
       titreFormulaire="Créer votre compte bailleur"
       descriptionFormulaire="Quelques informations suffisent pour ouvrir votre espace Sikaloc Pro."
       bas={

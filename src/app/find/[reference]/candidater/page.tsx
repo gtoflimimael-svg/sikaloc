@@ -110,8 +110,8 @@ export default async function PageCandidater({
           label="Sikaloc Find · Candidature"
           titreEditorial="Votre prochain logement commence ici."
           descriptionEditorial="Créez votre accès candidat pour envoyer votre demande et retrouver son évolution."
-          image="/images/home/sikaloc-find-editorial.webp"
-          imageAlt="Deux adultes découvrent ensemble un appartement lumineux et contemporain."
+          image="/images/find/sikaloc-find-candidate-studio.webp"
+          imageAlt="Intérieur de studio contemporain à titre illustratif, sans lien avec l’annonce sélectionnée."
           titreFormulaire="Créer votre compte candidat"
           descriptionFormulaire="Votre email et votre téléphone ne sont pas transmis au bailleur."
           retour={{ href: `/find/${reference}`, libelle: 'Revenir à l’annonce' }}

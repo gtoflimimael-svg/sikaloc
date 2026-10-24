@@ -84,8 +84,8 @@ export default function PageRejoindre() {
 
           <figure className="me-join-photo">
             <Image
-              src="/images/me/sikaloc-me-rejoindre-editorial.webp"
-              alt="Photographie illustrative d’un jeune homme ouest-africain consultant son téléphone dans un salon lumineux."
+              src="/images/me/sikaloc-me-rejoindre-home-life.webp"
+              alt="Image illustrative : un locataire ouest-africain aménage une étagère et prend ses repères dans son appartement."
               width={1440}
               height={960}
               sizes="(max-width: 900px) 100vw, (max-width: 1200px) 48vw, 600px"
