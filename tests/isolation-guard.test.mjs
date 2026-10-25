@@ -25,6 +25,11 @@ test('le marqueur explicite de pile jetable est obligatoire', () => {
   assert.throws(() => verifierIntention({ SIKALOC_INTEGRATION_TARGET: 'ephemeral-local' }), /absent/)
 })
 
+test('le démarrage habituel utilise la pile Supabase locale isolée', () => {
+  const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  assert.equal(packageJson.scripts.dev, 'node scripts/demo/local.mjs dev')
+})
+
 test('le scénario SQL refuse une base non marquée avant sa première écriture', () => {
   const sql = readFileSync(new URL('./receipt-historique-asof.integration.sql', import.meta.url), 'utf8')
   const garde = sql.indexOf("to_regclass('sikaloc_test_guard.instance')")

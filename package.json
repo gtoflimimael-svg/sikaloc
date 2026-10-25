@@ -4,7 +4,7 @@
   "private": true,
   "description": "Sikaloc — SaaS de gestion locative pour bailleurs individuels au Bénin",
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/demo/local.mjs dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
