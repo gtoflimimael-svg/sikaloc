@@ -30,6 +30,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verifier:migrations
+      - run: node --experimental-strip-types tests/schema-objets.test.mjs
       - run: npm run test:maintenance
       - run: npm run test:security-mutations
       - run: npm run test:verification

@@ -213,7 +213,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "contrainte",
     "nom": "locataires_signature_chemin_scope",
-    "migration": "20260820000200_signature_chemin_contraint.sql"
+    "migration": "20261020103659_corriger_signature_locataire.sql"
   },
   {
     "categorie": "contrainte",
@@ -272,6 +272,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "declencheur",
+    "nom": "a_quittances_qualifier_paiement",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+  },
+  {
+    "categorie": "declencheur",
     "nom": "a_verrou_paiements_locatifs",
     "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
   },
@@ -284,6 +289,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "declencheur",
     "nom": "attribuer_numero_document",
     "migration": "20260817000700_documents_v2_1.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "baux_tarif_initial",
+    "migration": "20261022090000_corriger_declencheur_loyer_initial.sql"
+  },
+  {
+    "categorie": "declencheur",
+    "nom": "baux_tarif_nouvelle_periode",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "declencheur",
@@ -402,6 +417,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "declencheur",
+    "nom": "verifier_quota_logements",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "declencheur",
     "nom": "verifier_transition_candidature",
     "migration": "20260919000700_candidatures.sql"
   },
@@ -467,8 +487,23 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "consommer_limite_questions",
+    "migration": "20261022231507_questions_contact.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "contexte_emission",
     "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "corriger_paiement",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "creer_paiement_brouillon",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",
@@ -477,8 +512,28 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "declarer_paiements_historiques",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "definir_mes_notifications",
     "migration": "20260913000900_notifications_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "definir_signature_bailleur",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "definir_signature_locataire",
+    "migration": "20261020103659_corriger_signature_locataire.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "definir_statut_bail",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
   },
   {
     "categorie": "fonction",
@@ -499,6 +554,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "enregistrer_profil_candidat",
     "migration": "20260919000700_candidatures.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "enregistrer_tarif_bail",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",
@@ -523,7 +583,12 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "finances_paiement_locatif",
-    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "finances_paiement_locatif_a_date",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",
@@ -558,7 +623,12 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "lire_quittance_autorisee",
-    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+    "migration": "20261020174549_corriger_solde_recu_historique.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "loyer_bail_pour_periode",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",
@@ -578,7 +648,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "mes_echeances",
-    "migration": "20260913000700_acces_locataire.sql"
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",
@@ -672,6 +742,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "qualifier_document_paiement",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "reactiver_abonnement",
     "migration": "20260817000800_cycle_de_grace.sql"
   },
@@ -717,6 +792,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "supprimer_paiement",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "telephone_canonique",
     "migration": "20260912000600_telephones_canoniques.sql"
   },
@@ -754,6 +834,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "verifier_publication_annonce",
     "migration": "20260919000100_annonces.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "verifier_quota_logements",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
   },
   {
     "categorie": "fonction",
@@ -892,6 +977,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "limites_questions_visiteurs_expiration_idx",
+    "migration": "20261022231507_questions_contact.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "locataires_bailleur_id_idx",
     "migration": "20260817000100_schema_initial.sql"
   },
@@ -937,6 +1027,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "questions_visiteurs_statut_cree_idx",
+    "migration": "20261022231507_questions_contact.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "quittances_bailleur_id_idx",
     "migration": "20260817000100_schema_initial.sql"
   },
@@ -957,6 +1052,31 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
+    "nom": "baux_loyers_lecture_proprietaire",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Nouveau bail nécessairement actif",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Signature active requise à l'insertion",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Signature active requise à la modification",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "politique",
+    "nom": "Signature active requise à la suppression",
+    "migration": "20261020102334_securiser_mutations_metier.sql"
+  },
+  {
+    "categorie": "politique",
     "nom": "Un bailleur ajoute des photos à ses annonces",
     "migration": "20260919000100_annonces.sql"
   },
@@ -964,11 +1084,6 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur annule ses invitations",
     "migration": "20260913000600_droits_invitations.sql"
-  },
-  {
-    "categorie": "politique",
-    "nom": "Un bailleur corrige ses paiements",
-    "migration": "20260817000300_rls.sql"
   },
   {
     "categorie": "politique",
@@ -999,11 +1114,6 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "politique",
     "nom": "Un bailleur dépose sa signature",
     "migration": "20260817000500_storage.sql"
-  },
-  {
-    "categorie": "politique",
-    "nom": "Un bailleur enregistre ses paiements",
-    "migration": "20260817000300_rls.sql"
   },
   {
     "categorie": "politique",
@@ -1167,11 +1277,6 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "politique",
-    "nom": "Un bailleur supprime ses paiements",
-    "migration": "20260817000300_rls.sql"
-  },
-  {
-    "categorie": "politique",
     "nom": "Un candidat crée son profil",
     "migration": "20260919000700_candidatures.sql"
   },
@@ -1208,7 +1313,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "vue",
     "nom": "v_echeances",
-    "migration": "20260913000300_echeances_et_historique.sql"
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "vue",
@@ -1218,7 +1323,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "vue",
     "nom": "v_metriques_dashboard",
-    "migration": "20260817000400_vues_metier.sql"
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "vue",
