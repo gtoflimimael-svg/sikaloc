@@ -93,9 +93,13 @@ export default async function PageDetailBail({
   const listeImpayes = (impayes ?? []) as Impaye[]
   const listeExcedents = excedents ?? []
   const suppressionBailPossible = peutSupprimerBail(listePaiements.length, !erreurPaiements)
+  const paiementsAffiches = listePaiements.map((paiement) => ({
+    paiement,
+    quittance: Array.isArray(paiement.quittance) ? paiement.quittance[0] : paiement.quittance,
+  }))
 
   return (
-    <div className="space-y-2xl">
+    <div className="lease-detail-page space-y-2xl">
       {erreurEcheances ? (
         <Alerte ton="erreur">
           Le suivi des échéances n’a pas pu être vérifié. Actualisez la page avant d’utiliser ces informations.
@@ -131,7 +135,7 @@ export default async function PageDetailBail({
         <div className="lease-detail-heading mt-lg flex flex-wrap items-start justify-between gap-lg">
           <div className="flex min-w-0 items-center gap-lg">
             <div>
-              <h1 className="text-display-md font-extrabold tracking-tight text-ink">
+              <h1 className="page-title">
                 {locataire?.nom ?? 'Locataire'}
               </h1>
               <p className="mt-xxs text-body-md text-mute">
@@ -159,7 +163,9 @@ export default async function PageDetailBail({
       </div>
 
       {/* ── Caractéristiques ───────────────────────────────────────────── */}
-      <section className="lease-facts-grid grid gap-lg sm:grid-cols-2 lg:grid-cols-4" aria-label="Conditions et informations du bail">
+      <section aria-labelledby="conditions-bail">
+        <h2 id="conditions-bail" className="section-title">Conditions du bail</h2>
+        <dl className="lease-detail-facts">
         <Fiche libelle="Loyer mensuel" valeur={formaterFCFA(bail.loyer_mensuel)} />
         <Fiche libelle="Jour d'échéance" valeur={`Le ${bail.jour_echeance} du mois`} />
         <Fiche libelle="Tolérance" valeur={`${bail.tolerance_jours} jours`} />
@@ -177,21 +183,22 @@ export default async function PageDetailBail({
           libelle="Téléphone locataire"
           valeur={locataire ? formaterTelephone(locataire.telephone) : '—'}
         />
+        </dl>
       </section>
 
       {/* ── Impayés du bail ────────────────────────────────────────────── */}
       {erreurImpayes || listeImpayes.length > 0 ? (
         <section>
-          <h2 className="mb-lg text-display-sm font-semibold tracking-tight text-ink">
+          <h2 className="mb-lg section-title">
             Loyers en retard sur ce bail
           </h2>
           {erreurImpayes ? (
             <Alerte ton="erreur">Les loyers en retard n’ont pas pu être vérifiés.</Alerte>
-          ) : <div className="space-y-md">
+          ) : <div className="lease-arrears-list">
             {listeImpayes.map((impaye) => (
               <div
                 key={impaye.periode_debut}
-                className="flex flex-wrap items-center justify-between gap-md rounded-lg border border-hairline border-l-4 border-l-negative bg-surface-card p-lg"
+                className="lease-arrears-row"
               >
                 <div>
                   <p className="text-body-md font-semibold text-ink">
@@ -220,7 +227,7 @@ export default async function PageDetailBail({
       {erreurExcedents ? (
         <Alerte ton="erreur">Les éventuels excédents n’ont pas pu être vérifiés.</Alerte>
       ) : listeExcedents.length > 0 ? (
-        <section className="rounded-lg border border-hairline bg-canvas-soft p-lg">
+        <section className="lease-excess-note">
           <h2 className="text-body-md font-semibold text-ink">Excédents non reportés</h2>
           <p className="mt-xs text-body-sm text-mute">
             Ces versements dépassent le loyer de leur période. Ils ne réduisent pas automatiquement le mois suivant.
@@ -238,7 +245,7 @@ export default async function PageDetailBail({
 
       {/* ── Historique ─────────────────────────────────────────────────── */}
       <section>
-        <h2 className="mb-lg text-display-sm font-semibold tracking-tight text-ink">
+        <h2 className="mb-lg section-title">
           Historique des paiements
         </h2>
 
@@ -256,6 +263,30 @@ export default async function PageDetailBail({
             }
           />
         ) : (
+          <>
+          <ul className="payment-mobile-list sm:hidden" aria-label="Historique des paiements du bail">
+            {paiementsAffiches.map(({ paiement, quittance }) => (
+              <li key={paiement.id}>
+                <div className="payment-mobile-heading">
+                  <h3>{formaterPeriode(paiement.periode_debut)}</h3>
+                  <strong className="tabular">{formaterFCFA(paiement.montant)}</strong>
+                </div>
+                <p className="mt-xs text-body-sm text-mute">
+                  {paiement.historique ? 'Avant Sikaloc' : formaterDateCourte(paiement.date_paiement)}
+                  {paiement.mode_paiement ? ` · ${paiement.mode_paiement}` : ''}
+                </p>
+                <div className="mt-md flex flex-wrap items-center justify-between gap-sm">
+                  <Badge ton={paiement.statut === 'Validé' ? paiement.est_partiel ? 'warning' : 'positive' : 'warning'}>
+                    {paiement.statut === 'Validé' ? paiement.est_partiel ? 'Partiel' : 'Payé' : 'Brouillon'}
+                  </Badge>
+                  <Link href={quittance ? `/pro/quittances/${quittance.id}` : `/pro/paiements/${paiement.id}/confirmer`} className="text-body-sm font-semibold text-ink underline underline-offset-4">
+                    {quittance ? `Voir ${quittance.type === 'Quittance' ? 'la quittance' : 'le reçu'}` : 'À valider'}
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden sm:block">
           <TableauListe id="paiements-bail" libelle="Historique des paiements du bail">
             <table className="data-table">
               <thead>
@@ -275,11 +306,7 @@ export default async function PageDetailBail({
                 </tr>
               </thead>
               <tbody>
-                {listePaiements.map((paiement) => {
-                  const quittance = Array.isArray(paiement.quittance)
-                    ? paiement.quittance[0]
-                    : paiement.quittance
-
+                {paiementsAffiches.map(({ paiement, quittance }) => {
                   return (
                     <tr key={paiement.id}>
                       <td className="font-semibold">
@@ -330,12 +357,14 @@ export default async function PageDetailBail({
               </tbody>
             </table>
           </TableauListe>
+          </div>
+          </>
         )}
       </section>
 
       {/* ── Zone sensible ──────────────────────────────────────────────── */}
-      <section className="card">
-        <h2 className="text-display-xs font-semibold text-ink">Cycle de vie du bail</h2>
+      <section className="lease-lifecycle">
+        <h2 className="section-title">Cycle de vie du bail</h2>
         <p className="mt-xs text-body-sm text-mute">
           La résiliation libère le logement : vous pourrez y créer un nouveau bail.
           L&apos;historique des paiements est conservé.
@@ -385,9 +414,9 @@ export default async function PageDetailBail({
 
 function Fiche({ libelle, valeur }: { libelle: string; valeur: string }) {
   return (
-    <div className="card">
-      <p className="text-body-sm text-mute">{libelle}</p>
-      <p className="mt-xs text-body-md font-semibold tabular text-ink">{valeur}</p>
+    <div>
+      <dt>{libelle}</dt>
+      <dd className="tabular">{valeur}</dd>
     </div>
   )
 }

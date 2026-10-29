@@ -361,11 +361,23 @@ export function VisiteGuidee({
     // La page n'est PAS verrouillée en défilement : la visite n'empêche rien.
     // On suit donc le défilement au lieu de l'interdire, et on amène la cible
     // à l'écran si elle n'y est pas.
-    cibleVisible(etape?.cible)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    const cible = cibleVisible(etape?.cible)
+    if (cible) {
+      const zone = cible.getBoundingClientRect()
+      const horsEcran = zone.top < 12 || zone.bottom > window.innerHeight - 12
+      if (horsEcran) {
+        cible.scrollIntoView({
+          block: 'center',
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'instant'
+            : 'smooth',
+        })
+      }
+    }
 
     window.addEventListener('resize', placer)
     window.addEventListener('scroll', placer, true)
-    // Rattrape le chargement des polices et les transitions de page.
+    // Rattrape la mise en page après le chargement des polices.
     const rattrapage = setTimeout(placer, 160)
 
     return () => {
@@ -409,7 +421,7 @@ export function VisiteGuidee({
       {!surPlace && position.halo ? (
         <div
           aria-hidden="true"
-          className="absolute rounded-lg transition-all duration-200"
+          className="absolute rounded-lg"
           style={{
             top: position.halo.haut,
             left: position.halo.gauche,
@@ -432,7 +444,7 @@ export function VisiteGuidee({
       {surPlace && champCourant && lisere ? (
         <div
           aria-hidden="true"
-          className="absolute rounded-md transition-all duration-200"
+          className="absolute rounded-md"
           style={{
             top: lisere.haut,
             left: lisere.gauche,

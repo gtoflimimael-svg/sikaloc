@@ -30,7 +30,7 @@ export function SignatureLocataire({
   const supprimer = supprimerSignatureLocataire.bind(null, locataireId)
 
   return (
-    <div className="card card-lg space-y-lg">
+    <div className="tenant-signature-section space-y-lg">
       <div>
         <h2 className="text-title-lg font-semibold text-ink">Signature du locataire</h2>
         <p className="mt-xxs text-body-sm text-mute">

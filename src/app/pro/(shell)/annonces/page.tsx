@@ -9,6 +9,8 @@ import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Annonce, CompteurCandidatures } from '@/lib/types/database'
 
+import styles from './annonces.module.css'
+
 export const metadata: Metadata = { title: 'Annonces' }
 
 type LigneAnnonce = Pick<
@@ -59,7 +61,7 @@ export default async function PageAnnonces() {
   )
 
   return (
-    <div className="listings-page">
+    <div className={`listings-page ${styles.page}`}>
       <EnTetePage
         titre="Annonces"
         description="Vos logements mis en location sur Sikaloc Find."
@@ -92,57 +94,52 @@ export default async function PageAnnonces() {
           }
         />
       ) : (
-        <div className="listing-management-grid">
+        <ul className={styles.list}>
           {annonces.map((annonce) => {
             const principale = annonce.annonce_photos.find((p) => p.position === 0)
             const nbPhotos = annonce.annonce_photos.length
             const candidatures = recues.get(annonce.id)
+            const titre = libelleChambres(annonce.chambres) ?? annonce.type
 
             return (
-              <Link
-                key={annonce.id}
-                href={`/pro/annonces/${annonce.id}`}
-                className="card listing-management-card"
-              >
-                <div className="listing-management-photo">
+              <li key={annonce.id} className={styles.item}>
+                <div className={styles.photo}>
                   {principale ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={`/api/annonces/photos/${principale.id}`}
                       alt=""
                       loading="lazy"
-                      className="listing-management-image"
+                      className={styles.image}
                     />
                   ) : (
-                    <span className="listing-management-no-photo text-caption text-mute">
-                      Sans photo
-                    </span>
+                    <span className={styles.noPhoto}>Sans photo</span>
                   )}
                 </div>
 
-                <div className="listing-management-content">
-                  <div className="listing-management-meta">
+                <div className={styles.content}>
+                  <div className={styles.heading}>
+                    <div className={styles.titleBlock}>
+                      <h2 className={styles.title}>
+                        <Link href={`/pro/annonces/${annonce.id}`}>{titre}</Link>
+                        <span>{annonce.type}</span>
+                      </h2>
+                      <p className={styles.location}>
+                        {annonce.quartier ? `${annonce.quartier}, ` : ''}
+                        {annonce.ville} <span aria-hidden="true">·</span> Réf. {annonce.reference}
+                      </p>
+                    </div>
                     <Badge ton={TON_STATUT[annonce.statut]}>
                       {annonce.statut === 'cloturee' && annonce.motif_cloture
                         ? `${LIBELLES_STATUT.cloturee} · ${LIBELLES_MOTIF[annonce.motif_cloture]}`
                         : LIBELLES_STATUT[annonce.statut]}
                     </Badge>
-                    <span className="text-caption text-mute">Réf. {annonce.reference}</span>
                   </div>
 
-                  <h2 className="listing-management-title">
-                    {libelleChambres(annonce.chambres) ?? annonce.type}
-                    <span className="font-normal text-mute"> · {annonce.type}</span>
-                  </h2>
-                  <p className="listing-management-location text-body-sm text-mute">
-                    {annonce.quartier ? `${annonce.quartier}, ` : ''}
-                    {annonce.ville}
-                  </p>
-
-                  <dl className="listing-management-facts">
+                  <dl className={styles.facts}>
                     <div>
                       <dt>Loyer mensuel</dt>
-                      <dd className="money">
+                      <dd>
                         {annonce.loyer !== null ? formaterFCFA(annonce.loyer) : 'À renseigner'}
                       </dd>
                     </div>
@@ -163,7 +160,7 @@ export default async function PageAnnonces() {
                     {candidatures ? (
                       <div>
                         <dt>Candidatures</dt>
-                        <dd>
+                        <dd className={styles.applicationCount}>
                           {candidatures.total}
                           {candidatures.nouvelles > 0 ? ` · ${candidatures.nouvelles} sans réponse` : ''}
                         </dd>
@@ -171,14 +168,20 @@ export default async function PageAnnonces() {
                     ) : null}
                   </dl>
 
-                  <span className="listing-management-open">
-                    Gérer l’annonce <span aria-hidden="true">↗</span>
-                  </span>
+                  <div className={styles.actions}>
+                    <Link href={`/pro/annonces/${annonce.id}/candidatures`} className={styles.candidatesLink}>
+                      Voir les candidatures
+                      {candidatures ? <span> ({candidatures.total})</span> : null}
+                    </Link>
+                    <Link href={`/pro/annonces/${annonce.id}`} className="btn btn-secondary btn-sm">
+                      Gérer l’annonce
+                    </Link>
+                  </div>
                 </div>
-              </Link>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
     </div>
   )

@@ -75,6 +75,23 @@ export default async function PageHistoriquePaiements({
   const total = liste
     .filter((p) => p.statut === 'Validé')
     .reduce((somme, p) => somme + Number(p.montant), 0)
+  const bailSelectionne = (baux ?? []).find((bail) => bail.id === bailFiltre)
+  const locataireBailSelectionne = Array.isArray(bailSelectionne?.locataire)
+    ? bailSelectionne.locataire[0]
+    : bailSelectionne?.locataire
+  const logementBailSelectionne = Array.isArray(bailSelectionne?.logement)
+    ? bailSelectionne.logement[0]
+    : bailSelectionne?.logement
+  const libelleBailSelectionne = bailSelectionne
+    ? `${locataireBailSelectionne?.nom ?? 'Locataire'} — ${logementBailSelectionne?.adresse ?? 'logement'}`
+    : null
+
+  const paiementsAffiches = liste.map((paiement) => {
+    const bail = Array.isArray(paiement.bail) ? paiement.bail[0] : paiement.bail
+    const locataire = Array.isArray(bail?.locataire) ? bail.locataire[0] : bail?.locataire
+    const quittance = Array.isArray(paiement.quittance) ? paiement.quittance[0] : paiement.quittance
+    return { paiement, locataire, quittance }
+  })
 
   return (
     <div className="payment-history-page">
@@ -109,6 +126,11 @@ export default async function PageHistoriquePaiements({
               )
             })}
           </select>
+          {libelleBailSelectionne ? (
+            <p className="payment-selected-bail text-caption text-mute">
+              Bail sélectionné : {libelleBailSelectionne}
+            </p>
+          ) : null}
         </div>
 
         <div>
@@ -160,6 +182,37 @@ export default async function PageHistoriquePaiements({
             </span>
           </ResumeListe>
 
+          <ul className="payment-mobile-list sm:hidden" aria-label="Historique des paiements">
+            {paiementsAffiches.map(({ paiement, locataire, quittance }) => (
+              <li key={paiement.id}>
+                <div className="payment-mobile-heading">
+                  <h3>{locataire?.nom ?? 'Locataire'}</h3>
+                  <strong className="money">{formaterFCFA(paiement.montant)}</strong>
+                </div>
+                <p className="mt-xs text-body-sm">{formaterPeriode(paiement.periode_debut)}</p>
+                <p className="mt-xs text-caption text-mute">
+                  {paiement.historique ? 'Avant Sikaloc · Paiement historique' : `${formaterDateCourte(paiement.date_paiement)} · ${paiement.mode_paiement}`}
+                </p>
+                <div className="mt-sm flex flex-wrap items-center justify-between gap-sm">
+                  <Badge ton={paiement.statut === 'Validé' && !paiement.est_partiel ? 'positive' : 'warning'}>
+                    {paiement.statut !== 'Validé' ? 'Brouillon' : paiement.est_partiel ? 'Partiel' : 'Payé'}
+                  </Badge>
+                  {quittance ? (
+                    <Link href={`/pro/quittances/${quittance.id}`} className="inline-flex min-h-11 items-center font-semibold underline"
+                      aria-label={`Voir ${quittance.type} — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}>
+                      {quittance.type}
+                    </Link>
+                  ) : paiement.historique ? <span className="text-caption text-mute">Aucune quittance</span> : (
+                    <Link href={`/pro/paiements/${paiement.id}/confirmer`} className="inline-flex min-h-11 items-center font-semibold text-warning-content underline"
+                      aria-label={`${libelleActionDocumentManquant(paiement.statut)} — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}>
+                      {libelleActionDocumentManquant(paiement.statut)}
+                    </Link>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden sm:block">
           <TableauListe id="paiements" libelle="Historique des paiements">
             <table className="data-table table-paiements">
               <caption className="sr-only">Paiements affichés, avec leur statut et leur document</caption>
@@ -265,6 +318,7 @@ export default async function PageHistoriquePaiements({
               </tbody>
             </table>
           </TableauListe>
+          </div>
           {pages > 1 ? (
             <nav aria-label="Pagination des paiements" className="mt-lg flex flex-wrap items-center justify-between gap-sm">
               {page > 1 ? <Link href={urlPage(page - 1)} rel="prev" className="btn btn-secondary">← Page précédente</Link> : <span />}

@@ -73,6 +73,7 @@ export function FormulairePaiement({
           libelle="Bail concerné"
           options={baux.map(({ valeur, libelle }) => ({ valeur, libelle }))}
           valeurDefaut={bailChoisi}
+          aide={bail && bail.libelle.length > 32 ? `Bail sélectionné : ${bail.libelle}` : undefined}
           requis
           erreur={etat.erreursChamps?.bailId}
         />

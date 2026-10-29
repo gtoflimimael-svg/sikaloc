@@ -1,3 +1,4 @@
+import styles from '@/components/app/annonce.module.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -134,7 +135,7 @@ export default async function PageAnnonce({
       ) : null}
 
       {annonce.statut !== 'brouillon' ? (
-        <section className="listing-candidate-shortcut card flex flex-wrap items-center justify-between gap-md">
+        <section className={`${styles.shortcut} flex flex-wrap items-center justify-between gap-md`}>
           <div>
             <p className="text-body-md font-semibold text-ink">Candidatures reçues</p>
             <p className="text-body-sm text-mute">
@@ -147,7 +148,7 @@ export default async function PageAnnonce({
         </section>
       ) : null}
 
-      <section className="listing-detail-controls card space-y-md">
+      <section className={`${styles.controls} space-y-md`}>
         <p className="text-body-sm text-mute">
           Logement :{' '}
           <span className="text-ink">
@@ -246,7 +247,7 @@ export default async function PageAnnonce({
       )}
 
       {cloturee ? (
-        <section className="card card-lg">
+        <section className={styles.controls}>
           <dl className="grid gap-md text-body-sm sm:grid-cols-2">
             <div>
               <dt className="text-mute">Loyer</dt>

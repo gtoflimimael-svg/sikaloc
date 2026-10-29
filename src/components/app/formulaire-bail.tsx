@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 
 import { ActionsFormulaire, FormulaireMetier, SectionFormulaire } from '@/components/ui/formulaire-metier'
 import { ChampMontant, ChampSelection, ChampTexte } from '@/components/ui/champs'
@@ -29,6 +29,10 @@ export function FormulaireBail({
   locataires: OptionEntite[]
 }) {
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
+  const [logementChoisi, choisirLogement] = useState(bail?.logement_id ?? '')
+  const [locataireChoisi, choisirLocataire] = useState(bail?.locataire_id ?? '')
+  const logement = logements.find((option) => option.valeur === logementChoisi)
+  const locataire = locataires.find((option) => option.valeur === locataireChoisi)
 
   // Garde-fou : les pages appelantes diagnostiquent le manque en amont (voir
   // `bail-impossible.tsx`) et n'affichent pas ce formulaire dans ce cas. Ce
@@ -54,7 +58,16 @@ export function FormulaireBail({
   }
 
   return (
-    <FormulaireMetier action={envoyer} etat={etat} titre="Informations du bail">
+    <FormulaireMetier
+      action={envoyer}
+      etat={etat}
+      titre="Informations du bail"
+      onChange={(evenement) => {
+        const champ = evenement.target as HTMLSelectElement
+        if (champ.name === 'logementId') choisirLogement(champ.value)
+        if (champ.name === 'locataireId') choisirLocataire(champ.value)
+      }}
+    >
       <SectionFormulaire titre="Logement et locataire" description="Associez un logement à son locataire.">
 
         <ChampSelection
@@ -63,6 +76,7 @@ export function FormulaireBail({
           placeholder="Sélectionnez un logement"
           options={logements}
           valeurDefaut={bail?.logement_id}
+          aide={logement && logement.libelle.length > 32 ? `Logement sélectionné : ${logement.libelle}` : undefined}
           requis
           erreur={etat.erreursChamps?.logementId}
         />
@@ -73,6 +87,7 @@ export function FormulaireBail({
           placeholder="Sélectionnez un locataire"
           options={locataires}
           valeurDefaut={bail?.locataire_id}
+          aide={locataire && locataire.libelle.length > 32 ? `Locataire sélectionné : ${locataire.libelle}` : undefined}
           requis
           erreur={etat.erreursChamps?.locataireId}
         />

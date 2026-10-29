@@ -1,7 +1,8 @@
 'use client'
 
 import { AlertTriangle, Check } from 'lucide-react'
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
+import styles from './historique.module.css'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { Alerte } from '@/components/ui/retours'
@@ -46,6 +47,12 @@ export function FormulaireHistorique({
 
   const [coches, setCoches] = useState<Set<string>>(new Set())
   const [relecture, setRelecture] = useState(false)
+  const titre = useRef<HTMLHeadingElement>(null)
+  const premierRendu = useRef(true)
+  useEffect(() => {
+    if (premierRendu.current) { premierRendu.current = false; return }
+    titre.current?.focus()
+  }, [relecture])
 
   const basculer = (periode: string) => {
     setCoches((precedent) => {
@@ -68,17 +75,17 @@ export function FormulaireHistorique({
         {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
         <div>
-          <h2 className="text-title-md font-semibold text-ink">
+          <h2 ref={titre} tabIndex={-1} className={styles.title}>
             Vérification de l’historique
           </h2>
           <p className="mt-xs text-body-sm text-mute">
-            Relisez avant d’enregistrer : les mois de droite apparaîtront dans
-            vos loyers en retard, et c’est de là que partent les relances.
+            Relisez avant d’enregistrer : les mois de la section « Seront en retard » apparaîtront
+            dans vos loyers en retard, d’où vous pourrez préparer les relances.
           </p>
         </div>
 
-        <div className="grid gap-lg sm:grid-cols-2">
-          <section className="rounded-md border border-positive/30 bg-positive-pale p-lg">
+        <div className={styles.review}>
+          <section >
             <p className="text-caption font-semibold uppercase tracking-wide text-positive-deep">
               Déjà réglés · {regles.length}
             </p>
@@ -101,7 +108,7 @@ export function FormulaireHistorique({
             )}
           </section>
 
-          <section className="rounded-md border border-negative/30 bg-negative/10 p-lg">
+          <section >
             <p className="text-caption font-semibold uppercase tracking-wide text-negative-darkest">
               Seront en retard · {impayes.length}
             </p>
@@ -154,6 +161,7 @@ export function FormulaireHistorique({
   // ═══ Temps 1 — sélection ═══════════════════════════════════════════════════
   return (
     <div className="space-y-xl">
+      <h2 ref={titre} tabIndex={-1} className={styles.title}>Mois déjà réglés</h2>
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
       <div className="flex flex-wrap items-baseline justify-between gap-md">
@@ -169,7 +177,7 @@ export function FormulaireHistorique({
               toutCoche ? new Set() : new Set(echeances.map((e) => e.periode_debut)),
             )
           }
-          className="text-body-sm font-semibold text-primary underline"
+          className="inline-flex min-h-11 items-center text-body-sm font-semibold text-ink underline"
         >
           {toutCoche ? 'Tout décocher' : 'Tout cocher'}
         </button>
@@ -187,18 +195,15 @@ export function FormulaireHistorique({
             Deux colonnes dès l'écran moyen, une seule sur téléphone : une case
             à cocher doit rester atteignable au pouce.
           */}
-          <ul className="grid gap-sm sm:grid-cols-2">
+          <ul className={styles.months}>
             {mois.map((e) => {
               const coche = coches.has(e.periode_debut)
 
               return (
                 <li key={e.periode_debut}>
                   <label
-                    className={`flex cursor-pointer items-center gap-md rounded-md border p-md transition-colors ${
-                      coche
-                        ? 'border-positive bg-positive-pale'
-                        : 'border-hairline bg-canvas hover:border-primary/40'
-                    }`}
+                    className={styles.month}
+                    data-checked={coche}
                   >
                     <input
                       type="checkbox"
@@ -228,7 +233,7 @@ export function FormulaireHistorique({
           onClick={() => setRelecture(true)}
           className="btn btn-primary"
         >
-          Continuer
+          Vérifier l’historique
         </button>
       </div>
     </div>

@@ -63,12 +63,15 @@ export function FormulaireLocataire({
           {etat.erreursChamps?.consentement ? <p className="field-error" role="alert">{etat.erreursChamps.consentement}</p> : null}
         </div>
       ) : (
+        <div className="tenant-consent">
         <ChampCase
           nom="consentement"
           libelle="J’ai informé ce locataire de la collecte de ses données"
           description="Obligatoire. Le locataire doit savoir que son nom et son numéro sont enregistrés dans Sikaloc, et peut demander leur suppression à tout moment."
           erreur={etat.erreursChamps?.consentement}
+          apparence="separateur"
         />
+        </div>
       )}
 
       <ActionsFormulaire annulerVers="/pro/locataires">

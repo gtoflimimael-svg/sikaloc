@@ -1,7 +1,9 @@
 'use client'
 
+import styles from './annonce.module.css'
+
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampSelection } from '@/components/ui/champs'
@@ -25,9 +27,11 @@ export function FormulaireNouvelleAnnonce({
   selection?: string
 }) {
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
+  const [logementSelectionne, definirLogementSelectionne] = useState(selection ?? '')
+  const libelleSelectionne = logements.find((logement) => logement.valeur === logementSelectionne)?.libelle
 
   return (
-    <form action={envoyer} className="card card-lg space-y-lg">
+    <form action={envoyer} className={styles.form}>
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
       <ChampSelection
@@ -36,10 +40,18 @@ export function FormulaireNouvelleAnnonce({
         options={logements}
         valeurDefaut={selection}
         placeholder="Choisissez un logement"
+        onChangeSelection={(event) => definirLogementSelectionne(event.currentTarget.value)}
         aide="L’annonce reprend son type et sa ville. Son adresse exacte n’est jamais publiée."
         requis
         erreur={etat.erreursChamps?.logementId}
       />
+
+      {libelleSelectionne && libelleSelectionne.length > 32 ? (
+        <p className={styles.selectedHousing} aria-live="polite">
+          <span>Logement sélectionné</span>
+          <strong>{libelleSelectionne}</strong>
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-md pt-sm">
         <BoutonSoumettre libelleEnCours="Création…">Créer le brouillon</BoutonSoumettre>

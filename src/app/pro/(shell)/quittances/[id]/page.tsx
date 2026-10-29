@@ -1,3 +1,4 @@
+import styles from '@/components/app/document.module.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -195,7 +196,7 @@ export default async function PageQuittance({
       ) : null}
 
       {/* ── Aperçu du document ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-xl border border-hairline bg-canvas-soft p-2xl">
+      <section className={styles.paper}>
         <span
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-[28deg] text-[64px] font-black text-mute-soft opacity-10"
@@ -226,8 +227,8 @@ export default async function PageQuittance({
             Période du {formaterDate(periodeDebut)} au {formaterDate(periodeFin)}
           </p>
 
-          <div className="mt-xl grid gap-lg sm:grid-cols-2">
-            <div className="rounded-lg bg-canvas p-lg">
+          <div className={styles.parties}>
+            <div className={styles.party}>
               <p className="text-caption uppercase tracking-wide text-mute">Bailleur</p>
               <p className="mt-xs text-body-md font-semibold text-ink">{bailleur.nom}</p>
               <p className="text-body-sm text-body">Tél. {formaterTelephone(bailleur.telephone)}</p>
@@ -236,7 +237,7 @@ export default async function PageQuittance({
               ) : null}
             </div>
 
-            <div className="rounded-lg bg-canvas p-lg">
+            <div className={styles.party}>
               <p className="text-caption uppercase tracking-wide text-mute">Locataire</p>
               <p className="mt-xs text-body-md font-semibold text-ink">{locataire.nom}</p>
               <p className="text-body-sm text-body">Tél. {formaterTelephone(locataire.telephone)}</p>
@@ -275,7 +276,7 @@ export default async function PageQuittance({
             <LigneApercu terme="Mode de paiement" definition={paiement.mode_paiement} />
           </dl>
 
-          <div className="mt-xl rounded-lg bg-primary-pale p-lg">
+          <div className={styles.amount}>
             <p className="text-caption text-ink-deep">Montant reçu</p>
             <p className="mt-xxs text-display-sm font-extrabold tabular text-ink-deep">
               {formaterFCFA(finances.montant)}
@@ -346,7 +347,7 @@ export default async function PageQuittance({
         ) : null}
 
         {quittance.hash_sha256 ? (
-          <div className="rounded-lg border border-hairline bg-canvas p-lg">
+          <div className={styles.integrity}>
             <p className="text-body-sm font-semibold text-ink">
               Empreinte d&apos;intégrité (SHA-256)
             </p>
@@ -355,7 +356,7 @@ export default async function PageQuittance({
               conteste le fichier reçu, comparez son empreinte à celle-ci : la
               moindre modification la change entièrement.
             </p>
-            <code className="mt-sm block overflow-x-auto whitespace-nowrap rounded-md bg-canvas-soft px-md py-sm font-mono text-caption text-body">
+            <code className={styles.hash}>
               {quittance.hash_sha256}
             </code>
           </div>
@@ -367,7 +368,7 @@ export default async function PageQuittance({
 
 function LigneApercu({ terme, definition }: { terme: string; definition: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-lg border-b border-hairline-soft py-xs">
+    <div className={styles.fact}>
       <dt className="text-body-sm text-mute">{terme}</dt>
       <dd className="text-right text-body-sm font-semibold tabular text-ink">{definition}</dd>
     </div>

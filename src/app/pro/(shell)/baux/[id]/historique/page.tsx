@@ -1,3 +1,4 @@
+import styles from '@/components/app/historique.module.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -99,7 +100,7 @@ export default async function PageHistorique({
         }
       />
 
-      <div className="lease-history-context card mb-xl">
+      <div className={styles.context}>
         <dl className="grid gap-md sm:grid-cols-3">
           <div>
             <dt className="text-caption text-mute">Locataire</dt>
@@ -137,7 +138,7 @@ export default async function PageHistorique({
         ) : null}
       </div>
 
-      <div className="lease-history-editor card">
+      <div className="min-w-0">
         <FormulaireHistorique
           bailId={id}
           echeances={aDeclarer}

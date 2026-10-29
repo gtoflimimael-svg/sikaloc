@@ -245,8 +245,8 @@ export default async function PagePresentationPro({
               <h2 className="pro-sales-heading">Des documents clairs, à retrouver facilement.</h2>
               <p className="pro-sales-copy">Consultez les reçus et quittances disponibles avec les informations de paiement et la période concernée. Un reçu correspond à un versement ; une quittance, à une période entièrement réglée.</p>
               <div className="pro-sales-actions">
-                <Link href="/exemple-quittance" className="pro-sales-button pro-sales-button-primary">Voir un exemple de quittance <span aria-hidden="true">↗</span></Link>
-                <Link href="/exemple-recu" className="pro-sales-text-link">Voir un exemple de reçu <span aria-hidden="true">↗</span></Link>
+                <a href="/exemple-quittance" className="pro-sales-button pro-sales-button-primary">Voir un exemple de quittance <span aria-hidden="true">↗</span></a>
+                <a href="/exemple-recu" className="pro-sales-text-link">Voir un exemple de reçu <span aria-hidden="true">↗</span></a>
               </div>
               <p className="pro-sales-smallprint">L’exemple est fictif et ne constitue ni un justificatif réel ni un conseil juridique.</p>
               <Link href="/legal/confidentialite" className="pro-sales-quiet-link">Lire la politique de confidentialité</Link>

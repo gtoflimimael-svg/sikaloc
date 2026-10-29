@@ -1,5 +1,7 @@
 'use client'
 
+import styles from './annonce.module.css'
+
 import { useActionState, useState } from 'react'
 
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
@@ -55,7 +57,7 @@ export function PhotosAnnonce({
   }
 
   return (
-    <section className="card card-lg space-y-lg">
+    <section className={`${styles.photos} space-y-lg`}>
       <div className="flex flex-wrap items-baseline justify-between gap-sm">
         <h2 className="text-display-xs font-semibold text-ink">Photos</h2>
         <p className="text-body-sm text-mute">
@@ -124,7 +126,7 @@ export function PhotosAnnonce({
               accept="image/jpeg,image/webp"
               required
               onChange={verifier}
-              className="block w-full text-body-sm"
+              className={styles.file}
             />
             <p className="field-hint">
               JPEG ou WebP, 3 Mo au plus. La photo est réduite et nettoyée de ses métadonnées

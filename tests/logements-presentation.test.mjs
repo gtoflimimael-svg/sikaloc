@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   presenterActionAnnonce,
+  presenterLocalisationLogement,
   presenterQuotaLogements,
   peutSupprimerLogement,
   premiereRelation,
@@ -77,10 +78,16 @@ test('un logement sans bail actif ouvre le parcours réel de préparation d’an
 })
 
 test('présente le plan effectif et le quota sans inventer une limite Standard', () => {
-  assert.equal(presenterQuotaLogements('Gratuit', 0, 2), 'Plan Gratuit · 0 sur 2 logements')
-  assert.equal(presenterQuotaLogements('Gratuit', 1, 2), 'Plan Gratuit · 1 logement sur 2')
-  assert.equal(presenterQuotaLogements('Gratuit', 2, 2), 'Plan Gratuit · 2 logements sur 2')
-  assert.equal(presenterQuotaLogements('Standard', 3, null), 'Plan Standard · 3 logements')
+  assert.equal(presenterQuotaLogements('Gratuit', 0, 2), 'Gratuit · 0/2 logements')
+  assert.equal(presenterQuotaLogements('Gratuit', 1, 2), 'Gratuit · 1/2 logements')
+  assert.equal(presenterQuotaLogements('Gratuit', 2, 2), 'Gratuit · 2/2 logements')
+  assert.equal(presenterQuotaLogements('Standard', 3, null), 'Standard · 3 logements')
+})
+
+test('raccourcit la localisation au Bénin et conserve les autres pays', () => {
+  assert.equal(presenterLocalisationLogement('Appartement', 'Cotonou', 'Bénin'), 'Appartement · Cotonou')
+  assert.equal(presenterLocalisationLogement('Maison', 'Lomé', 'Togo'), 'Maison · Lomé, Togo')
+  assert.equal(presenterLocalisationLogement('Studio', '', 'Bénin'), 'Studio')
 })
 
 test('ne propose la suppression que lorsque les relations connues ne la bloquent pas', () => {

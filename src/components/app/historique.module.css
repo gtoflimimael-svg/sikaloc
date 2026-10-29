@@ -1,0 +1,11 @@
+.context { margin-block: 28px; padding-block: 24px; border-block: 1px solid var(--color-hairline); }
+.months { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.month { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 16px 8px; border-bottom: 1px solid var(--color-hairline); cursor: pointer; }
+.month[data-checked=true] { background: var(--color-canvas-sage); }
+.month:focus-within { outline: 2px solid var(--color-ink-deep); outline-offset: 2px; }
+.review { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.review section { padding-block: 20px; border-top: 2px solid var(--color-hairline-strong); }
+.review section:first-child { border-top-color: var(--color-positive-deep); }
+.review section:last-child { border-top-color: var(--color-negative-deep); }
+.title { color: var(--color-ink); font-size: 20px; font-weight: 650; outline: none; }
+@media (max-width: 639px) { .months, .review { grid-template-columns: minmax(0, 1fr); } .review { gap: 12px; } }

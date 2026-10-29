@@ -42,10 +42,26 @@ export function presenterQuotaLogements(
 ): string {
   const logement = nombre === 1 ? 'logement' : 'logements'
 
-  if (limite === null) return `Plan ${plan} · ${nombre} ${logement}`
-  if (nombre === 0) return `Plan ${plan} · 0 sur ${limite} logements`
+  if (limite === null) return `${plan} · ${nombre} ${logement}`
 
-  return `Plan ${plan} · ${nombre} ${logement} sur ${limite}`
+  return `${plan} · ${nombre}/${limite} logements`
+}
+
+/** Localisation courte : le pays est omis pour le Bénin, contexte par défaut. */
+export function presenterLocalisationLogement(
+  type: string,
+  ville: string,
+  pays: string,
+): string {
+  const paysNormalise = pays
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('fr')
+  const paysAafficher = paysNormalise && paysNormalise !== 'benin' ? pays.trim() : ''
+  const villeEtPays = [ville.trim(), paysAafficher].filter(Boolean).join(', ')
+
+  return [type.trim(), villeEtPays].filter(Boolean).join(' · ')
 }
 
 /**

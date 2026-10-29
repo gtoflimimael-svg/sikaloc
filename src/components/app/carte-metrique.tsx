@@ -39,7 +39,7 @@ export function CarteMetrique({
       </div>
       <p
         className={`metric-value ${
-          ton === 'alerte' ? 'text-negative' : 'text-ink'
+          ton === 'alerte' ? 'text-negative-darkest' : 'text-ink'
         }`}
       >
         {valeur}

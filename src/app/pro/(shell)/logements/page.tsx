@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Plus } from 'lucide-react'
 
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
-import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
+import { Alerte, Badge } from '@/components/ui/retours'
 import { supprimerLogement } from '@/lib/actions/logements'
 import { formaterFCFA } from '@/lib/format'
 import { capacites } from '@/lib/plan'
@@ -14,6 +14,7 @@ import {
   premiereRelation,
   presenterStatutAnnonce,
   presenterActionAnnonce,
+  presenterLocalisationLogement,
   presenterQuotaLogements,
   peutSupprimerLogement,
   trouverAnnonceVivante,
@@ -69,15 +70,29 @@ export default async function PageLogements() {
 
   return (
     <div className={styles.page}>
-      <EnTetePage
-        titre="Logements"
-        description="Retrouvez et gérez vos biens immobiliers."
-        action={!plafondAtteint && liste.length > 0 && !erreurLogements ? (
-          <Link href="/pro/logements/nouveau" className="btn btn-primary">
-            Ajouter un logement
-          </Link>
-        ) : undefined}
-      />
+      <header className={`${styles.header}${plafondAtteint && !erreurLogements ? ` ${styles.headerQuota}` : ''}`}>
+        <h1 className={styles.title}>Logements</h1>
+        {!erreurLogements ? (
+          <>
+            <p className={styles.capacity}>
+              {presenterQuotaLogements(capacitesBailleur.plan, liste.length, limite)}
+              {plafondAtteint ? (
+                <Link href="/pro/parametres/abonnement">Changer de plan</Link>
+              ) : null}
+            </p>
+            {!plafondAtteint ? (
+              <Link
+                href="/pro/logements/nouveau"
+                className={`btn btn-primary ${styles.addAction}`}
+                aria-label="Ajouter un logement"
+              >
+                Ajouter
+                <Plus size={17} strokeWidth={2} aria-hidden="true" />
+              </Link>
+            ) : null}
+          </>
+        ) : null}
+      </header>
 
       {erreurLogements ? (
         <Alerte ton="erreur">
@@ -93,25 +108,9 @@ export default async function PageLogements() {
             </div>
           ) : null}
 
-          <div className={styles.collectionHeading}>
-            <h2>Votre parc</h2>
-            <p className={styles.capacity}>
-              {presenterQuotaLogements(capacitesBailleur.plan, liste.length, limite)}
-              {plafondAtteint ? (
-                <Link href="/pro/parametres/abonnement">Découvrir le plan Standard</Link>
-              ) : null}
-            </p>
-          </div>
-
           {liste.length === 0 ? (
             <section className={styles.empty} aria-labelledby="empty-properties-title">
-              <div className={styles.emptyCopy}>
-                <h3 id="empty-properties-title">Ajoutez votre premier logement.</h3>
-                <p>Commencez par enregistrer un bien pour organiser sa location.</p>
-              </div>
-              <Link href="/pro/logements/nouveau" className="btn btn-primary">
-                Ajouter un logement
-              </Link>
+              <h2 id="empty-properties-title">Aucun logement pour le moment.</h2>
             </section>
           ) : (
             <ul className={styles.list} aria-label="Logements enregistrés">
@@ -123,14 +122,15 @@ export default async function PageLogements() {
                 const statutAnnonce = annonce ? presenterStatutAnnonce(annonce.statut) : null
                 const actionAnnonce = presenterActionAnnonce(annonce?.id, logement.id, Boolean(bailActif))
                 const suppressionPossible = peutSupprimerLogement(baux.length, Boolean(annonce))
+                const actionPrincipale = bailActif
+                  ? { href: `/pro/baux/${bailActif.id}`, libelle: 'Voir le bail' }
+                  : actionAnnonce
 
                 return (
                   <li key={logement.id} className={styles.property}>
                     <div className={styles.identity}>
                       <h3>{logement.adresse}</h3>
-                      <p>
-                        {logement.type} <span aria-hidden="true">·</span> {logement.ville}, {logement.pays}
-                      </p>
+                      <p>{presenterLocalisationLogement(logement.type, logement.ville, logement.pays)}</p>
                     </div>
 
                     <div className={styles.occupation}>
@@ -138,6 +138,12 @@ export default async function PageLogements() {
                         <Badge ton={bailActif ? 'positive' : 'neutral'}>
                           {bailActif ? 'Occupé' : 'Libre'}
                         </Badge>
+                        {bailActif && locataire?.nom ? (
+                          <span className={styles.tenantName}>
+                            <span className="sr-only">Locataire : </span>
+                            {locataire.nom}
+                          </span>
+                        ) : null}
                         {statutAnnonce ? (
                           <span className={styles.advertStatus} data-tone={statutAnnonce.ton}>
                             {statutAnnonce.libelle}
@@ -145,58 +151,45 @@ export default async function PageLogements() {
                         ) : null}
                       </div>
 
-                      {bailActif ? (
-                        <p className={styles.tenant}>
-                          <span>Locataire</span>
-                          <strong>{locataire?.nom ?? 'Locataire associé'}</strong>
-                        </p>
-                      ) : (
-                        <div className={styles.vacancySummary}>
-                          <p>Sans bail actif</p>
-                          {locataireDisponible ? <Link href="/pro/baux/nouveau">Créer un bail</Link> : null}
-                        </div>
-                      )}
                     </div>
 
-                    <div className={styles.rent}>
-                      <span>Loyer contractuel</span>
-                      {bailActif ? (
-                        <p>
-                          <strong>{formaterFCFA(bailActif.loyer_mensuel)}</strong>
-                          <span>/ mois</span>
-                        </p>
-                      ) : (
-                        <p className={styles.rentMissing}>
-                          <span aria-hidden="true">—</span>
-                          <span className="sr-only">Aucun loyer contractuel sans bail actif</span>
-                        </p>
-                      )}
-                    </div>
+                    {bailActif ? (
+                      <p className={styles.rent}>
+                        <span className="sr-only">Loyer contractuel : </span>
+                        <strong>{formaterFCFA(bailActif.loyer_mensuel)}</strong>
+                        <span>/mois</span>
+                      </p>
+                    ) : null}
 
                     <div className={styles.actions} role="group" aria-label={`Actions pour ${logement.adresse}`}>
-                      <Link href={`/pro/logements/${logement.id}/modifier`} className={styles.rowAction}>
-                        Modifier
-                      </Link>
-                      {bailActif ? (
+                      {actionPrincipale ? (
                         <Link
-                          href={`/pro/baux/${bailActif.id}`}
+                          href={actionPrincipale.href}
                           className={styles.rowAction}
-                          aria-label={`Voir le bail de ${locataire?.nom ?? 'ce logement'}`}
+                          aria-label={`${actionPrincipale.libelle} — ${logement.adresse}`}
                         >
-                          Voir le bail
+                          {actionPrincipale.libelle}
                         </Link>
                       ) : null}
-                      {actionAnnonce ? (
-                        <Link href={actionAnnonce.href} className={styles.rowAction}>
-                          {actionAnnonce.libelle}
-                        </Link>
-                      ) : null}
-                      {suppressionPossible ? (
-                        <details className={styles.moreActions}>
-                          <summary aria-label={`Autres actions pour ${logement.adresse}`}>
-                            <MoreHorizontal size={18} aria-hidden="true" />
-                          </summary>
-                          <div className={styles.actionMenu}>
+                      <details className={styles.moreActions}>
+                        <summary aria-label={`Plus d’actions pour ${logement.adresse}`}>
+                          <MoreHorizontal size={18} aria-hidden="true" />
+                        </summary>
+                        <div className={styles.actionMenu}>
+                          <Link href={`/pro/logements/${logement.id}/modifier`} className={styles.menuAction}>
+                            Modifier
+                          </Link>
+                          {bailActif && actionAnnonce ? (
+                            <Link href={actionAnnonce.href} className={styles.menuAction}>
+                              Gérer l’annonce
+                            </Link>
+                          ) : null}
+                          {!bailActif && locataireDisponible ? (
+                            <Link href="/pro/baux/nouveau" className={styles.menuAction}>
+                              Créer un bail
+                            </Link>
+                          ) : null}
+                          {suppressionPossible ? (
                             <ActionConfirmee
                               action={supprimerLogement.bind(null, logement.id)}
                               libelle="Supprimer le logement"
@@ -206,9 +199,9 @@ export default async function PageLogements() {
                               messageConfirmation="Cette action est définitive. Si un bail ou une annonce en cours vient d’être associé, la suppression sera refusée."
                               libelleConfirmation="Supprimer définitivement"
                             />
-                          </div>
-                        </details>
-                      ) : null}
+                          ) : null}
+                        </div>
+                      </details>
                     </div>
                   </li>
                 )

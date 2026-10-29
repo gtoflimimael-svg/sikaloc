@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { ActionConfirmee, BoutonAction } from '@/components/ui/action-confirmee'
-import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { repondreCandidature } from '@/lib/actions/candidatures-pro'
 import { LIBELLES_STATUT, libelleChambres } from '@/lib/annonces/libelles'
 import { LIBELLES_STATUT_CANDIDATURE, TON_STATUT_CANDIDATURE } from '@/lib/candidatures/messages'
@@ -12,6 +12,8 @@ import { lireNumeroPage } from '@/lib/pagination'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { CandidatureDuBailleur, StatutAnnonce } from '@/lib/types/database'
+
+import styles from './candidatures.module.css'
 
 export const metadata: Metadata = { title: 'Candidatures reçues' }
 
@@ -83,9 +85,9 @@ export default async function PageCandidaturesRecues({
   const titre = `${libelleChambres(annonce.chambres) ?? annonce.type}${annonce.quartier ? ` · ${annonce.quartier}` : ''}`
 
   return (
-    <div className="listing-candidates-page mx-auto max-w-[56rem] space-y-xl">
+    <div className={`listing-candidates-page ${styles.page}`}>
       <div>
-        <Link href={`/pro/annonces/${annonce.id}`} className="text-body-sm text-mute hover:text-ink">
+        <Link href={`/pro/annonces/${annonce.id}`} className={`text-body-sm text-mute hover:text-ink ${styles.backLink}`}>
           ← {titre}
         </Link>
       </div>
@@ -106,29 +108,52 @@ export default async function PageCandidaturesRecues({
         annonce suspendue qui a déjà reçu trois candidatures n'en recevra plus,
         et rien d'autre sur cette page ne le laisse deviner.
       */}
-      {annonce.statut !== 'publiee' ? (
+      {annonce.statut !== 'publiee' && candidatures.length > 0 ? (
         <Alerte ton={annonce.statut === 'brouillon' ? 'info' : 'attention'}>
           {attente(annonce.statut)}
         </Alerte>
       ) : null}
 
-      <p className="candidate-privacy-note text-body-sm text-mute">
-        Le candidat vous a transmis son nom et son message. Son téléphone et son adresse email ne
-        vous sont pas communiqués. Après votre décision, un email de réponse est mis en file pour
-        le candidat ; sa livraison dépend du service d’envoi et n’est pas garantie par ce clic.
-      </p>
+      <aside className={styles.privacy} aria-labelledby="candidate-privacy-title">
+        <h2 id="candidate-privacy-title">Confidentialité des candidatures</h2>
+        <div className={styles.privacyCopy}>
+          <p>
+            Vous voyez le nom et le message transmis par le candidat. Son téléphone et son adresse
+            email ne vous sont pas communiqués.
+          </p>
+          <p>
+            Après votre décision, un email de réponse est mis en file pour le candidat. Sa livraison
+            dépend du service d’envoi et n’est pas garantie par ce clic.
+          </p>
+        </div>
+      </aside>
 
       {error ? null : candidatures.length === 0 ? (
-        <EtatVide
-          titre="Aucune candidature"
-          description={
-            annonce.statut === 'publiee'
-              ? attente(annonce.statut)
-              : 'Aucune candidature n’a été reçue sur cette annonce.'
-          }
-        />
+        <section className={styles.empty} aria-labelledby="candidate-empty-title">
+          <p
+            className={styles.emptyCount}
+            aria-label={numeroPage > 1 ? 'Aucune candidature sur cette page' : 'Aucune candidature reçue'}
+          >
+            <strong aria-hidden="true">0</strong>
+            <span>{numeroPage > 1 ? 'sur cette page' : 'Candidature reçue'}</span>
+          </p>
+          <div className={styles.emptyContent}>
+            <p className={styles.emptyStatus}>{LIBELLES_STATUT[annonce.statut]}</p>
+            <h2 id="candidate-empty-title">
+              {numeroPage > 1 ? 'Fin de la liste' : 'Aucune candidature pour le moment'}
+            </h2>
+            <p>
+              {numeroPage > 1
+                ? 'Il n’y a pas d’autre candidature à afficher sur cette page.'
+                : attente(annonce.statut)}
+            </p>
+            <Link href={`/pro/annonces/${annonce.id}`} className="btn btn-secondary">
+              Gérer l’annonce
+            </Link>
+          </div>
+        </section>
       ) : (
-        <ul className="space-y-md">
+        <ul className={styles.candidateList}>
           {candidatures.map((c) => (
             <Candidature key={c.candidature_id} candidature={c} />
           ))}
@@ -185,13 +210,13 @@ function Candidature({ candidature: c }: { candidature: CandidatureDuBailleur })
   const reetudiable = c.statut === 'refusee'
 
   return (
-    <li className="listing-candidate-card card space-y-md">
-      <div className="flex flex-wrap items-start justify-between gap-sm">
+    <li className={styles.candidateItem}>
+      <div className={styles.candidateHeading}>
         <div className="min-w-0">
-          <p className="text-body-md font-semibold text-ink">
+          <p className={styles.candidateName}>
             {c.candidat_nom ?? <span className="font-normal text-mute">Candidat supprimé</span>}
           </p>
-          <p className="text-caption text-mute">
+          <p className={styles.candidateDate}>
             Candidature du {formaterDate(c.deposee_le)}
             {c.repondue_le ? ` · réponse le ${formaterDate(c.repondue_le)}` : ''}
           </p>
@@ -203,11 +228,9 @@ function Candidature({ candidature: c }: { candidature: CandidatureDuBailleur })
 
       {c.message ? (
         // Du texte, jamais du HTML : le message est écrit par le candidat.
-        <p className="whitespace-pre-line rounded-md bg-canvas-soft p-md text-body-sm text-body">
-          {c.message}
-        </p>
+        <blockquote className={styles.candidateMessage}>{c.message}</blockquote>
       ) : (
-        <p className="text-body-sm text-mute">Sans message.</p>
+        <p className={styles.candidateNoMessage}>Sans message.</p>
       )}
 
       {c.statut === 'retiree' ? (
@@ -220,7 +243,7 @@ function Candidature({ candidature: c }: { candidature: CandidatureDuBailleur })
           n’engage aucune réservation et ne crée pas de bail.
         </p>
       ) : (
-        <div className="flex flex-wrap items-start gap-md">
+        <div className={styles.candidateActions}>
           {enEtude ? (
             <BoutonAction
               action={repondre.bind(null, 'en_etude')}

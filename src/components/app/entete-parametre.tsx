@@ -1,7 +1,7 @@
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
-import { sectionParametre, type CleParametre } from '@/lib/parametres'
+import { SECTIONS_PARAMETRES, sectionParametre, type CleParametre } from '@/lib/parametres'
 
 /**
  * En-tête d'un écran de paramètre : « Paramètres / Profil ».
@@ -41,6 +41,19 @@ export function EnteteParametre({ cle }: { cle: CleParametre }) {
       <p className="mt-xs max-w-[42rem] text-body-md text-mute">
         {section.description}
       </p>
+
+      <nav aria-label="Sections des paramètres" className="settings-section-nav">
+        {SECTIONS_PARAMETRES.map((item) => (
+          <Link
+            key={item.cle}
+            href={`/pro/parametres/${item.cle}`}
+            aria-current={item.cle === cle ? 'page' : undefined}
+            className="settings-section-link"
+          >
+            {item.titre}
+          </Link>
+        ))}
+      </nav>
     </div>
   )
 }
