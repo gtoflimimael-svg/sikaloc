@@ -17,6 +17,7 @@
     "test:pro-shell": "node tests/pro-shell.test.mjs",
     "test:lot2b": "node --experimental-strip-types tests/lot2b-parcours.test.mjs",
     "test:routes": "node --test tests/route-coverage.test.mjs",
+    "test:hydration-ui": "node --test tests/hydratation-ui.test.mjs",
     "test:retour-abonnement": "node --experimental-strip-types --test tests/retour-abonnement.test.mjs",
     "test:isolation-guard": "node --test tests/isolation-guard.test.mjs",
     "verifier:migrations": "node scripts/verifier-migrations-statique.mjs",
