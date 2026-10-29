@@ -459,6 +459,24 @@ async function main() {
     throw new Error('choisissez setup, seed, dev, status, stop ou rebuild')
   }
 
+  // Le serveur reste limité à la machine par défaut. Pour un aperçu sur un
+  // téléphone du même réseau, accepter uniquement une adresse IPv4 réellement
+  // attribuée à cet ordinateur — jamais un bind générique sur toutes les
+  // interfaces.
+  let hoteServeur = '127.0.0.1'
+  if (action === 'dev' && process.env.SIKALOC_DEMO_HOST) {
+    const hoteDemande = process.env.SIKALOC_DEMO_HOST.trim()
+    const adressesLocales = Object.values(os.networkInterfaces())
+      .flatMap((interfaceReseau) => interfaceReseau ?? [])
+      .filter((interfaceReseau) => !interfaceReseau.internal && interfaceReseau.family === 'IPv4')
+      .map((interfaceReseau) => interfaceReseau.address)
+
+    if (hoteDemande !== '127.0.0.1' && !adressesLocales.includes(hoteDemande)) {
+      throw new Error('SIKALOC_DEMO_HOST doit être 127.0.0.1 ou une adresse IPv4 de cet ordinateur')
+    }
+    hoteServeur = hoteDemande
+  }
+
   if (action === 'stop') {
     const marqueur = await lireMarqueur()
     if (!marqueur) throw new Error('aucune instance dédiée reconnue; rien n’a été arrêté')
@@ -538,8 +556,12 @@ async function main() {
     console.log('Fixtures déjà présentes : les données modifiées dans l’application sont conservées.')
   }
   if (action === 'dev') {
-    console.log('Application locale démarrée sur http://localhost:3000 (pile et comptes de démonstration isolés).')
-    const processus = spawn(process.execPath, [binaireNext, 'dev', '--hostname', '127.0.0.1'], {
+    console.log(
+      hoteServeur === '127.0.0.1'
+        ? 'Application locale démarrée sur http://localhost:3000 (pile et comptes de démonstration isolés).'
+        : `Application locale accessible sur http://${hoteServeur}:3000 (réseau local, pile de démonstration isolée).`,
+    )
+    const processus = spawn(process.execPath, [binaireNext, 'dev', '--hostname', hoteServeur], {
       cwd: racine,
       env: environnementApplication(identite, secrets, marqueur.projectId),
       stdio: 'inherit',

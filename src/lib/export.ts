@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createHash } from 'node:crypto'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { zipSync } from 'fflate'
 
@@ -66,7 +67,10 @@ export interface ResultatExport {
   resume: { baux: number; loyersHistoriques: number; paiements: number; quittances: number; pdf: number; pdfManquants: number }
 }
 
-export async function exporterDonnees(bailleurId: string): Promise<ResultatExport> {
+export async function exporterDonnees(
+  bailleurId: string,
+  clientUtilisateur: SupabaseClient<Database>,
+): Promise<ResultatExport> {
   const admin = creerClientAdmin()
 
   const debut = Date.now()
@@ -123,14 +127,16 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
   const paiements = await lire('paiements')
   const quittances = await lire('quittances')
 
-  // `baux_loyers` n'a pas bailleur_id : les identifiants de bail proviennent
-  // exclusivement de la lecture propriétaire ci-dessus. Le filtrage explicite
-  // par ces identifiants conserve l'isolation même avec le client admin.
+  // `baux_loyers` retire explicitement les droits de `service_role` et n'accorde
+  // la lecture qu'à `authenticated` sous RLS. Utiliser ici le client de la
+  // session évite de contourner cette frontière; la politique limite chaque
+  // ligne aux baux de auth.uid(). Les identifiants sont également issus de la
+  // lecture propriétaire ci-dessus et le résultat reste borné à ces baux.
   const loyersHistoriques: Database['public']['Tables']['baux_loyers']['Row'][] = []
   const identifiantsBaux = (baux.data ?? []).map((bail) => bail.id)
   for (let debutLot = 0; debutLot < identifiantsBaux.length; debutLot += 100) {
     const lot = identifiantsBaux.slice(debutLot, debutLot + 100)
-    const initial = await admin
+    const initial = await clientUtilisateur
       .from('baux_loyers')
       .select('bail_id', { count: 'exact', head: true })
       .in('bail_id', lot)
@@ -141,7 +147,7 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
 
     const lignesLot: Database['public']['Tables']['baux_loyers']['Row'][] = []
     for (let offset = 0; ; offset += 500) {
-      const resultat = await admin
+      const resultat = await clientUtilisateur
         .from('baux_loyers')
         .select('*')
         .in('bail_id', lot)
@@ -160,7 +166,7 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
       if (resultat.data.length < 500) break
     }
 
-    const final = await admin
+    const final = await clientUtilisateur
       .from('baux_loyers')
       .select('bail_id', { count: 'exact', head: true })
       .in('bail_id', lot)

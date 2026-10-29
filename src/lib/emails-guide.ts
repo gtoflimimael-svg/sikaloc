@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { COULEUR_MARQUE } from '@/lib/marque'
+import { COULEUR_MARQUE, COULEUR_MARQUE_SUR_SOMBRE } from '@/lib/marque'
 
 /**
  * Emails adressés aux PROSPECTS du guide.
@@ -53,42 +53,49 @@ function rendreHtml({ titre, paragraphes, bouton, urlDesinscription }: Contenu):
   const corps = paragraphes
     .map(
       (p) =>
-        `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#3A3A3D">${p}</p>`,
+        `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#424940">${p}</p>`,
     )
     .join('')
 
   const action = bouton
     ? `<p style="margin:24px 0">
          <a href="${echapper(bouton.url)}"
-            style="display:inline-block;background:${COULEUR_MARQUE};color:#FFFFFF;
+            style="display:inline-block;background:${COULEUR_MARQUE_SUR_SOMBRE};color:#111810;
                    text-decoration:none;padding:13px 22px;border-radius:10px;
-                   font-size:15px;font-weight:600">${echapper(bouton.libelle)}</a>
+                   font-size:15px;line-height:1.3;font-weight:600">${echapper(bouton.libelle)}</a>
        </p>`
     : ''
 
   const pied = urlDesinscription
-    ? `<p style="margin:0;font-size:12px;line-height:1.6;color:#82828E">
+    ? `<p style="margin:0;font-size:13px;line-height:1.6;color:#636D63">
          Vous recevez ce message parce que vous avez demandé le guide sur
-         <a href="${site()}" style="color:#82828E">sikaloc.com</a> et confirmé votre adresse.
-         <a href="${echapper(urlDesinscription)}" style="color:#82828E">Me désinscrire</a> —
+         <a href="${site()}" style="color:#636D63">sikaloc.com</a> et confirmé votre adresse.
+         <a href="${echapper(urlDesinscription)}" style="color:#636D63">Me désinscrire</a> —
          effet immédiat, sans justification.
        </p>`
-    : `<p style="margin:0;font-size:12px;line-height:1.6;color:#82828E">
+    : `<p style="margin:0;font-size:13px;line-height:1.6;color:#636D63">
          Ce message a été envoyé parce que cette adresse a été saisie sur
-         <a href="${site()}" style="color:#82828E">sikaloc.com</a>.
+         <a href="${site()}" style="color:#636D63">sikaloc.com</a>.
          Si ce n'était pas vous, ignorez-le : sans confirmation de votre part,
          l'adresse est effacée et rien d'autre ne vous sera envoyé.
        </p>`
 
   return `<!doctype html>
-<html lang="fr"><body style="margin:0;padding:24px;background:#F4F4FB;
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${echapper(titre)}</title>
+</head>
+<body style="margin:0;padding:24px;background:#EAF1E7;
       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-  <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:14px;padding:32px">
+  <div lang="fr" dir="ltr" style="max-width:560px;margin:0 auto;background:#FFFFFF;
+      border:1px solid #D6E0D2;border-radius:16px;padding:28px 24px;box-sizing:border-box">
     <p style="margin:0 0 24px;font-size:19px;font-weight:700;color:${COULEUR_MARQUE}">Sikaloc</p>
-    <h1 style="margin:0 0 18px;font-size:21px;line-height:1.3;color:#131314">${echapper(titre)}</h1>
+    <h1 style="margin:0 0 18px;font-size:21px;line-height:1.3;color:#111810">${echapper(titre)}</h1>
     ${corps}
     ${action}
-    <hr style="border:none;border-top:1px solid #D8D8E6;margin:28px 0 18px">
+    <hr style="border:none;border-top:1px solid #D6E0D2;margin:28px 0 18px">
     ${pied}
   </div>
 </body></html>`
