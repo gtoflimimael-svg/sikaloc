@@ -35,6 +35,7 @@
     "demo:dev": "node scripts/demo/local.mjs dev",
     "demo:status": "node scripts/demo/local.mjs status",
     "demo:stop": "node scripts/demo/local.mjs stop",
+    "verifier:sikaloc-test": "node scripts/recette-sikaloc-test.mjs --preflight",
     "dev:sikaloc-test": "node scripts/recette-sikaloc-test.mjs",
     "test:recette-sikaloc-launcher": "node --test tests/recette-sikaloc-launcher.test.mjs",
     "verifier:schema": "tsx scripts/verifier-schema.ts",
