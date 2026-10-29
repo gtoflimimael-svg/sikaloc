@@ -35,6 +35,8 @@
     "demo:dev": "node scripts/demo/local.mjs dev",
     "demo:status": "node scripts/demo/local.mjs status",
     "demo:stop": "node scripts/demo/local.mjs stop",
+    "dev:sikaloc-test": "node scripts/recette-sikaloc-test.mjs",
+    "test:recette-sikaloc-launcher": "node --test tests/recette-sikaloc-launcher.test.mjs",
     "verifier:schema": "tsx scripts/verifier-schema.ts",
     "banc:signature": "node scripts/banc-signature.cjs",
     "banc:parcours": "node scripts/banc-parcours-signature.cjs",
