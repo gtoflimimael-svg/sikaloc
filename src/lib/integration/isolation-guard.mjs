@@ -35,3 +35,19 @@ export function verifierIntention(env) {
   }
   return id.toLowerCase()
 }
+
+/** Compare les versions réellement appliquées à celles du dépôt courant. */
+export function verifierHistoriqueMigrations(fichiers, historique) {
+  const versions = fichiers.filter((nom) => nom.endsWith('.sql')).map((nom) => {
+    const correspondance = nom.match(/^(\d{14})_.+\.sql$/)
+    if (!correspondance) throw new Error('Nom de migration locale invalide.')
+    return correspondance[1]
+  }).sort()
+  const appliquees = historique ? historique.split(',').sort() : []
+  if (!versions.length || new Set(versions).size !== versions.length ||
+      appliquees.length !== versions.length ||
+      appliquees.some((version, index) => version !== versions[index])) {
+    throw new Error('Les versions des migrations locales et de la pile jetable diffèrent.')
+  }
+  return versions.length
+}

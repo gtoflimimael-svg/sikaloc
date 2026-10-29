@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
+import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { verifierIntention, verifierUrlLocale } from '../src/lib/integration/isolation-guard.mjs'
+import { verifierHistoriqueMigrations, verifierIntention, verifierUrlLocale } from '../src/lib/integration/isolation-guard.mjs'
 
 // Ne lit jamais DATABASE_URL ni les variables de connexion d'une application.
 // Une pile fraîche doit porter un marqueur créé manuellement après contrôle de
@@ -37,8 +38,9 @@ try {
   const marqueur = lire(`select id::text from sikaloc_test_guard.instance
     where id = '${instanceId}'::uuid and disposable is true`)
   if (marqueur !== instanceId) throw new Error('Marqueur de pile jetable non confirmé.')
-  const migrations = Number(lire('select count(*) from supabase_migrations.schema_migrations'))
-  if (migrations !== 57) throw new Error('Les 57 migrations ne sont pas présentes sur cette pile.')
+  const fichiers = readdirSync(new URL('../supabase/migrations/', import.meta.url))
+  const historique = lire("select coalesce(string_agg(version::text, ',' order by version), '') from supabase_migrations.schema_migrations")
+  verifierHistoriqueMigrations(fichiers, historique)
 } catch (error) {
   process.stderr.write(`${error.message}\n`)
   process.exit(2)

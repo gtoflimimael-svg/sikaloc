@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { verifierIntention, verifierUrlLocale } from '../src/lib/integration/isolation-guard.mjs'
+import { verifierHistoriqueMigrations, verifierIntention, verifierUrlLocale } from '../src/lib/integration/isolation-guard.mjs'
 
 test('seule la base locale sur le port Supabase de test est admise', () => {
   assert.equal(verifierUrlLocale('postgresql://postgres@127.0.0.1:54322/postgres').host, '127.0.0.1')
@@ -23,6 +23,17 @@ test('le marqueur explicite de pile jetable est obligatoire', () => {
   }), id)
   assert.throws(() => verifierIntention({ SIKALOC_INTEGRATION_INSTANCE_ID: id }), /refusée/)
   assert.throws(() => verifierIntention({ SIKALOC_INTEGRATION_TARGET: 'ephemeral-local' }), /absent/)
+})
+
+test('les versions de migration doivent correspondre exactement au dépôt', () => {
+  const fichiers = ['20261022090000_initial.sql', '20261022231507_questions.sql']
+  assert.equal(verifierHistoriqueMigrations(fichiers, '20261022090000,20261022231507'), 2)
+  assert.throws(() => verifierHistoriqueMigrations(fichiers, '20261022090000'), /diffèrent/)
+  assert.throws(() => verifierHistoriqueMigrations(fichiers, '20261022090000,20261022231507,20261023000000'), /diffèrent/)
+  assert.throws(() => verifierHistoriqueMigrations(fichiers, '20261022090000,20261022231508'), /diffèrent/)
+  assert.throws(() => verifierHistoriqueMigrations([...fichiers, '20261022090000_autre.sql'], '20261022090000,20261022231507'), /diffèrent/)
+  assert.throws(() => verifierHistoriqueMigrations(['incorrect.sql'], ''), /invalide/)
+  assert.throws(() => verifierHistoriqueMigrations([], ''), /diffèrent/)
 })
 
 test('le démarrage habituel utilise la pile Supabase locale isolée', () => {
