@@ -5,7 +5,11 @@ import { extraire } from '../scripts/generer-objets-schema.ts'
 import { OBJETS_DECLARES } from '../src/lib/schema-objets.ts'
 
 test('l’inventaire embarqué correspond aux migrations du dépôt', () => {
-  assert.deepEqual(OBJETS_DECLARES, extraire())
+  // L'ordre d'affichage peut varier selon la locale et la version d'ICU.
+  const normaliser = (objets) => objets
+    .map(({ categorie, nom, migration }) => JSON.stringify([categorie, nom, migration]))
+    .sort()
+  assert.deepEqual(normaliser(OBJETS_DECLARES), normaliser(extraire()))
 })
 
 test('l’inventaire comprend les objets essentiels des migrations récentes', () => {
