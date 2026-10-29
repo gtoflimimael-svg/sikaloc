@@ -73,11 +73,10 @@ export default async function PageEntrer({
         </div>
 
         {/*
-          Une colonne sur téléphone, deux à partir de la tablette. Les cartes
-          sont des liens entiers : sur mobile, viser un petit bouton à
-          l'intérieur d'une carte est le meilleur moyen de rater sa cible.
+          Une colonne sur téléphone, deux à partir de la tablette. Chaque
+          choix conserve une grande zone de lien facile à viser au doigt.
         */}
-        <div className="grid gap-lg md:grid-cols-2">
+        <div className="grid gap-0 md:grid-cols-2 md:gap-8">
           <CarteEspace
             espace={ESPACE_PRO}
             icone={<Building2 size={26} strokeWidth={1.75} aria-hidden="true" />}
@@ -131,10 +130,10 @@ function CarteEspace({
 }) {
   return (
     <div
-      className="card card-lg flex flex-col anim-monte transition-shadow hover:shadow-lg"
+      className="space-choice flex flex-col anim-monte"
       style={{ animationDelay: '80ms' }}
     >
-      <Link href={destination} className="group flex-1">
+      <Link href={destination} className="group flex-1 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
         <span className="flex size-12 items-center justify-center rounded-md bg-canvas-sage text-primary">
           {icone}
         </span>
@@ -161,12 +160,7 @@ function CarteEspace({
 
         <span className="mt-xl inline-flex items-center gap-xs text-body-md font-semibold text-ink">
           Continuer
-          <ArrowRight
-            size={17}
-            strokeWidth={2.25}
-            aria-hidden="true"
-            className="transition-transform group-hover:translate-x-1"
-          />
+          <ArrowRight size={17} strokeWidth={2.25} aria-hidden="true" />
         </span>
       </Link>
 

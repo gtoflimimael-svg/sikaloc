@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import styles from '@/components/find/parcours.module.css'
 import { redirect } from 'next/navigation'
 
 import { FormulaireProfilCandidat, VerificationTelephoneCandidat } from '@/components/find/candidature'
 import { EnTeteFind, PiedDePageFind } from '@/components/find/navigation'
-import { Alerte, Badge, EtatVide } from '@/components/ui/retours'
+import { Alerte, Badge } from '@/components/ui/retours'
 import {
   demanderCodeCandidat,
   enregistrerProfilCandidat,
@@ -48,35 +49,31 @@ export default async function PageMesCandidatures() {
   const candidatures = (lignes ?? []) as CandidatureDuCandidat[]
 
   return (
-    <div className="me-candidatures-page flex min-h-screen flex-col bg-canvas-soft">
+    <div className={`me-candidatures-page flex flex-col ${styles.root}`}>
       <EnTeteFind connecte />
 
-      <main id="contenu" className="app-main flex-1">
+      <main id="contenu" className={`${styles.candidateMain} w-full flex-1`}>
         <div className="mx-auto max-w-[900px] space-y-2xl">
-          <header className="rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
-            <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Suivi personnel</p>
-            <h1 className="mt-xs page-title text-on-dark">
+          <header className={styles.candidateHeading}>
+            <p>Suivi personnel</p>
+            <h1 className="page-title">
               Mes candidatures
             </h1>
-            <p className="mt-sm text-body-md text-on-dark-mute">
+            <p>
               Le bailleur voit votre nom et votre message. Ni votre téléphone, ni votre email.
             </p>
           </header>
 
           {erreurCandidatures ? <Alerte ton="erreur">Vos candidatures n’ont pas pu être chargées. Réessayez dans un instant.</Alerte> : candidatures.length === 0 ? (
-            <EtatVide
-              titre="Aucune candidature"
-              description="Parcourez les logements publiés sur Sikaloc_Find : vous pourrez candidater depuis la fiche d’une annonce."
-              action={
-                <Link href="/find" className="btn btn-primary">
-                  Voir les logements
-                </Link>
-              }
-            />
+            <section className={styles.candidateEmpty} aria-labelledby="candidatures-vides">
+              <h2 id="candidatures-vides">Aucune candidature pour le moment</h2>
+              <p>Parcourez les logements publiés sur Sikaloc Find. Vous pourrez candidater depuis la fiche d’une annonce.</p>
+              <Link href="/find" className="btn btn-primary">Voir les logements</Link>
+            </section>
           ) : (
-            <ul className="space-y-md">
+            <ul>
               {candidatures.map((c) => (
-                <li key={c.candidature_id} className="card list-card list-row shadow-sm">
+                <li key={c.candidature_id} className={`${styles.candidateSection} list-row`}>
                   <div className="list-copy min-w-0">
                     <p className="text-body-md font-semibold text-ink">
                       {c.annonce_type}
@@ -111,7 +108,7 @@ export default async function PageMesCandidatures() {
 
           {erreurProfil ? <Alerte ton="erreur">Votre profil n’a pas pu être chargé. Rechargez la page avant de le modifier.</Alerte> : null}
           {profil?.telephone ? (
-            <section className="card card-lg">
+            <section className={styles.candidateSection}>
               <h2 className="section-title">Mon numéro</h2>
               <p className="mt-sm mb-lg text-body-sm text-body">
                 Lorsque le canal est disponible, un numéro vérifié et votre accord permettent
@@ -127,7 +124,7 @@ export default async function PageMesCandidatures() {
             </section>
           ) : null}
 
-          {!erreurProfil ? <section className="card card-lg">
+          {!erreurProfil ? <section className={styles.candidateSection}>
             <h2 className="section-title">Mon profil</h2>
             <p className="mt-sm mb-lg text-body-sm text-body">
               Ces informations servent à vos candidatures. Vous pouvez les corriger à tout moment.

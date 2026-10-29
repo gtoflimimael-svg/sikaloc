@@ -1,8 +1,9 @@
-import { ArrowRight, CircleHelp, House, Phone, TriangleAlert } from 'lucide-react'
+import { ArrowRight, CircleHelp, House, Phone } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { BadgeLoyer } from '@/components/me/etat-loyer'
+import styles from '@/components/me/espace.module.css'
 import { Alerte } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import {
@@ -57,17 +58,17 @@ export default async function PageAccueilMe() {
 
   return (
     <div className="space-y-xl">
-      <div className="me-dashboard-hero rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
-        <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre espace personnel</p>
-        <h1 className="mt-xs page-title text-on-dark">
+      <header className={styles.greeting}>
+        <p className={styles.introKicker}>Votre espace personnel</p>
+        <h1 className="page-title">
           Bonjour {nom.split(' ')[0]}
         </h1>
-        <p className="mt-xs text-body-md text-on-dark-mute">
+        <p>
           {baux.length > 1
             ? `Vos ${baux.length} locations, et où en sont vos loyers.`
             : 'Votre logement, et où en sont vos loyers.'}
         </p>
-      </div>
+      </header>
 
       {/*
         Le retard d'abord, et seulement s'il existe. Un bandeau permanent
@@ -76,8 +77,6 @@ export default async function PageAccueilMe() {
       */}
       {enRetard.length > 0 ? (
         <Alerte ton="attention">
-          <span className="flex items-start gap-sm">
-            <TriangleAlert size={17} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             <span>
               <strong>
                 {enRetard.length === 1
@@ -88,11 +87,10 @@ export default async function PageAccueilMe() {
               total. Si vous avez déjà réglé, signalez-le à votre bailleur : lui
               seul peut l’enregistrer.
             </span>
-          </span>
         </Alerte>
       ) : null}
 
-      <div className="flex flex-wrap gap-sm" aria-label="Accès rapides">
+      <div className={styles.quickActions} aria-label="Accès rapides">
         <Link href="/me/loyers" className="btn btn-primary">Consulter mes loyers</Link>
         <Link href="/me/paiements" className="btn btn-secondary">Paiements et documents</Link>
         <Link href="/me/bail" className="btn btn-tertiary">Mon bail</Link>
@@ -111,7 +109,7 @@ export default async function PageAccueilMe() {
         dit noir sur blanc.
       */}
       {indeterminees.length > 0 ? (
-        <section className="card list-card">
+        <section className={styles.historyNote}>
           <p className="flex items-start gap-sm text-body-md font-semibold text-ink">
             <CircleHelp size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             {indeterminees.length === 1
@@ -153,16 +151,16 @@ function CarteBail({
   ).length
 
   return (
-    <section className="card list-card overflow-hidden border-l-4 border-l-primary shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-lg">
+    <section className={styles.homeLease}>
+      <div className={styles.homeLeaseHeading}>
         <div className="min-w-0 list-copy">
           <p className="flex items-center gap-sm text-caption text-mute">
             <House size={15} strokeWidth={2} aria-hidden="true" />
             {bail.logement_type}
           </p>
-          <p className="mt-xs section-title list-copy">
+          <h2 className="mt-xs section-title list-copy">
             {bail.logement_adresse}
-          </p>
+          </h2>
           <p className="text-body-sm text-mute">
             {bail.logement_ville}, {bail.logement_pays}
           </p>
@@ -177,7 +175,7 @@ function CarteBail({
       </div>
 
       {/* ── Où en est ce bail ────────────────────────────────────────────── */}
-      <div className="mt-lg rounded-md bg-canvas-soft p-md">
+      <div className={styles.nextDue}>
         {resilie ? (
           <p className="text-body-md text-mute">
             Ce bail est <strong className="text-ink">résilié</strong>. Les
@@ -187,7 +185,7 @@ function CarteBail({
           </p>
         ) : prochaine ? (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-md">
+            <div className={styles.nextDueHeading}>
               <div>
                 <p className="text-caption text-mute">
                   {prochaine.etat === 'Impayé' ? 'Loyer le plus ancien non réglé' : 'Prochain loyer'}
@@ -208,7 +206,7 @@ function CarteBail({
                     : null}
                 </p>
               </div>
-              <div className="text-right">
+              <div className={styles.nextDueAmount}>
                 <BadgeLoyer etat={prochaine.etat} />
                 <p className="mt-sm text-title-lg font-semibold money text-ink">
                   {formaterFCFA(prochaine.montant_du)}
@@ -221,7 +219,7 @@ function CarteBail({
             </p>
 
             {du > 0 && du !== Number(prochaine.montant_du) ? (
-              <p className="mt-sm text-body-sm font-semibold text-negative">
+              <p className="mt-sm text-body-sm font-semibold text-negative-darkest">
                 Total en retard sur ce logement : {formaterFCFA(du)}
               </p>
             ) : null}
@@ -252,7 +250,7 @@ function CarteBail({
       </div>
 
       {/* ── Qui contacter ────────────────────────────────────────────────── */}
-      <div className="mt-lg flex flex-wrap items-center justify-between gap-md">
+      <div className={styles.contact}>
         <div className="text-body-sm">
           <span className="text-mute">Bailleur : </span>
           <span className="font-semibold text-ink">{bail.bailleur_nom}</span>

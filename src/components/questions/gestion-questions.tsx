@@ -130,10 +130,10 @@ export function GestionQuestions({ questions, filtre }: { questions: QuestionVis
                 </a>
               </div>
               <footer className="questions-admin-item-actions">
-                <button type="button" disabled={enCours === question.id} onClick={() => void changerStatut(question)}>
-                  {question.statut === 'nouvelle' ? 'Prendre en charge' : question.statut === 'en_cours' ? 'Marquer comme répondue' : 'Réouvrir'}
+                <button type="button" disabled={enCours !== null} onClick={() => void changerStatut(question)}>
+                  {enCours === question.id ? 'Traitement…' : question.statut === 'nouvelle' ? 'Prendre en charge' : question.statut === 'en_cours' ? 'Marquer comme répondue' : 'Réouvrir'}
                 </button>
-                <button type="button" className="questions-admin-delete" disabled={enCours === question.id} onClick={() => void supprimer(question)}>
+                <button type="button" className="questions-admin-delete" disabled={enCours !== null} onClick={() => void supprimer(question)}>
                   <Trash2 size={15} aria-hidden="true" /> Supprimer
                 </button>
               </footer>

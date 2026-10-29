@@ -1,4 +1,3 @@
-import { AlertTriangle } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -204,10 +203,7 @@ function Refus({ message }: { message: string }) {
     <CarteAuth titre="Invitation non valable">
       <div className="space-y-xl">
         <Alerte ton="attention">
-          <span className="flex items-start gap-sm">
-            <AlertTriangle size={17} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
-            {message}
-          </span>
+          {message}
         </Alerte>
 
         <p className="text-body-sm text-mute">

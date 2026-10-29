@@ -2,6 +2,7 @@ import { Banknote, Download } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
 import { EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { mesBaux, mesPaiements } from '@/lib/locataire'
@@ -44,7 +45,7 @@ export default async function PagePaiements() {
           description="Dès que votre bailleur enregistrera un versement, il apparaîtra ici avec sa quittance."
         />
       ) : (
-        <ul aria-label="Paiements enregistrés" className="space-y-md">
+        <ul aria-label="Paiements enregistrés" className={styles.paymentList}>
           {paiements.map((paiement) => (
             <LignePaiement
               key={paiement.paiement_id}
@@ -75,7 +76,7 @@ function LignePaiement({
   montrerAdresse: boolean
 }) {
   return (
-    <li className="me-payment-card card list-card shadow-sm">
+    <li className={styles.paymentRow}>
       <div className="flex flex-wrap items-start justify-between gap-md">
         <div className="min-w-0 list-copy">
           <p className="text-body-md font-semibold text-ink">

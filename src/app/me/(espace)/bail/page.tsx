@@ -2,6 +2,7 @@ import { FileText, Phone } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
 import { Badge } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import { mesBaux } from '@/lib/locataire'
@@ -53,10 +54,10 @@ export default async function PageBail() {
 function CarteDetail({ bail }: { bail: BailLocataire }) {
   const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   return (
-    <section className="me-contract-card overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
-      <header className="flex flex-wrap items-start justify-between gap-md border-b border-hairline bg-canvas-sage p-lg">
+    <section className={styles.contract}>
+      <header className={styles.contractHeading}>
         <div className="min-w-0">
-          <p className="section-title list-copy">{bail.logement_adresse}</p>
+          <h2 className="section-title list-copy">{bail.logement_adresse}</h2>
           <p className="text-body-sm text-mute">
             {bail.logement_type} · {bail.logement_ville}, {bail.logement_pays}
           </p>
@@ -64,7 +65,7 @@ function CarteDetail({ bail }: { bail: BailLocataire }) {
         <Badge ton={bail.statut === 'Actif' ? 'positive' : 'neutral'}>{bail.statut}</Badge>
       </header>
 
-      <dl className="divide-y divide-hairline-soft">
+      <dl className={styles.contractFacts}>
         <Ligne terme="Locataire" definition={bail.locataire_nom} />
         <Ligne terme="Loyer mensuel" definition={formaterFCFA(bail.loyer_mensuel)} montant />
         <Ligne
@@ -91,7 +92,7 @@ function CarteDetail({ bail }: { bail: BailLocataire }) {
         ) : null}
       </dl>
 
-      <footer className="flex flex-wrap items-center justify-between gap-md border-t border-hairline bg-canvas-soft p-lg">
+      <footer>
         <div>
           <p className="text-caption text-mute">Votre bailleur</p>
           <p className="mt-xxs text-body-md font-semibold text-ink">{bail.bailleur_nom}</p>

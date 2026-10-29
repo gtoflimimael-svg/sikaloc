@@ -1,6 +1,7 @@
 import { CheckCircle2 } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import styles from '@/components/find/parcours.module.css'
 import { notFound } from 'next/navigation'
 
 import {
@@ -101,7 +102,7 @@ export default async function PageCandidater({
   }
 
   return (
-    <div className="find-application-page min-h-screen bg-canvas-soft">
+    <div className={styles.root}>
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
       {!utilisateur ? (
@@ -130,20 +131,20 @@ export default async function PageCandidater({
           />
         </ExperienceInscription>
       ) : (
-        <main id="contenu" className="mx-auto max-w-[48rem] app-main">
+        <main id="contenu" className={styles.applicationMain}>
           <Link href={`/find/${reference}`} className="text-body-sm text-mute hover:text-ink">
             ← Revenir à l’annonce
           </Link>
 
-          <section className="find-application-context mt-lg rounded-xl bg-surface-dark p-lg text-on-dark sm:p-xl">
-            <p className="text-caption font-semibold uppercase tracking-[.12em] text-primary">Votre candidature · Réf. {annonce.reference}</p>
-            <h1 className="mt-xs page-title text-on-dark">{titre}</h1>
-            <p className="mt-sm list-copy text-body-md text-on-dark-mute">
+          <section className={styles.hero}>
+            <p>Votre candidature · Réf. {annonce.reference}</p>
+            <h1>{titre}</h1>
+            <p className={styles.location}>
               {lieu} · {formaterFCFA(annonce.loyer)} / mois · Réf. {annonce.reference}
             </p>
           </section>
 
-          <section aria-label="Étape de la candidature" className="mt-lg card card-lg">
+          <section aria-label="Étape de la candidature" className={styles.applicationForm}>
             {!profilCandidat ? (
               <>
                 <h2 className="section-title">Complétez votre profil</h2>

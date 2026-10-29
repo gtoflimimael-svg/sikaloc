@@ -2,7 +2,7 @@
 
 import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { LIBELLES_EQUIPEMENT } from '@/lib/annonces/libelles'
 import type { Filtres } from '@/lib/find/recherche'
@@ -30,8 +30,12 @@ export function FiltresFind({
     Number(filtres.surfaceMax !== undefined) +
     Number(Boolean(filtres.disponible)) +
     filtres.equipements.length
+  const [rechercheEnCours, setRechercheEnCours] = useState(false)
   const [ouvert, setOuvert] = useState(filtresAvancesActifs > 0)
-  const panneau = useId()
+  // Les filtres sont un exemplaire unique sur la page Find. Des identifiants
+  // déterministes garantissent que les associations `label`/champ et
+  // `aria-controls` restent identiques entre le HTML serveur et l’hydratation.
+  const panneau = 'find-filtres-avances'
   const declencheur = useRef<HTMLButtonElement>(null)
   const formulaire = useRef<HTMLFormElement>(null)
   const focaliserPremierFiltre = useRef(false)
@@ -51,6 +55,19 @@ export function FiltresFind({
     formulaire.current?.querySelector<HTMLElement>('[data-first-advanced="true"]')?.focus()
     focaliserPremierFiltre.current = false
   }, [ouvert])
+
+  useEffect(() => {
+    // Le retour navigateur peut restaurer le formulaire depuis le bfcache.
+    const restaurer = () => {
+      setRechercheEnCours(false)
+      formulaire.current?.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-vide-soumis]').forEach((control) => {
+        control.disabled = false
+        delete control.dataset.videSoumis
+      })
+    }
+    window.addEventListener('pageshow', restaurer)
+    return () => window.removeEventListener('pageshow', restaurer)
+  }, [])
 
   function basculerFiltres() {
     if (ouvert) {
@@ -75,6 +92,7 @@ export function FiltresFind({
       className="find-search-form"
       role="search"
       aria-label="Rechercher un logement"
+      aria-busy={rechercheEnCours}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && ouvert) {
           event.preventDefault()
@@ -82,11 +100,15 @@ export function FiltresFind({
         }
       }}
       onSubmit={(event) => {
+        setRechercheEnCours(true)
         // Les champs vides ne doivent pas polluer l’URL. Le navigateur
         // construit et soumet toujours la recherche par GET.
         for (const element of Array.from(event.currentTarget.elements)) {
           const control = element as HTMLInputElement | HTMLSelectElement
-          if (control.name && 'value' in control && control.value === '') control.disabled = true
+          if (control.name && 'value' in control && control.value === '') {
+            control.dataset.videSoumis = 'true'
+            control.disabled = true
+          }
         }
       }}
     >
@@ -152,7 +174,7 @@ export function FiltresFind({
 
         <button type="submit" className="btn btn-primary find-search-submit">
           <Search size={18} aria-hidden="true" />
-          Rechercher
+          {rechercheEnCours ? 'Recherche…' : 'Rechercher'}
         </button>
       </div>
 
@@ -170,7 +192,7 @@ export function FiltresFind({
           {nbFiltresActifs > 0 ? <span className="find-filter-count">{nbFiltresActifs}</span> : null}
           <ChevronDown size={16} aria-hidden="true" className={ouvert ? 'is-open' : ''} />
         </button>
-        <p className="find-search-note">Les résultats correspondent aux annonces publiées.</p>
+        <p className="find-search-note" role="status">{rechercheEnCours ? 'Recherche des annonces en cours…' : 'Les résultats correspondent aux annonces publiées.'}</p>
       </div>
 
       <section id={panneau} hidden={!ouvert} aria-label="Filtres avancés" className="find-advanced-panel">

@@ -18,6 +18,7 @@ import { SikalocSpaceBrand } from '@/components/ui/logo'
 import { SelecteurTheme } from '@/components/ui/theme'
 import { deconnecter } from '@/lib/actions/auth'
 import { ESPACE_ME } from '@/lib/roles'
+import styles from './espace.module.css'
 
 /**
  * La navigation de Sikaloc_Me.
@@ -26,8 +27,7 @@ import { ESPACE_ME } from '@/lib/roles'
  *
  * Pas de barre latérale, pas de tiroir. Sikaloc_Pro en a besoin : sept
  * rubriques, un compteur d'impayés, une action principale. Ici il y a cinq
- * écrans dont un seul porte un réglage — une barre d'onglets suffit, et elle
- * défile sur la largeur d'un téléphone sans rien replier.
+ * écrans dont un seul porte un réglage — une barre d'onglets suffit.
  *
  * C'est le public qui commande : un bailleur gère depuis un bureau autant que
  * depuis son téléphone, un locataire consulte presque toujours depuis son
@@ -35,17 +35,17 @@ import { ESPACE_ME } from '@/lib/roles'
  *
  * ─── Un seul repère de navigation, jamais deux ──────────────────────────────
  *
- * Les onglets défilent horizontalement plutôt que de passer dans un menu : un
- * menu caché ferait disparaître la moitié de l'espace derrière un geste à
- * découvrir, alors que le défilement se voit.
+ * Les cinq rubriques restent visibles au téléphone grâce à des libellés courts.
+ * Le compte qui possède aussi un rôle candidat garde un sixième accès et le
+ * défilement horizontal; l’onglet courant reste amené dans la zone visible.
  */
 
 const ONGLETS = [
-  { href: ESPACE_ME.racine, libelle: 'Accueil', Icone: House },
-  { href: `${ESPACE_ME.racine}/loyers`, libelle: 'Mes loyers', Icone: CalendarDays },
-  { href: `${ESPACE_ME.racine}/paiements`, libelle: 'Mes paiements', Icone: Banknote },
-  { href: `${ESPACE_ME.racine}/bail`, libelle: 'Mon bail', Icone: ScrollText },
-  { href: `${ESPACE_ME.racine}/preferences`, libelle: 'Préférences', Icone: SlidersHorizontal },
+  { href: ESPACE_ME.racine, libelle: 'Accueil', court: 'Accueil', Icone: House },
+  { href: `${ESPACE_ME.racine}/loyers`, libelle: 'Mes loyers', court: 'Loyers', Icone: CalendarDays },
+  { href: `${ESPACE_ME.racine}/paiements`, libelle: 'Mes paiements', court: 'Paiements', Icone: Banknote },
+  { href: `${ESPACE_ME.racine}/bail`, libelle: 'Mon bail', court: 'Bail', Icone: ScrollText },
+  { href: `${ESPACE_ME.racine}/preferences`, libelle: 'Préférences', court: 'Réglages', Icone: SlidersHorizontal },
 ]
 
 /** `/me` ne doit s'activer que sur lui-même, pas sur `/me/loyers`. */
@@ -117,8 +117,8 @@ export function EnTeteMe({
         aria-label="Sections locataires"
         className="mx-auto max-w-[900px] overflow-x-auto px-md sm:px-lg"
       >
-        <ul className="flex min-w-max gap-xs pb-xs">
-          {[...ONGLETS, ...(aussiCandidat ? [{ href: '/me/candidatures', libelle: 'Candidatures', Icone: Send }] : [])].map(({ href, libelle, Icone }) => {
+        <ul className={`${styles.tabs} ${aussiCandidat ? styles.tabsExtended : ''}`}>
+          {[...ONGLETS, ...(aussiCandidat ? [{ href: '/me/candidatures', libelle: 'Candidatures', court: 'Demandes', Icone: Send }] : [])].map(({ href, libelle, court, Icone }) => {
             const actif = estActif(href, chemin)
             return (
               <li key={href}>
@@ -126,14 +126,12 @@ export function EnTeteMe({
                   href={href}
                   prefetch
                   aria-current={actif ? 'page' : undefined}
-                  className={`inline-flex items-center min-h-11 gap-xs whitespace-nowrap border-b-2 px-sm py-sm text-body-sm transition-colors rounded-t-md ${
-                    actif
-                      ? 'border-primary bg-primary-pale font-semibold text-ink'
-                      : 'border-transparent text-mute hover:text-ink'
-                  }`}
+                  className={styles.tab}
+                  aria-label={libelle}
                 >
                   <Icone size={17} strokeWidth={1.9} aria-hidden="true" />
-                  {libelle}
+                  <span className={styles.shortLabel}>{court}</span>
+                  <span className={styles.longLabel}>{libelle}</span>
                 </Link>
               </li>
             )

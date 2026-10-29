@@ -6,6 +6,7 @@ import { BoutonSoumettre } from '@/components/ui/boutons'
 import { Alerte } from '@/components/ui/retours'
 import { definirMesNotifications } from '@/lib/actions/preferences-locataire'
 import type { EtatFormulaire } from '@/lib/validation'
+import styles from './espace.module.css'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
@@ -23,7 +24,7 @@ export function FormulairePreferencesLocataire({ actif }: { actif: boolean }) {
   const [etat, action, enCours] = useActionState(definirMesNotifications, ETAT_INITIAL)
 
   return (
-    <form action={action} className="card space-y-lg" aria-label="Préférences de notification" aria-busy={enCours} onReset={e => e.preventDefault()}>
+    <form action={action} className={`${styles.preferences} space-y-lg`} aria-label="Préférences de notification" aria-busy={enCours} onReset={e => e.preventDefault()}>
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
       {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 

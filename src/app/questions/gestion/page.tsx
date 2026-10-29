@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { EnteteEditorial } from '@/components/marketing/entete-editorial'
 import { notFound, redirect } from 'next/navigation'
 
 import { GestionQuestions } from '@/components/questions/gestion-questions'
@@ -46,7 +47,9 @@ export default async function PageGestionQuestions({ searchParams }: Props) {
   }
 
   return (
-    <main className="questions-admin-page">
+    <>
+      <EnteteEditorial contexte="Espace interne" action={{ href: "/", libelle: "Accueil" }} />
+    <main id="contenu" className="questions-admin-page">
       <div className="questions-admin-layout">
         <header className="questions-admin-heading">
           <p className="question-form-eyebrow">Sikaloc · Espace interne</p>
@@ -63,5 +66,6 @@ export default async function PageGestionQuestions({ searchParams }: Props) {
         )}
       </div>
     </main>
+    </>
   )
 }

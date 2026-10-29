@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 
 import { BadgeLoyer } from '@/components/me/etat-loyer'
 import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
 import { EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import {
@@ -94,7 +95,7 @@ export default async function PageLoyers() {
       })}
 
       {/* ── La légende ───────────────────────────────────────────────────── */}
-      <section className="card list-card">
+      <section className={styles.legend}>
         <h2 className="text-body-md font-semibold text-ink">Ce que veut dire chaque état</h2>
         <dl className="mt-lg space-y-md">
           {(['Réglé', 'À venir', 'Impayé', 'À déterminer'] as const).map((etat) => (
@@ -120,11 +121,11 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
             {annee}
           </h3>
 
-          <ul className="overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm">
+          <ul className={styles.rentLedger}>
             {mois.map((echeance) => (
               <li
                 key={echeance.periode_debut}
-                className="flex flex-wrap items-center justify-between gap-md border-b border-hairline-soft px-lg py-md last:border-b-0"
+                className="flex flex-wrap items-center justify-between gap-md"
               >
                 <div className="min-w-0">
                   <p className="text-body-md font-semibold text-ink">

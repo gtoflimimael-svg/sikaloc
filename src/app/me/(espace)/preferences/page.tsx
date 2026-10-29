@@ -3,6 +3,7 @@ import { SlidersHorizontal } from 'lucide-react'
 
 import { FormulairePreferencesLocataire } from '@/components/me/formulaire-preferences'
 import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
 import { mesPreferences } from '@/lib/locataire'
 import { locataireCourant } from '@/lib/session'
 
@@ -34,7 +35,7 @@ export default async function PagePreferences() {
 
       <FormulairePreferencesLocataire actif={preferences.notifEmail} />
 
-      <p className="me-preferences-privacy rounded-lg border border-hairline bg-canvas p-md text-body-sm text-mute">
+      <p className={styles.privacy}>
         Les emails partent à <strong className="text-ink list-copy">{compte.email}</strong>,
         l’adresse de votre compte. Pour en changer, écrivez à votre bailleur : la
         fiche qu’il tient est celle qui sert d’adresse de contact.

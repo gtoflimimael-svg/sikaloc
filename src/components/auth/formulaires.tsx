@@ -19,6 +19,22 @@ import type { EtatFormulaire } from '@/lib/validation'
 
 const ETAT_INITIAL: EtatFormulaire = {}
 
+function useFocusErreurFormulaire(etat: EtatFormulaire) {
+  const formulaire = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (!etat.erreur && !Object.keys(etat.erreursChamps ?? {}).length) return
+    const cible = formulaire.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
+      ?? formulaire.current?.querySelector<HTMLElement>('[role="alert"]')
+    if (cible) {
+      if (!cible.hasAttribute('aria-invalid')) cible.tabIndex = -1
+      cible.focus()
+    }
+  }, [etat])
+
+  return formulaire
+}
+
 export function FormulaireConnexion({
   suite = '/entrer',
   contexte = 'general',
@@ -27,9 +43,11 @@ export function FormulaireConnexion({
   contexte?: ContexteConnexion
 }) {
   const [etat, action] = useActionState(connecter, ETAT_INITIAL)
+  const formulaire = useFocusErreurFormulaire(etat)
+  const [email, setEmail] = useState('')
 
   return (
-    <form action={action} className="space-y-lg">
+    <form ref={formulaire} action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
       <input type="hidden" name="suite" value={suite} />
@@ -40,6 +58,8 @@ export function FormulaireConnexion({
         type="email"
         autoComplete="username"
         placeholder="vous@exemple.bj"
+        valeur={email}
+        onChange={(evenement) => setEmail(evenement.currentTarget.value)}
         requis
         erreur={etat.erreursChamps?.email}
       />
@@ -72,18 +92,8 @@ export function FormulaireConnexion({
 /** Inscription simple : les informations nécessaires au compte bailleur. */
 export function FormulaireInscription({ codeParrain }: { codeParrain?: string }) {
   const [etat, action, enCours] = useActionState(inscrire, ETAT_INITIAL)
-  const formulaire = useRef<HTMLFormElement>(null)
+  const formulaire = useFocusErreurFormulaire(etat)
   const [valeurs, setValeurs] = useState<{ nom?: string; email?: string }>({})
-
-  useEffect(() => {
-    if (!etat.erreur && !Object.keys(etat.erreursChamps ?? {}).length) return
-    const cible = formulaire.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
-      ?? formulaire.current?.querySelector<HTMLElement>('[role="alert"]')
-    if (cible) {
-      if (!cible.hasAttribute('aria-invalid')) cible.tabIndex = -1
-      cible.focus()
-    }
-  }, [etat])
 
   const retenirChamps = (evenement: FormEvent<HTMLFormElement>) => {
     const cible = evenement.target as HTMLInputElement
@@ -191,6 +201,8 @@ export function FormulaireMotDePasseOublie({
   suite?: string
 }) {
   const [etat, action] = useActionState(demanderReinitialisation, ETAT_INITIAL)
+  const formulaire = useFocusErreurFormulaire(etat)
+  const [email, setEmail] = useState('')
 
   if (etat.succes) {
     return (
@@ -204,7 +216,7 @@ export function FormulaireMotDePasseOublie({
   }
 
   return (
-    <form action={action} className="space-y-lg">
+    <form ref={formulaire} action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
       <input type="hidden" name="suite" value={suite} />
@@ -215,6 +227,8 @@ export function FormulaireMotDePasseOublie({
         type="email"
         autoComplete="username"
         placeholder="vous@exemple.bj"
+        valeur={email}
+        onChange={(evenement) => setEmail(evenement.currentTarget.value)}
         requis
         erreur={etat.erreursChamps?.email}
       />
@@ -234,9 +248,10 @@ export function FormulaireNouveauMotDePasse({
   suite?: string
 }) {
   const [etat, action] = useActionState(definirNouveauMotDePasse, ETAT_INITIAL)
+  const formulaire = useFocusErreurFormulaire(etat)
 
   return (
-    <form action={action} className="space-y-lg">
+    <form ref={formulaire} action={action} className="space-y-lg">
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
 
       <input type="hidden" name="suite" value={suite} />

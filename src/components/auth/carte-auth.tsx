@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
+import styles from './securite.module.css'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
 
 /**
  * Cadre commun aux écrans d'authentification.
- * Carte blanche et formulaire central ; le panneau éditorial reste secondaire.
+ * Formulaire ouvert et centré ; le panneau éditorial reste secondaire.
  *
  * La connexion et l'inscription peuvent afficher une illustration de marque
  * sur grand écran. Les procédures de sécurité gardent un gabarit sobre.
@@ -25,11 +26,9 @@ export function CarteAuth({
   ambiance?: boolean
 }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-canvas-soft px-lg py-3xl">
+    <main id="contenu" className={styles.main}>
       <div
-        className={`grid w-full items-stretch gap-2xl ${
-          ambiance ? 'max-w-[1060px] lg:grid-cols-[1fr_1fr]' : 'max-w-[480px]'
-        }`}
+        className={`${styles.frame} ${ambiance ? styles.wide : ''}`}
       >
         {ambiance ? (
           <aside className="hidden min-h-[600px] flex-col justify-between overflow-hidden rounded-xl bg-surface-dark p-2xl text-white lg:flex">
@@ -42,15 +41,15 @@ export function CarteAuth({
           </aside>
         ) : null}
 
-        <div className="flex min-w-0 w-full flex-col justify-center">
-          <div className="mb-xl flex justify-center anim-apparait">
+        <div className={styles.content}>
+          <div className={styles.brand}>
             <MarqueSikaloc />
           </div>
 
-          <div className="auth-form-card card card-lg anim-monte min-w-0 w-full" style={{ animationDelay: '60ms' }}>
-            <h1 className="text-display-sm font-bold tracking-tight text-ink">{titre}</h1>
+          <div className={styles.form}>
+            <h1 >{titre}</h1>
             {description ? (
-              <p className="mt-xs mb-xl text-body-md text-mute">{description}</p>
+              <p className={styles.description}>{description}</p>
             ) : (
               <div className="mb-xl" />
             )}
@@ -58,9 +57,9 @@ export function CarteAuth({
             {children}
           </div>
 
-          {bas ? <div className="mt-xl text-center text-body-sm text-mute">{bas}</div> : null}
+          {bas ? <div className={styles.footer}>{bas}</div> : null}
 
-          <p className="mt-2xl text-center">
+          <p className={styles.back}>
             <Link href="/" className="text-body-sm text-mute hover:text-ink">
               ← Retour à l&apos;accueil
             </Link>

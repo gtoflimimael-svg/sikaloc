@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { House } from 'lucide-react'
+import { EnteteEditorial } from '@/components/marketing/entete-editorial'
+import styles from '@/components/marketing/editorial.module.css'
 
 /**
  * La réponse unique de `/find/[reference]` à tout ce qui n'est pas une annonce
@@ -11,16 +14,19 @@ import Link from 'next/link'
  */
 export default function AnnonceIntrouvable() {
   return (
-    <main id="contenu" className="flex min-h-[70vh] items-center justify-center bg-canvas-soft px-lg py-3xl">
-      <div className="card card-lg max-w-[32rem] text-center">
-        <h1 className="page-title">Cette annonce n’est pas disponible</h1>
-        <p className="mt-sm text-body-md text-body">
+    <div className={styles.editorialPage}>
+      <EnteteEditorial contexte="Find" action={{ href: "/find", libelle: "Les logements" }} />
+      <main id="contenu" className={styles.stateMain}>
+        <div className={styles.stateMark}><House size={24} aria-hidden="true" /></div>
+        <p className={styles.eyebrow}>Sikaloc Find</p>
+        <h1 >Cette annonce n’est pas disponible</h1>
+        <p className={styles.stateCopy}>
           Elle n’existe pas, ou elle n’est plus proposée à la location.
         </p>
-        <Link href="/find" className="btn btn-primary mt-lg">
+        <div className={styles.stateActions}><Link href="/find" className="btn btn-primary">
           Voir les logements disponibles
-        </Link>
-      </div>
-    </main>
+        </Link></div>
+      </main>
+    </div>
   )
 }
