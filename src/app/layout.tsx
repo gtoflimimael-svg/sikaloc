@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 
 import { BandeauDemoLocal } from '@/components/demo/bandeau-local'
+import { MouvementPages } from '@/components/ui/mouvement-pages'
 import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
 
 import './globals.css'
@@ -112,9 +113,14 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#17311C',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#EAF1E7' },
+    { media: '(prefers-color-scheme: dark)', color: '#111810' },
+  ],
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -126,13 +132,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={inter.variable}
     >
-      <head>
-        {/*
-          Pose `data-theme` avant le premier paint. Sans ce script bloquant, un
-          utilisateur en mode nuit verrait un éclair blanc à chaque navigation.
-        */}
+      <body>
+        {/* S’exécute au parsing, avant le contenu visible et la première frame. */}
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_ANTI_FLASH }} />
-
+        <BandeauDemoLocal />
+        <MouvementPages />
+        {children}
         {/*
           Données structurées — `Organization` uniquement.
 
@@ -174,10 +179,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
-      </head>
-      <body>
-        <BandeauDemoLocal />
-        {children}
       </body>
     </html>
   )

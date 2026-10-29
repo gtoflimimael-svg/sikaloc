@@ -8,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-public'
+import { AccueilAnimations } from '@/components/marketing/accueil-animations'
 import { ApercuQuittanceDemonstration } from '@/components/marketing/apercu-quittance-demonstration'
 import { FAQAccueil } from '@/components/marketing/faq-accueil'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
@@ -94,6 +95,7 @@ export default async function PageAccueil() {
   const utilisateur = await obtenirUtilisateur()
 
   return (
+    <AccueilAnimations>
     <div className="min-h-screen bg-canvas-soft">
       {/*
         Ni `espace`, ni `marqueHref` : ici la marque est Sikaloc tout court, et
@@ -119,23 +121,23 @@ export default async function PageAccueil() {
           <div className="home-hero-inner relative mx-auto max-w-[1320px]">
             <div className="home-hero-layout">
               <div className="home-hero-copy-block">
-                <p className="home-kicker">
+                <p className="home-kicker home-intro-item" data-home-intro-step="0">
                   <span aria-hidden="true" className="home-kicker-mark" />
                   La location au Bénin, mieux reliée
                 </p>
 
-                <h1 className="home-hero-title text-balance">
+                <h1 className="home-hero-title text-balance home-intro-item" data-home-intro-step="1">
                   <span className="home-hero-title-main">Un logement à trouver.</span>
                   <span className="home-hero-title-support">Des loyers à suivre.</span>
                   <span className="home-hero-title-support home-hero-title-mark">Des preuves à garder.</span>
                 </h1>
 
-                <p className="public-hero-copy home-hero-description">
+                <p className="public-hero-copy home-hero-description home-intro-item" data-home-intro-step="2">
                   Sikaloc réunit la recherche de logements, le suivi locatif et les documents de location
                   dans des espaces dédiés aux bailleurs, aux locataires invités et aux candidats.
                 </p>
 
-                <div className="home-hero-actions">
+                <div className="home-hero-actions home-intro-item" data-home-intro-step="3">
                   <Link href="/pro?presentation=1" className="btn btn-primary">
                     Découvrir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
                   </Link>
@@ -144,13 +146,13 @@ export default async function PageAccueil() {
                   </Link>
                 </div>
 
-                <p className="home-hero-tenant">
+                <p className="home-hero-tenant home-intro-item" data-home-intro-step="4">
                   Vous êtes locataire ?{' '}
                   <Link href="/me/rejoindre">Votre bailleur vous invite sur Me.</Link>
                 </p>
               </div>
 
-              <figure className="home-hero-art">
+              <figure className="home-hero-art" data-home-intro-art>
                 <Image
                   src="/illustrations/home-01-villas.webp"
                   alt="Cinq villas contemporaines indépendantes, aux façades claires et aux accents verts, alignées côte à côte"
@@ -168,7 +170,7 @@ export default async function PageAccueil() {
         {/* ── Le problème ──────────────────────────────────────────────── */}
         <section className="home-problem-section">
           <div className="home-problem-layout mx-auto max-w-[1200px]">
-            <div className="home-problem-heading">
+            <div className="home-problem-heading" data-home-reveal>
               <p className="home-section-label">Une location, deux points de vue</p>
               <h2 className="home-section-title home-problem-title">
                 Quand les informations se dispersent, le suivi se complique.
@@ -177,17 +179,17 @@ export default async function PageAccueil() {
 
             <div className="home-problem-scene">
               <div className="home-problem-fragments">
-                <div className="home-problem-fragment home-problem-fragment--lease">
+                <div className="home-problem-fragment home-problem-fragment--lease" data-home-reveal>
                   <span className="home-problem-paper-edge" aria-hidden="true" />
                   <strong>Bail</strong>
                   <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
                 </div>
-                <div className="home-problem-fragment home-problem-fragment--payments">
+                <div className="home-problem-fragment home-problem-fragment--payments" data-home-reveal>
                   <span className="home-problem-paper-edge" aria-hidden="true" />
                   <strong>Versements</strong>
                   <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
                 </div>
-                <div className="home-problem-fragment home-problem-fragment--documents">
+                <div className="home-problem-fragment home-problem-fragment--documents" data-home-reveal>
                   <span className="home-problem-paper-edge" aria-hidden="true" />
                   <strong>Documents</strong>
                   <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /></span>
@@ -196,7 +198,7 @@ export default async function PageAccueil() {
             </div>
 
             <div className="home-perspectives">
-              <article className="home-perspective home-perspective--owner">
+              <article className="home-perspective home-perspective--owner" data-home-reveal>
                 <span className="home-perspective-role">
                   <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
                   <span>Côté bailleur</span>
@@ -204,7 +206,7 @@ export default async function PageAccueil() {
                 <p className="home-perspective-question">Quelle période reste à régler&nbsp;?</p>
                 <p className="home-perspective-copy">Bail, périodes et règlements à rapprocher.</p>
               </article>
-              <article className="home-perspective home-perspective--tenant">
+              <article className="home-perspective home-perspective--tenant" data-home-reveal>
                 <span className="home-perspective-role">
                   <ScrollText size={18} strokeWidth={1.8} aria-hidden="true" />
                   <span>Côté locataire</span>
@@ -220,7 +222,7 @@ export default async function PageAccueil() {
         <section id="espaces" className="home-spaces-section" aria-labelledby="home-pro-title">
           <div className="mx-auto max-w-[1200px]">
             <article className="home-product-story home-product-story--pro">
-              <div className="home-product-story-copy">
+              <div className="home-product-story-copy" data-home-reveal>
                 <p className="home-product-label">Sikaloc Pro</p>
                 <h2 id="home-pro-title" className="home-product-title">Vos locations, enfin organisées.</h2>
                 <p className="home-product-description">
@@ -231,7 +233,7 @@ export default async function PageAccueil() {
                   Découvrir Sikaloc Pro <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>
-              <figure className="home-product-visual home-product-visual--pro">
+              <figure className="home-product-visual home-product-visual--pro" data-home-reveal>
                 <div className="home-product-visual-frame">
                   <Image
                     src="/images/home/sikaloc-pro-editorial.webp"
@@ -249,7 +251,7 @@ export default async function PageAccueil() {
         <section className="home-me-section" aria-labelledby="home-me-title">
           <div className="mx-auto max-w-[1200px]">
             <article className="home-product-story home-product-story--me">
-              <div className="home-product-story-copy">
+              <div className="home-product-story-copy" data-home-reveal>
                 <p className="home-product-label">Sikaloc Me</p>
                 <h2 id="home-me-title" className="home-product-title">
                   Votre location, votre espace.
@@ -262,7 +264,7 @@ export default async function PageAccueil() {
                   Comment accéder à Sikaloc Me <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>
-              <figure className="home-product-visual home-product-visual--me">
+              <figure className="home-product-visual home-product-visual--me" data-home-reveal>
                 <div className="home-product-visual-frame">
                   <Image
                     src="/images/home/sikaloc-me-editorial.webp"
@@ -279,7 +281,7 @@ export default async function PageAccueil() {
 
         <section id="trouver" className="home-find-section" aria-labelledby="home-find-title">
           <div className="home-find-layout mx-auto max-w-[1200px]">
-            <div className="home-find-copy">
+            <div className="home-find-copy" data-home-reveal>
               <p className="home-product-label">Sikaloc Find</p>
               <h2 id="home-find-title" className="home-product-title">
                 Cherchez avec vos propres repères.
@@ -293,7 +295,7 @@ export default async function PageAccueil() {
               </Link>
             </div>
 
-            <figure className="home-product-visual home-product-visual--find">
+            <figure className="home-product-visual home-product-visual--find" data-home-reveal>
               <div className="home-product-visual-frame">
                 <Image
                   src="/images/home/sikaloc-find-editorial.webp"
@@ -310,7 +312,7 @@ export default async function PageAccueil() {
         {/* ── Le parcours ──────────────────────────────────────────────── */}
         <section id="parcours" className="home-journey-section">
           <div className="mx-auto max-w-[1200px]">
-            <div className="home-journey-heading">
+            <div className="home-journey-heading" data-home-reveal>
               <p className="home-section-label">Comment les espaces se complètent</p>
               <h2 className="home-section-title">Chaque espace garde son rôle.</h2>
               <p className="home-journey-transition">
@@ -327,7 +329,7 @@ export default async function PageAccueil() {
         {/* ── Suivi locatif et documents ───────────────────────────────── */}
         <section className="home-document-section" aria-labelledby="home-document-title">
           <div className="home-document-layout mx-auto max-w-[1200px]">
-            <div className="home-document-copy">
+            <div className="home-document-copy" data-home-reveal>
               <p className="home-section-label">Suivi locatif &amp; documents</p>
               <h2 id="home-document-title" className="home-document-title">
                 <span>Des loyers suivis.</span>
@@ -347,24 +349,28 @@ export default async function PageAccueil() {
               </div>
             </div>
 
-            <ApercuQuittanceDemonstration />
+            <div className="home-document-motion-preview" data-home-reveal>
+              <ApercuQuittanceDemonstration />
+            </div>
           </div>
         </section>
 
         <section id="faq" className="home-faq-section" aria-labelledby="home-faq-title">
           <div className="home-faq-layout mx-auto max-w-[1200px]">
-            <div className="home-faq-heading">
+            <div className="home-faq-heading" data-home-reveal>
               <p className="home-section-label">Questions fréquentes</p>
               <h2 id="home-faq-title" className="home-section-title">Des questions avant de commencer&nbsp;?</h2>
             </div>
-            <FAQAccueil />
+            <div className="home-faq-motion-list" data-home-reveal>
+              <FAQAccueil />
+            </div>
           </div>
         </section>
 
         {/* ── Appel final ──────────────────────────────────────────────── */}
         <section className="home-final-section" aria-labelledby="home-final-title">
           <div className="home-final-cta mx-auto max-w-[1200px]">
-            <div className="home-final-copy">
+            <div className="home-final-copy" data-home-reveal>
               <p className="home-final-kicker">Choisissez votre prochain pas</p>
               <h2 id="home-final-title">
                 <span>Une location.</span>
@@ -375,7 +381,7 @@ export default async function PageAccueil() {
               </p>
             </div>
 
-            <nav className="home-final-paths" aria-label="Choisir un espace Sikaloc">
+            <nav className="home-final-paths" aria-label="Choisir un espace Sikaloc" data-home-reveal>
               <div className="home-final-actions">
                 <Link href={utilisateur ? '/entrer' : '/inscription'} className="home-final-action home-final-action--pro">
                   <span>{utilisateur ? 'Ouvrir mon espace' : 'Créer un compte bailleur'}</span>
@@ -403,5 +409,6 @@ export default async function PageAccueil() {
       <PiedDePage />
       <WidgetWhatsApp />
     </div>
+    </AccueilAnimations>
   )
 }

@@ -139,7 +139,7 @@ export function ChampTelephone({
     <div>
       <label htmlFor={nom} className="field-label">
         {libelle}
-        {requis ? <span className="text-negative"> *</span> : null}
+        {requis ? <span className="text-negative-darkest"> *</span> : null}
       </label>
 
       {/*

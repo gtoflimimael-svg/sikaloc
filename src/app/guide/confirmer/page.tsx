@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { CircleCheck, Link2Off, MailWarning } from 'lucide-react'
+import styles from '@/components/marketing/editorial.module.css'
 
 import { confirmerEtEnvoyer } from '@/lib/actions/guide'
 
@@ -43,20 +45,22 @@ export default async function PageConfirmation({
   const { jeton } = await searchParams
   const issue = await confirmerEtEnvoyer(jeton ?? '')
   const { titre, texte } = MESSAGES[issue]
+  const Icone = issue === 'jeton_invalide' ? Link2Off : issue === 'envoi_echoue' ? MailWarning : CircleCheck
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-[36rem] flex-col justify-center px-xl py-5xl">
-      <p className="text-caption-uppercase uppercase text-primary">Guide Sikaloc</p>
-      <h1 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">{titre}</h1>
-      <p className="mt-lg text-body-lg text-body">{texte}</p>
+    <main id="contenu" className={styles.stateMain}>
+      <div className={styles.stateMark}><Icone size={24} aria-hidden="true" /></div>
+      <p className={styles.eyebrow}>Guide Sikaloc</p>
+      <h1>{titre}</h1>
+      <p className={styles.stateCopy}>{texte}</p>
 
-      <div className="mt-2xl flex flex-wrap gap-md">
+      <div className={styles.stateActions}>
         <Link href="/" className="btn btn-secondary">
           Retour à l’accueil
         </Link>
-        <Link href="/exemple-quittance" className="btn btn-primary">
-          Voir une vraie quittance
-        </Link>
+        <a href="/exemple-quittance" className="btn btn-primary">
+          Voir un exemple de quittance
+        </a>
       </div>
     </main>
   )

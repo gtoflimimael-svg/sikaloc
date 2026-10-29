@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
@@ -34,15 +34,14 @@ const QUESTIONS = [
 
 export function FAQAccueil() {
   const [ouvert, setOuvert] = useState<number | null>(0)
-  const identifiant = useId()
 
   return (
     <div className="home-faq-content">
       <div className="home-faq-list">
         {QUESTIONS.map(({ question, reponse }, index) => {
           const estOuvert = ouvert === index
-          const panneauId = `${identifiant}-reponse-${index}`
-          const boutonId = `${identifiant}-question-${index}`
+          const panneauId = `accueil-faq-reponse-${index}`
+          const boutonId = `accueil-faq-question-${index}`
 
           return (
             <article className="home-faq-item" key={question}>
@@ -76,9 +75,9 @@ export function FAQAccueil() {
         })}
       </div>
 
-      <aside className="home-faq-contact" aria-labelledby={`${identifiant}-contact-title`}>
+      <aside className="home-faq-contact" aria-labelledby="accueil-faq-contact-title">
         <div>
-          <h3 id={`${identifiant}-contact-title`}>Vous n&apos;avez pas trouvé votre réponse ?</h3>
+          <h3 id="accueil-faq-contact-title">Vous n&apos;avez pas trouvé votre réponse ?</h3>
           <p>Posez-nous votre question et choisissez de recevoir notre réponse par e-mail ou WhatsApp.</p>
         </div>
         <Link href="/questions" className="btn btn-primary home-faq-contact-button">

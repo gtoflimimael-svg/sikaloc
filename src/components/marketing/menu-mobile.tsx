@@ -231,12 +231,12 @@ export function MenuMobile({
         aria-label="Ouvrir le menu"
         aria-haspopup="dialog"
         aria-expanded={ouvert}
-        aria-controls="menu-mobile-accueil"
+        aria-controls={monte ? 'menu-mobile-accueil' : undefined}
       >
         <Menu size={20} strokeWidth={2} aria-hidden="true" />
       </button>
 
-      {monte && ouvert
+      {monte
         ? createPortal(
             /*
               `z-[60]` et non `z-50` : l'en-tête collant est lui-même à `z-50`
@@ -244,7 +244,7 @@ export function MenuMobile({
               portail, greffé sur `<body>`, n'a plus de position stable par
               rapport à l'en-tête. On tranche explicitement.
             */
-            <div className="fixed inset-0 z-[60] lg:hidden">
+            <div className="fixed inset-0 z-[60] lg:hidden" hidden={!ouvert}>
               {/*
                 Le voile est décoratif : `aria-hidden` et pas de `tabindex`.
                 En faire un `<button>` plein écran, comme le voulait le

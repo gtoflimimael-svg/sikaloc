@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation'
 
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { TexteRiche } from '@/components/marketing/texte-riche'
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { EnteteEditorial } from '@/components/marketing/entete-editorial'
+import styles from '@/components/marketing/editorial.module.css'
 import { ARTICLES, articleParSlug, avertissement } from '@/lib/articles'
 
 /** Les cinq articles sont connus au build : rien à rendre à la demande. */
@@ -49,38 +50,30 @@ export default async function PageArticle({
   const autres = ARTICLES.filter((a) => a.slug !== article.slug).slice(0, 2)
 
   return (
-    <>
-      <header className="border-b border-hairline px-xl py-lg">
-        <div className="mx-auto flex max-w-[46rem] items-center justify-between gap-lg">
-          <MarqueSikaloc taille="sm" />
-          <Link href="/inscription" className="btn btn-primary btn-sm">
-            Commencer
-          </Link>
-        </div>
-      </header>
+    <div className={styles.editorialPage}>
+      <EnteteEditorial contexte="Ressources" action={{ href: '/inscription', libelle: 'Commencer' }} />
 
-      <main className="mx-auto max-w-[48rem] px-xl py-5xl">
-        <Link href="/blog" className="text-body-sm font-semibold text-mute hover:text-ink">
+      <main id="contenu" className={styles.readingMain}>
+        <Link href="/blog" className={styles.backLink}>
           ← Tous les articles
         </Link>
 
-        <h1 className="mt-lg text-display-lg font-extrabold tracking-tight text-ink">
+        <h1 className={styles.articleHeading}>
           {article.titre}
         </h1>
 
-        <div className="mt-xl rounded-lg border-l-2 border-primary bg-canvas p-lg">
+        <div className={styles.summary}>
           <p className="text-body-md text-body">
             <strong className="font-semibold text-ink">En bref.</strong> {article.enBref}
           </p>
         </div>
 
-        <div className="mt-2xl space-y-lg">
+        <div className={styles.articleBody}>
           {article.blocs.map((bloc, i) => {
             if (bloc.type === 'titre') {
               return (
                 <h2
                   key={i}
-                  className="!mt-2xl text-display-sm font-bold text-ink"
                 >
                   {bloc.texte}
                 </h2>
@@ -125,23 +118,23 @@ export default async function PageArticle({
           {avertissement(article.slug)}
         </p>
 
-        <section className="mt-3xl rounded-xl bg-canvas p-xl">
+        <section className={styles.documentCallout}>
           <h2 className="text-title-lg font-bold text-ink">Voir le document par vous-même</h2>
           <p className="mt-sm text-body-md text-body">
-            Une quittance réelle, avec des données fictives, sans créer de compte.
+            Un exemple de quittance, avec des données fictives, sans créer de compte.
           </p>
           <div className="mt-lg flex flex-wrap gap-md">
-            <Link href="/exemple-quittance" className="btn btn-primary">
+            <a href="/exemple-quittance" className="btn btn-primary">
               Voir une quittance
-            </Link>
-            <Link href="/exemple-recu" className="btn btn-secondary">
+            </a>
+            <a href="/exemple-recu" className="btn btn-secondary">
               Voir un reçu
-            </Link>
+            </a>
           </div>
         </section>
 
         {autres.length > 0 ? (
-          <section className="mt-3xl">
+          <section className={styles.related}>
             <h2 className="text-title-lg font-bold text-ink">À lire ensuite</h2>
             <ul role="list" className="mt-lg space-y-md">
               {autres.map((a) => (
@@ -160,6 +153,6 @@ export default async function PageArticle({
       </main>
 
       <PiedDePage />
-    </>
+    </div>
   )
 }

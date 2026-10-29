@@ -1,25 +1,14 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 /**
- * Entrée de page.
+ * Frontière légère pour le contenu serveur des espaces connectés.
  *
- * Le contenu applicatif remonte de quelques pixels à chaque navigation, ce qui
- * distingue « la page a changé » de « rien ne s'est passé » — utile quand deux
- * écrans se ressemblent, comme la liste des baux et celle des logements.
- *
- * L'astuce tient dans la clé : changer `key` démonte puis remonte le sous-arbre,
- * ce qui rejoue l'animation CSS. Les enfants restent des composants serveur,
- * ils ne font que traverser.
+ * Les pages Pro et Me sont consultées souvent et contiennent des montants,
+ * statuts et formulaires. La navigation reste immédiate ; les menus et
+ * confirmations gardent leurs retours visuels propres.
  */
 export function TransitionPage({ children }: { children: ReactNode }) {
-  const chemin = usePathname()
-
-  return (
-    <div key={chemin} className="anim-page">
-      {children}
-    </div>
-  )
+  return children
 }

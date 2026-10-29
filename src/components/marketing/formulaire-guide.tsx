@@ -21,7 +21,7 @@ export function FormulaireGuide() {
 
   if (etat.succes) {
     return (
-      <div className="anim-monte rounded-lg border border-hairline bg-canvas p-lg">
+      <div role="status" aria-live="polite" className="anim-monte rounded-lg border border-hairline bg-canvas p-lg">
         <p className="text-body-md font-semibold text-ink">Vérifiez votre boîte mail</p>
         <p className="mt-sm text-body-sm text-body">{etat.succes}</p>
       </div>

@@ -148,7 +148,7 @@ export function ChampMotDePasse({
     <div>
       <label htmlFor={nom} className="field-label">
         {libelle}
-        {requis ? <span className="text-negative"> *</span> : null}
+        {requis ? <span className="text-negative-darkest"> *</span> : null}
       </label>
 
       <div className="relative">

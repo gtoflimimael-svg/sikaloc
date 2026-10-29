@@ -37,19 +37,19 @@ const PAGE_MAINTENANCE = `<!doctype html>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow, noarchive">
-    <meta name="theme-color" content="#f7f7fc">
+    <meta name="theme-color" content="#EAF1E7">
     <title>Sikaloc — Maintenance</title>
     <style>
-      :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #232325; background: #f7f7fc; }
+      :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111810; background: #F6F8F5; }
       * { box-sizing: border-box; }
       body { min-height: 100vh; min-height: 100svh; margin: 0; display: grid; place-items: center; padding: 24px; }
-      main { width: min(100%, 620px); padding: clamp(32px, 7vw, 64px); border: 1px solid #e3e3ef; border-radius: 28px; background: rgba(255,255,255,.88); box-shadow: 0 24px 80px rgba(44,44,92,.08); text-align: center; }
-      .brand { margin: 0 0 42px; color: #5555bc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; font-weight: 600; letter-spacing: -.06em; }
-      .mark { width: 64px; height: 64px; margin: 0 auto 24px; display: grid; place-items: center; border-radius: 20px; background: #eeeeF8; color: #5555bc; }
-      h1 { max-width: 16ch; margin: 0 auto 18px; color: #17171c; font-family: Georgia, "Times New Roman", serif; font-size: clamp(30px, 7vw, 44px); font-weight: 500; line-height: 1.13; letter-spacing: -.035em; }
-      p { max-width: 44ch; margin: 0 auto; color: #62626e; font-size: 16px; line-height: 1.75; }
-      .rule { width: 46px; height: 3px; margin: 30px auto 0; border-radius: 99px; background: #7777cf; }
-      @media (max-width: 420px) { body { padding: 16px; } main { border-radius: 22px; } .brand { margin-bottom: 34px; } p { font-size: 15px; } }
+      main { width: min(100%, 620px); padding: clamp(28px, 7vw, 56px) 0; border-top: 3px solid #17311C; text-align: left; }
+      .brand { margin: 0 0 42px; color: #17311C; font-size: 24px; font-weight: 800; letter-spacing: -.06em; }
+      .mark { width: 64px; height: 64px; margin: 0 0 24px; display: grid; place-items: center; border-radius: 50%; background: #EAF1E7; color: #17311C; }
+      h1 { max-width: 20ch; margin: 0 0 24px; color: #111810; font-size: clamp(32px, 7vw, 46px); font-weight: 750; line-height: 1.13; letter-spacing: -.035em; }
+      p { max-width: 52ch; margin: 12px 0 0; color: #424940; font-size: 16px; line-height: 1.75; }
+      .rule { width: 46px; height: 3px; margin: 30px 0 0; border-radius: 99px; background: #B8F36D; }
+      @media (max-width: 420px) { body { padding: 16px; } .brand { margin-bottom: 34px; } p { font-size: 15px; } }
     </style>
   </head>
   <body>
