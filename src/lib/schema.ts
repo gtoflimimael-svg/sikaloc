@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { OBJETS_DECLARES } from '@/lib/schema-objets'
+import { fetchSupabaseSansSecretBearer } from '@/lib/supabase/fetch-cle-secrete'
 
 /**
  * Comparaison du schéma réel de la base à ce que le code attend.
@@ -112,8 +113,9 @@ export async function verifierSchema(): Promise<RapportSchema> {
 
   // `limit=0` : PostgREST valide la colonne demandée sans renvoyer la moindre
   // ligne. Rien des données du bailleur ne transite ici.
+  const fetchSupabase = fetchSupabaseSansSecretBearer()
   const existe = async (table: string, selection: string) =>
-    (await fetch(`${url}/rest/v1/${table}?select=${selection}&limit=0`, { headers: entetes })).ok
+    (await fetchSupabase(`${url}/rest/v1/${table}?select=${selection}&limit=0`, { headers: entetes })).ok
 
   const ecarts: EcartSchema[] = []
   let colonnesVerifiees = 0

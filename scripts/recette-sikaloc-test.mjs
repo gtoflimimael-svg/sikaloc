@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { createHash, randomBytes } from 'node:crypto'
 import { spawn } from 'node:child_process'
+import { homedir } from 'node:os'
 import {
+  constants,
+  fstatSync,
   closeSync,
   lstatSync,
   openSync,
@@ -17,6 +20,8 @@ export const SI_TEST_REF = 'epjpcmvdvshxfsydltgf'
 export const SI_TEST_URL = `https://${SI_TEST_REF}.supabase.co`
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const cheminConfigurationRecette = path.join(homedir(), '.config', 'sikaloc-test', 'app.env')
+const cheminConfigurationAdminRecette = path.join(homedir(), '.config', 'sikaloc-test', 'admin.env')
 const fichiersEnvNext = [
   '.env.development.local',
   '.env.local',
@@ -27,6 +32,7 @@ const fichiersEnvNext = [
 const variablesControlees = new Set([
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'SIKALOC_TEST_BACKUP_MANIFEST',
   'NEXT_PUBLIC_SITE_URL',
@@ -60,6 +66,23 @@ const variablesControlees = new Set([
   'SIKALOC_DEMO_EXPECTED_PROJECT_ID',
 ])
 
+const variablesAutoriseesConfigurationRecette = new Set([
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+  'SIKALOC_TEST_SUPABASE_URL',
+  'SIKALOC_TEST_SUPABASE_ANON_KEY',
+  'SIKALOC_TEST_SUPABASE_PUBLISHABLE_KEY',
+  'SIKALOC_TEST_SUPABASE_SECRET_KEY',
+  'SIKALOC_TEST_SERVICE_ROLE_KEY',
+  'SIKALOC_TEST_BACKUP_MANIFEST',
+  'SIKALOC_TEST_OTP_SECRET',
+  'SIKALOC_TEST_CRON_SECRET',
+  'SIKALOC_TEST_FEDAPAY_PUBLIC_KEY',
+  'SIKALOC_TEST_FEDAPAY_SECRET_KEY',
+  'SIKALOC_TEST_FEDAPAY_WEBHOOK_SECRET',
+])
+
 const controlesRestaurationPostgres = [
   'schemas',
   'tables',
@@ -74,6 +97,188 @@ const controlesRestaurationPostgres = [
 function estDansDepot(chemin) {
   const relatif = path.relative(racine, chemin)
   return relatif === '' || (!relatif.startsWith(`..${path.sep}`) && relatif !== '..' && !path.isAbsolute(relatif))
+}
+
+function lireValeurEnv(texte, numeroLigne) {
+  const valeur = texte.trim()
+  if (!valeur) return ''
+
+  const guillemet = valeur[0]
+  if (guillemet === '"' || guillemet === "'") {
+    let fin = -1
+    for (let index = 1; index < valeur.length; index += 1) {
+      if (valeur[index] === guillemet && valeur[index - 1] !== '\\') {
+        fin = index
+        break
+      }
+    }
+    if (fin < 0 || (valeur.slice(fin + 1).trim() && !valeur.slice(fin + 1).trim().startsWith('#'))) {
+      throw new Error(`Configuration Sikaloc-Test : syntaxe invalide à la ligne ${numeroLigne}.`)
+    }
+    const contenu = valeur.slice(1, fin)
+    const decode = guillemet === '"'
+      ? contenu.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+      : contenu
+    if (/[\r\n\0]/.test(decode)) {
+      throw new Error(`Configuration Sikaloc-Test : valeur multilignes refusée à la ligne ${numeroLigne}.`)
+    }
+    return decode
+  }
+
+  const commentaire = valeur.search(/\s#/)
+  const sansCommentaire = commentaire < 0 ? valeur : valeur.slice(0, commentaire)
+  if (/[\0\r\n]/.test(sansCommentaire)) {
+    throw new Error(`Configuration Sikaloc-Test : valeur invalide à la ligne ${numeroLigne}.`)
+  }
+  return sansCommentaire.trimEnd()
+}
+
+export function chargerConfigurationRecettePrivee(chemin = cheminConfigurationRecette, { optional = false } = {}) {
+  if (typeof chemin !== 'string' || !path.isAbsolute(chemin)) {
+    throw new Error('Configuration Sikaloc-Test : chemin absolu requis.')
+  }
+
+  let lstat
+  try {
+    lstat = lstatSync(chemin)
+  } catch (cause) {
+    if (optional && cause?.code === 'ENOENT') return {}
+    throw new Error('Configuration Sikaloc-Test : fichier absent ou inaccessible.')
+  }
+  if (lstat.isSymbolicLink() || !lstat.isFile()) {
+    throw new Error('Configuration Sikaloc-Test : fichier ordinaire requis; liens symboliques refusés.')
+  }
+
+  const cheminReel = realpathSync(chemin)
+  if (estDansDepot(cheminReel)) {
+    throw new Error('Configuration Sikaloc-Test : le fichier doit rester hors du dépôt.')
+  }
+
+  const dossier = path.dirname(cheminReel)
+  let statDossier
+  try {
+    const dossierLstat = lstatSync(dossier)
+    if (dossierLstat.isSymbolicLink() || !dossierLstat.isDirectory()) {
+      throw new Error('Configuration Sikaloc-Test : dossier privé invalide.')
+    }
+    statDossier = statSync(dossier)
+  } catch {
+    throw new Error('Configuration Sikaloc-Test : dossier privé absent ou invalide.')
+  }
+
+  const uid = typeof process.getuid === 'function' ? process.getuid() : undefined
+  if (
+    process.platform !== 'win32' &&
+    ((statDossier.mode & 0o077) !== 0 || (lstat.mode & 0o077) !== 0 || (lstat.mode & 0o111) !== 0 ||
+      (uid !== undefined && (statDossier.uid !== uid || lstat.uid !== uid)))
+  ) {
+    throw new Error('Configuration Sikaloc-Test : fichier et dossier doivent appartenir à l’utilisateur et rester privés (0600/0700).')
+  }
+  if ([cheminConfigurationRecette, cheminConfigurationAdminRecette].includes(path.resolve(chemin))) {
+    const dossierConfig = path.join(homedir(), '.config')
+    let statConfig
+    try {
+      const configLstat = lstatSync(dossierConfig)
+      if (configLstat.isSymbolicLink() || !configLstat.isDirectory()) {
+        throw new Error('Configuration Sikaloc-Test : dossier .config invalide.')
+      }
+      statConfig = statSync(dossierConfig)
+    } catch {
+      throw new Error('Configuration Sikaloc-Test : dossier .config absent ou invalide.')
+    }
+    if (
+      process.platform !== 'win32' &&
+      ((statConfig.mode & 0o077) !== 0 || (uid !== undefined && statConfig.uid !== uid))
+    ) {
+      throw new Error('Configuration Sikaloc-Test : le dossier .config doit appartenir à l’utilisateur et rester privé.')
+    }
+  }
+  if (lstat.size === 0 || lstat.size > 64 * 1024) {
+    throw new Error('Configuration Sikaloc-Test : fichier vide ou supérieur à 64 Ko.')
+  }
+
+  let fd
+  let contenu
+  try {
+    const options = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)
+    fd = openSync(cheminReel, options)
+    const statOuvert = fstatSync(fd)
+    if (
+      !statOuvert.isFile() || statOuvert.size === 0 || statOuvert.size > 64 * 1024 ||
+      (process.platform !== 'win32' &&
+        ((statOuvert.mode & 0o077) !== 0 || (statOuvert.mode & 0o111) !== 0 ||
+          (uid !== undefined && statOuvert.uid !== uid)))
+    ) {
+      throw new Error('Configuration Sikaloc-Test : fichier modifié ou invalide à l’ouverture.')
+    }
+    contenu = readFileSync(fd, 'utf8')
+  } catch (cause) {
+    if (cause instanceof Error && cause.message.startsWith('Configuration Sikaloc-Test :')) throw cause
+    throw new Error('Configuration Sikaloc-Test : lecture sécurisée impossible.')
+  } finally {
+    if (fd !== undefined) closeSync(fd)
+  }
+
+  const configuration = {}
+  const lignes = contenu.replace(/^\uFEFF/, '').split(/\r?\n/)
+  for (let index = 0; index < lignes.length; index += 1) {
+    const ligne = lignes[index]
+    if (!ligne.trim() || ligne.trimStart().startsWith('#')) continue
+    const correspondance = ligne.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=([\s\S]*)$/)
+    if (!correspondance) {
+      throw new Error(`Configuration Sikaloc-Test : syntaxe invalide à la ligne ${index + 1}.`)
+    }
+    const nom = correspondance[1]
+    if (!variablesAutoriseesConfigurationRecette.has(nom)) {
+      throw new Error(`Configuration Sikaloc-Test : variable non autorisée « ${nom} » à la ligne ${index + 1}.`)
+    }
+    if (Object.hasOwn(configuration, nom)) {
+      throw new Error(`Configuration Sikaloc-Test : variable dupliquée « ${nom} ».`)
+    }
+    configuration[nom] = lireValeurEnv(correspondance[2], index + 1)
+  }
+  return configuration
+}
+
+export function fusionnerConfigurationRecettePrivee(
+  source = process.env,
+  chemin = cheminConfigurationRecette,
+  cheminAdmin = path.resolve(chemin) === cheminConfigurationRecette ? cheminConfigurationAdminRecette : null,
+) {
+  const fichiersPrives = [chargerConfigurationRecettePrivee(chemin)]
+  if (cheminAdmin) {
+    fichiersPrives.push(
+      chargerConfigurationRecettePrivee(cheminAdmin, { optional: cheminAdmin === cheminConfigurationAdminRecette }),
+    )
+  }
+  const normalisee = {}
+  const aliases = new Map([
+    ['NEXT_PUBLIC_SUPABASE_URL', 'SIKALOC_TEST_SUPABASE_URL'],
+    ['NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SIKALOC_TEST_SUPABASE_ANON_KEY'],
+    ['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'SIKALOC_TEST_SUPABASE_ANON_KEY'],
+    ['SIKALOC_TEST_SUPABASE_PUBLISHABLE_KEY', 'SIKALOC_TEST_SUPABASE_ANON_KEY'],
+    ['SIKALOC_TEST_SUPABASE_SECRET_KEY', 'SIKALOC_TEST_SERVICE_ROLE_KEY'],
+  ])
+
+  for (const privee of fichiersPrives) {
+    for (const [nom, valeur] of Object.entries(privee)) {
+      const destination = aliases.get(nom) ?? nom
+      if (valeur === '') continue
+      if (Object.hasOwn(normalisee, destination) && normalisee[destination] !== valeur) {
+        throw new Error(`Configuration Sikaloc-Test : valeurs contradictoires pour « ${destination} ».`)
+      }
+      normalisee[destination] = valeur
+    }
+  }
+
+  const fusion = { ...source }
+  for (const [nom, valeur] of Object.entries(normalisee)) {
+    if (fusion[nom] && fusion[nom] !== valeur) {
+      throw new Error(`Configuration Sikaloc-Test : conflit pour « ${nom} » entre le fichier privé et l’environnement.`)
+    }
+    fusion[nom] = valeur
+  }
+  return fusion
 }
 
 function lireFichierPrive(chemin, base, libelle, limiteOctets = Number.POSITIVE_INFINITY) {
@@ -283,12 +488,8 @@ function verifierConfigurationCles(source) {
   if (!clePublique) throw new Error('SIKALOC_TEST_SUPABASE_ANON_KEY est requise.')
   if (!cleService) throw new Error('SIKALOC_TEST_SERVICE_ROLE_KEY est requise pour les routes serveur.')
 
-  if (clePublique.split('.').length === 3) {
-    verifierCleJwt(clePublique, 'anon', 'SIKALOC_TEST_SUPABASE_ANON_KEY')
-  } else if (!clePublique.startsWith('sb_publishable_')) {
-    throw new Error('La clé publique Test doit être une clé anon JWT ou sb_publishable_.')
-  }
-  verifierCleJwt(cleService, 'service_role', 'SIKALOC_TEST_SERVICE_ROLE_KEY')
+  verifierClePublique(clePublique, 'SIKALOC_TEST_SUPABASE_ANON_KEY')
+  verifierCleServeur(cleService, 'SIKALOC_TEST_SERVICE_ROLE_KEY')
   return { url, clePublique, cleService }
 }
 
@@ -309,9 +510,22 @@ export function diagnostiquerPrerequisRecette(source = process.env, nomsEnvCharg
     return 'noms reconnus; valeurs non affichées'
   })
   ajouter('Cible Supabase', () => verifierUrlTest(source.SIKALOC_TEST_SUPABASE_URL ?? ''))
-  ajouter('Clés Supabase Test', () => {
-    verifierConfigurationCles(source)
-    return 'présentes et projet/roles vérifiés sans afficher les clés'
+  ajouter('Clé publique Supabase Test', () => {
+    verifierUrlTest(source.SIKALOC_TEST_SUPABASE_URL ?? '')
+    const cle = source.SIKALOC_TEST_SUPABASE_ANON_KEY?.trim() ?? ''
+    if (!cle) throw new Error('SIKALOC_TEST_SUPABASE_ANON_KEY est absente.')
+    const verification = verifierClePublique(cle, 'SIKALOC_TEST_SUPABASE_ANON_KEY')
+    return verification.referenceProjetVerifiee
+      ? 'rôle anon et référence Test vérifiés; valeur masquée'
+      : 'format publishable reconnu; correspondance clé/projet non vérifiable hors ligne; valeur masquée'
+  })
+  ajouter('Clé serveur Supabase Test', () => {
+    const cle = source.SIKALOC_TEST_SERVICE_ROLE_KEY?.trim() ?? ''
+    if (!cle) throw new Error('SIKALOC_TEST_SERVICE_ROLE_KEY est requise pour les routes serveur.')
+    const verification = verifierCleServeur(cle, 'SIKALOC_TEST_SERVICE_ROLE_KEY')
+    return verification.referenceProjetVerifiee
+      ? 'ancienne clé service_role et référence Test vérifiées; valeur masquée'
+      : 'nouvelle clé secrète reconnue; référence projet à confirmer par contrôle de connexion GET; valeur masquée'
   })
   ajouter('Sauvegardes et restauration', () => {
     const preuves = verifierPreuvesSauvegardes(source.SIKALOC_TEST_BACKUP_MANIFEST ?? '')
@@ -381,6 +595,29 @@ function verifierCleJwt(cle, roleAttendu, nomVariable) {
   }
 }
 
+function verifierCleServeur(cle, nomVariable) {
+  if (cle.startsWith('sb_secret_')) {
+    if (cle.length <= 'sb_secret_'.length || /\s/.test(cle)) {
+      throw new Error(`${nomVariable} n’a pas un format de clé secrète Supabase valide.`)
+    }
+    return { type: 'secret', referenceProjetVerifiee: false }
+  }
+
+  verifierCleJwt(cle, 'service_role', nomVariable)
+  return { type: 'service_role', referenceProjetVerifiee: true }
+}
+
+function verifierClePublique(cle, nomVariable) {
+  if (cle.split('.').length === 3) {
+    verifierCleJwt(cle, 'anon', nomVariable)
+    return { type: 'anon', referenceProjetVerifiee: true }
+  }
+  if (cle.startsWith('sb_publishable_')) {
+    return { type: 'publishable', referenceProjetVerifiee: false }
+  }
+  throw new Error('La clé publique Test doit être une clé anon JWT ou sb_publishable_.')
+}
+
 function verifierUrlTest(urlBrute) {
   let url
   try {
@@ -405,6 +642,45 @@ function verifierUrlTest(urlBrute) {
   }
 
   return SI_TEST_URL
+}
+
+export async function verifierConnexionProjetTest(source = process.env, fetcher = globalThis.fetch) {
+  const url = verifierUrlTest(source.SIKALOC_TEST_SUPABASE_URL ?? '')
+  const cleServeur = source.SIKALOC_TEST_SERVICE_ROLE_KEY?.trim() ?? ''
+  const clePublique = source.SIKALOC_TEST_SUPABASE_ANON_KEY?.trim() ?? ''
+  if (!cleServeur) throw new Error('SIKALOC_TEST_SERVICE_ROLE_KEY est absente.')
+  if (!clePublique) throw new Error('SIKALOC_TEST_SUPABASE_ANON_KEY est absente.')
+
+  const typeServeur = verifierCleServeur(cleServeur, 'SIKALOC_TEST_SERVICE_ROLE_KEY').type
+  const typePublic = verifierClePublique(clePublique, 'SIKALOC_TEST_SUPABASE_ANON_KEY').type
+  const testerCle = async (cle, type) => {
+    const headers = new Headers({ apikey: cle })
+    const headerNames = ['apikey']
+    if (type === 'service_role' || type === 'anon') {
+      headers.set('Authorization', `Bearer ${cle}`)
+      headerNames.push('Authorization')
+    }
+    try {
+      const reponse = await fetcher(`${url}/auth/v1/settings`, {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+        redirect: 'error',
+        signal: AbortSignal.timeout(15_000),
+      })
+      const resultat = { type, status: reponse.status, accepted: reponse.ok, headerNames }
+      await reponse.body?.cancel().catch(() => {})
+      return resultat
+    } catch {
+      return { type, status: null, accepted: false, headerNames }
+    }
+  }
+
+  const [server, publicClient] = await Promise.all([
+    testerCle(cleServeur, typeServeur),
+    testerCle(clePublique, typePublic),
+  ])
+  return { projectRef: SI_TEST_REF, method: 'GET', path: '/auth/v1/settings', server, publicClient }
 }
 
 export function construireEnvironnementRecette(source = process.env, nomsEnvCharges = []) {
@@ -542,10 +818,22 @@ export function lancerRecette(source = process.env, repertoire = racine) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    if (process.argv.includes('--preflight')) {
-      afficherPreflightRecette(process.env, collecterNomsEnvNext())
+    const source = fusionnerConfigurationRecettePrivee(process.env)
+    if (process.argv.includes('--check-connection')) {
+      const resultat = await verifierConnexionProjetTest(source)
+      for (const [nom, controle] of Object.entries({ serveur: resultat.server, publique: resultat.publicClient })) {
+        const statut = controle.status === null ? 'erreur réseau' : `HTTP ${controle.status}`
+        console.info(`[${controle.accepted ? 'OK' : 'ÉCHEC'}] clé ${nom} (${controle.type}) — ${statut}`)
+      }
+      console.info(
+        `Contrôle GET ${resultat.path} en lecture seule sur ${resultat.projectRef}; aucune table ni donnée métier consultée. ` +
+        'Ce contrôle ne valide pas les sauvegardes ou les emails Auth et ne débloque pas le lancement de la recette.',
+      )
+      if (!resultat.server.accepted || !resultat.publicClient.accepted) process.exitCode = 1
+    } else if (process.argv.includes('--preflight')) {
+      afficherPreflightRecette(source, collecterNomsEnvNext())
     } else {
-      lancerRecette()
+      lancerRecette(source)
     }
   } catch (cause) {
     console.error(`Recette Sikaloc-Test arrêtée sans démarrer l’application : ${cause.message}`)

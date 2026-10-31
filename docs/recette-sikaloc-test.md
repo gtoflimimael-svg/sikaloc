@@ -12,6 +12,16 @@ Le serveur connecté ne doit être lancé qu'après validation du préflight, av
 npm run dev:sikaloc-test
 ```
 
+Le lanceur lit `~/.config/sikaloc-test/app.env` et, s'il existe, `~/.config/sikaloc-test/admin.env`. Les deux fichiers doivent être ordinaires, appartenir à l'utilisateur courant, être en mode `0600` au plus, et leur dossier direct en mode `0700` au plus; `.config` doit également rester privé. Les liens symboliques, variables inconnues, doublons et valeurs contradictoires sont refusés. Les fichiers ne sont jamais chargés comme des scripts shell et leurs valeurs ne sont pas affichées.
+
+Noms acceptés pour les informations API actuellement utilisées : `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Le lanceur les associe aux variables internes réservées à Test, vérifie que l'URL cible exactement `epjpcmvdvshxfsydltgf`, puis transmet la clé publishable sous le nom client attendu par l'application. Une ancienne clé publique `NEXT_PUBLIC_SUPABASE_ANON_KEY` reste acceptée. Une clé `sb_publishable_…` est opaque : sans connexion réseau, le préflight vérifie son format, mais ne peut pas prouver qu'elle appartient à la référence Test indiquée.
+
+Dans le fichier privé `admin.env`, la clé serveur peut être nommée `SIKALOC_TEST_SERVICE_ROLE_KEY` (compatibilité avec le nom historique) ou `SIKALOC_TEST_SUPABASE_SECRET_KEY`. Les deux formats de valeur sont acceptés : l'ancien JWT `service_role`, dont le projet et le rôle sont vérifiés localement, et la nouvelle clé `sb_secret_…`, opaque hors ligne. `npm run verifier:connexion-sikaloc-test` effectue des requêtes `GET /rest/v1/` vers l'URL fixe de Test avec la clé serveur et la clé publique, sans lire de table ni écrire de donnée; il n'affiche pas les réponses. Ce contrôle réseau ne remplace pas les preuves de sauvegarde ni le test des emails Auth. Le nom générique `SUPABASE_SERVICE_ROLE_KEY` est refusé dans les fichiers privés.
+
+Le secret reste exclusivement serveur : il n'est jamais affecté à une variable `NEXT_PUBLIC_*`. Le client Admin adapte les requêtes `sb_secret_…` pour les envoyer dans `apikey` uniquement; les Bearer d'une session utilisateur et l'ancien JWT `service_role` restent inchangés. Les secrets FedaPay éventuels doivent être les trois valeurs dédiées `SIKALOC_TEST_FEDAPAY_PUBLIC_KEY`, `SIKALOC_TEST_FEDAPAY_SECRET_KEY` et `SIKALOC_TEST_FEDAPAY_WEBHOOK_SECRET`, avec une clé sandbox.
+
+Le fichier API seul ne permet pas de démarrer la recette : la clé serveur Test et le manifeste de sauvegardes/restaurations vérifiées restent obligatoires. Le préflight est local et consultatif; il ne contacte aucune base. La vérification `verifier:connexion-sikaloc-test` est un contrôle de connectivité distinct et ne lève aucune condition de lancement.
+
 Le lanceur exige `SIKALOC_TEST_BACKUP_MANIFEST`, chemin absolu vers un manifeste JSON situé hors du dépôt. Les anciens indicateurs `*_VERIFIED=1` ne sont pas acceptés comme preuves.
 
 ## Format des preuves
