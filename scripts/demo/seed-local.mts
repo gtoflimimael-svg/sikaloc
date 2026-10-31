@@ -635,6 +635,9 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
     logementPays: String(logement.pays ?? 'Bénin'),
     logementType: String(logement.type),
     loyerMensuel: Number(finances.loyer_mensuel ?? bail.loyer_mensuel),
+    montantExigible: typeof finances.montant_exigible === 'number'
+      ? Number(finances.montant_exigible)
+      : null,
     montantCumule: Number(finances.cumul_loyer),
     montantExcedentaire: Number(finances.trop_percu ?? 0),
     periodeDebut,
@@ -643,7 +646,7 @@ async function genererDocumentPaiement(acteur: string, paiementId: string, valid
     datePaiement,
     modePaiement: String(finances.mode_paiement),
     typePaiement,
-    estPartiel: Boolean(finances.est_partiel),
+    estPartiel: typeof finances.est_partiel === 'boolean' ? finances.est_partiel : null,
     signatureDataUri: null,
     signatureLocataireDataUri: null,
     signatureBailleurEtat: 'non-apposee',

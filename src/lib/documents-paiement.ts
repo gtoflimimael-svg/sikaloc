@@ -3,9 +3,37 @@ import type { TypeDocument, TypePaiement } from '@/lib/types/database'
 /** Seul un loyer entièrement réglé peut produire une quittance de loyer. */
 export function typeDocumentPaiement(
   typePaiement: TypePaiement,
-  estPartiel: boolean,
+  estPartiel: boolean | null,
 ): TypeDocument {
-  return typePaiement === 'Loyer' && !estPartiel ? 'Quittance' : 'Reçu'
+  return typePaiement === 'Loyer' && estPartiel === false ? 'Quittance' : 'Reçu'
+}
+
+export type EtatPaiementFinance = 'Brouillon' | 'Partiel' | 'Payé' | 'À déterminer'
+
+/** Le snapshot du document prévaut sur l'indicateur historique de la ligne. */
+export function etatPaiementFinance({
+  statut,
+  typePaiement,
+  estPartiel,
+  finances,
+}: {
+  statut: string
+  typePaiement: TypePaiement
+  estPartiel: boolean | null
+  finances?: unknown
+}): EtatPaiementFinance {
+  if (statut !== 'Validé') return 'Brouillon'
+  if (typePaiement !== 'Loyer') return 'Payé'
+
+  const snapshot = finances && typeof finances === 'object' && !Array.isArray(finances)
+    ? finances as Record<string, unknown>
+    : null
+  const partiel = snapshot && Object.hasOwn(snapshot, 'est_partiel')
+    ? snapshot.est_partiel
+    : estPartiel
+
+  if (typeof partiel !== 'boolean') return 'À déterminer'
+  return partiel ? 'Partiel' : 'Payé'
 }
 
 export interface ApercuDocumentPaiement {
@@ -75,16 +103,19 @@ export function apercuDocumentPaiement({
     return { cumul: null, solde: null, estPartiel: null, typeDocument: 'Reçu' }
   }
 
-  if (loyerApplicable === null || cumulValideAvant === null) {
+  if (
+    !Number.isFinite(montant) || montant <= 0 ||
+    (loyerApplicable !== null && (!Number.isFinite(loyerApplicable) || loyerApplicable < 0)) ||
+    (cumulValideAvant !== null && (!Number.isFinite(cumulValideAvant) || cumulValideAvant < 0))
+  ) {
     return { cumul: null, solde: null, estPartiel: null, typeDocument: null }
   }
 
-  if (
-    !Number.isFinite(montant) || montant <= 0 ||
-    !Number.isFinite(loyerApplicable) || loyerApplicable <= 0 ||
-    !Number.isFinite(cumulValideAvant) || cumulValideAvant < 0
-  ) {
-    return { cumul: null, solde: null, estPartiel: null, typeDocument: null }
+  // Un reçu peut attester le versement sans établir le montant contractuel dû.
+  // Dans ce cas, il ne présente aucun solde et ne devient jamais une quittance.
+  if (loyerApplicable === null || cumulValideAvant === null) {
+    const cumul = cumulValideAvant === null ? null : cumulValideAvant + montant
+    return { cumul, solde: null, estPartiel: null, typeDocument: 'Reçu' }
   }
 
   const cumul = cumulValideAvant + montant

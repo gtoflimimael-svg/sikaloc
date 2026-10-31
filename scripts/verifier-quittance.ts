@@ -96,6 +96,7 @@ const exemple: DonneesQuittance = {
   logementType: 'Appartement',
 
   loyerMensuel: 60_000,
+  montantExigible: 60_000,
   periodeDebut: '2026-08-01',
   periodeFin: '2026-08-31',
 

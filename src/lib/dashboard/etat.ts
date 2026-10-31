@@ -12,6 +12,8 @@ export type ActionContextuelleDashboard =
 
 export type RecouvrementDashboard = {
   attendu: number
+  attenduComplet: boolean
+  nbConditionsApreciser: number
   valide: number
   taux: number | null
   progression: number | null
@@ -26,21 +28,27 @@ export type RecouvrementDashboard = {
 export function presenterRecouvrementDashboard(
   attenduSource: number | string | null | undefined,
   valideSource: number | string | null | undefined,
+  nbConditionsApreciserSource: number | string | null | undefined = 0,
 ): RecouvrementDashboard | null {
   if (attenduSource == null || valideSource == null || attenduSource === '' || valideSource === '') return null
 
   const attendu = Number(attenduSource)
   const valide = Number(valideSource)
-  if (!Number.isFinite(attendu) || !Number.isFinite(valide) || attendu < 0 || valide < 0) return null
+  const nbConditionsApreciser = Number(nbConditionsApreciserSource)
+  if (!Number.isFinite(attendu) || !Number.isFinite(valide) || !Number.isInteger(nbConditionsApreciser)
+      || attendu < 0 || valide < 0 || nbConditionsApreciser < 0) return null
 
-  const taux = attendu > 0 ? Math.round((valide / attendu) * 100) : null
+  const attenduComplet = nbConditionsApreciser === 0
+  const taux = attenduComplet && attendu > 0 ? Math.round((valide / attendu) * 100) : null
   return {
     attendu,
+    attenduComplet,
+    nbConditionsApreciser,
     valide,
     taux,
     progression: taux === null ? null : Math.max(0, Math.min(taux, 100)),
-    reste: Math.max(0, attendu - valide),
-    excedent: Math.max(0, valide - attendu),
+    reste: attenduComplet ? Math.max(0, attendu - valide) : 0,
+    excedent: attenduComplet ? Math.max(0, valide - attendu) : 0,
   }
 }
 

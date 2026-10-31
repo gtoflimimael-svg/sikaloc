@@ -130,6 +130,33 @@ export function FormulaireBail({
         </div>
 
       </SectionFormulaire>
+      <SectionFormulaire
+        titre="Premier loyer"
+        description="Saisissez le montant et la date convenus au contrat. Sikaloc ne calcule pas de prorata."
+      >
+        <div className="grid gap-lg sm:grid-cols-2">
+          <ChampMontant
+            nom="premierLoyerMontant"
+            libelle="Montant exigible"
+            valeurDefaut={bail?.premier_loyer_montant ?? undefined}
+            requis={!bail}
+            erreur={etat.erreursChamps?.premierLoyerMontant}
+          />
+          <ChampTexte
+            nom="premierLoyerDuLe"
+            libelle="Exigible à partir du"
+            type="date"
+            valeurDefaut={bail?.premier_loyer_du_le ?? undefined}
+            requis={!bail}
+            erreur={etat.erreursChamps?.premierLoyerDuLe}
+          />
+        </div>
+        {bail && !bail.premier_loyer_du_le ? (
+          <p className="text-caption text-mute">
+            Conditions du premier loyer non établies. Laissez les deux champs vides tant qu’elles ne sont pas vérifiées.
+          </p>
+        ) : null}
+      </SectionFormulaire>
       <SectionFormulaire titre="Échéance et garantie">
         <div className="grid gap-lg sm:grid-cols-2">
           <ChampTexte

@@ -79,6 +79,17 @@ test('l’action transmet intégralement le code à Supabase verifyOtp', async (
   assert.doesNotMatch(action, /replace\(|slice\(/)
 })
 
+test('le template local remet le code OTP à six chiffres sur l’écran de vérification', async () => {
+  const template = await readFile(new URL('supabase/templates/confirmation.html', racine), 'utf8')
+  const configuration = await readFile(new URL('supabase/config.toml', racine), 'utf8')
+  assert.match(template, /\{\{\s*\.Token\s*\}\}/)
+  assert.doesNotMatch(template, /\{\{\s*\.ConfirmationURL\s*\}\}/)
+  assert.match(template, /href="\{\{\s*\.SiteURL\s*\}\}\/verification"/)
+  assert.match(configuration, /\[auth\.email\][\s\S]*?otp_length\s*=\s*6/)
+  const action = await readFile(new URL('src/lib/actions/verification.ts', racine), 'utf8')
+  assert.match(action, /auth\.verifyOtp\(\{[\s\S]*token: code,[\s\S]*type: 'signup'/)
+})
+
 test('un code invalide ou expiré ne contourne pas la confirmation email', async () => {
   const source = await readFile(new URL('src/lib/actions/verification.ts', racine), 'utf8')
   const action = source.slice(

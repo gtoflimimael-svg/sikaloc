@@ -22,6 +22,7 @@ const base = {
   logementPays: 'Bénin',
   logementType: 'Appartement de démonstration',
   loyerMensuel: 120_000,
+  montantExigible: 120_000,
   periodeDebut: '2026-03-01',
   periodeFin: '2026-03-31',
   typePaiement: 'Loyer' as const,

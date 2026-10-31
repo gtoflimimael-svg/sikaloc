@@ -100,7 +100,10 @@ function LignePaiement({
               : 'Date de versement non précisée'}
             {' · '}
             {paiement.mode_paiement}
-            {paiement.est_partiel ? ' · versement partiel' : null}
+            {paiement.est_partiel === true ? ' · versement partiel' : null}
+            {paiement.type_paiement === 'Loyer' && paiement.est_partiel === null
+              ? ' · solde à déterminer'
+              : null}
           </p>
 
           {montrerAdresse && bail ? (

@@ -261,7 +261,7 @@ export async function exporterDonnees(
             p.montant,
             p.mode_paiement,
             p.type_paiement,
-            p.est_partiel ? 'oui' : 'non',
+            p.est_partiel === null ? 'à déterminer' : p.est_partiel ? 'oui' : 'non',
             p.statut,
           ]
         }),

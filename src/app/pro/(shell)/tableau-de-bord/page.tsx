@@ -99,7 +99,9 @@ function SyntheseRecouvrement({
 }) {
   const { attendu, valide, taux, progression, excedent } = recouvrement
   const libellePeriode = formaterPeriode(periode)
-  const description = attendu === 0
+  const description = !recouvrement.attenduComplet
+    ? `${recouvrement.nbConditionsApreciser} premier${recouvrement.nbConditionsApreciser > 1 ? 's' : ''} loyer${recouvrement.nbConditionsApreciser > 1 ? 's' : ''} à préciser ; le taux global n’est pas calculé.`
+    : attendu === 0
     ? valide > 0
       ? 'Des loyers ont été validés, sans montant attendu sur cette période.'
       : 'Aucun loyer attendu sur cette période.'
@@ -117,7 +119,7 @@ function SyntheseRecouvrement({
       <div className="dashboard-collection-heading">
         <div>
           <h2 id="recouvrement-mois" className="dashboard-collection-title">
-            {taux === null ? '—' : `${taux} %`}
+            {!recouvrement.attenduComplet ? 'À préciser' : taux === null ? '—' : `${taux} %`}
           </h2>
           <p className="dashboard-collection-caption">{description}</p>
         </div>
@@ -127,7 +129,7 @@ function SyntheseRecouvrement({
             <strong>{formaterFCFA(valide)}</strong>
           </div>
           <div>
-            <span>Attendu</span>
+            <span>{recouvrement.attenduComplet ? 'Attendu' : 'Montant établi'}</span>
             <strong>{formaterFCFA(attendu)}</strong>
           </div>
         </div>
@@ -598,7 +600,11 @@ export default async function PageTableauDeBord({
   const echeances = (echeancesReponse.data ?? []) as EcheanceDashboard[]
   const periodeCourante = periodeCouranteDashboard()
   const recouvrement = metriques
-    ? presenterRecouvrementDashboard(metriques.loyers_attendus_mois, metriques.loyers_percus_mois)
+    ? presenterRecouvrementDashboard(
+        metriques.loyers_attendus_mois,
+        metriques.loyers_percus_mois,
+        metriques.nb_loyers_a_determiner_mois,
+      )
     : null
   const nbBauxActifs = logements.reduce(
     (total, logement) => total + (logement.baux?.filter((bail) => bail.statut === 'Actif').length ?? 0),
@@ -610,7 +616,7 @@ export default async function PageTableauDeBord({
     (logement) => !logementOccupe(logement) && !annonceVivante(logement),
   )
   const suiviUrgentConnu = !impayesReponse.error && !brouillonsReponse.error
-  const actionContextuelle = metriques && recouvrement
+  const actionContextuelle = metriques && recouvrement?.attenduComplet
     ? determinerActionContextuelleDashboard({
         nbBauxActifs,
         nbLogementsLibres,

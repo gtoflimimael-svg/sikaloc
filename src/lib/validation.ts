@@ -4,6 +4,7 @@ import { LONGUEUR_MAXIMALE, messageRefus } from '@/lib/mot-de-passe'
 import { MESSAGES_TELEPHONE, validerTelephone } from '@/lib/telephone'
 import { evaluerMotDePasse } from '@/lib/mot-de-passe-evaluation'
 import { EQUIPEMENTS_ANNONCE } from '@/lib/types/database'
+import { verifierConditionsPremierLoyer } from '@/lib/premier-loyer'
 
 /**
  * Schémas de validation partagés.
@@ -263,6 +264,14 @@ export const schemaBail = z
     locataireId: z.uuid('Sélectionnez un locataire.'),
     loyerMensuel: montant,
     dateDebut: dateISO,
+    premierLoyerMontant: z.preprocess(
+      vide,
+      z.coerce.number({ error: 'Montant du premier loyer invalide.' })
+        .min(0, 'Le premier loyer ne peut pas être négatif.')
+        .max(999_999_999, 'Le montant est trop élevé.')
+        .optional(),
+    ),
+    premierLoyerDuLe: z.preprocess(vide, dateISO.optional()),
     dateFin: dateISO.optional().or(z.literal('')),
     jourEcheance: z.coerce
       .number({ error: "Jour d'échéance invalide." })
@@ -284,6 +293,34 @@ export const schemaBail = z
   .refine((d) => !d.dateFin || d.dateFin >= d.dateDebut, {
     message: 'La date de fin doit être postérieure à la date de début.',
     path: ['dateFin'],
+  })
+  .superRefine((d, contexte) => {
+    const conditions = verifierConditionsPremierLoyer({
+      dateDebut: d.dateDebut,
+      montant: d.premierLoyerMontant,
+      exigibleLe: d.premierLoyerDuLe,
+    })
+    if (conditions.etat === 'incomplet') {
+      contexte.addIssue({
+        code: 'custom',
+        message: 'Renseignez à la fois le montant convenu et sa date d’exigibilité.',
+        path: ['premierLoyerMontant'],
+      })
+    }
+    if (conditions.etat === 'date_avant_debut') {
+      contexte.addIssue({
+        code: 'custom',
+        message: 'Le premier loyer ne peut pas être exigible avant le début du bail.',
+        path: ['premierLoyerDuLe'],
+      })
+    }
+    if (conditions.etat === 'date_invalide') {
+      contexte.addIssue({
+        code: 'custom',
+        message: 'Vérifiez les dates du bail et du premier loyer.',
+        path: ['premierLoyerDuLe'],
+      })
+    }
   })
 
 export const schemaPaiement = z.object({

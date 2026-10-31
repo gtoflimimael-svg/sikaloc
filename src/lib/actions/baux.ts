@@ -7,6 +7,7 @@ import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaBail, type EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
+import { verifierConditionsPremierLoyer } from '@/lib/premier-loyer'
 
 function lireFormulaire(donnees: FormData) {
   return schemaBail.safeParse({
@@ -14,6 +15,8 @@ function lireFormulaire(donnees: FormData) {
     locataireId: donnees.get('locataireId'),
     loyerMensuel: donnees.get('loyerMensuel'),
     dateDebut: donnees.get('dateDebut'),
+    premierLoyerMontant: donnees.get('premierLoyerMontant'),
+    premierLoyerDuLe: donnees.get('premierLoyerDuLe'),
     dateFin: donnees.get('dateFin') || '',
     jourEcheance: donnees.get('jourEcheance'),
     toleranceJours: donnees.get('toleranceJours') || 5,
@@ -39,6 +42,14 @@ export async function creerBail(
 ): Promise<EtatFormulaire> {
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
+  const conditionsPremierLoyer = verifierConditionsPremierLoyer({
+    dateDebut: analyse.data.dateDebut,
+    montant: analyse.data.premierLoyerMontant,
+    exigibleLe: analyse.data.premierLoyerDuLe,
+  })
+  if (conditionsPremierLoyer.etat !== 'valide') {
+    return { erreursChamps: { premierLoyerMontant: 'Précisez les conditions convenues au contrat.' } }
+  }
 
   const acces = await bailleurAvecEcriture()
   if (!acces.ok) return acces.etat
@@ -52,6 +63,8 @@ export async function creerBail(
       logement_id: analyse.data.logementId,
       locataire_id: analyse.data.locataireId,
       loyer_mensuel: analyse.data.loyerMensuel,
+      premier_loyer_montant: conditionsPremierLoyer.montant,
+      premier_loyer_du_le: conditionsPremierLoyer.exigibleLe,
       date_debut: analyse.data.dateDebut,
       date_fin: analyse.data.dateFin || null,
       jour_echeance: analyse.data.jourEcheance,
@@ -106,6 +119,8 @@ export async function modifierBail(
       logement_id: analyse.data.logementId,
       locataire_id: analyse.data.locataireId,
       loyer_mensuel: analyse.data.loyerMensuel,
+      premier_loyer_montant: analyse.data.premierLoyerMontant ?? null,
+      premier_loyer_du_le: analyse.data.premierLoyerDuLe ?? null,
       date_debut: analyse.data.dateDebut,
       date_fin: analyse.data.dateFin || null,
       jour_echeance: analyse.data.jourEcheance,

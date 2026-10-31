@@ -92,9 +92,10 @@ interface ContexteQuittance {
   logement: Logement
   locataire: Locataire
   finances?: {
-    montant: number; cumul_loyer: number; loyer_mensuel: number; solde_restant: number;
+    montant: number; cumul_loyer: number; loyer_mensuel: number | null;
+    montant_exigible?: number | null; solde_restant: number | null;
     trop_percu?: number
-    est_partiel: boolean; periode_debut: string; periode_fin: string;
+    est_partiel: boolean | null; periode_debut: string; periode_fin: string;
     date_paiement: string; mode_paiement: string; type_paiement: TypePaiement
     versements?: { id: string; empreinte: string }[]
   }
@@ -104,6 +105,14 @@ interface DocumentAutorise {
   quittance: Quittance
   contexte: ContexteQuittance
   signee: boolean
+}
+
+function estPartielSnapshot(
+  finances: ContexteQuittance['finances'],
+  valeurLigne: boolean | null,
+): boolean | null {
+  if (finances && Object.hasOwn(finances, 'est_partiel')) return finances.est_partiel ?? null
+  return valeurLigne
 }
 
 export const REFUS_QUITTANCE = 'Opération impossible ou non autorisée.'
@@ -137,10 +146,15 @@ async function donneesDuContexte(
     chargerSignature(locataire.signature_chemin ?? null),
   ])
   const typePaiement = finances?.type_paiement ?? paiement.type_paiement
-  const estPartiel = finances?.est_partiel ?? paiement.est_partiel
+  const estPartiel = estPartielSnapshot(finances, paiement.est_partiel)
   const loyerMensuel = typePaiement === 'Loyer'
-    ? Number(finances?.loyer_mensuel ?? bail.loyer_mensuel)
+    ? typeof finances?.loyer_mensuel === 'number' ? finances.loyer_mensuel : null
     : 0
+  const montantExigible = typePaiement !== 'Loyer'
+    ? null
+    : typeof finances?.montant_exigible === 'number'
+      ? finances.montant_exigible
+      : null
   const montantCumule = typePaiement === 'Loyer' && finances
     ? Number(finances.cumul_loyer)
     : undefined
@@ -151,7 +165,8 @@ async function donneesDuContexte(
     datePaiement,
     modePaiement: finances?.mode_paiement ?? paiement.mode_paiement,
   }
-  const estQuittanceComplete = typePaiement === 'Loyer' && !estPartiel
+  const estQuittanceComplete = typePaiement === 'Loyer'
+    && estPartiel === false && montantExigible !== null
   let versements: VersementPdf[] = [versementCourant]
 
   if (estQuittanceComplete) {
@@ -209,7 +224,7 @@ async function donneesDuContexte(
   return {
     modeDocument: 'reel',
     numeroDocument: options.numeroDocument ?? '',
-    type: typeDocumentPaiement(typePaiement, estPartiel),
+    type: typeDocumentPaiement(typePaiement, montantExigible === null ? null : estPartiel),
     dateGeneration: options.dateGeneration ?? new Date().toISOString(),
     pays: logement.pays ?? 'Bénin',
     bailleurNom: bailleur.nom, bailleurTelephone: bailleur.telephone,
@@ -219,10 +234,10 @@ async function donneesDuContexte(
     signatureLocataireEtat: signatureLocataire.etat,
     logementAdresse: logement.adresse, logementVille: logement.ville,
     logementPays: logement.pays ?? 'Bénin', logementType: logement.type,
-    loyerMensuel,
+    loyerMensuel, montantExigible,
     montantCumule,
-    montantExcedentaire: typePaiement === 'Loyer'
-      ? Number(finances?.trop_percu ?? Math.max(0, (montantCumule ?? Number(paiement.montant)) - loyerMensuel))
+    montantExcedentaire: typePaiement === 'Loyer' && montantExigible !== null
+      ? Number(finances?.trop_percu ?? Math.max(0, (montantCumule ?? Number(paiement.montant)) - montantExigible))
       : 0,
     periodeDebut: finances?.periode_debut ?? paiement.periode_debut, periodeFin: finances?.periode_fin ?? paiement.periode_fin,
     montant: versementCourant.montant, datePaiement,
@@ -355,7 +370,9 @@ export async function genererEtStocker(
       numeroDocument: quittance.numero_document ?? '',
       type: typeDocumentPaiement(
         contexte.finances?.type_paiement ?? contexte.paiement.type_paiement,
-        contexte.finances?.est_partiel ?? contexte.paiement.est_partiel,
+        typeof contexte.finances?.montant_exigible !== 'number'
+          ? null
+          : estPartielSnapshot(contexte.finances, contexte.paiement.est_partiel),
       ),
     }
   } catch {

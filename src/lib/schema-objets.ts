@@ -172,6 +172,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "contrainte",
+    "nom": "baux_premier_loyer_conditions_coherentes",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+  },
+  {
+    "categorie": "contrainte",
     "nom": "candidats_nom_longueur",
     "migration": "20260919000700_candidatures.sql"
   },
@@ -653,7 +658,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "mes_paiements",
-    "migration": "20260913000700_acces_locataire.sql"
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",
@@ -664,6 +669,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "fonction",
     "nom": "mes_roles",
     "migration": "20260919000800_inscription_candidat.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "montant_exigible_bail_pour_periode",
+    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
   },
   {
     "categorie": "fonction",

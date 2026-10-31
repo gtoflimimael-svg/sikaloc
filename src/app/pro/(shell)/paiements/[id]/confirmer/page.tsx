@@ -69,12 +69,14 @@ export default async function PageConfirmationPaiement({
   const { data: echeance, error: erreurEcheance } = paiement.type_paiement === 'Loyer'
     ? await supabase
         .from('v_echeances')
-        .select('loyer_mensuel, montant_paye')
+        .select('montant_exigible, montant_paye')
         .eq('bail_id', paiement.bail_id)
         .eq('periode_debut', paiement.periode_debut)
         .maybeSingle()
     : { data: null, error: null }
-  const loyerApplicable = echeance ? Number(echeance.loyer_mensuel) : null
+  const loyerApplicable = typeof echeance?.montant_exigible === 'number'
+    ? Number(echeance.montant_exigible)
+    : null
   const montantPayeAuPrealable = echeance ? Number(echeance.montant_paye) : null
   // La vue inclut ce paiement s'il est déjà validé mais que l'émission doit
   // être reprise : ne pas compter son montant deux fois dans l'aperçu.
@@ -110,15 +112,19 @@ export default async function PageConfirmationPaiement({
         </Alerte>
       ) : apercu.estPartiel ? (
         <Alerte ton="attention">
-          Le cumul des versements reste inférieur au loyer applicable à cette période. Le document émis sera
+          Le cumul des versements reste inférieur au montant exigible convenu pour cette période. Le document émis sera
           un <strong>reçu</strong>, pas une quittance : il ne libère pas le
           locataire du solde de {formaterFCFA(apercu.solde ?? 0)}.
+        </Alerte>
+      ) : paiement.type_paiement === 'Loyer' && apercu.estPartiel === null ? (
+        <Alerte ton="info">
+          Le montant exigible de cette période n’est pas établi. Le document sera un reçu du versement, sans calcul de solde ni affirmation de quittance.
         </Alerte>
       ) : null}
 
       {paiement.type_paiement === 'Loyer' && (erreurEcheance || !echeance) ? (
         <Alerte ton="info">
-          Le loyer historique de cette période n’est pas disponible dans l’aperçu. Le calcul financier
+          Le montant exigible de cette période n’est pas disponible dans l’aperçu. Le calcul financier
           et le type de document seront déterminés par la validation sécurisée avant l’émission.
         </Alerte>
       ) : null}
@@ -157,7 +163,7 @@ export default async function PageConfirmationPaiement({
           <Ligne terme="Mode de paiement" definition={paiement.mode_paiement} />
           <Ligne terme="Nature" definition={paiement.type_paiement} />
           {loyerApplicable !== null ? (
-            <Ligne terme="Loyer applicable à la période" definition={formaterFCFA(loyerApplicable)} montant />
+            <Ligne terme="Montant exigible convenu" definition={formaterFCFA(loyerApplicable)} montant />
           ) : null}
           {paiement.type_paiement === 'Loyer' && apercu.cumul !== null && apercu.solde !== null ? (
             <>

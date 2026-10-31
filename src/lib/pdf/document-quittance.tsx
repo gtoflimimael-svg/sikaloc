@@ -312,14 +312,16 @@ interface DonneesQuittanceCommunes {
   logementVille: string
   logementPays: string
   logementType: string
-  loyerMensuel: number
+  loyerMensuel: number | null
+  /** Montant exact exigible, distinct du tarif mensuel pour un premier mois. */
+  montantExigible: number | null
   periodeDebut: string
   periodeFin: string
   montant: number
   datePaiement: string
   modePaiement: string
   typePaiement: TypePaiement
-  estPartiel: boolean
+  estPartiel: boolean | null
   /** Cumul validé du loyer de la période au moment de l'émission. */
   montantCumule?: number
   /** Versements validés pris en compte dans une quittance de loyer complète. */
@@ -369,12 +371,15 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
   const estLoyer = donnees.typePaiement === 'Loyer'
   const estQuittance = estLoyer && donnees.type === 'Quittance'
   const cumul = estLoyer ? (donnees.montantCumule ?? donnees.montant) : 0
-  const soldeRestant = estLoyer ? Math.max(0, donnees.loyerMensuel - cumul) : 0
-  const excedent = estLoyer
-    ? Math.max(0, donnees.montantExcedentaire ?? cumul - donnees.loyerMensuel)
+  const montantExigible = donnees.montantExigible
+  const soldeRestant = estLoyer && montantExigible !== null
+    ? Math.max(0, montantExigible - cumul)
+    : null
+  const excedent = estLoyer && montantExigible !== null
+    ? Math.max(0, donnees.montantExcedentaire ?? cumul - montantExigible)
     : 0
 
-  if (estQuittance && (donnees.estPartiel || cumul < donnees.loyerMensuel)) {
+  if (estQuittance && (donnees.estPartiel !== false || montantExigible === null || cumul < montantExigible)) {
     throw new Error('Une quittance ne peut pas être rendue avec un solde de loyer restant.')
   }
 
@@ -458,20 +463,24 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           {estLoyer ? (
             <>
               <View style={styles.recapCell}>
-                <Text style={styles.recapLabel}>Loyer dû</Text>
-                <Text style={styles.recapValue}>{formaterFCFA(donnees.loyerMensuel)}</Text>
+                <Text style={styles.recapLabel}>Montant exigible</Text>
+                <Text style={styles.recapValue}>
+                  {montantExigible === null ? 'À déterminer' : formaterFCFA(montantExigible)}
+                </Text>
               </View>
               <View style={styles.recapCell}>
                 <Text style={styles.recapLabel}>{estQuittance ? 'Total réglé' : 'Total validé à date'}</Text>
                 <Text style={[styles.recapValue, styles.recapValueEmphasis]}>{formaterFCFA(cumul)}</Text>
               </View>
               <View style={[styles.recapCell, styles.recapCellLast]}>
-                <Text style={styles.recapLabel}>{excedent > 0 ? 'Excédent non reporté' : 'Solde restant'}</Text>
+                <Text style={styles.recapLabel}>
+                  {montantExigible === null ? 'Solde' : excedent > 0 ? 'Excédent non reporté' : 'Solde restant'}
+                </Text>
                 <Text style={[
                   styles.recapValue,
                   soldeRestant === 0 && excedent === 0 ? { color: couleurs.positiveDeep } : { color: couleurs.warningDeep },
                 ]}>
-                  {formaterFCFA(excedent > 0 ? excedent : soldeRestant)}
+                  {soldeRestant === null ? 'À déterminer' : formaterFCFA(excedent > 0 ? excedent : soldeRestant)}
                 </Text>
               </View>
             </>
@@ -514,7 +523,12 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
             <Ligne etiquette="Adresse" valeur={donnees.logementAdresse} />
             <Ligne etiquette="Ville" valeur={`${donnees.logementVille}, ${donnees.logementPays}`} />
             <Ligne etiquette="Type de bien" valeur={donnees.logementType} />
-            {estLoyer ? <Ligne etiquette="Loyer contractuel" valeur={formaterFCFA(donnees.loyerMensuel)} /> : null}
+            {estLoyer ? (
+              <Ligne
+                etiquette="Loyer contractuel"
+                valeur={donnees.loyerMensuel === null ? 'À déterminer' : formaterFCFA(donnees.loyerMensuel)}
+              />
+            ) : null}
           </SectionDetails>
           {plusieursVersements ? (
             <SectionDetails titre="Versements pris en compte" seconde>
@@ -551,7 +565,9 @@ export function DocumentQuittance(donnees: DonneesQuittance) {
           </Text>
           {estLoyer && donnees.type === 'Reçu' ? (
             <Text style={styles.statementNote}>
-              {`Ce reçu porte uniquement sur le versement indiqué et n'atteste pas le règlement intégral de la période. Solde restant : ${formaterFCFA(soldeRestant)}. Les informations reflètent les données enregistrées dans Sikaloc, sans confirmation indépendante d'un prestataire de paiement.`}
+              {soldeRestant === null
+                ? "Le montant exigible de cette période n’est pas déterminé. Ce reçu atteste uniquement le versement indiqué et ne vaut pas quittance. Les informations reflètent les données enregistrées dans Sikaloc, sans confirmation indépendante d’un prestataire de paiement."
+                : `Ce reçu porte uniquement sur le versement indiqué et n'atteste pas le règlement intégral de la période. Solde restant : ${formaterFCFA(soldeRestant)}. Les informations reflètent les données enregistrées dans Sikaloc, sans confirmation indépendante d'un prestataire de paiement.`}
             </Text>
           ) : null}
           {estLoyer && excedent > 0 ? (

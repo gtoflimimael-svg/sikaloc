@@ -17,6 +17,7 @@ export const donneesExempleQuittance: DonneesQuittance = {
   logementPays: 'Bénin',
   logementType: 'Appartement de démonstration',
   loyerMensuel: 75_000,
+  montantExigible: 75_000,
   periodeDebut: '2026-03-01',
   periodeFin: '2026-03-31',
   montant: 75_000,

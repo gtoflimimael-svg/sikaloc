@@ -105,6 +105,8 @@ test('la prochaine action suit les vrais prérequis du logement vacant', () => {
 test('le recouvrement distingue absence d’attendu, zéro, partiel et règlement complet', () => {
   assert.deepEqual(presenterRecouvrementDashboard(0, 0), {
     attendu: 0,
+    attenduComplet: true,
+    nbConditionsApreciser: 0,
     valide: 0,
     taux: null,
     progression: null,
@@ -122,11 +124,26 @@ test('le recouvrement distingue absence d’attendu, zéro, partiel et règlemen
 test('un excédent reste visible sans faire dépasser la barre de son échelle', () => {
   assert.deepEqual(presenterRecouvrementDashboard(20000, 25000), {
     attendu: 20000,
+    attenduComplet: true,
+    nbConditionsApreciser: 0,
     valide: 25000,
     taux: 125,
     progression: 100,
     reste: 0,
     excedent: 5000,
+  })
+})
+
+test('un premier loyer indéterminé empêche un taux de recouvrement trompeur', () => {
+  assert.deepEqual(presenterRecouvrementDashboard(100000, 50000, 1), {
+    attendu: 100000,
+    attenduComplet: false,
+    nbConditionsApreciser: 1,
+    valide: 50000,
+    taux: null,
+    progression: null,
+    reste: 0,
+    excedent: 0,
   })
 })
 

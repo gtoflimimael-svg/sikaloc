@@ -99,9 +99,9 @@ export const EXPLICATION_ETAT: Record<EtatEcheance, string> = {
     'l’enregistrer.',
   // Le message le plus important de l'écran. Voir le commentaire ci-dessous.
   'À déterminer':
-    'Ce mois précède l’arrivée de votre bailleur sur Sikaloc, et il ne s’est ' +
-    'pas encore prononcé dessus. Ce n’est pas un impayé : Sikaloc n’en sait ' +
-    'simplement rien.',
+    'Le montant ou les conditions d’exigibilité de ce mois ne sont pas établis. ' +
+    'Ce n’est ni une confirmation de paiement ni un impayé ; faites le point ' +
+    'avec votre bailleur.',
 }
 
 /**

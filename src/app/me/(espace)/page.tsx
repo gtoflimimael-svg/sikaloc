@@ -113,8 +113,8 @@ export default async function PageAccueilMe() {
           <p className="flex items-start gap-sm text-body-md font-semibold text-ink">
             <CircleHelp size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             {indeterminees.length === 1
-              ? '1 mois antérieur à Sikaloc'
-              : `${indeterminees.length} mois antérieurs à Sikaloc`}
+              ? '1 échéance à préciser'
+              : `${indeterminees.length} échéances à préciser`}
           </p>
           <p className="mt-sm text-body-md text-mute">
             {EXPLICATION_ETAT['À déterminer']} Ces mois n’entrent dans aucun
@@ -238,8 +238,8 @@ function CarteBail({
             Aucun loyer ne vous est réclamé pour ce logement.{' '}
             <span className="text-mute">
               {indeterminesDuBail === 1
-                ? 'Un mois antérieur reste à confirmer avec votre bailleur.'
-                : `${indeterminesDuBail} mois antérieurs restent à confirmer avec votre bailleur.`}
+                ? 'Une échéance reste à clarifier avec votre bailleur.'
+                : `${indeterminesDuBail} échéances restent à clarifier avec votre bailleur.`}
             </span>
           </p>
         ) : (

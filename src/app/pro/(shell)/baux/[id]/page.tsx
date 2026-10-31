@@ -18,6 +18,7 @@ import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Impaye } from '@/lib/types/database'
 import { formaterTelephone } from '@/lib/telephone'
+import { etatPaiementFinance } from '@/lib/documents-paiement'
 
 export const metadata: Metadata = { title: 'Détail du bail' }
 
@@ -61,7 +62,7 @@ export default async function PageDetailBail({
   ] = await Promise.all([
       supabase
         .from('paiements')
-        .select('*, quittance:quittances(id, numero_document, type)')
+        .select('*, quittance:quittances(id, numero_document, type, donnees_financieres)')
         .eq('bail_id', id)
         .order('periode_debut', { ascending: false })
         .limit(24),
@@ -96,6 +97,15 @@ export default async function PageDetailBail({
   const paiementsAffiches = listePaiements.map((paiement) => ({
     paiement,
     quittance: Array.isArray(paiement.quittance) ? paiement.quittance[0] : paiement.quittance,
+  })).map(({ paiement, quittance }) => ({
+    paiement,
+    quittance,
+    etatFinancier: etatPaiementFinance({
+      statut: paiement.statut,
+      typePaiement: paiement.type_paiement,
+      estPartiel: paiement.est_partiel,
+      finances: quittance?.donnees_financieres,
+    }),
   }))
 
   return (
@@ -265,7 +275,7 @@ export default async function PageDetailBail({
         ) : (
           <>
           <ul className="payment-mobile-list sm:hidden" aria-label="Historique des paiements du bail">
-            {paiementsAffiches.map(({ paiement, quittance }) => (
+            {paiementsAffiches.map(({ paiement, quittance, etatFinancier }) => (
               <li key={paiement.id}>
                 <div className="payment-mobile-heading">
                   <h3>{formaterPeriode(paiement.periode_debut)}</h3>
@@ -276,8 +286,8 @@ export default async function PageDetailBail({
                   {paiement.mode_paiement ? ` · ${paiement.mode_paiement}` : ''}
                 </p>
                 <div className="mt-md flex flex-wrap items-center justify-between gap-sm">
-                  <Badge ton={paiement.statut === 'Validé' ? paiement.est_partiel ? 'warning' : 'positive' : 'warning'}>
-                    {paiement.statut === 'Validé' ? paiement.est_partiel ? 'Partiel' : 'Payé' : 'Brouillon'}
+                  <Badge ton={etatFinancier === 'Payé' ? 'positive' : 'warning'}>
+                    {etatFinancier}
                   </Badge>
                   <Link href={quittance ? `/pro/quittances/${quittance.id}` : `/pro/paiements/${paiement.id}/confirmer`} className="text-body-sm font-semibold text-ink underline underline-offset-4">
                     {quittance ? `Voir ${quittance.type === 'Quittance' ? 'la quittance' : 'le reçu'}` : 'À valider'}
@@ -306,7 +316,7 @@ export default async function PageDetailBail({
                 </tr>
               </thead>
               <tbody>
-                {paiementsAffiches.map(({ paiement, quittance }) => {
+                {paiementsAffiches.map(({ paiement, quittance, etatFinancier }) => {
                   return (
                     <tr key={paiement.id}>
                       <td className="font-semibold">
@@ -323,13 +333,9 @@ export default async function PageDetailBail({
                       </td>
                       <td className="hidden sm:table-cell">{paiement.mode_paiement}</td>
                       <td>
-                        {paiement.statut === 'Validé' ? (
-                          <Badge ton={paiement.est_partiel ? 'warning' : 'positive'}>
-                            {paiement.est_partiel ? 'Partiel' : 'Payé'}
-                          </Badge>
-                        ) : (
-                          <Badge ton="warning">Brouillon</Badge>
-                        )}
+                        <Badge ton={etatFinancier === 'Payé' ? 'positive' : 'warning'}>
+                          {etatFinancier}
+                        </Badge>
                       </td>
                       <td className="text-right font-semibold tabular">
                         {formaterFCFA(paiement.montant)}

@@ -132,7 +132,9 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
                     {formaterPeriode(echeance.periode_debut)}
                   </p>
                   <p className="text-caption text-mute">
-                    Échéance le {formaterDate(echeance.date_echeance)}
+                    {echeance.date_echeance
+                      ? `Échéance le ${formaterDate(echeance.date_echeance)}`
+                      : 'Date d’exigibilité à déterminer'}
                     {/*
                       Deux règles, et la seconde a été trouvée dans un
                       navigateur en comparant les deux espaces.
@@ -158,12 +160,17 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
 
                 <BadgeLoyer etat={echeance.etat} />
                 <dl className="me-amounts w-full">
-                  <div><dt>Loyer mensuel</dt><dd className="money">{formaterFCFA(echeance.loyer_mensuel)}</dd></div>
+                  <div>
+                    <dt>Loyer mensuel</dt>
+                    <dd className="money">
+                      {echeance.loyer_mensuel === null ? 'À déterminer' : formaterFCFA(echeance.loyer_mensuel)}
+                    </dd>
+                  </div>
                   {echeance.etat !== 'À déterminer' ? (
                     <>
                       <div><dt>Versements enregistrés</dt><dd className="money">{formaterFCFA(echeance.montant_paye)}</dd></div>
                       <div><dt>Solde de la période</dt><dd className="money">{formaterFCFA(echeance.montant_du)}</dd></div>
-                      {echeance.montant_excedentaire > 0 ? (
+                      {echeance.montant_excedentaire !== null && echeance.montant_excedentaire > 0 ? (
                         <div>
                           <dt>Excédent non reporté</dt>
                           <dd className="money">{formaterFCFA(echeance.montant_excedentaire)}</dd>

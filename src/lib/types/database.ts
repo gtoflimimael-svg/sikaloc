@@ -326,6 +326,10 @@ export type Bail = {
   logement_id: string
   locataire_id: string
   loyer_mensuel: number
+  /** Montant du premier loyer explicitement convenu; NULL si inconnu. */
+  premier_loyer_montant: number | null
+  /** Date d'exigibilité du premier loyer; NULL si inconnue. */
+  premier_loyer_du_le: string | null
   date_debut: string
   date_fin: string | null
   jour_echeance: number
@@ -370,7 +374,7 @@ export type Paiement = {
   periode_fin: string
   mode_paiement: ModePaiement
   type_paiement: TypePaiement
-  est_partiel: boolean
+  est_partiel: boolean | null
   statut: StatutPaiement
   valide_le: string | null
   /**
@@ -577,14 +581,16 @@ export type Echeance = {
   logement_id: string
   periode_debut: string
   periode_fin: string
-  date_echeance: string
-  loyer_mensuel: number
+  date_echeance: string | null
+  loyer_mensuel: number | null
   tolerance_jours: number
   montant_paye: number
-  montant_du: number
+  montant_du: number | null
   /** Part payée au-delà du loyer de ce mois, non affectée au mois suivant. */
-  montant_excedentaire: number
-  jours_de_retard: number
+  montant_excedentaire: number | null
+  jours_de_retard: number | null
+  /** NULL lorsque le contrat ne permet pas d'établir le premier montant dû. */
+  montant_exigible: number | null
   /** L'échéance était déjà échue quand le bail a été enregistré dans Sikaloc. */
   anterieure: boolean
   historique_declare: boolean
@@ -750,12 +756,13 @@ export type EcheanceLocataire = {
   bail_id: string
   periode_debut: string
   periode_fin: string
-  date_echeance: string
-  loyer_mensuel: number
+  date_echeance: string | null
+  loyer_mensuel: number | null
   montant_paye: number
-  montant_du: number
-  montant_excedentaire: number
-  jours_de_retard: number
+  montant_du: number | null
+  montant_excedentaire: number | null
+  jours_de_retard: number | null
+  montant_exigible: number | null
   etat: EtatEcheance
 }
 
@@ -770,7 +777,7 @@ export type PaiementLocataire = {
   periode_fin: string
   mode_paiement: ModePaiement
   type_paiement: TypePaiement
-  est_partiel: boolean
+  est_partiel: boolean | null
   historique: boolean
   quittance_id: string | null
   quittance_numero: string | null
@@ -833,6 +840,7 @@ export type MetriquesDashboard = {
   ca_du_mois: number
   nb_impayes: number
   montant_impaye_total: number
+  nb_loyers_a_determiner_mois: number
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   formaterPeriode,
 } from '@/lib/format'
 import { libelleActionDocumentManquant } from '@/lib/paiement-utils'
+import { etatPaiementFinance } from '@/lib/documents-paiement'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -37,7 +38,7 @@ export default async function PageHistoriquePaiements({
   let requete = supabase
     .from('paiements')
     .select(
-      '*, bail:baux(id, locataire:locataires(nom), logement:logements(adresse)), quittance:quittances(id, numero_document, type)',
+      '*, bail:baux(id, locataire:locataires(nom), logement:logements(adresse)), quittance:quittances(id, numero_document, type, donnees_financieres)',
       { count: 'exact' },
     )
     // `nullsFirst: false` : un paiement historique n'a pas de date, et
@@ -90,7 +91,13 @@ export default async function PageHistoriquePaiements({
     const bail = Array.isArray(paiement.bail) ? paiement.bail[0] : paiement.bail
     const locataire = Array.isArray(bail?.locataire) ? bail.locataire[0] : bail?.locataire
     const quittance = Array.isArray(paiement.quittance) ? paiement.quittance[0] : paiement.quittance
-    return { paiement, locataire, quittance }
+    const etatFinancier = etatPaiementFinance({
+      statut: paiement.statut,
+      typePaiement: paiement.type_paiement,
+      estPartiel: paiement.est_partiel,
+      finances: quittance?.donnees_financieres,
+    })
+    return { paiement, locataire, quittance, etatFinancier }
   })
 
   return (
@@ -183,7 +190,7 @@ export default async function PageHistoriquePaiements({
           </ResumeListe>
 
           <ul className="payment-mobile-list sm:hidden" aria-label="Historique des paiements">
-            {paiementsAffiches.map(({ paiement, locataire, quittance }) => (
+            {paiementsAffiches.map(({ paiement, locataire, quittance, etatFinancier }) => (
               <li key={paiement.id}>
                 <div className="payment-mobile-heading">
                   <h3>{locataire?.nom ?? 'Locataire'}</h3>
@@ -194,8 +201,8 @@ export default async function PageHistoriquePaiements({
                   {paiement.historique ? 'Avant Sikaloc · Paiement historique' : `${formaterDateCourte(paiement.date_paiement)} · ${paiement.mode_paiement}`}
                 </p>
                 <div className="mt-sm flex flex-wrap items-center justify-between gap-sm">
-                  <Badge ton={paiement.statut === 'Validé' && !paiement.est_partiel ? 'positive' : 'warning'}>
-                    {paiement.statut !== 'Validé' ? 'Brouillon' : paiement.est_partiel ? 'Partiel' : 'Payé'}
+                  <Badge ton={etatFinancier === 'Payé' ? 'positive' : 'warning'}>
+                    {etatFinancier}
                   </Badge>
                   {quittance ? (
                     <Link href={`/pro/quittances/${quittance.id}`} className="inline-flex min-h-11 items-center font-semibold underline"
@@ -236,15 +243,7 @@ export default async function PageHistoriquePaiements({
                 </tr>
               </thead>
               <tbody>
-                {liste.map((paiement) => {
-                  const bail = Array.isArray(paiement.bail) ? paiement.bail[0] : paiement.bail
-                  const locataire = Array.isArray(bail?.locataire)
-                    ? bail?.locataire[0]
-                    : bail?.locataire
-                  const quittance = Array.isArray(paiement.quittance)
-                    ? paiement.quittance[0]
-                    : paiement.quittance
-
+                {paiementsAffiches.map(({ paiement, locataire, quittance, etatFinancier }) => {
                   return (
                     <tr key={paiement.id}>
                       <td className="font-semibold">{locataire?.nom ?? '—'}</td>
@@ -261,13 +260,9 @@ export default async function PageHistoriquePaiements({
                       </td>
                       <td className="hidden lg:table-cell">{paiement.mode_paiement}</td>
                       <td>
-                        {paiement.statut === 'Validé' ? (
-                          <Badge ton={paiement.est_partiel ? 'warning' : 'positive'}>
-                            {paiement.est_partiel ? 'Partiel' : 'Payé'}
-                          </Badge>
-                        ) : (
-                          <Badge ton="warning">Brouillon</Badge>
-                        )}
+                        <Badge ton={etatFinancier === 'Payé' ? 'positive' : 'warning'}>
+                          {etatFinancier}
+                        </Badge>
                         {/*
                           Dire d'où vient ce paiement évite de laisser croire
                           que Sikaloc était en service au moment de
