@@ -59,10 +59,12 @@ function useMemoireChamps<C extends string>(champs: readonly C[]) {
 export function FormulaireInscriptionCandidat({
   action,
   connexion,
+  motDePasseOublie,
 }: {
   action: Action
   /** Où va quelqu'un qui a déjà un compte, avec le retour vers l'annonce. */
   connexion: string
+  motDePasseOublie: string
 }) {
   const [etat, envoyer, enCours] = useActionState(action, ETAT_INITIAL)
   const formulaire = useFocusErreur(etat)
@@ -91,7 +93,13 @@ export function FormulaireInscriptionCandidat({
         requis
         erreur={etat.erreursChamps?.email}
       />
-      <ChampTelephone nom="telephone" libelle="Votre téléphone" requis erreur={etat.erreursChamps?.telephone} />
+      <ChampTelephone
+        nom="telephone"
+        libelle="Votre téléphone"
+        exigerPrefixeActuel
+        requis
+        erreur={etat.erreursChamps?.telephone}
+      />
       <ChampMotDePasse
         nom="motDePasse"
         libelle="Mot de passe"
@@ -100,13 +108,22 @@ export function FormulaireInscriptionCandidat({
         erreur={etat.erreursChamps?.motDePasse}
       />
 
-      <BoutonSoumettre libelleEnCours="Création…">Créer mon compte</BoutonSoumettre>
+      <BoutonSoumettre pleineLargeur libelleEnCours="Création…">Créer mon compte</BoutonSoumettre>
 
       <p className="text-center text-body-sm text-mute">
         Vous avez déjà un compte ?{' '}
         <Link href={connexion} className="font-semibold text-ink underline">
           Se connecter
         </Link>
+        <span aria-hidden="true"> · </span>
+        <Link href={motDePasseOublie} className="font-semibold text-ink underline">
+          Mot de passe oublié ?
+        </Link>
+      </p>
+      <p className="text-center text-caption text-mute">
+        En créant un compte, vous acceptez les{' '}
+        <Link href="/legal/conditions" className="underline">conditions d’utilisation</Link>{' '}
+        et la <Link href="/legal/confidentialite" className="underline">politique de confidentialité</Link>.
       </p>
     </form>
   )

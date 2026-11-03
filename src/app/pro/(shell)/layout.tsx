@@ -1,27 +1,38 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import localFont from 'next/font/local'
 
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
-import { BandeauPhoto } from '@/components/app/bandeau-photo'
 import { MenuCompte } from '@/components/app/menu-compte'
-import { BarreLaterale, EnTeteMobile } from '@/components/app/navigation'
+import { BarreLaterale, ContextePro, EnTeteMobile } from '@/components/app/navigation'
 import { VisiteGuidee } from '@/components/app/visite-guidee'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { abonnementActif } from '@/lib/plan'
 import { bailleurCourant } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
-import { ESPACE_PRO } from '@/lib/roles'
+
+const manropePro = localFont({
+  src: [
+    { path: '../../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
+    { path: '../../fonts/Manrope-PDF-Medium.ttf', weight: '500' },
+    { path: '../../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
+    { path: '../../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
+    { path: '../../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
+  ],
+  variable: '--font-pro-display',
+  display: 'swap',
+  preload: false,
+})
 
 /**
  * Le titre des onglets de l'espace bailleur.
  *
- * Le gabarit de la racine dit « … · Sikaloc ». Ici il dit « … · Sikaloc_Pro » :
+ * Le gabarit de la racine dit « … · Sikaloc ». Ici il dit « … · Sikaloc Pro » :
  * sur un navigateur qui porte les deux espaces ouverts côte à côte, c'est
  * l'onglet qui les distingue.
  */
 export const metadata: Metadata = {
-  title: { template: `%s · ${ESPACE_PRO.nom}`, default: ESPACE_PRO.nom },
+  title: { template: '%s · Sikaloc Pro', default: 'Sikaloc Pro' },
 }
 
 export default async function LayoutApplication({
@@ -31,14 +42,8 @@ export default async function LayoutApplication({
 }) {
   const supabase = await creerClientServeur()
 
-  // Ce layout enveloppe CHAQUE page de l'application : la moindre latence
-  // gagnée ici se paie à chaque navigation. Le profil du bailleur et le
-  // compteur d'impayés sont deux lectures indépendantes — toutes deux scopées
-  // par les RLS via le cookie de session, aucune n'a besoin du résultat de
-  // l'autre — donc parties en parallèle plutôt qu'à la suite.
-  //
-  // `head: true` sur le compteur ne rapatrie aucune ligne : seul le total
-  // voyage.
+  // Le profil est d'abord résolu afin de borner explicitement les compteurs à
+  // ce bailleur. `head: true` ne rapatrie aucune ligne : seul le total voyage.
   const [bailleur, { count }] = await Promise.all([
     bailleurCourant(),
     supabase.from('v_impayes').select('bail_id', { count: 'exact', head: true }),
@@ -67,47 +72,31 @@ export default async function LayoutApplication({
   const plan = abonnementActif(bailleur) ? 'Standard' : 'Gratuit'
 
   return (
-    <div className="flex min-h-screen bg-canvas-soft">
+    <div className={`${manropePro.variable} pro-shell flex min-h-screen`}>
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <BarreLaterale impayes={impayes} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <EnTeteMobile
           impayes={impayes}
-          aPhotoBailleur={Boolean(bailleur.photo_chemin)}
           nomBailleur={bailleur.nom}
-          idBailleur={bailleur.id}
-          avatarBailleur={bailleur.avatar}
           emailBailleur={bailleur.email}
           plan={plan}
         />
 
         <BandeauAbonnement bailleur={bailleur} />
-        <BandeauPhoto bailleur={bailleur} />
 
-        <header className="hidden h-16 shrink-0 items-center justify-end gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
-          <Link
-            href="/pro/paiements/nouveau"
-            // Repère de la visite guidée. Le bouton équivalent de l'en-tête
-            // mobile porte le même : `cibleVisible` retient celui qui est
-            // réellement à l'écran, quel que soit l'ordre du DOM.
-            data-visite="bouton-paiement"
-            className="btn btn-primary btn-sm"
-          >
-            Enregistrer un paiement
-          </Link>
+        <header className="pro-topbar hidden h-16 shrink-0 items-center justify-between gap-lg border-b border-hairline bg-canvas px-xl lg:flex">
+          <ContextePro />
           <MenuCompte
-            id={bailleur.id}
-            aPhoto={Boolean(bailleur.photo_chemin)}
-            avatar={bailleur.avatar}
             nom={bailleur.nom}
             email={bailleur.email}
             plan={plan}
           />
         </header>
 
-        <main id="contenu-principal" tabIndex={-1} className="app-main flex-1">
-          <div className="mx-auto max-w-[1100px]">
+        <main id="contenu-principal" tabIndex={-1} className="app-main pro-main flex-1">
+          <div className="pro-content-frame">
             <TransitionPage>{children}</TransitionPage>
           </div>
         </main>

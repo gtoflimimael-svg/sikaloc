@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { FormulairePaiement } from '@/components/app/formulaire-paiement'
-import { EnTetePage } from '@/components/ui/retours'
+import { Alerte, EnTetePage } from '@/components/ui/retours'
 import { enregistrerPaiement } from '@/lib/actions/paiements'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -17,7 +17,7 @@ export default async function PageNouveauPaiement({
 
   // `bailleurOnboarde()` ne fait que vérifier l'accès ; la liste des baux est
   // scopée par les RLS indépendamment. Les deux partent en parallèle.
-  const [, { data: baux }] = await Promise.all([
+  const [, reponseBaux] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('baux')
@@ -25,6 +25,7 @@ export default async function PageNouveauPaiement({
       .eq('statut', 'Actif')
       .order('created_at', { ascending: false }),
   ])
+  const { data: baux, error: erreurBaux } = reponseBaux
 
   const options = (baux ?? []).map((b) => {
     const logement = Array.isArray(b.logement) ? b.logement[0] : b.logement
@@ -38,17 +39,23 @@ export default async function PageNouveauPaiement({
   })
 
   return (
-    <div className="mx-auto max-w-[42rem]">
+    <div className="payment-form-page mx-auto max-w-[42rem]">
       <EnTetePage
         titre="Enregistrer un paiement"
-        description="Vous verrez un récapitulatif avant validation. La quittance est générée à la confirmation."
+        description="Vous verrez un récapitulatif avant validation. À la confirmation, Sikaloc produit le reçu ou la quittance correspondant au paiement."
       />
 
-      <FormulairePaiement
-        action={enregistrerPaiement}
-        baux={options}
-        bailPreselectionne={bail}
-      />
+      {erreurBaux ? (
+        <Alerte ton="erreur">
+          Les baux actifs n’ont pas pu être chargés. Aucun paiement ne peut être préparé avant de réessayer.
+        </Alerte>
+      ) : (
+        <FormulairePaiement
+          action={enregistrerPaiement}
+          baux={options}
+          bailPreselectionne={bail}
+        />
+      )}
     </div>
   )
 }

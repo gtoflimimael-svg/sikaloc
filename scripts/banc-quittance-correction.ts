@@ -132,7 +132,7 @@ const seul = <T>(v: T | T[] | null | undefined): T | undefined =>
    * familles au chargement ; `rendrePdf` charge `@react-pdf/renderer` par un
    * `import()` différé, parce que le paquet est lourd. Sous tsx, ces deux
    * chemins résolvent DEUX instances du module — la CJS et l'ESM — chacune avec
-   * son propre registre. Le rendu partait donc chercher StyreneB dans un
+   * son propre registre. Le rendu partait donc chercher une police absente dans un
    * registre vide.
    *
    * C'est un artefact du transpileur, pas un défaut du produit : un bundler

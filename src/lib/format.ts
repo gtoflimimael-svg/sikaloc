@@ -18,7 +18,6 @@ export function formaterFCFA(montant: number | string | null | undefined): strin
 
   return `${formaterNombre(valeur)}${ESPACE_INSECABLE}FCFA`
 }
-
 /** « 150 000 » — sans unité, pour les cellules de tableau déjà légendées. */
 export function formaterNombre(montant: number | string | null | undefined): string {
   const valeur = Number(montant ?? 0)
@@ -133,14 +132,4 @@ export function periodesRecentes(nbMois = 18): { valeur: string; libelle: string
   }
 
   return periodes
-}
-
-/** Initiales pour l'avatar d'un locataire. */
-export function initiales(nom: string): string {
-  return nom
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((mot) => mot.charAt(0).toUpperCase())
-    .join('')
 }

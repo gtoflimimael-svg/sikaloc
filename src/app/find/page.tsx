@@ -15,6 +15,7 @@ import {
   type ParametresBruts,
 } from '@/lib/find/recherche'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
+import { lireNumeroPage } from '@/lib/pagination'
 import type { AnnoncePublique } from '@/lib/types/database'
 
 /**
@@ -39,21 +40,13 @@ import type { AnnoncePublique } from '@/lib/types/database'
  * `lib/find/recherche.ts`) ; seule une `page` qui n'en est pas une répond 404.
  */
 
+// Valider l’URL avant les lectures garantit les vraies réponses 404. Le GET
+// natif annonce sa recherche en cours sans diffuser un document partiel.
 const PAR_PAGE = 24
-const PAGE_MAX = 1000
 
 const TITRE = 'Logements à louer au Bénin — Sikaloc_Find'
 const DESCRIPTION =
-  'Appartements, maisons, studios et boutiques à louer au Bénin, publiés par leurs bailleurs sur ' +
-  'Sikaloc. Loyer, charges, caution, équipements et disponibilité, sans adresse exacte.'
-
-/** `undefined` → page 1 ; un entier valide → ce nombre ; tout le reste → `null`. */
-function lirePage(brut: string | string[] | undefined): number | null {
-  if (brut === undefined) return 1
-  if (typeof brut !== 'string' || !/^[1-9]\d{0,3}$/.test(brut)) return null
-  const page = Number(brut)
-  return page <= PAGE_MAX ? page : null
-}
+  'Explorez les logements disponibles au Bénin, comparez leurs caractéristiques et trouvez celui qui correspond à vos besoins.'
 
 export async function generateMetadata({
   searchParams,
@@ -61,7 +54,7 @@ export async function generateMetadata({
   searchParams: Promise<ParametresBruts>
 }): Promise<Metadata> {
   const parametres = await searchParams
-  const page = lirePage(parametres.page)
+  const page = lireNumeroPage(parametres.page)
   const filtres = lireFiltres(parametres)
   const filtree = !aucunFiltre(filtres)
 
@@ -88,19 +81,9 @@ export async function generateMetadata({
   }
 }
 
-export default async function PageFind({ searchParams }: { searchParams: Promise<ParametresBruts> }) {
-  const parametres = await searchParams
-  if (parametres.page === '1') redirect(urlRecherche(lireFiltres(parametres)))
-  const page = lirePage(parametres.page)
-  if (page === null) notFound()
-
-  const filtres = lireFiltres(parametres)
-  const filtree = !aucunFiltre(filtres)
-  const actifs = pastilles(filtres)
-
+async function chargerCatalogue(filtres: ReturnType<typeof lireFiltres>, page: number) {
   const supabase = await creerClientServeur()
-  const [utilisateur, { data, error }, lieux] = await Promise.all([
-    obtenirUtilisateur(),
+  const [{ data, error }, lieux] = await Promise.all([
     supabase.rpc('annonces_recherche', argumentsRecherche(filtres, PAR_PAGE + 1, (page - 1) * PAR_PAGE)),
     supabase.rpc('lieux_publies'),
   ])
@@ -108,131 +91,139 @@ export default async function PageFind({ searchParams }: { searchParams: Promise
   if (error) console.error('[find] recherche indisponible', error.code, error.message)
   if (lieux.error) console.error('[find] lieux indisponibles', lieux.error.code, lieux.error.message)
 
-  const recues = (data ?? []) as AnnoncePublique[]
-  if (!error && page > 1 && recues.length === 0) notFound()
+  return { data, error, lieux: lieux.data ?? [], erreurLieux: lieux.error }
+}
 
-  const annonces = recues.slice(0, PAR_PAGE)
-  const suivante = recues.length > PAR_PAGE
+type ResultatCatalogue = Awaited<ReturnType<typeof chargerCatalogue>>
+
+function ResultatsCatalogue({
+  filtres,
+  page,
+  resultats,
+}: {
+  filtres: ReturnType<typeof lireFiltres>
+  page: number
+  resultats: ResultatCatalogue
+}) {
+  const filtree = !aucunFiltre(filtres)
+  const actifs = pastilles(filtres)
+  const annoncesRecues = (resultats.data ?? []) as AnnoncePublique[]
+  const annoncesErreur = resultats.error
+  const annonces = annoncesRecues.slice(0, PAR_PAGE)
+  const suivante = annoncesRecues.length > PAR_PAGE
   // Une date par page, pas par carte : toutes disent « maintenant » au même instant.
   const aujourdhui = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <>
+      <section aria-label="Recherche de logements" className="find-catalog-search-section">
+        <FiltresFind filtres={filtres} lieux={resultats.lieux} nbFiltresActifs={actifs.length} />
+      </section>
+
+      <section className="find-catalog-results" aria-labelledby="find-results-title">
+        <div className="find-results-heading">
+          <div>
+            <p className="find-results-eyebrow">Le catalogue</p>
+            <h2 id="find-results-title">Logements disponibles</h2>
+          </div>
+          <p className="find-privacy-note">Les adresses exactes restent privées.</p>
+        </div>
+
+        {resultats.erreurLieux ? <Alerte ton="attention">Les choix de lieux ne sont pas disponibles pour le moment. Les autres critères restent utilisables.</Alerte> : null}
+        {actifs.length > 0 ? (
+          <div className="find-active-filters">
+            <h3 className="sr-only">Filtres actifs</h3>
+            <ul>
+              {actifs.map((p) => (
+                <li key={p.cle}>
+                  <Link href={p.href}>
+                    {p.libelle}<span aria-hidden="true">×</span><span className="sr-only"> — retirer ce filtre</span>
+                  </Link>
+                </li>
+              ))}
+              <li><Link href="/find" className="find-clear-filters">Tout effacer</Link></li>
+            </ul>
+          </div>
+        ) : null}
+
+        {annoncesErreur ? (
+          <div className="find-catalog-error">
+            <Alerte ton="erreur">Le catalogue ne peut pas être affiché pour le moment. Aucun résultat n’est confirmé.</Alerte>
+            <Link href={urlRecherche(filtres, page)} className="btn btn-secondary">Réessayer la recherche</Link>
+          </div>
+        ) : annonces.length === 0 ? (
+          <section className="find-empty-state">
+            <p className="find-results-eyebrow">Votre recherche</p>
+            <h2>{filtree ? 'Aucun logement ne correspond à votre recherche.' : 'Aucun logement publié pour le moment.'}</h2>
+            <p>
+              {filtree
+                ? 'Essayez d’élargir votre budget, de choisir une autre ville ou de retirer un équipement.'
+                : 'Les logements publiés par les bailleurs apparaîtront ici dès leur mise en ligne.'}
+            </p>
+            {filtree ? <Link href="/find" className="btn btn-primary">Réinitialiser les filtres</Link> : null}
+          </section>
+        ) : (
+          <>
+            <p className="find-results-count" role="status">
+              {suivante
+                ? `${annonces.length} logements affichés sur cette page`
+                : `${annonces.length} logement${annonces.length > 1 ? 's' : ''} trouvé${annonces.length > 1 ? 's' : ''}`}
+            </p>
+            <ul className="find-property-grid" aria-label="Annonces disponibles">
+              {annonces.map((annonce, index) => (
+                <li key={annonce.reference}>
+                  <CarteAnnonce annonce={annonce} aujourdhui={aujourdhui} prioritaire={index < 3} />
+                </li>
+              ))}
+            </ul>
+
+            {page > 1 || suivante ? (
+              <nav aria-label="Pages du catalogue" className="find-pagination">
+                {page > 1 ? (
+                  <Link href={urlRecherche(filtres, page - 1)} className="btn btn-secondary" rel="prev">← Page précédente</Link>
+                ) : <span />}
+                <p aria-current="page">Page {page}</p>
+                {suivante ? (
+                  <Link href={urlRecherche(filtres, page + 1)} className="btn btn-secondary" rel="next">Page suivante →</Link>
+                ) : <span />}
+              </nav>
+            ) : null}
+          </>
+        )}
+      </section>
+    </>
+  )
+}
+
+export default async function PageFind({ searchParams }: { searchParams: Promise<ParametresBruts> }) {
+  const parametres = await searchParams
+  if (parametres.page === '1') redirect(urlRecherche(lireFiltres(parametres)))
+  const page = lireNumeroPage(parametres.page)
+  if (page === null) notFound()
+
+  const filtres = lireFiltres(parametres)
+  const utilisateurPromise = obtenirUtilisateur()
+
+  // Vérifier les pages au-delà de la première avant le rendu : une pagination
+  // inexistante doit rester une vraie 404, même si le catalogue est diffusé.
+  const resultatInitial = await chargerCatalogue(filtres, page)
+  if (page > 1 && !resultatInitial.error && (resultatInitial.data ?? []).length === 0) notFound()
+  const utilisateur = await utilisateurPromise
+
+  return (
+    <div className="find-catalog-page min-h-screen bg-canvas">
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
-      <main id="contenu" className="mx-auto max-w-[1200px] app-main">
-        <header className="max-w-[46rem]">
-          <h1 className="page-title">
-            Logements à louer au Bénin
-          </h1>
-          <p className="mt-sm text-body-md text-body">
-            Publiés par des bailleurs qui gèrent leurs biens sur Sikaloc. L’adresse exacte n’apparaît
-            jamais sur une annonce.
+      <main id="contenu" className="find-catalog-main mx-auto max-w-[1320px]">
+        <header className="find-catalog-intro">
+          <p className="find-catalog-eyebrow">Catalogue immobilier <span aria-hidden="true">·</span> Bénin</p>
+          <h1>Trouvez un logement qui vous ressemble.</h1>
+          <p className="find-catalog-description">
+            Explorez les logements disponibles au Bénin, comparez leurs caractéristiques et trouvez celui qui correspond à vos besoins.
           </p>
         </header>
 
-        <div className="mt-xl grid gap-lg lg:grid-cols-[18rem_minmax(0,1fr)]">
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <FiltresFind filtres={filtres} lieux={lieux.data ?? []} nbFiltresActifs={actifs.length} />
-          </div>
-
-          <div className="min-w-0">
-            {lieux.error ? <Alerte ton="attention">Les choix de lieux ne sont pas disponibles pour le moment. Les autres critères restent utilisables.</Alerte> : null}
-            {actifs.length > 0 ? (
-              <div className="mb-lg">
-                <h2 className="sr-only">Filtres actifs</h2>
-                <ul className="flex flex-wrap items-center gap-sm">
-                  {actifs.map((p) => (
-                    <li key={p.cle}>
-                      <Link
-                        href={p.href}
-                        className="inline-flex min-h-11 items-center gap-xs rounded-pill border border-hairline bg-canvas px-md py-xs text-body-sm text-ink hover:border-hairline-strong"
-                      >
-                        {p.libelle}
-                        <span aria-hidden="true">×</span>
-                        <span className="sr-only">— retirer ce filtre</span>
-                      </Link>
-                    </li>
-                  ))}
-                  <li>
-                    <Link href="/find" className="text-body-sm text-mute underline hover:text-ink">
-                      Réinitialiser
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            ) : null}
-
-            {error ? (
-              <Alerte ton="erreur">
-                Le catalogue ne peut pas être affiché pour le moment. Réessayez dans un instant.
-              </Alerte>
-            ) : annonces.length === 0 ? (
-              <section className="card card-lg">
-                <h2 className="section-title">
-                  {filtree ? 'Aucun logement ne correspond à ces critères' : 'Aucun logement publié pour le moment'}
-                </h2>
-                <p className="mt-sm text-body-md text-body">
-                  {filtree
-                    ? 'Élargissez votre recherche : un loyer plus haut, une autre ville, moins d’équipements.'
-                    : 'Les logements que les bailleurs mettent en location sur Sikaloc apparaîtront ici, dès leur publication.'}
-                </p>
-                <div className="mt-lg flex flex-wrap gap-md">
-                  {filtree ? (
-                    <Link href="/find" className="btn btn-primary">
-                      Réinitialiser les filtres
-                    </Link>
-                  ) : (
-                    <>
-                      <Link href="/" className="btn btn-secondary">
-                        Découvrir Sikaloc
-                      </Link>
-                      <Link href="/pro" className="btn btn-tertiary">
-                        Vous êtes bailleur ?
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </section>
-            ) : (
-              <>
-                <p className="mb-md text-body-sm text-mute" role="status">{annonces.length} annonce{annonces.length > 1 ? 's' : ''} sur cette page{suivante ? ' · d’autres résultats à la page suivante' : ''}.</p>
-                <ul className="grid gap-lg sm:grid-cols-2 xl:grid-cols-3" aria-label="Annonces">
-                  {annonces.map((annonce, i) => (
-                    <li key={annonce.reference}>
-                      <CarteAnnonce annonce={annonce} aujourdhui={aujourdhui} prioritaire={i < 3} />
-                    </li>
-                  ))}
-                </ul>
-
-                {page > 1 || suivante ? (
-                  <nav
-                    aria-label="Pages du catalogue"
-                    className="mt-2xl flex flex-wrap items-center justify-between gap-md"
-                  >
-                    {page > 1 ? (
-                      <Link href={urlRecherche(filtres, page - 1)} className="btn btn-secondary" rel="prev">
-                        ← Page précédente
-                      </Link>
-                    ) : (
-                      <span />
-                    )}
-                    <p className="text-body-sm text-mute" aria-current="page">
-                      Page {page}
-                    </p>
-                    {suivante ? (
-                      <Link href={urlRecherche(filtres, page + 1)} className="btn btn-secondary" rel="next">
-                        Page suivante →
-                      </Link>
-                    ) : (
-                      <span />
-                    )}
-                  </nav>
-                ) : null}
-              </>
-            )}
-          </div>
-        </div>
+        <ResultatsCatalogue filtres={filtres} page={page} resultats={resultatInitial} />
       </main>
 
       <PiedDePageFind />

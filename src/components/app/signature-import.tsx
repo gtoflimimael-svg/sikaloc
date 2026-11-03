@@ -221,7 +221,7 @@ export function SignatureImport({
         >
           {traitement ? (
             <>
-              <Crop size={16} strokeWidth={2} aria-hidden="true" className="anim-pulse" />
+              <Crop size={16} strokeWidth={2} aria-hidden="true" />
               Détourage…
             </>
           ) : (

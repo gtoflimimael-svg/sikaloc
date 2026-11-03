@@ -1,11 +1,17 @@
+import styles from '@/components/app/historique.module.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { FormulaireHistorique } from '@/components/app/formulaire-historique'
-import { EnTetePage } from '@/components/ui/retours'
-import { echeancesADeclarer, echeancesAnterieuresReglees } from '@/lib/echeances'
-import { formaterDate, formaterPeriode } from '@/lib/format'
+import { Alerte, EnTetePage } from '@/components/ui/retours'
+import {
+  echeancesADeclarer,
+  echeancesAnterieuresReglees,
+  echeancesIndetermineesAReviser,
+  historiqueNecessaire,
+} from '@/lib/echeances'
+import { formaterDate, formaterDateCourte, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Echeance } from '@/lib/types/database'
@@ -37,22 +43,42 @@ export default async function PageHistorique({
   const { id } = await params
   const supabase = await creerClientServeur()
 
-  const [, { data: bail }, { data: lignes }] = await Promise.all([
+  const [, reponseBail, reponseEcheances] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('baux')
       .select(
-        'id, loyer_mensuel, date_debut, date_fin, created_at, historique_declare_le, locataire:locataires(nom), logement:logements(adresse, ville)',
+        'id, date_debut, date_fin, created_at, historique_declare_le, locataire:locataires(nom), logement:logements(adresse, ville)',
       )
       .eq('id', id)
       .maybeSingle(),
     supabase.from('v_echeances').select('*').eq('bail_id', id),
   ])
 
+  const { data: bail, error: erreurBail } = reponseBail
+  const { data: lignes, error: erreurEcheances } = reponseEcheances
+
+  if (erreurBail) {
+    return <Alerte ton="erreur">Le bail n’a pas pu être chargé. Actualisez la page pour réessayer.</Alerte>
+  }
   if (!bail) redirect('/pro/baux')
+  if (erreurEcheances) {
+    return (
+      <div className="space-y-md">
+        <Alerte ton="erreur">
+          L’historique des échéances n’a pas pu être chargé. Aucune donnée n’a été modifiée.
+        </Alerte>
+        <Link href={`/pro/baux/${id}`} className="btn btn-secondary">
+          Retour au bail
+        </Link>
+      </div>
+    )
+  }
 
   const echeances = (lignes ?? []) as Echeance[]
+  const dateReference = new Date().toISOString().slice(0, 10)
   const aDeclarer = echeancesADeclarer(echeances)
+  const aPreciser = echeancesIndetermineesAReviser(echeances, dateReference)
   const dejaReglees = echeancesAnterieuresReglees(echeances)
 
   // ─── Déclaration, ou correction ? ────────────────────────────────────────
@@ -65,23 +91,27 @@ export default async function PageHistorique({
 
   // Rien à demander : bail commencé aujourd'hui ou plus tard, ou historique
   // déjà renseigné. On ne fait pas perdre un écran pour rien.
-  if (aDeclarer.length === 0) redirect(`/pro/baux/${id}`)
+  if (!historiqueNecessaire(echeances, dateReference)) redirect(`/pro/baux/${id}`)
+
+  const uniquementAPreciser = aDeclarer.length === 0 && aPreciser.length > 0
 
   const locataire = Array.isArray(bail.locataire) ? bail.locataire[0] : bail.locataire
   const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
 
   return (
-    <div>
+    <div className="lease-history-page">
       <EnTetePage
-        titre={correction ? 'Corriger l’historique' : 'Historique des loyers'}
+        titre={uniquementAPreciser ? 'Périodes à préciser' : correction ? 'Corriger l’historique' : 'Historique des loyers'}
         description={
-          correction
+          uniquementAPreciser
+            ? 'Certaines périodes commencées à ce jour n’ont pas de montant ou de date d’exigibilité suffisamment établis. Elles restent à vérifier.'
+            : correction
             ? 'Ces mois sont actuellement comptés en retard. Cochez ceux qui ont en réalité été réglés.'
             : 'Ce bail a commencé avant son enregistrement dans Sikaloc. Indiquez les mois déjà réglés pour ne pas les compter en retard.'
         }
       />
 
-      <div className="card mb-xl">
+      <div className={styles.context}>
         <dl className="grid gap-md sm:grid-cols-3">
           <div>
             <dt className="text-caption text-mute">Locataire</dt>
@@ -119,21 +149,61 @@ export default async function PageHistorique({
         ) : null}
       </div>
 
-      <div className="card">
-        <FormulaireHistorique
-          bailId={id}
-          echeances={aDeclarer}
-          loyerMensuel={Number(bail.loyer_mensuel)}
-        />
-      </div>
+      {aPreciser.length > 0 ? (
+        <section className={styles.context} aria-labelledby="echeances-a-preciser">
+          <h2 id="echeances-a-preciser" className="text-body-md font-semibold text-ink">
+            Périodes commencées à ce jour à vérifier · {aPreciser.length}
+          </h2>
+          <p className="mt-xs text-body-sm text-mute">
+            Ces périodes ne sont ni déclarées impayées ni considérées comme réglées. Aucun solde
+            ni retard n’est calculé tant que les informations contractuelles manquent.
+          </p>
+          <ul className="mt-md space-y-sm">
+            {aPreciser.map((e) => {
+              const montantConnu =
+                typeof e.montant_exigible === 'number' && Number.isFinite(e.montant_exigible)
+              const echeanceConnue =
+                typeof e.date_echeance === 'string' && e.date_echeance.length > 0
+
+              return (
+                <li key={e.periode_debut} className="border-t border-hairline pt-sm">
+                  <p className="text-body-sm font-semibold text-ink">
+                    {formaterPeriode(e.periode_debut)} · À déterminer
+                  </p>
+                  <p className="mt-xxs text-caption text-mute">
+                    {montantConnu ? 'Montant de la période documenté' : 'Montant non établi'}
+                    {echeanceConnue ? ` · Échéance ${formaterDateCourte(e.date_echeance)}` : ' · Date d’exigibilité non établie'}
+                  </p>
+                  {montantConnu ? (
+                    <p className="mt-xxs text-caption text-body">
+                      Montant documenté pour cette période : {formaterFCFA(e.montant_exigible)}
+                    </p>
+                  ) : null}
+                  {e.montant_paye > 0 ? (
+                    <p className="mt-xxs text-caption text-body">
+                      Paiements validés enregistrés : {formaterFCFA(e.montant_paye)}
+                    </p>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {aDeclarer.length > 0 ? (
+        <div className="min-w-0">
+          <FormulaireHistorique bailId={id} echeances={aDeclarer} />
+        </div>
+      ) : null}
 
       <p className="mt-lg text-center text-caption text-mute">
-        <Link href={`/pro/baux/${id}`} className="underline">
-          Retour au bail
-        </Link>
-        {correction
-          ? ' — les mois non cochés resteront comptés en retard.'
-          : ' — vous pouvez revenir plus tard : tant que rien n’est renseigné, aucun de ces mois n’est réclamé.'}
+        <Link href={`/pro/baux/${id}`} className="underline">Retour au bail</Link>
+        {aDeclarer.length > 0
+          ? correction
+            ? ' — les mois non cochés resteront comptés en retard.'
+            : ' — vous pouvez revenir plus tard : tant que rien n’est renseigné, aucun de ces mois n’est réclamé.'
+          : ' — vérifiez les contrats et justificatifs avant toute déclaration financière.'}
       </p>
     </div>
   )

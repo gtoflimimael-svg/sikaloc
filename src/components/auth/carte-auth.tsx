@@ -1,61 +1,55 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import type { ReactNode } from 'react'
+import styles from './securite.module.css'
 
-import { Illustration, type NomIllustration } from '@/components/ui/illustration'
 import { MarqueSikaloc } from '@/components/ui/logo'
 
 /**
  * Cadre commun aux écrans d'authentification.
- * Design system : `auth-form-card` — carte blanche, max-width 420px, centrée.
+ * Formulaire ouvert et centré ; le panneau éditorial reste secondaire.
  *
- * Les illustrations de part et d'autre ne sont posées que sur les écrans qui
- * en reçoivent explicitement (connexion, inscription) : la réinitialisation
- * de mot de passe reste sobre, personne n'a envie d'un décor pendant une
- * procédure de sécurité.
+ * La connexion et l'inscription peuvent afficher une illustration de marque
+ * sur grand écran. Les procédures de sécurité gardent un gabarit sobre.
  */
 export function CarteAuth({
   titre,
   description,
   children,
   bas,
-  illustrationGauche,
-  illustrationDroite,
+  ambiance = false,
 }: {
   titre: string
   description?: string
   children: ReactNode
   bas?: ReactNode
-  illustrationGauche?: NomIllustration
-  illustrationDroite?: NomIllustration
+  ambiance?: boolean
 }) {
-  const avecDecor = Boolean(illustrationGauche || illustrationDroite)
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center overflow-hidden bg-canvas-soft px-lg py-3xl">
+    <main id="contenu" className={styles.main}>
       <div
-        className={`flex w-full items-center justify-center gap-4xl ${
-          avecDecor ? 'max-w-[1240px]' : 'max-w-[420px]'
-        }`}
+        className={`${styles.frame} ${ambiance ? styles.wide : ''}`}
       >
-        {illustrationGauche ? (
-          <div
-            aria-hidden="true"
-            className="anim-glisse hidden shrink-0 xl:block"
-            style={{ animationDelay: '80ms' }}
-          >
-            <Illustration nom={illustrationGauche} taille={300} decorative className="text-primary-neutral" />
-          </div>
+        {ambiance ? (
+          <aside className="hidden min-h-[600px] flex-col justify-between overflow-hidden rounded-xl bg-surface-dark p-2xl text-white lg:flex">
+            <div>
+              <p className="text-caption font-semibold uppercase tracking-widest text-primary-on-dark">Sikaloc Pro</p>
+              <h2 className="mt-xl text-display-md font-extrabold text-white">La gestion locative, au clair.</h2>
+              <p className="mt-md max-w-[30rem] text-body-md text-on-dark-mute">Vos logements, vos baux et vos documents dans un espace pensé pour les bailleurs.</p>
+            </div>
+            <Image src="/illustrations/home-02.webp" alt="" width={1200} height={900} sizes="(min-width: 1024px) 45vw, 0px" className="h-auto w-full rounded-lg" />
+          </aside>
         ) : null}
 
-        <div className="w-full max-w-[420px] shrink-0">
-          <div className="mb-xl flex justify-center anim-apparait">
+        <div className={styles.content}>
+          <div className={styles.brand}>
             <MarqueSikaloc />
           </div>
 
-          <div className="card card-lg anim-monte" style={{ animationDelay: '60ms' }}>
-            <h1 className="text-display-sm font-bold tracking-tight text-ink">{titre}</h1>
+          <div className={styles.form}>
+            <h1 >{titre}</h1>
             {description ? (
-              <p className="mt-xs mb-xl text-body-md text-mute">{description}</p>
+              <p className={styles.description}>{description}</p>
             ) : (
               <div className="mb-xl" />
             )}
@@ -63,24 +57,15 @@ export function CarteAuth({
             {children}
           </div>
 
-          {bas ? <div className="mt-xl text-center text-body-sm text-mute">{bas}</div> : null}
+          {bas ? <div className={styles.footer}>{bas}</div> : null}
 
-          <p className="mt-2xl text-center">
+          <p className={styles.back}>
             <Link href="/" className="text-body-sm text-mute hover:text-ink">
               ← Retour à l&apos;accueil
             </Link>
           </p>
         </div>
 
-        {illustrationDroite ? (
-          <div
-            aria-hidden="true"
-            className="anim-glisse hidden shrink-0 xl:block"
-            style={{ animationDelay: '140ms' }}
-          >
-            <Illustration nom={illustrationDroite} taille={300} decorative className="text-accent-teal" />
-          </div>
-        ) : null}
       </div>
     </main>
   )

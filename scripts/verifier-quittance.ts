@@ -77,6 +77,7 @@ for (const [valeur, attendu] of CAS) {
 // ─── 2. Rendu du PDF ─────────────────────────────────────────────────────────
 
 const exemple: DonneesQuittance = {
+  modeDocument: 'reel',
   numeroDocument: 'Q-8F3A2-20260817-9X4K',
   type: 'Quittance',
   dateGeneration: new Date('2026-08-17T14:32:00').toISOString(),
@@ -95,6 +96,7 @@ const exemple: DonneesQuittance = {
   logementType: 'Appartement',
 
   loyerMensuel: 60_000,
+  montantExigible: 60_000,
   periodeDebut: '2026-08-01',
   periodeFin: '2026-08-31',
 
@@ -136,6 +138,41 @@ async function rendreExemples(): Promise<void> {
     await writeFile('apercu-recu.pdf', recu)
     console.log(`  ok   Reçu partiel rendu (${(recu.length / 1024).toFixed(1)} Ko)`)
     console.log('       → apercu-recu.pdf')
+
+    // Un dépôt est un reçu autonome : il ne doit pas être présenté comme un
+    // loyer payé ni comme une quittance donnant quittance du loyer.
+    const depot = await renderToBuffer(
+      createElement(DocumentQuittance, {
+        ...exemple,
+        numeroDocument: 'R-8F3A2-20260817-DEPOT',
+        type: 'Reçu',
+        typePaiement: 'Dépôt de garantie',
+        loyerMensuel: 0,
+        montant: 120_000,
+        estPartiel: false,
+      }) as Parameters<typeof renderToBuffer>[0],
+    )
+
+    await writeFile('apercu-recu-depot.pdf', depot)
+    console.log(`  ok   Reçu de dépôt rendu (${(depot.length / 1024).toFixed(1)} Ko)`)
+    console.log('       → apercu-recu-depot.pdf')
+
+    // Un versement supérieur au loyer du mois reste un excédent non reporté.
+    const excedent = await renderToBuffer(
+      createElement(DocumentQuittance, {
+        ...exemple,
+        numeroDocument: 'R-8F3A2-20260817-EXCEDENT',
+        type: 'Reçu',
+        montant: 75_000,
+        montantCumule: 75_000,
+        montantExcedentaire: 15_000,
+        estPartiel: false,
+      }) as Parameters<typeof renderToBuffer>[0],
+    )
+
+    await writeFile('apercu-loyer-excedentaire.pdf', excedent)
+    console.log(`  ok   Reçu avec excédent rendu (${(excedent.length / 1024).toFixed(1)} Ko)`)
+    console.log('       → apercu-loyer-excedentaire.pdf')
 
     // Cas fiscal : espèces au-delà de 100 000 FCFA, seul cas où le droit de
     // timbre est réellement susceptible de s'appliquer (art. 423 du CGI).

@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { aujourdhuiISO } from '@/lib/format'
 import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaBail, type EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
+import { verifierConditionsPremierLoyer } from '@/lib/premier-loyer'
 
 function lireFormulaire(donnees: FormData) {
   return schemaBail.safeParse({
@@ -15,6 +15,8 @@ function lireFormulaire(donnees: FormData) {
     locataireId: donnees.get('locataireId'),
     loyerMensuel: donnees.get('loyerMensuel'),
     dateDebut: donnees.get('dateDebut'),
+    premierLoyerMontant: donnees.get('premierLoyerMontant'),
+    premierLoyerDuLe: donnees.get('premierLoyerDuLe'),
     dateFin: donnees.get('dateFin') || '',
     jourEcheance: donnees.get('jourEcheance'),
     toleranceJours: donnees.get('toleranceJours') || 5,
@@ -40,6 +42,14 @@ export async function creerBail(
 ): Promise<EtatFormulaire> {
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
+  const conditionsPremierLoyer = verifierConditionsPremierLoyer({
+    dateDebut: analyse.data.dateDebut,
+    montant: analyse.data.premierLoyerMontant,
+    exigibleLe: analyse.data.premierLoyerDuLe,
+  })
+  if (conditionsPremierLoyer.etat !== 'valide') {
+    return { erreursChamps: { premierLoyerMontant: 'Précisez les conditions convenues au contrat.' } }
+  }
 
   const acces = await bailleurAvecEcriture()
   if (!acces.ok) return acces.etat
@@ -53,6 +63,8 @@ export async function creerBail(
       logement_id: analyse.data.logementId,
       locataire_id: analyse.data.locataireId,
       loyer_mensuel: analyse.data.loyerMensuel,
+      premier_loyer_montant: conditionsPremierLoyer.montant,
+      premier_loyer_du_le: conditionsPremierLoyer.exigibleLe,
       date_debut: analyse.data.dateDebut,
       date_fin: analyse.data.dateFin || null,
       jour_echeance: analyse.data.jourEcheance,
@@ -97,14 +109,18 @@ export async function modifierBail(
   const analyse = lireFormulaire(donnees)
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
 
-  const { error } = await supabase
+  const { data: modifie, error } = await supabase
     .from('baux')
     .update({
       logement_id: analyse.data.logementId,
       locataire_id: analyse.data.locataireId,
       loyer_mensuel: analyse.data.loyerMensuel,
+      premier_loyer_montant: analyse.data.premierLoyerMontant ?? null,
+      premier_loyer_du_le: analyse.data.premierLoyerDuLe ?? null,
       date_debut: analyse.data.dateDebut,
       date_fin: analyse.data.dateFin || null,
       jour_echeance: analyse.data.jourEcheance,
@@ -112,8 +128,12 @@ export async function modifierBail(
       depot_garantie: analyse.data.depotGarantie ?? null,
     })
     .eq('id', id)
+    .eq('bailleur_id', acces.bailleur.id)
+    .select('id')
+    .maybeSingle()
 
   if (error) return { erreur: `Mise à jour impossible : ${messageErreur(error)}` }
+  if (!modifie) return { erreur: 'Modification impossible : bail introuvable ou non autorisé.' }
 
   revalidatePath('/pro/baux')
   revalidatePath(`/pro/baux/${id}`)
@@ -127,23 +147,17 @@ export async function modifierBail(
  * reste lisible et que la détection d'impayés cesse au bon mois.
  */
 export async function resilierBail(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
 
-  const { data: bail } = await supabase
-    .from('baux')
-    .select('date_fin')
-    .eq('id', id)
-    .single()
-
-  const { error } = await supabase
-    .from('baux')
-    .update({
-      statut: 'Résilié',
-      date_fin: bail?.date_fin ?? aujourdhuiISO(),
-    })
-    .eq('id', id)
+  const { data: statut, error } = await supabase.rpc('definir_statut_bail', {
+    p_bail_id: id,
+    p_statut: 'Résilié',
+  })
 
   if (error) return { erreur: `Résiliation impossible : ${messageErreur(error)}` }
+  if (statut !== 'Résilié') return { erreur: 'Résiliation impossible : bail introuvable ou non autorisé.' }
 
   revalidatePath('/pro/baux')
   revalidatePath(`/pro/baux/${id}`)
@@ -152,14 +166,17 @@ export async function resilierBail(id: string): Promise<EtatFormulaire> {
 }
 
 export async function reactiverBail(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
 
-  const { error } = await supabase
-    .from('baux')
-    .update({ statut: 'Actif', date_fin: null })
-    .eq('id', id)
+  const { data: statut, error } = await supabase.rpc('definir_statut_bail', {
+    p_bail_id: id,
+    p_statut: 'Actif',
+  })
 
   if (error) return { erreur: `Réactivation impossible : ${messageErreur(error)}` }
+  if (statut !== 'Actif') return { erreur: 'Réactivation impossible : bail introuvable ou non autorisé.' }
 
   revalidatePath('/pro/baux')
   revalidatePath(`/pro/baux/${id}`)
@@ -167,8 +184,11 @@ export async function reactiverBail(id: string): Promise<EtatFormulaire> {
 }
 
 export async function supprimerBail(id: string): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
   const supabase = await creerClientServeur()
-  const { error } = await supabase.from('baux').delete().eq('id', id)
+  const { data: supprime, error } = await supabase.from('baux').delete()
+    .eq('id', id).eq('bailleur_id', acces.bailleur.id).select('id').maybeSingle()
 
   if (error) {
     if (error.code === '23503') {
@@ -179,6 +199,8 @@ export async function supprimerBail(id: string): Promise<EtatFormulaire> {
     }
     return { erreur: `Suppression impossible : ${messageErreur(error)}` }
   }
+
+  if (!supprime) return { erreur: 'Suppression impossible : bail introuvable ou non autorisé.' }
 
   revalidatePath('/pro/baux')
   redirect('/pro/baux')

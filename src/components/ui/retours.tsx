@@ -61,48 +61,40 @@ export function EtatVide({
   )
 }
 
-/** Avatar circulaire à initiales — design system « Avatars locataires ». */
-export function Avatar({
-  initiales,
-  taille = 40,
-  ton = 'primary',
-}: {
-  initiales: string
-  taille?: number
-  ton?: 'primary' | 'neutre'
-}) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{ width: taille, height: taille, fontSize: taille * 0.36 }}
-      className={`inline-flex shrink-0 items-center justify-center rounded-pill font-semibold ${
-        ton === 'primary' ? 'bg-primary text-on-primary' : 'bg-surface-elevated text-mute'
-      }`}
-    >
-      {initiales}
-    </span>
-  )
-}
-
-/** Titre de page — Copernicus Book, taille responsive commune aux espaces. */
+/** Titre de page — Manrope, taille responsive commune aux espaces. */
 export function EnTetePage({
   titre,
   description,
   action,
+  surTitre,
 }: {
   titre: string
   description?: string
   action?: ReactNode
+  surTitre?: string
 }) {
+  const famille = surTitre ?? (
+    /tableau de bord/i.test(titre) ? 'Pilotage' :
+    /impay/i.test(titre) ? 'Recouvrement' :
+    /logement/i.test(titre) ? 'Parc immobilier' :
+    /locataire/i.test(titre) ? 'Relations locataires' :
+    /bail/i.test(titre) ? 'Contrats locatifs' :
+    /annonce|candidature/i.test(titre) ? 'Diffusion locative' :
+    /paiement|quittance|reçu/i.test(titre) ? 'Finances' :
+    /paramètre|profil|préférence|signature|abonnement|parrainage|donnée/i.test(titre) ? 'Configuration' :
+    'Espace Pro'
+  )
+
   return (
-    <div className="mb-xl flex flex-wrap items-start justify-between gap-lg">
+    <div className="page-header page-header-workspace mb-xl flex flex-wrap items-end justify-between gap-lg">
       <div className="min-w-0">
+        <p className="page-header-kicker">{famille}</p>
         <h1 className="page-title">{titre}</h1>
         {description ? (
           <p className="mt-xs max-w-[42rem] text-body-md text-mute">{description}</p>
         ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="page-header-actions shrink-0">{action}</div> : null}
     </div>
   )
 }

@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { ResumeListe } from '@/components/ui/listes'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { capacites } from '@/lib/plan'
@@ -38,7 +37,7 @@ export default async function PageImpayes() {
   const whatsappPropose = bailleur.notif_whatsapp !== false
 
   return (
-    <div>
+    <div className="arrears-page">
       <EnTetePage
         titre="Loyers en retard"
         description="Un loyer bascule ici lorsque son échéance est dépassée, tolérance comprise, et qu'il reste un solde impayé."
@@ -47,12 +46,13 @@ export default async function PageImpayes() {
       {erreurImpayes ? (
         <Alerte ton="erreur">Les loyers en retard ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : impayes.length === 0 ? (
-        <div className="card border-positive/30">
+        <div className="arrears-empty-card card">
           <p className="section-title text-positive-deep">
             Aucun loyer en retard
           </p>
           <p className="mt-sm text-body-md text-body">
-            Tous les loyers échus ont été réglés. Rien à relancer aujourd&apos;hui.
+            Aucun retard confirmé n&apos;apparaît aujourd&apos;hui. Les périodes dont
+            l&apos;historique est incomplet ne sont pas qualifiées d&apos;impayées.
           </p>
           <Link href="/pro/paiements/nouveau" className="btn btn-primary mt-lg">
             Enregistrer un paiement
@@ -61,10 +61,10 @@ export default async function PageImpayes() {
       ) : (
         <>
           <ResumeListe>
-            <span className="text-mute">
+            <span className="arrears-summary-count text-mute">
               {impayes.length} loyer{impayes.length > 1 ? 's' : ''} en retard
             </span>
-            <strong className="money text-body-lg font-semibold text-negative-darkest">
+            <strong className="arrears-summary-total money text-body-lg font-semibold text-negative-darkest">
               {formaterFCFA(total)}<span className="ml-xs text-body-sm font-normal text-mute">à recouvrer</span>
             </strong>
           </ResumeListe>
@@ -82,7 +82,7 @@ export default async function PageImpayes() {
             </div>
           ) : null}
 
-          <ul className="space-y-sm" aria-label="Loyers en retard">
+          <ul className="arrears-list space-y-sm" aria-label="Loyers en retard">
             {impayes.map((impaye) => {
               const lien = lienRelanceImpaye({
                 locataireNom: impaye.locataire_nom,
@@ -96,12 +96,10 @@ export default async function PageImpayes() {
               return (
                 <li
                   key={`${impaye.bail_id}-${impaye.periode_debut}`}
-                  className="card list-card border-l-4 border-l-negative"
+                  className="card list-card arrears-card border-l-4 border-l-negative"
                 >
                   <div className="list-row">
-                    <div className="flex min-w-0 items-start gap-sm">
-                      <AvatarPeep id={impaye.locataire_id} nom={impaye.locataire_nom} />
-                      <div className="min-w-0">
+                    <div className="min-w-0">
                         <h2 className="list-title">
                           {impaye.locataire_nom}
                         </h2>
@@ -123,10 +121,9 @@ export default async function PageImpayes() {
                             {formaterFCFA(impaye.loyer_mensuel)}
                           </p>
                         ) : null}
-                      </div>
                     </div>
 
-                    <div className="list-aside">
+                    <div className="list-aside arrears-card-aside">
                       <Badge ton="negative">Impayé</Badge>
                       <p className="money text-body-lg font-semibold text-ink">
                         {formaterFCFA(impaye.montant_du)}

@@ -10,16 +10,21 @@ export function CarteMetrique({
   valeur,
   detail,
   ton = 'neutre',
+  icone,
 }: {
   label: string
   valeur: string
   detail?: ReactNode
   ton?: 'neutre' | 'primary' | 'alerte'
+  icone?: ReactNode
 }) {
   if (ton === 'primary') {
     return (
       <div className="metric-card metric-card-primary">
-        <p className="text-body-sm font-semibold opacity-90">{label}</p>
+        <div className="metric-card-heading">
+          <p className="metric-label">{label}</p>
+          {icone ? <span className="metric-icon" aria-hidden="true">{icone}</span> : null}
+        </div>
         <p className="metric-value">{valeur}</p>
         {detail ? <p className="mt-xs text-caption opacity-90">{detail}</p> : null}
       </div>
@@ -27,11 +32,14 @@ export function CarteMetrique({
   }
 
   return (
-    <div className="metric-card">
-      <p className="text-body-sm text-mute">{label}</p>
+    <div className={`metric-card ${ton === 'alerte' ? 'metric-card-alert' : ''}`}>
+      <div className="metric-card-heading">
+        <p className="metric-label">{label}</p>
+        {icone ? <span className="metric-icon" aria-hidden="true">{icone}</span> : null}
+      </div>
       <p
         className={`metric-value ${
-          ton === 'alerte' ? 'text-negative' : 'text-ink'
+          ton === 'alerte' ? 'text-negative-darkest' : 'text-ink'
         }`}
       >
         {valeur}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import styles from './annonce.module.css'
 
 import { BoutonSoumettre } from '@/components/ui/boutons'
 import { ChampMontant, ChampTexte } from '@/components/ui/champs'
@@ -32,10 +33,12 @@ export function FormulaireAnnonce({
   const exigeAPublication = 'Obligatoire pour publier.'
 
   return (
-    <form action={envoyer} className="card card-lg space-y-lg">
+    <form action={envoyer} className={styles.form}>
       {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
       {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 
+      <section className={styles.section}>
+        <h2>Localisation</h2>
       <div className="grid gap-lg sm:grid-cols-2">
         <ChampTexte
           nom="ville"
@@ -54,6 +57,9 @@ export function FormulaireAnnonce({
         />
       </div>
 
+      </section>
+      <section className={styles.section}>
+        <h2>Le logement</h2>
       <div className="grid gap-lg sm:grid-cols-3">
         <ChampTexte
           nom="chambres"
@@ -89,6 +95,9 @@ export function FormulaireAnnonce({
         />
       </div>
 
+      </section>
+      <section className={styles.section}>
+        <h2>Conditions financières</h2>
       <div className="grid gap-lg sm:grid-cols-2">
         <ChampMontant
           nom="loyer"
@@ -124,13 +133,14 @@ export function FormulaireAnnonce({
         />
       </div>
 
-      <fieldset>
+      </section>
+      <fieldset className={styles.section}>
         <legend className="field-label">Équipements</legend>
-        <div className="grid gap-sm sm:grid-cols-2">
+        <div className={styles.equipment}>
           {EQUIPEMENTS_ANNONCE.map((equipement) => (
             <label
               key={equipement}
-              className="flex cursor-pointer items-center gap-md rounded-md border border-hairline bg-canvas px-lg py-md"
+
             >
               <input
                 type="checkbox"

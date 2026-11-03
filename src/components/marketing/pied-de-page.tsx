@@ -44,9 +44,7 @@ const colonnes = [
       // et c'est souvent le cas d'un locataire arrivé ici sans rien demander.
       { libelle: 'Je suis locataire', href: '/me/rejoindre' },
       { libelle: 'Le blog', href: '/blog' },
-      // La FAQ n'existe que sur `/pro`, où elle a été déplacée avec le reste
-      // du contenu bailleur — ses trois questions de locataire comprises.
-      { libelle: 'Questions fréquentes', href: '/pro?presentation=1#faq' },
+      { libelle: 'Questions fréquentes', href: '/#faq' },
       { libelle: 'Nous écrire', href: 'mailto:bonjour@sikaloc.com' },
     ],
   },
@@ -63,8 +61,8 @@ export function PiedDePage() {
                 mention légale ci-dessous, où il est porteur : c'est lui qui
                 établit que Sikaloc n'est pas partie au contrat de bail. */}
             <p className="mt-md max-w-[20rem] text-body-sm">
-              Les quittances des bailleurs au Bénin. Numérotées, horodatées,
-              envoyées par le bailleur au locataire sur WhatsApp.
+              Gestion locative, documents et recherche de logements au Bénin.
+              Trois espaces pour les bailleurs, les locataires et les candidats.
             </p>
           </div>
 
@@ -91,8 +89,8 @@ export function PiedDePage() {
 
         <div className="mt-3xl border-t border-white/10 pt-xl">
           <p className="text-caption">
-            © {new Date().getFullYear()} Sikaloc. Données hébergées en Europe
-            (Francfort). Les quittances sont générées sous la responsabilité du
+            © {new Date().getFullYear()} Sikaloc. Pensé pour les usages locatifs
+            au Bénin. Les quittances sont générées sous la responsabilité du
             bailleur ; Sikaloc n&apos;est pas partie au contrat de bail et ne
             fournit aucun conseil juridique.
           </p>

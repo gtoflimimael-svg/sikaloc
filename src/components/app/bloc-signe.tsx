@@ -51,9 +51,9 @@ export function BlocSigne({
   )
 
   return (
-    <section className="card mt-xl">
+    <section className="mt-xl border-t border-hairline pt-xl">
       <div className="flex items-start gap-md">
-        <Lock size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0 text-primary" />
+        <Lock size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0 text-ink-deep" />
         <div className="min-w-0 flex-1">
           <h2 className="text-title-sm font-semibold text-ink">Document signé</h2>
 

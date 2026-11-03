@@ -33,8 +33,8 @@ import { poserTemoinVerification } from '@/lib/verification/temoin'
  *
  * ─── Pourquoi une inscription à part ───────────────────────────────────────
  *
- * `/inscription` fabrique un bailleur : parrainage, nombre de logements,
- * avatar, et un profil créé par le déclencheur. Y greffer un choix de rôle,
+ * `/inscription` fabrique un bailleur : parrainage et profil créé par le
+ * déclencheur. Y greffer un choix de rôle,
  * c'est toucher au chemin par lequel passent toutes les créations de compte.
  *
  * Le projet a déjà tranché autrement pour les locataires : leur inscription
@@ -69,7 +69,6 @@ export async function inscrireCandidat(
     telephone: donnees.get('telephone'),
     motDePasse: donnees.get('motDePasse'),
     codeParrain: '',
-    avatar: '',
   })
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
@@ -88,13 +87,10 @@ export async function inscrireCandidat(
   })
 
   if (error) {
-    if (error.message.toLowerCase().includes('already registered')) {
-      return {
-        erreur:
-          'Un compte existe déjà avec cette adresse. Connectez-vous, puis revenez à cette annonce.',
-      }
+    return {
+      erreur:
+        'Nous n’avons pas pu créer le compte. Vérifiez les informations ou connectez-vous si vous avez déjà un accès.',
     }
-    return { erreur: 'La création du compte a échoué. Réessayez dans un instant.' }
   }
 
   // Deux témoins : l'adresse, pour l'écran de saisie du code ; l'annonce, pour
@@ -119,6 +115,8 @@ export async function enregistrerProfilCandidat(
   if (!analyse.success) return { erreursChamps: erreursChamps(analyse.error) }
 
   const supabase = await creerClientServeur()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { erreur: messageCandidature('authentification_requise') }
   const { data, error } = await supabase.rpc('enregistrer_profil_candidat', {
     p_nom: analyse.data.nom,
     p_telephone: analyse.data.telephone,
@@ -134,16 +132,18 @@ export async function enregistrerProfilCandidat(
   // Le consentement WhatsApp vit à part du RPC de S8-A : le candidat écrit
   // lui-même sur sa propre ligne (RLS « Un candidat modifie son profil »). Une
   // case cochée vaut oui, absente vaut non — jamais un consentement supposé.
-  const { error: erreurWhatsApp } = await supabase
+  const { data: profilMisAJour, error: erreurWhatsApp } = await supabase
     .from('candidats')
     .update({ notif_whatsapp: donnees.get('notifWhatsApp') === 'on' })
-    .eq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
-  if (erreurWhatsApp) {
-    console.error('[candidatures] consentement WhatsApp', erreurWhatsApp.code, erreurWhatsApp.message)
-  }
+    .eq('id', user.id)
+    .select('id')
+    .maybeSingle()
 
   if (REFERENCE.test(reference)) revalidatePath(`/find/${reference}/candidater`)
   revalidatePath('/me/candidatures')
+  if (erreurWhatsApp || !profilMisAJour) return {
+    erreur: 'Profil enregistré, mais votre préférence WhatsApp n’a pas pu être sauvegardée. Réessayez.',
+  }
   return { succes: 'Profil enregistré.' }
 }
 

@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 56,
     paddingHorizontal: 54,
-    fontFamily: 'StyreneB',
+    fontFamily: 'Inter',
     fontSize: 10,
     lineHeight: 1.55,
     color: couleurs.body,
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   },
   titre: {
     marginTop: 6,
-    fontFamily: 'Copernicus',
+    fontFamily: 'Manrope',
     fontSize: 25,
     fontWeight: 800,
     color: couleurs.ink,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   sousTitre: {
     marginTop: 4,
-    fontFamily: 'Copernicus',
+    fontFamily: 'Manrope',
     fontSize: 14,
     fontWeight: 700,
     color: couleurs.ink,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.canvasSoft,
   },
   recapTitre: {
-    fontFamily: 'Copernicus',
+    fontFamily: 'Manrope',
     fontSize: 13,
     fontWeight: 700,
     color: couleurs.ink,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   lien: {
     marginTop: 6,
-    fontFamily: 'Copernicus',
+    fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: 700,
     color: couleurs.inkDeep,

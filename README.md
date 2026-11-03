@@ -13,20 +13,12 @@ Construit à partir de `Fichiers de référence/Sika_MVP_Specification_Finale.md
 
 ---
 
-## État actuel
+## Développement local
 
-L'application **tourne** sur le projet Supabase dédié `SIka`
-(`pzrixjydnclwvjwqfbal`, eu-central-1 / Francfort). Les 8 migrations, les RLS,
-les vues, les buckets, pg_cron et le jeu de démonstration y sont appliqués ;
-`.env.local` est renseigné, FedaPay (sandbox) et Resend compris.
-
-```bash
-npm run dev        # http://localhost:3000
-```
-
-Connexion : **demo@sikaloc.com** / **demo1234**
-
-Pour repartir d'une base locale plutôt qu'hébergée, suivre « Démarrage » ci-dessous.
+`npm run dev` démarre la pile Supabase locale isolée de Sikaloc et l'application
+sur `http://localhost:3000`. Cette commande n'utilise pas les identifiants de
+`.env.local` et ne peut donc pas viser un projet hébergé par inadvertance.
+Les données de cette pile sont conservées entre les démarrages.
 
 ---
 
@@ -38,68 +30,20 @@ Pour repartir d'une base locale plutôt qu'hébergée, suivre « Démarrage » c
 npm install
 ```
 
-### 2. Lancer la base de données
+### 2. Démarrer l'application
 
-Deux options. **A** ne demande aucun compte et fait tourner tout Supabase en
-local ; **B** utilise un projet hébergé.
-
-#### Option A — Supabase local (recommandé pour développer)
-
-Requiert Docker **accessible sans sudo** :
-
-```bash
-# une seule fois, puis se déconnecter/reconnecter de la session
-sudo usermod -aG docker $USER
-
-npx supabase start      # démarre Postgres, Auth, Storage, Studio
-```
-
-La commande affiche `API URL`, `anon key` et `service_role key` — à recopier
-dans `.env.local`. Les migrations et le jeu de démonstration sont appliqués
-automatiquement.
-
-#### Option B — Supabase Cloud
-
-1. Créer un projet sur [supabase.com](https://supabase.com) (région Europe /
-   Francfort, comme prévu au §9.1 de la spécification).
-2. Récupérer l'URL et les clés dans *Project Settings → API*.
-3. Pousser le schéma :
-
-```bash
-npx supabase link --project-ref <ref-du-projet>
-npx supabase db push
-```
-
-### 3. Configurer l'environnement
-
-```bash
-cp .env.example .env.local
-```
-
-Puis renseigner au minimum :
-
-| Variable | Rôle |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL de l'API Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clé publique, utilisée par le navigateur |
-| `SUPABASE_SERVICE_ROLE_KEY` | Clé serveur — génération des quittances, webhook de paiement, comptage des tentatives de connexion. **Jamais exposée au client.** |
-
-`FEDAPAY_*` et `RESEND_API_KEY` sont optionnelles : sans elles, l'application
-fonctionne, seules la souscription au plan Standard et les rappels du cycle de
-grâce sont indisponibles. `CRON_SECRET` est en revanche nécessaire dès que les
-tâches planifiées tournent — sans lui, les routes `/api/cron/*` refusent toute
-requête.
-
-### 4. Démarrer
+Requiert Docker accessible sans `sudo`. La commande démarre et vérifie la pile
+locale dédiée, applique uniquement les migrations locales manquantes, puis
+lance Next.js. Ne recopiez pas de clés de Production dans `.env.local` pour
+démarrer le développement.
 
 ```bash
 npm run dev     # http://localhost:3000
 ```
 
-Compte de démonstration (créé par `supabase/seed.sql`, développement local
-uniquement) : **demo@sikaloc.com** / **demo1234**. Il contient trois baux couvrant
-les trois cas que le tableau de bord doit savoir montrer — un loyer soldé, un
-versement partiel, et deux mois de retard.
+Pour les environnements hébergés, utiliser le projet Sikaloc-Test et son
+déploiement dédié; ne connectez pas le serveur de développement local à
+Production.
 
 ---
 
@@ -107,7 +51,7 @@ versement partiel, et deux mois de retard.
 
 | Commande | Effet |
 |---|---|
-| `npm run dev` | Serveur de développement |
+| `npm run dev` | Pile Supabase locale isolée + serveur de développement |
 | `npm run build` | Build de production |
 | `npm run typecheck` | Vérification TypeScript |
 | `npm run verifier:quittance` | Vérifie les montants en toutes lettres et produit `apercu-quittance.pdf` / `apercu-recu.pdf` — **sans base de données** |

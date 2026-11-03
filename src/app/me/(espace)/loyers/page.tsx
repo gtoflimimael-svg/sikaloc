@@ -2,7 +2,9 @@ import { CalendarDays } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import { BadgeLoyer } from '@/components/me/etat-loyer'
-import { EnTetePage, EtatVide } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
+import { EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import {
   EXPLICATION_ETAT,
@@ -32,13 +34,25 @@ export const metadata: Metadata = { title: 'Mes loyers' }
  */
 export default async function PageLoyers() {
   const [baux, echeances] = await Promise.all([mesBaux(), mesEcheances()])
+  const excedentTotal = echeances.reduce(
+    (total, echeance) => total + Number(echeance.montant_excedentaire),
+    0,
+  )
 
   return (
     <div className="space-y-2xl">
-      <EnTetePage
+      <IntroPageMe
         titre="Mes loyers"
         description="Chaque mois de votre bail, et ce que Sikaloc en sait."
+        icone={<CalendarDays size={24} />}
       />
+
+      {excedentTotal > 0 ? (
+        <p className="rounded-lg border border-hairline bg-canvas-sage p-md text-body-sm text-body">
+          Les versements supérieurs au loyer de leur mois restent affichés comme
+          excédents non reportés. Ils ne sont pas automatiquement imputés au mois suivant.
+        </p>
+      ) : null}
 
       {baux.map((bail) => {
         const duBail = echeances.filter((e) => e.bail_id === bail.bail_id)
@@ -63,12 +77,12 @@ export default async function PageLoyers() {
               <EtatVide
                 icone={<CalendarDays size={32} strokeWidth={1.5} aria-hidden="true" />}
                 titre={
-                  sansEcheancesCalculees(bail)
+                  sansEcheancesCalculees(bail, duBail)
                     ? 'Ce bail est résilié'
                     : 'Aucun mois à afficher'
                 }
                 description={
-                  sansEcheancesCalculees(bail)
+                  sansEcheancesCalculees(bail, duBail)
                     ? 'Les loyers ne sont plus calculés pour un bail résilié. Vos paiements et vos quittances restent consultables dans l’onglet « Mes paiements ».'
                     : 'Votre bail vient d’être enregistré : le premier mois apparaîtra ici dès qu’il commencera.'
                 }
@@ -81,7 +95,7 @@ export default async function PageLoyers() {
       })}
 
       {/* ── La légende ───────────────────────────────────────────────────── */}
-      <section className="card list-card">
+      <section className={styles.legend}>
         <h2 className="text-body-md font-semibold text-ink">Ce que veut dire chaque état</h2>
         <dl className="mt-lg space-y-md">
           {(['Réglé', 'À venir', 'Impayé', 'À déterminer'] as const).map((etat) => (
@@ -107,18 +121,20 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
             {annee}
           </h3>
 
-          <ul className="overflow-hidden rounded-xl border border-hairline bg-canvas">
+          <ul className={styles.rentLedger}>
             {mois.map((echeance) => (
               <li
                 key={echeance.periode_debut}
-                className="flex flex-wrap items-center justify-between gap-md border-b border-hairline-soft px-lg py-md last:border-b-0"
+                className="flex flex-wrap items-center justify-between gap-md"
               >
                 <div className="min-w-0">
                   <p className="text-body-md font-semibold text-ink">
                     {formaterPeriode(echeance.periode_debut)}
                   </p>
                   <p className="text-caption text-mute">
-                    Échéance le {formaterDate(echeance.date_echeance)}
+                    {echeance.date_echeance
+                      ? `Échéance le ${formaterDate(echeance.date_echeance)}`
+                      : 'Date d’exigibilité à déterminer'}
                     {/*
                       Deux règles, et la seconde a été trouvée dans un
                       navigateur en comparant les deux espaces.
@@ -144,11 +160,22 @@ function TableauLoyers({ echeances }: { echeances: EcheanceLocataire[] }) {
 
                 <BadgeLoyer etat={echeance.etat} />
                 <dl className="me-amounts w-full">
-                  <div><dt>Loyer mensuel</dt><dd className="money">{formaterFCFA(echeance.loyer_mensuel)}</dd></div>
+                  <div>
+                    <dt>Loyer mensuel</dt>
+                    <dd className="money">
+                      {echeance.loyer_mensuel === null ? 'À déterminer' : formaterFCFA(echeance.loyer_mensuel)}
+                    </dd>
+                  </div>
                   {echeance.etat !== 'À déterminer' ? (
                     <>
                       <div><dt>Versements enregistrés</dt><dd className="money">{formaterFCFA(echeance.montant_paye)}</dd></div>
                       <div><dt>Solde de la période</dt><dd className="money">{formaterFCFA(echeance.montant_du)}</dd></div>
+                      {echeance.montant_excedentaire !== null && echeance.montant_excedentaire > 0 ? (
+                        <div>
+                          <dt>Excédent non reporté</dt>
+                          <dd className="money">{formaterFCFA(echeance.montant_excedentaire)}</dd>
+                        </div>
+                      ) : null}
                     </>
                   ) : null}
                 </dl>

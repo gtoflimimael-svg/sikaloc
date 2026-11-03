@@ -1,0 +1,49 @@
+.page {
+  transition: opacity 280ms var(--ease-doux);
+}
+
+.page[data-sikaloc-page-ready='true']:not([data-sikaloc-page-entered='true']) {
+  opacity: 0;
+}
+
+.page[data-sikaloc-page-ready='true'][data-sikaloc-page-entered='true'] {
+  opacity: 1;
+}
+
+.page[data-sikaloc-page-ready='true'] :global([data-sikaloc-motion-heading]) {
+  opacity: 0;
+  translate: 0 9px;
+  transition:
+    opacity 360ms var(--ease-doux),
+    translate 420ms var(--ease-doux);
+}
+
+.page[data-sikaloc-page-entered='true'] :global([data-sikaloc-motion-heading]) {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.page[data-sikaloc-page-ready='true'] :global([data-sikaloc-motion-reveal='pending']) {
+  opacity: 0;
+  translate: 0 14px;
+  transition:
+    opacity 420ms var(--ease-doux),
+    translate 500ms var(--ease-doux);
+}
+
+.page[data-sikaloc-page-ready='true'] :global([data-sikaloc-motion-reveal='visible']) {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .page[data-sikaloc-page-ready='true']:not([data-sikaloc-page-entered='true']),
+  .page[data-sikaloc-page-ready='true'] :global([data-sikaloc-motion-heading]),
+  .page[data-sikaloc-page-ready='true'] :global([data-sikaloc-motion-reveal='pending']),
+  .page[data-sikaloc-page-ready='true'] :global([data-sikaloc-motion-reveal='visible']) {
+    opacity: 1;
+    translate: 0 0;
+    transition: none;
+  }
+}

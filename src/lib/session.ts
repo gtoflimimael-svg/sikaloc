@@ -126,7 +126,8 @@ export async function locataireCourant(): Promise<{ compteId: string; email: str
 }
 
 /**
- * Profil du bailleur connecté, dont les deux coordonnées sont vérifiées.
+ * Profil du bailleur connecté après confirmation de l'email et, uniquement si
+ * un fournisseur réel est opérationnel, vérification téléphonique.
  *
  * ─── Pourquoi le contrôle est ICI ───────────────────────────────────────────
  *
@@ -134,17 +135,17 @@ export async function locataireCourant(): Promise<{ compteId: string; email: str
  * d'actions serveur et les trois mises en page de l'application appellent
  * cette fonction ; aucun n'a besoin d'être modifié pour hériter de la règle.
  *
- * L'alternative — poser le contrôle dans `bailleurOnboarde()` ou dans chaque
- * action — reproduirait exactement la dette du cycle de grâce, appliqué à
- * 4 actions serveur sur 18. Une règle de sécurité qu'il faut se souvenir
- * d'appeler n'est pas une règle, c'est une intention.
+ * L'email confirmé est une condition d'accès. Le téléphone n'est pas une
+ * autorisation : il ne devient qu'une étape additionnelle si un transport
+ * fournisseur opérationnel est déclaré. L'identité, les rôles, les RLS et les
+ * contrôles métier des actions restent les protections d'accès aux données.
  *
  * ─── Ce que le navigateur n'y change rien ───────────────────────────────────
  *
  * Masquer un écran n'empêche personne de rejouer la requête. Ce contrôle-ci
- * s'exécute sur le serveur, avant toute lecture et toute écriture métier : un
- * compte dont seul l'email est vérifié n'atteint aucune donnée, quelle que soit
- * la façon dont la requête a été fabriquée.
+ * s'exécute sur le serveur. Même sans exigence téléphonique, chaque action
+ * conserve ses gardes d'identité, de rôle, de propriété, de RLS et de droits
+ * métier ; aucun champ téléphone saisi n'est promu en preuve de vérification.
  */
 export async function bailleurCourant(): Promise<Bailleur> {
   const bailleur = await bailleurNonVerifie()

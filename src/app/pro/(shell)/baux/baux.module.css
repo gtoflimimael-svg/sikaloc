@@ -1,0 +1,314 @@
+.page {
+  width: 100%;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.title {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3vw, 36px);
+  font-weight: 750;
+  letter-spacing: -.045em;
+  line-height: 1.12;
+}
+
+.newLease {
+  display: inline-flex;
+  min-height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 24px;
+  min-height: 43px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.filter {
+  position: relative;
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  color: var(--color-mute);
+  font-size: 14px;
+  font-weight: 540;
+  line-height: 1.3;
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.filter:hover,
+.filter[aria-current='page'] {
+  color: var(--color-ink);
+}
+
+.filter[aria-current='page'] {
+  font-weight: 670;
+}
+
+.filter[aria-current='page']::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--color-ink-deep);
+  content: '';
+}
+
+.filter:focus-visible,
+.newLease:focus-visible,
+.viewLease:focus-visible,
+.allLeases:focus-visible {
+  outline: 2px solid var(--color-ink-deep);
+  outline-offset: 3px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.12fr) minmax(74px, .38fr) minmax(150px, .72fr) auto;
+  align-items: center;
+  gap: 16px clamp(16px, 2vw, 30px);
+  min-width: 0;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.property,
+.tenant {
+  min-width: 0;
+}
+
+.propertyName {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 690;
+  letter-spacing: -.025em;
+  line-height: 1.3;
+}
+
+.propertyMeta,
+.tenantName,
+.leaseStart {
+  overflow-wrap: anywhere;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.propertyMeta {
+  margin-top: 4px;
+  color: var(--color-mute);
+  font-size: 14px;
+}
+
+.tenantName {
+  color: var(--color-body-strong);
+  font-size: 14px;
+  font-weight: 570;
+}
+
+.leaseStart {
+  margin-top: 3px;
+  color: var(--color-mute);
+  font-size: 13px;
+}
+
+.status {
+  align-self: start;
+  justify-self: start;
+  margin: 0;
+  color: var(--color-mute);
+  font-size: 14px;
+  font-weight: 620;
+  line-height: 1.4;
+}
+
+.status[data-status='Actif'] {
+  color: var(--color-positive-deep);
+}
+
+.rent {
+  display: flex;
+  align-self: start;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rentPeriod {
+  color: var(--color-mute);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 450;
+  white-space: nowrap;
+}
+
+.viewLease {
+  display: inline-flex;
+  align-self: start;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 0 6px 6px;
+  border-radius: 4px;
+  color: var(--color-ink-deep);
+  font-size: 14px;
+  font-weight: 620;
+  line-height: 1.35;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 140ms ease;
+}
+
+.viewLease:hover,
+.allLeases:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+}
+
+.empty {
+  margin-top: 42px;
+}
+
+.empty h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -.02em;
+  line-height: 1.4;
+}
+
+.allLeases {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin-top: 8px;
+  color: var(--color-ink-deep);
+  font-size: 14px;
+  font-weight: 620;
+  text-decoration: none;
+}
+
+@media (max-width: 1100px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 18px;
+    padding: 20px 0;
+  }
+
+  .property {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .tenant {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .status {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .rent {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .viewLease {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .title {
+    font-size: clamp(29px, 8vw, 34px);
+  }
+
+  .filters {
+    gap: 22px;
+  }
+
+  .row {
+    gap: 9px 14px;
+    padding: 18px 0;
+  }
+}
+
+@media (max-width: 359px) {
+  .header {
+    align-items: flex-start;
+  }
+
+  .newLease {
+    min-height: 42px;
+    gap: 5px;
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+
+  .rent {
+    font-size: 15px;
+  }
+
+  .rentPeriod {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter,
+  .viewLease {
+    transition: none;
+  }
+}

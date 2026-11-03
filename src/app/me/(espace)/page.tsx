@@ -1,8 +1,9 @@
-import { ArrowRight, CircleHelp, House, Phone, TriangleAlert } from 'lucide-react'
+import { ArrowRight, CircleHelp, House, Phone } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { BadgeLoyer } from '@/components/me/etat-loyer'
+import styles from '@/components/me/espace.module.css'
 import { Alerte } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import {
@@ -15,7 +16,7 @@ import {
   resteADevoir,
 } from '@/lib/locataire'
 import { ESPACE_ME } from '@/lib/roles'
-import { formaterTelephone } from '@/lib/telephone'
+import { formaterTelephone, normaliserTelephone } from '@/lib/telephone'
 import type { BailLocataire, EcheanceLocataire } from '@/lib/types/database'
 
 /*
@@ -57,16 +58,17 @@ export default async function PageAccueilMe() {
 
   return (
     <div className="space-y-xl">
-      <div>
+      <header className={styles.greeting}>
+        <p className={styles.introKicker}>Votre espace personnel</p>
         <h1 className="page-title">
           Bonjour {nom.split(' ')[0]}
         </h1>
-        <p className="mt-xs text-body-md text-mute">
+        <p>
           {baux.length > 1
             ? `Vos ${baux.length} locations, et où en sont vos loyers.`
             : 'Votre logement, et où en sont vos loyers.'}
         </p>
-      </div>
+      </header>
 
       {/*
         Le retard d'abord, et seulement s'il existe. Un bandeau permanent
@@ -75,8 +77,6 @@ export default async function PageAccueilMe() {
       */}
       {enRetard.length > 0 ? (
         <Alerte ton="attention">
-          <span className="flex items-start gap-sm">
-            <TriangleAlert size={17} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             <span>
               <strong>
                 {enRetard.length === 1
@@ -87,13 +87,13 @@ export default async function PageAccueilMe() {
               total. Si vous avez déjà réglé, signalez-le à votre bailleur : lui
               seul peut l’enregistrer.
             </span>
-          </span>
         </Alerte>
       ) : null}
 
-      <div className="flex flex-wrap gap-sm" aria-label="Accès rapides">
+      <div className={styles.quickActions} aria-label="Accès rapides">
         <Link href="/me/loyers" className="btn btn-primary">Consulter mes loyers</Link>
         <Link href="/me/paiements" className="btn btn-secondary">Paiements et documents</Link>
+        <Link href="/me/bail" className="btn btn-tertiary">Mon bail</Link>
       </div>
 
       {baux.map((bail) => (
@@ -109,12 +109,12 @@ export default async function PageAccueilMe() {
         dit noir sur blanc.
       */}
       {indeterminees.length > 0 ? (
-        <section className="card list-card">
+        <section className={styles.historyNote}>
           <p className="flex items-start gap-sm text-body-md font-semibold text-ink">
             <CircleHelp size={18} strokeWidth={2} aria-hidden="true" className="mt-xxs shrink-0" />
             {indeterminees.length === 1
-              ? '1 mois antérieur à Sikaloc'
-              : `${indeterminees.length} mois antérieurs à Sikaloc`}
+              ? '1 échéance à préciser'
+              : `${indeterminees.length} échéances à préciser`}
           </p>
           <p className="mt-sm text-body-md text-mute">
             {EXPLICATION_ETAT['À déterminer']} Ces mois n’entrent dans aucun
@@ -140,6 +140,7 @@ function CarteBail({
   bail: BailLocataire
   echeances: EcheanceLocataire[]
 }) {
+  const numeroBailleur = normaliserTelephone(bail.bailleur_telephone)
   const prochaine = prochaineEcheance(echeances, bail.bail_id)
   const du = resteADevoir(echeances, bail.bail_id)
   const resilie = bail.statut !== 'Actif'
@@ -150,16 +151,16 @@ function CarteBail({
   ).length
 
   return (
-    <section className="card list-card">
-      <div className="flex flex-wrap items-start justify-between gap-lg">
+    <section className={styles.homeLease}>
+      <div className={styles.homeLeaseHeading}>
         <div className="min-w-0 list-copy">
           <p className="flex items-center gap-sm text-caption text-mute">
             <House size={15} strokeWidth={2} aria-hidden="true" />
             {bail.logement_type}
           </p>
-          <p className="mt-xs section-title list-copy">
+          <h2 className="mt-xs section-title list-copy">
             {bail.logement_adresse}
-          </p>
+          </h2>
           <p className="text-body-sm text-mute">
             {bail.logement_ville}, {bail.logement_pays}
           </p>
@@ -174,21 +175,17 @@ function CarteBail({
       </div>
 
       {/* ── Où en est ce bail ────────────────────────────────────────────── */}
-      <div className="mt-lg rounded-md bg-canvas-soft p-md">
+      <div className={styles.nextDue}>
         {resilie ? (
-          /*
-            `v_echeances` ne calcule que les baux actifs : un bail résilié
-            n'aurait aucune ligne, et une liste vide ressemblerait à une panne.
-            On dit donc pourquoi elle est vide.
-          */
           <p className="text-body-md text-mute">
-            Ce bail est <strong className="text-ink">résilié</strong>. Vos
-            quittances et vos paiements restent consultables, mais aucun loyer
-            n’est plus calculé pour ce logement.
+            Ce bail est <strong className="text-ink">résilié</strong>. Les
+            échéances jusqu’à sa date de fin restent visibles dans « Mes loyers »
+            {du > 0 ? ` et le solde restant est de ${formaterFCFA(du)}.` : '.'}
+            {' '}Aucun mois après la fin du bail n’est calculé.
           </p>
         ) : prochaine ? (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-md">
+            <div className={styles.nextDueHeading}>
               <div>
                 <p className="text-caption text-mute">
                   {prochaine.etat === 'Impayé' ? 'Loyer le plus ancien non réglé' : 'Prochain loyer'}
@@ -209,7 +206,7 @@ function CarteBail({
                     : null}
                 </p>
               </div>
-              <div className="text-right">
+              <div className={styles.nextDueAmount}>
                 <BadgeLoyer etat={prochaine.etat} />
                 <p className="mt-sm text-title-lg font-semibold money text-ink">
                   {formaterFCFA(prochaine.montant_du)}
@@ -222,7 +219,7 @@ function CarteBail({
             </p>
 
             {du > 0 && du !== Number(prochaine.montant_du) ? (
-              <p className="mt-sm text-body-sm font-semibold text-negative">
+              <p className="mt-sm text-body-sm font-semibold text-negative-darkest">
                 Total en retard sur ce logement : {formaterFCFA(du)}
               </p>
             ) : null}
@@ -241,8 +238,8 @@ function CarteBail({
             Aucun loyer ne vous est réclamé pour ce logement.{' '}
             <span className="text-mute">
               {indeterminesDuBail === 1
-                ? 'Un mois antérieur reste à confirmer avec votre bailleur.'
-                : `${indeterminesDuBail} mois antérieurs restent à confirmer avec votre bailleur.`}
+                ? 'Une échéance reste à clarifier avec votre bailleur.'
+                : `${indeterminesDuBail} échéances restent à clarifier avec votre bailleur.`}
             </span>
           </p>
         ) : (
@@ -253,18 +250,17 @@ function CarteBail({
       </div>
 
       {/* ── Qui contacter ────────────────────────────────────────────────── */}
-      <div className="mt-lg flex flex-wrap items-center justify-between gap-md">
+      <div className={styles.contact}>
         <div className="text-body-sm">
           <span className="text-mute">Bailleur : </span>
           <span className="font-semibold text-ink">{bail.bailleur_nom}</span>
         </div>
-        <a
-          href={`tel:${bail.bailleur_telephone}`}
-          className="btn btn-tertiary btn-sm"
-        >
-          <Phone size={15} strokeWidth={2} aria-hidden="true" />
-          {formaterTelephone(bail.bailleur_telephone)}
-        </a>
+        {numeroBailleur ? (
+          <a href={`tel:${numeroBailleur}`} className="btn btn-tertiary btn-sm">
+            <Phone size={15} strokeWidth={2} aria-hidden="true" />
+            {formaterTelephone(numeroBailleur)}
+          </a>
+        ) : <span className="text-body-sm text-mute">Téléphone non renseigné</span>}
       </div>
     </section>
   )

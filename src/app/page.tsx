@@ -1,21 +1,19 @@
 import {
   ArrowRight,
   Building2,
-  Database,
-  FileCheck,
-  Home,
-  Lock,
-  Search,
   ScrollText,
 } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { EnTetePublic, type LienEnTete } from '@/components/marketing/en-tete-public'
+import { AccueilAnimations } from '@/components/marketing/accueil-animations'
+import { ApercuQuittanceDemonstration } from '@/components/marketing/apercu-quittance-demonstration'
+import { FAQAccueil } from '@/components/marketing/faq-accueil'
 import { PiedDePage } from '@/components/marketing/pied-de-page'
 import { WidgetWhatsApp } from '@/components/marketing/widget-whatsapp'
-import { Illustration } from '@/components/ui/illustration'
-import { ESPACE_ME, ESPACE_PRO } from '@/lib/roles'
+import { URL_EXEMPLE_QUITTANCE } from '@/lib/pdf/exemple-url'
 import { obtenirUtilisateur } from '@/lib/supabase/serveur'
 
 /**
@@ -56,9 +54,8 @@ export const metadata: Metadata = {
   // description disait « bientôt » — elle s'affiche seule dans un résultat de
   // recherche, et promettait sinon une page qu'on ne trouvait pas en cliquant.
   description:
-    'Sikaloc réunit les espaces de la location au Bénin : Sikaloc_Pro pour ' +
-    'les bailleurs, Sikaloc_Me pour les locataires, et Sikaloc_Find ' +
-    'pour chercher un logement. Un seul compte, des documents partagés.',
+    'Sikaloc relie recherche de logements, gestion locative et accès aux ' +
+    'informations de location au Bénin, avec un espace adapté à chaque usage.',
   alternates: { canonical: '/' },
 }
 
@@ -83,10 +80,8 @@ const LIENS_ACCUEIL: LienEnTete[] = [
 /**
  * Le tiroir mobile : les mêmes entrées, plus la porte du locataire.
  *
- * Vers `/me/rejoindre` et non `#locataire` : cette section a quitté la page
- * d'accueil avec le reste du contenu bailleur. C'est au téléphone qu'arrive le
- * locataire qui a reçu une invitation — le tiroir est l'endroit où il la
- * cherche.
+ * Vers `/me/rejoindre` et non directement vers l'espace privé : le locataire
+ * qui a reçu une invitation y trouve les étapes pour rejoindre son espace.
  */
 const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
   { href: '#espaces', libelle: 'Les espaces' },
@@ -96,132 +91,11 @@ const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
   { href: '/me/rejoindre', libelle: 'Je suis locataire' },
 ]
 
-/**
- * Les trois espaces, avec leur état RÉEL.
- *
- * `disponible` n'est pas un drapeau d'affichage : c'est ce qui décide si une
- * carte porte un lien ou une mention d'attente. Sikaloc_Find est passé à
- * `true` le jour où `/find` a existé — pas avant.
- */
-const ESPACES_PRESENTES = [
-  {
-    nom: ESPACE_PRO.nom,
-    Icone: Building2,
-    pour: 'Propriétaires et bailleurs',
-    texte:
-      'Vos logements, vos locataires, vos baux. Chaque loyer encaissé produit sa quittance, numérotée et horodatée, et les retards remontent d’eux-mêmes.',
-    disponible: true,
-    lien: { href: '/pro', libelle: 'Découvrir Sikaloc_Pro' },
-  },
-  {
-    nom: ESPACE_ME.nom,
-    Icone: ScrollText,
-    pour: 'Locataires',
-    texte:
-      'Votre bail, vos loyers mois par mois, vos quittances à télécharger. Les mêmes documents que votre bailleur — pas des copies.',
-    disponible: true,
-    // Pas `/me` : cette adresse exige une session, et un curieux y serait
-    // renvoyé vers un formulaire de connexion sans identifiants.
-    lien: { href: '/me/rejoindre', libelle: 'Comment y accéder' },
-  },
-  {
-    nom: 'Sikaloc_Find',
-    Icone: Search,
-    pour: 'Personnes en recherche',
-    texte:
-      'Chercher un logement à louer, et le trouver publié par un bailleur qui gère déjà ses biens sur Sikaloc.',
-    disponible: true,
-    lien: { href: '/find', libelle: 'Voir les logements' },
-  },
-]
-
-/**
- * Le parcours d'un logement, d'un bout à l'autre de l'écosystème.
- *
- * C'est ce qui distingue Sikaloc d'un logiciel de gestion : le même logement,
- * le même bail et les mêmes documents traversent les trois espaces sans être
- * ressaisis.
- */
-const PARCOURS = [
-  {
-    numero: '1',
-    espace: ESPACE_PRO.nom,
-    titre: 'Le bailleur enregistre son bien',
-    texte:
-      'Logement, locataire, bail, loyer. C’est là que vivent les paiements et les quittances.',
-    avenir: false,
-  },
-  {
-    numero: '2',
-    espace: 'Sikaloc_Find',
-    titre: 'Il le publie s’il est vacant',
-    texte:
-      'Le logement est déjà décrit : le publier ne demande pas de le ressaisir.',
-    avenir: false,
-  },
-  {
-    numero: '3',
-    espace: ESPACE_ME.nom,
-    titre: 'Le locataire entre dans son espace',
-    texte:
-      'Son bailleur l’invite. Il retrouve son bail, ses loyers et ses quittances, sans rien installer ni payer.',
-    avenir: false,
-  },
-]
-
-/** Ce que Sikaloc_Pro apporte au bailleur. Le détail vit sur `/pro`. */
-const POUR_BAILLEURS = [
-  'Des quittances conformes aux mentions attendues au Bénin, générées à chaque paiement',
-  'Les loyers en retard remontés d’eux-mêmes, avec le nombre de jours',
-  'Un tableau de bord : qui a payé, qui doit encore, combien ce mois-ci',
-]
-
-/**
- * Ce que Sikaloc_Me apporte au locataire.
- *
- * Le troisième point est le moins spectaculaire et le plus important : c'est la
- * seule ligne de cette page qui protège le locataire contre le produit
- * lui-même.
- */
-const POUR_LOCATAIRES = [
-  'Vos quittances téléchargeables à tout moment, avec leur numéro et leur empreinte',
-  'Vos loyers mois par mois — le même calcul que celui de votre bailleur',
-  'Les mois antérieurs à l’arrivée de votre bailleur sur Sikaloc s’affichent « à déterminer », jamais « impayé »',
-]
-
-/**
- * Ce qui se vérifie.
- *
- * Aucun témoignage, aucun chiffre d'usage : Sikaloc n'en a pas encore, et en
- * inventer serait un faux. Ces trois affirmations se contrôlent — la première
- * en ouvrant un document, les deux autres en lisant la politique de
- * confidentialité.
- */
-const VERIFIABLE = [
-  {
-    Icone: FileCheck,
-    titre: 'Des documents vérifiables',
-    texte:
-      'Chaque quittance porte un numéro continu et une empreinte SHA-256 : la moindre modification du fichier devient détectable.',
-  },
-  {
-    Icone: Database,
-    titre: 'Des données cloisonnées',
-    texte:
-      'Chaque bailleur ne voit que les siennes, isolées au niveau de la base. Un locataire ne voit que son propre bail.',
-  },
-  {
-    Icone: Lock,
-    titre: 'Hébergées en Europe',
-    texte:
-      'Échanges chiffrés, stockage privé. Vos données ne sont ni vendues, ni louées, ni utilisées à des fins publicitaires.',
-  },
-]
-
 export default async function PageAccueil() {
   const utilisateur = await obtenirUtilisateur()
 
   return (
+    <AccueilAnimations>
     <div className="min-h-screen bg-canvas-soft">
       {/*
         Ni `espace`, ni `marqueHref` : ici la marque est Sikaloc tout court, et
@@ -243,330 +117,291 @@ export default async function PageAccueil() {
 
       <main id="contenu">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-xl py-5xl">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-pill bg-primary-pale opacity-60 blur-3xl"
-          />
-
-          <div className="relative mx-auto max-w-[1200px]">
-            <div className="grid items-center gap-4xl lg:grid-cols-[1.1fr_0.9fr]">
-              <div>
-                <span className="badge badge-neutral mb-lg">Bénin</span>
-
-                <h1 className="text-balance text-display-lg font-extrabold tracking-tight text-ink sm:text-display-xl lg:text-display-xxl">
-                  La location, écrite noir sur blanc
-                </h1>
-
-                <p className="anim-monte mt-xl max-w-[38rem] text-body-lg text-body">
-                  Au Bénin, un loyer se règle souvent de la main à la main, et la
-                  relation tient sur la parole. Sikaloc en garde la trace — pour
-                  le bailleur qui encaisse comme pour le locataire qui paie.
+        <section className="public-hero home-hero home-hero--clair relative overflow-hidden">
+          <div className="home-hero-inner relative mx-auto max-w-[1320px]">
+            <div className="home-hero-layout">
+              <div className="home-hero-copy-block">
+                <p className="home-kicker home-intro-item" data-home-intro-step="0">
+                  <span aria-hidden="true" className="home-kicker-mark" />
+                  La location au Bénin, mieux reliée
                 </p>
 
-                <div className="mt-2xl flex flex-wrap items-center gap-md">
-                  <Link href="/pro" className="btn btn-primary">
-                    Je suis bailleur
+                <h1 className="home-hero-title text-balance home-intro-item" data-home-intro-step="1">
+                  <span className="home-hero-title-main">Un logement à trouver.</span>
+                  <span className="home-hero-title-support">Des loyers à suivre.</span>
+                  <span className="home-hero-title-support home-hero-title-mark">Des preuves à garder.</span>
+                </h1>
+
+                <p className="public-hero-copy home-hero-description home-intro-item" data-home-intro-step="2">
+                  Sikaloc réunit la recherche de logements, le suivi locatif et les documents de location
+                  dans des espaces dédiés aux bailleurs, aux locataires invités et aux candidats.
+                </p>
+
+                <div className="home-hero-actions home-intro-item" data-home-intro-step="3">
+                  <Link href="/pro?presentation=1" className="btn btn-primary">
+                    Découvrir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
                   </Link>
-                  <Link
-                    href="/me/rejoindre"
-                    className="lien-anime text-body-sm font-medium text-ink"
-                  >
-                    Je suis locataire
+                  <Link href="/find" className="btn btn-secondary home-hero-secondary">
+                    Trouver un logement <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 </div>
 
-                <p className="mt-lg text-body-sm text-mute">
-                  Trois espaces, un seul compte. Les documents ne sont pas
-                  recopiés d’un espace à l’autre : ce sont les mêmes.
+                <p className="home-hero-tenant home-intro-item" data-home-intro-step="4">
+                  Vous êtes locataire ?{' '}
+                  <Link href="/me/rejoindre">Votre bailleur vous invite sur Me.</Link>
                 </p>
               </div>
 
-              <div className="relative flex justify-center lg:justify-end">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 m-auto size-[26rem] rounded-pill bg-primary-pale opacity-70 blur-3xl"
+              <figure className="home-hero-art" data-home-intro-art>
+                <Image
+                  src="/illustrations/home-01-villas.webp"
+                  alt="Cinq villas contemporaines indépendantes, aux façades claires et aux accents verts, alignées côte à côte"
+                  width={1774}
+                  height={887}
+                  priority
+                  sizes="(max-width: 639px) 100vw, (max-width: 1199px) 94vw, 1100px"
+                  className="home-hero-image"
                 />
-                <Illustration
-                  nom="lecture"
-                  taille={440}
-                  className="relative w-full max-w-[26rem] text-ink"
-                />
-              </div>
+              </figure>
             </div>
           </div>
         </section>
 
         {/* ── Le problème ──────────────────────────────────────────────── */}
-        <section className="bg-canvas px-xl py-5xl">
-          <div className="mx-auto max-w-[48rem]">
-            <p className="text-caption-uppercase uppercase text-primary">
-              Ce que Sikaloc cherche à réparer
-            </p>
-            <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
-              Sans écrit, tout repose sur la mémoire des deux parties
-            </h2>
+        <section className="home-problem-section">
+          <div className="home-problem-layout mx-auto max-w-[1200px]">
+            <div className="home-problem-heading" data-home-reveal>
+              <p className="home-section-label">Une location, deux points de vue</p>
+              <h2 className="home-section-title home-problem-title">
+                Quand les informations se dispersent, le suivi se complique.
+              </h2>
+            </div>
 
-            <div className="mt-2xl grid gap-xl sm:grid-cols-2">
-              <div>
-                <p className="text-body-md font-semibold text-ink">
-                  Le bailleur ne peut rien opposer
-                </p>
-                <p className="mt-sm text-body-md text-mute">
-                  Un locataire affirme avoir payé le mois dernier. Sans écrit daté
-                  et numéroté, la discussion devient parole contre parole — et le
-                  retard se découvre tard, quand il s’est accumulé.
-                </p>
+            <div className="home-problem-scene">
+              <div className="home-problem-fragments">
+                <div className="home-problem-fragment home-problem-fragment--lease" data-home-reveal>
+                  <span className="home-problem-paper-edge" aria-hidden="true" />
+                  <strong>Bail</strong>
+                  <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+                <div className="home-problem-fragment home-problem-fragment--payments" data-home-reveal>
+                  <span className="home-problem-paper-edge" aria-hidden="true" />
+                  <strong>Versements</strong>
+                  <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+                <div className="home-problem-fragment home-problem-fragment--documents" data-home-reveal>
+                  <span className="home-problem-paper-edge" aria-hidden="true" />
+                  <strong>Documents</strong>
+                  <span className="home-problem-fragment-lines" aria-hidden="true"><i /><i /></span>
+                </div>
               </div>
-              <div>
-                <p className="text-body-md font-semibold text-ink">
-                  Le locataire ne peut rien prouver
-                </p>
-                <p className="mt-sm text-body-md text-mute">
-                  Il a réglé, parfois pendant des années, sans jamais recevoir de
-                  quittance. Le jour où on lui en demande une, il n’a rien à
-                  produire.
-                </p>
-              </div>
+            </div>
+
+            <div className="home-perspectives">
+              <article className="home-perspective home-perspective--owner" data-home-reveal>
+                <span className="home-perspective-role">
+                  <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Côté bailleur</span>
+                </span>
+                <p className="home-perspective-question">Quelle période reste à régler&nbsp;?</p>
+                <p className="home-perspective-copy">Bail, périodes et règlements à rapprocher.</p>
+              </article>
+              <article className="home-perspective home-perspective--tenant" data-home-reveal>
+                <span className="home-perspective-role">
+                  <ScrollText size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Côté locataire</span>
+                </span>
+                <p className="home-perspective-question">Où retrouver mon bail et mes reçus&nbsp;?</p>
+                <p className="home-perspective-copy">Les documents que le bailleur rend disponibles dans Me.</p>
+              </article>
             </div>
           </div>
         </section>
 
         {/* ── Les trois espaces ────────────────────────────────────────── */}
-        <section id="espaces" className="px-xl py-5xl">
-          <div className="mx-auto max-w-[1100px]">
-            <p className="text-caption-uppercase uppercase text-primary">
-              L’écosystème
-            </p>
-            <h2 className="mt-sm max-w-[44rem] text-display-md font-extrabold tracking-tight text-ink">
-              Trois espaces, un seul jeu de documents
-            </h2>
-            <p className="mt-lg max-w-[42rem] text-body-lg text-body">
-              Ce ne sont pas trois produits qui se parlent. C’est un seul produit
-              vu depuis trois places : un bail lu par son bailleur et par son
-              locataire est le même bail, pas une copie synchronisée.
-            </p>
-
-            <div className="mt-2xl grid gap-lg md:grid-cols-3">
-              {ESPACES_PRESENTES.map(({ nom, Icone, pour, texte, disponible, lien }) => (
-                <div
-                  key={nom}
-                  className={`flex flex-col rounded-xl border p-xl ${
-                    disponible
-                      ? 'border-hairline bg-canvas'
-                      : // La carte de l'espace à venir est visuellement en
-                        // retrait : rien ne doit laisser croire qu'on peut y
-                        // entrer aujourd'hui.
-                        'border-dashed border-hairline bg-transparent'
-                  }`}
-                >
-                  <Icone
-                    size={24}
-                    strokeWidth={1.8}
-                    aria-hidden="true"
-                    className={disponible ? 'text-primary' : 'text-mute-soft'}
+        <section id="espaces" className="home-spaces-section" aria-labelledby="home-pro-title">
+          <div className="mx-auto max-w-[1200px]">
+            <article className="home-product-story home-product-story--pro">
+              <div className="home-product-story-copy" data-home-reveal>
+                <p className="home-product-label">Sikaloc Pro</p>
+                <h2 id="home-pro-title" className="home-product-title">Vos locations, enfin organisées.</h2>
+                <p className="home-product-description">
+                  Retrouvez vos logements, vos locataires, vos baux et le suivi
+                  des loyers dans un même espace.
+                </p>
+                <Link href="/pro" className="home-product-link">
+                  Découvrir Sikaloc Pro <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              </div>
+              <figure className="home-product-visual home-product-visual--pro" data-home-reveal>
+                <div className="home-product-visual-frame">
+                  <Image
+                    src="/images/home/sikaloc-pro-editorial.webp"
+                    alt="Scène illustrative : une propriétaire béninoise organise ses locations dans son espace de travail."
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
                   />
-
-                  <p className="mt-md text-body-lg font-semibold text-ink">{nom}</p>
-                  <p className="text-caption uppercase tracking-wide text-mute">{pour}</p>
-
-                  <p className="mt-md flex-1 text-body-sm text-body">{texte}</p>
-
-                  {disponible && lien ? (
-                    <Link
-                      href={lien.href}
-                      className="mt-lg inline-flex items-center gap-xs text-body-sm font-semibold text-ink hover:underline"
-                    >
-                      {lien.libelle}
-                      <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
-                    </Link>
-                  ) : (
-                    <p className="mt-lg text-body-sm font-semibold text-mute">
-                      N’existe pas encore
-                    </p>
-                  )}
                 </div>
-              ))}
+              </figure>
+            </article>
+          </div>
+        </section>
+
+        <section className="home-me-section" aria-labelledby="home-me-title">
+          <div className="mx-auto max-w-[1200px]">
+            <article className="home-product-story home-product-story--me">
+              <div className="home-product-story-copy" data-home-reveal>
+                <p className="home-product-label">Sikaloc Me</p>
+                <h2 id="home-me-title" className="home-product-title">
+                  Votre location, votre espace.
+                </h2>
+                <p className="home-product-description">
+                  Après invitation, consultez les informations de votre bail,
+                  les paiements enregistrés et les documents mis à votre disposition.
+                </p>
+                <Link href="/me/rejoindre" className="home-product-link">
+                  Comment accéder à Sikaloc Me <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              </div>
+              <figure className="home-product-visual home-product-visual--me" data-home-reveal>
+                <div className="home-product-visual-frame">
+                  <Image
+                    src="/images/home/sikaloc-me-editorial.webp"
+                    alt="Scène illustrative : une locataire béninoise consulte son téléphone dans son logement."
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
+                  />
+                </div>
+              </figure>
+            </article>
+          </div>
+        </section>
+
+        <section id="trouver" className="home-find-section" aria-labelledby="home-find-title">
+          <div className="home-find-layout mx-auto max-w-[1200px]">
+            <div className="home-find-copy" data-home-reveal>
+              <p className="home-product-label">Sikaloc Find</p>
+              <h2 id="home-find-title" className="home-product-title">
+                Cherchez avec vos propres repères.
+              </h2>
+              <p className="home-product-description">
+                Choisissez une ville, un type de bien et une fourchette de loyer.
+                Find affiche les annonces publiées qui correspondent à votre recherche.
+              </p>
+              <Link href="/find" className="home-product-link">
+                Explorer les annonces <ArrowRight size={18} aria-hidden="true" />
+              </Link>
             </div>
+
+            <figure className="home-product-visual home-product-visual--find" data-home-reveal>
+              <div className="home-product-visual-frame">
+                <Image
+                  src="/images/home/sikaloc-find-editorial.webp"
+                  alt="Scène illustrative : un couple béninois découvre un appartement contemporain."
+                  width={1536}
+                  height={1024}
+                  sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
+                />
+              </div>
+            </figure>
           </div>
         </section>
 
         {/* ── Le parcours ──────────────────────────────────────────────── */}
-        <section id="parcours" className="bg-canvas px-xl py-5xl">
-          <div className="mx-auto max-w-[56rem]">
-            <p className="text-caption-uppercase uppercase text-primary">
-              Comment ça marche
-            </p>
-            <h2 className="mt-sm max-w-[42rem] text-display-md font-extrabold tracking-tight text-ink">
-              Le même logement, d’un espace à l’autre
-            </h2>
-
-            <ol className="mt-2xl space-y-lg">
-              {PARCOURS.map(({ numero, espace, titre, texte, avenir }) => (
-                <li
-                  key={numero}
-                  className="flex gap-lg rounded-xl border border-hairline bg-canvas-soft p-lg"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-pill text-body-sm font-bold ${
-                      avenir ? 'bg-canvas text-mute' : 'bg-primary text-on-primary'
-                    }`}
-                  >
-                    {numero}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-sm">
-                      <span className="text-body-md font-semibold text-ink">{titre}</span>
-                      {/*
-                        `text-mute` et non `text-mute-soft` : cette teinte
-                        plafonne à 3,13:1 en clair, sous le seuil WCAG de
-                        4,5:1 — elle est faite pour du décoratif, or ce
-                        texte porte le nom de l'espace. Trouvé par
-                        `banc:contraste`, pas à l'œil.
-                      */}
-                      <span className="text-caption text-mute">{espace}</span>
-                      {avenir ? (
-                        <span className="badge badge-neutral text-caption">À venir</span>
-                      ) : null}
-                    </p>
-                    <p className="mt-xs text-body-sm text-mute">{texte}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ── Pour les bailleurs ───────────────────────────────────────── */}
-        <section className="px-xl py-5xl">
-          <div className="mx-auto grid max-w-[1100px] gap-4xl lg:grid-cols-2">
-            <div>
-              <p className="text-caption-uppercase uppercase text-primary">
-                Pour les bailleurs
+        <section id="parcours" className="home-journey-section">
+          <div className="mx-auto max-w-[1200px]">
+            <div className="home-journey-heading" data-home-reveal>
+              <p className="home-section-label">Comment les espaces se complètent</p>
+              <h2 className="home-section-title">Chaque espace garde son rôle.</h2>
+              <p className="home-journey-transition">
+                Dans <strong>Pro</strong>, le bailleur organise ses locations et
+                peut choisir de publier une annonce sur <strong>Find</strong>.
+                Les candidatures restent des demandes à examiner : elles ne
+                créent pas de bail. L’accès à <strong>Me</strong> se fait sur
+                invitation du bailleur.
               </p>
-              <h2 className="mt-sm text-display-sm font-extrabold tracking-tight text-ink">
-                Vous encaissez, Sikaloc écrit
-              </h2>
-              <ul role="list" className="mt-lg space-y-md">
-                {POUR_BAILLEURS.map((point) => (
-                  <li key={point} className="flex items-start gap-sm text-body-md text-body">
-                    <Building2
-                      size={17}
-                      strokeWidth={2}
-                      aria-hidden="true"
-                      className="mt-xxs shrink-0 text-primary"
-                    />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/pro" className="btn btn-primary mt-xl">
-                Voir {ESPACE_PRO.nom} en détail
-              </Link>
-            </div>
-
-            <div>
-              <p className="text-caption-uppercase uppercase text-primary">
-                Pour les locataires
-              </p>
-              <h2 className="mt-sm text-display-sm font-extrabold tracking-tight text-ink">
-                Vous payez, vous gardez la preuve
-              </h2>
-              <ul role="list" className="mt-lg space-y-md">
-                {POUR_LOCATAIRES.map((point) => (
-                  <li key={point} className="flex items-start gap-sm text-body-md text-body">
-                    <Home
-                      size={17}
-                      strokeWidth={2}
-                      aria-hidden="true"
-                      className="mt-xxs shrink-0 text-primary"
-                    />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-              {/*
-                Pas de bouton principal ici : le locataire n'a rien à acheter, et
-                il n'entre pas de lui-même. Le lien explique comment son bailleur
-                lui ouvre l'accès — c'est la seule chose vraie à lui proposer.
-              */}
-              <Link href="/me/rejoindre" className="btn btn-secondary mt-xl">
-                Comment accéder à {ESPACE_ME.nom}
-              </Link>
             </div>
           </div>
         </section>
 
-        {/* ── Ce qui se vérifie ────────────────────────────────────────── */}
-        <section className="border-t border-hairline px-xl py-5xl">
-          <div className="mx-auto max-w-[56rem]">
-            <p className="text-caption-uppercase uppercase text-primary">
-              Ce que vous pouvez vérifier
-            </p>
-            <h2 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
-              Pas de témoignages : des faits contrôlables
-            </h2>
-
-            <div className="mt-2xl grid gap-xl sm:grid-cols-3">
-              {VERIFIABLE.map(({ Icone, titre, texte }) => (
-                <div key={titre}>
-                  <Icone size={22} strokeWidth={1.9} aria-hidden="true" className="text-primary" />
-                  <p className="mt-md text-body-md font-semibold text-ink">{titre}</p>
-                  <p className="mt-xs text-body-sm text-mute">{texte}</p>
-                </div>
-              ))}
+        {/* ── Suivi locatif et documents ───────────────────────────────── */}
+        <section className="home-document-section" aria-labelledby="home-document-title">
+          <div className="home-document-layout mx-auto max-w-[1200px]">
+            <div className="home-document-copy" data-home-reveal>
+              <p className="home-section-label">Suivi locatif &amp; documents</p>
+              <h2 id="home-document-title" className="home-document-title">
+                <span>Des loyers suivis.</span>
+                <span>Des documents à retrouver.</span>
+              </h2>
+              <p className="home-document-description">
+                Retrouvez les paiements enregistrés, les périodes de location et
+                les documents mis à disposition, selon votre rôle et vos accès.
+              </p>
+              <div className="home-document-actions">
+                <Link href={URL_EXEMPLE_QUITTANCE} className="home-product-link">
+                  Voir un exemple de quittance <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+                <Link href="/legal/confidentialite" className="home-document-privacy lien-anime">
+                  Lire la politique de confidentialité
+                </Link>
+              </div>
             </div>
 
-            <div className="mt-xl flex flex-wrap gap-lg">
-              <Link
-                href="/exemple-quittance"
-                className="lien-anime text-body-sm font-medium text-ink"
-              >
-                Voir un exemple de quittance
-              </Link>
-              <Link
-                href="/legal/confidentialite"
-                className="lien-anime text-body-sm font-medium text-ink"
-              >
-                Lire la politique de confidentialité
-              </Link>
+            <div className="home-document-motion-preview" data-home-reveal>
+              <ApercuQuittanceDemonstration />
+            </div>
+          </div>
+        </section>
+
+        <section id="faq" className="home-faq-section" aria-labelledby="home-faq-title">
+          <div className="home-faq-layout mx-auto max-w-[1200px]">
+            <div className="home-faq-heading" data-home-reveal>
+              <p className="home-section-label">Questions fréquentes</p>
+              <h2 id="home-faq-title" className="home-section-title">Des questions avant de commencer&nbsp;?</h2>
+            </div>
+            <div className="home-faq-motion-list" data-home-reveal>
+              <FAQAccueil />
             </div>
           </div>
         </section>
 
         {/* ── Appel final ──────────────────────────────────────────────── */}
-        <section className="px-xl pb-5xl">
-          <div className="mx-auto max-w-[1100px] rounded-xl bg-surface-dark px-xl py-4xl text-center">
-            <h2 className="mx-auto max-w-[36rem] text-display-md font-extrabold tracking-tight text-on-dark">
-              {utilisateur
-                ? 'Reprenez où vous en étiez'
-                : 'Commencez par le bout qui vous concerne'}
-            </h2>
-
-            <div className="mt-2xl flex flex-wrap items-center justify-center gap-md">
-              {utilisateur ? (
-                // Le compte existe : `/entrer` aiguille selon les rôles, et ne
-                // pose la question qu'à qui porte les deux.
-                <Link href="/entrer" className="btn btn-primary">
-                  Accéder à mon espace
-                </Link>
-              ) : (
-                <>
-                  <Link href="/inscription" className="btn btn-primary">
-                    Créer un compte bailleur
-                  </Link>
-                  <Link href="/me/rejoindre" className="btn btn-secondary">
-                    Je suis locataire
-                  </Link>
-                </>
-              )}
+        <section className="home-final-section" aria-labelledby="home-final-title">
+          <div className="home-final-cta mx-auto max-w-[1200px]">
+            <div className="home-final-copy" data-home-reveal>
+              <p className="home-final-kicker">Choisissez votre prochain pas</p>
+              <h2 id="home-final-title">
+                <span>Une location.</span>
+                <span>Votre manière d’avancer.</span>
+              </h2>
+              <p className="home-final-description">
+                Bailleur, locataire ou en recherche de logement : trouvez l&apos;espace qui vous correspond.
+              </p>
             </div>
 
-            <p className="mx-auto mt-lg max-w-[34rem] text-body-sm text-on-dark-mute">
-              La création de compte concerne les bailleurs. Un locataire reçoit
-              son accès de son bailleur, et ne paie rien.
-            </p>
+            <nav className="home-final-paths" aria-label="Choisir un espace Sikaloc" data-home-reveal>
+              <div className="home-final-actions">
+                <Link href={utilisateur ? '/entrer' : '/inscription'} className="home-final-action home-final-action--pro">
+                  <span>{utilisateur ? 'Ouvrir mon espace' : 'Créer un compte bailleur'}</span>
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+                <Link href="/find" className="home-final-action home-final-action--find">
+                  <span>Explorer les annonces</span>
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="home-final-me">
+                <Link href="/me/rejoindre" className="home-final-me-link">
+                  <span>Vous êtes locataire ?</span>
+                  <strong>Accéder à Sikaloc Me</strong>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <span className="home-final-me-note">Accès sur invitation</span>
+              </div>
+            </nav>
+
           </div>
         </section>
       </main>
@@ -574,5 +409,6 @@ export default async function PageAccueil() {
       <PiedDePage />
       <WidgetWhatsApp />
     </div>
+    </AccueilAnimations>
   )
 }

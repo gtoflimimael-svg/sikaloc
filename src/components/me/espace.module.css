@@ -1,0 +1,58 @@
+.root { background: var(--color-canvas); }
+.main { padding: 36px 24px 48px; }
+.intro { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 28px; border-bottom: 1px solid var(--color-hairline); }
+.introIcon { color: var(--color-mute); padding-top: 28px; }
+.introKicker { color: var(--color-mute); font-size: 13px; font-weight: 550; }
+.intro h1 { margin-top: 8px; }
+.intro p:last-child { margin-top: 12px; max-width: 55ch; color: var(--color-body); font-size: 16px; line-height: 1.6; }
+.greeting { padding-block: 8px 12px; }
+.greeting h1 { margin-top: 8px; }
+.greeting > p:last-child { margin-top: 12px; color: var(--color-body); font-size: 16px; }
+.quickActions { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 4px; }
+.homeLease { padding-block: 24px; border-block: 1px solid var(--color-hairline); }
+.homeLeaseHeading { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 20px; }
+.nextDue { padding: 24px; margin-top: 24px; border-radius: 8px; background: var(--color-canvas-sage); }
+.nextDueHeading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+.nextDueAmount { flex-shrink: 0; text-align: right; }
+.contact { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.historyNote, .legend { padding-top: 24px; border-top: 1px solid var(--color-hairline); }
+.contract { border-bottom: 1px solid var(--color-hairline); }
+.contractHeading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 16px; padding-bottom: 24px; }
+.contractFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; border-top: 1px solid var(--color-hairline); }
+.contractFacts > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; gap: 20px; padding: 17px 0; border-bottom: 1px solid var(--color-hairline); }
+.contractFacts dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.contract > footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding-block: 24px; }
+.paymentList { border-top: 1px solid var(--color-hairline); }
+.paymentRow { padding-block: 24px; border-bottom: 1px solid var(--color-hairline); }
+.paymentRow > div:last-child { margin-top: 16px; padding-top: 0; border: 0; }
+.rentLedger { border-top: 1px solid var(--color-hairline); }
+.rentLedger > li { padding: 24px 0; border-bottom: 1px solid var(--color-hairline); }
+.preferences { padding-block: 8px 28px; border-bottom: 1px solid var(--color-hairline); }
+.privacy { max-width: 70ch; color: var(--color-mute); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.tabs { display: flex; gap: 4px; min-width: max-content; }
+.tab { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 12px; border-bottom: 2px solid transparent; color: var(--color-mute); font-size: 14px; white-space: nowrap; }
+.tab[aria-current=page] { border-color: var(--color-ink-deep); color: var(--color-ink); font-weight: 650; }
+.shortLabel { display: none; }
+@media (hover: hover) and (pointer: fine) { .tab:hover { background: var(--color-surface-soft); color: var(--color-ink); } }
+@media (max-width: 639px) {
+  .main { padding: 28px 16px 40px; }
+  .intro { gap: 12px; padding-bottom: 24px; }
+  .introIcon { display: none; }
+  .intro h1 { font-size: 30px; }
+  .greeting h1 { font-size: 32px; }
+  .quickActions > a:first-child { flex-basis: 100%; }
+  .quickActions > a { font-size: 14px; }
+  .nextDue { padding: 20px 16px; margin-top: 20px; }
+  .nextDueHeading { display: block; }
+  .nextDueAmount { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; text-align: left; }
+  .nextDueAmount > p { margin: 0; }
+  .contractFacts { grid-template-columns: minmax(0, 1fr); }
+  .contractFacts > div { gap: 16px; }
+  .contractFacts dt, .contractFacts dd { font-size: 14px; }
+  .tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; min-width: 0; }
+  .tabsExtended { grid-template-columns: repeat(6, minmax(72px, 1fr)); }
+  .tab { min-height: 62px; flex-direction: column; justify-content: center; gap: 7px; padding: 8px 2px; font-size: 12px; }
+  .shortLabel { display: inline; }
+  .longLabel { display: none; }
+}
+@media (max-width: 359px) { .root :global(.marque-officielle) { width: auto !important; height: 20px !important; } }

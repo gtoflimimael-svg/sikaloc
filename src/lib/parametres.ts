@@ -32,21 +32,21 @@ export const SECTIONS_PARAMETRES: SectionParametre[] = [
     cle: 'profil',
     titre: 'Profil',
     details:
-      'Votre avatar, votre nom, votre téléphone et votre mot de passe. Ces informations figurent sur vos quittances.',
+      'Votre nom et vos coordonnées pour les quittances, ainsi que vos identifiants de connexion.',
     description: 'Votre identité de bailleur et vos identifiants de connexion.',
   },
   {
     cle: 'signature',
     titre: 'Signature',
     details:
-      'La signature incrustée sur chaque quittance PDF. Importez une image ou scannez-la avec votre téléphone.',
+      'Gérez la signature des nouvelles quittances PDF. Dessinez-la ou importez une image depuis votre téléphone.',
     description: 'Elle est apposée sur chacun de vos documents.',
   },
   {
     cle: 'preferences',
     titre: 'Préférences',
     details:
-      'Les rappels que vous recevez par email et l’affichage des relances WhatsApp sur vos impayés.',
+      'Choisissez les emails non essentiels reçus et les boutons WhatsApp pour vos relances manuelles.',
     description: 'Ce que Sikaloc vous envoie, et ce qu’il vous propose d’envoyer.',
   },
   {
@@ -67,7 +67,7 @@ export const SECTIONS_PARAMETRES: SectionParametre[] = [
     cle: 'donnees',
     titre: 'Mes données',
     details:
-      'Téléchargez tout ce que Sikaloc détient sur vous : paiements, quittances et leurs PDF, dans une seule archive.',
+      'Récupérez vos logements, baux, loyers, paiements, quittances et PDF dans une seule archive.',
     description: 'Récupérez une copie complète de vos données, à tout moment.',
   },
 ]

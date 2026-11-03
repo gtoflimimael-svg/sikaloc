@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ChangeEventHandler, ReactNode } from 'react'
 
 /**
  * Champs de formulaire — spec design « Inputs & Forms ».
@@ -12,6 +12,8 @@ interface ProprietesCommunes {
   erreur?: string
   aide?: string
   requis?: boolean
+  valeur?: string | number
+  onChange?: ChangeEventHandler<HTMLInputElement>
 }
 
 function Enveloppe({
@@ -26,7 +28,7 @@ function Enveloppe({
     <div>
       <label htmlFor={nom} className="field-label">
         {libelle}
-        {requis ? <span className="text-negative"> *</span> : null}
+        {requis ? <span className="text-negative-darkest"> *</span> : null}
       </label>
       {children}
       {aide && !erreur ? <p id={`${nom}-aide`} className="field-hint">{aide}</p> : null}
@@ -46,6 +48,8 @@ function descriptionChamp({ nom, erreur, aide }: ProprietesCommunes) {
 export function ChampTexte({
   type = 'text',
   valeurDefaut,
+  valeur,
+  onChange,
   placeholder,
   inputMode,
   autoComplete,
@@ -69,7 +73,10 @@ export function ChampTexte({
         id={commun.nom}
         name={commun.nom}
         type={type}
-        defaultValue={valeurDefaut ?? undefined}
+        {...(valeur !== undefined
+          ? { value: valeur }
+          : { defaultValue: valeurDefaut ?? undefined })}
+        onChange={onChange}
         placeholder={placeholder}
         inputMode={inputMode}
         autoComplete={autoComplete}
@@ -89,11 +96,13 @@ export function ChampSelection({
   options,
   valeurDefaut,
   placeholder,
+  onChangeSelection,
   ...commun
 }: ProprietesCommunes & {
   options: { valeur: string; libelle: string }[]
   valeurDefaut?: string | null
   placeholder?: string
+  onChangeSelection?: ChangeEventHandler<HTMLSelectElement>
 }) {
   return (
     <Enveloppe {...commun}>
@@ -101,6 +110,7 @@ export function ChampSelection({
         id={commun.nom}
         name={commun.nom}
         defaultValue={valeurDefaut ?? ''}
+        onChange={onChangeSelection}
         required={commun.requis}
         aria-invalid={commun.erreur ? true : undefined}
         aria-describedby={descriptionChamp(commun)}
@@ -127,18 +137,22 @@ export function ChampCase({
   description,
   erreur,
   parDefaut,
+  apparence = 'encart',
 }: {
   nom: string
   libelle: string
   description?: string
   erreur?: string
   parDefaut?: boolean
+  apparence?: 'encart' | 'separateur'
 }) {
   return (
     <div>
       <label
         htmlFor={nom}
-        className="flex cursor-pointer items-start gap-md rounded-md border border-hairline bg-canvas p-lg"
+        className={apparence === 'separateur'
+          ? 'flex cursor-pointer items-start gap-md rounded-none border-0 bg-transparent p-0'
+          : 'flex cursor-pointer items-start gap-md rounded-md border border-hairline bg-canvas p-lg'}
       >
         <input
           id={nom}

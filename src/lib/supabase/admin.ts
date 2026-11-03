@@ -2,10 +2,11 @@ import 'server-only'
 
 import { createClient } from '@supabase/supabase-js'
 
+import { fetchSupabaseSansSecretBearer } from '@/lib/supabase/fetch-cle-secrete'
 import type { Database } from '@/lib/types/database'
 
 /**
- * Client à privilèges élevés (service_role) — contourne toutes les RLS.
+ * Client à privilèges élevés (service_role historique ou Secret key) — contourne toutes les RLS.
  *
  * Réservé à quatre usages serveur qui ne peuvent pas s'exécuter dans le contexte
  * d'un utilisateur :
@@ -32,5 +33,6 @@ export function creerClientAdmin() {
 
   return createClient<Database>(url, cle, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: fetchSupabaseSansSecretBearer() },
   })
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { House } from 'lucide-react'
 
 import { FormulaireNouvelleAnnonce } from '@/components/app/formulaire-nouvelle-annonce'
-import { Illustration } from '@/components/ui/illustration'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import { creerAnnonce } from '@/lib/actions/annonces'
 import { LIBELLES_STATUT, TON_STATUT } from '@/lib/annonces/libelles'
@@ -29,13 +29,14 @@ export default async function PageNouvelleAnnonce({
   const { logement: selection } = await searchParams
   const supabase = await creerClientServeur()
 
-  const [, { data }] = await Promise.all([
+  const [, reponseLogements] = await Promise.all([
     bailleurOnboarde(),
     supabase
       .from('logements')
       .select('id, adresse, ville, type, baux(statut), annonces(id, statut)')
       .order('created_at', { ascending: false }),
   ])
+  const { data, error: erreurLogements } = reponseLogements
 
   const logements = (data ?? []) as unknown as LigneLogement[]
 
@@ -47,15 +48,20 @@ export default async function PageNouvelleAnnonce({
   const loue = (l: LigneLogement) => l.baux.some((b) => b.statut === 'Actif')
 
   return (
-    <div className="mx-auto max-w-[42rem] space-y-xl">
+    <div className="listing-form-page mx-auto max-w-[42rem] space-y-xl">
       <EnTetePage
         titre="Nouvelle annonce"
         description="Choisissez le logement à proposer. L’annonce commence en brouillon : rien n’est publié tant que vous ne l’avez pas décidé."
       />
 
-      {logements.length === 0 ? (
+      {erreurLogements ? (
+        <Alerte ton="erreur">
+          Vos logements n’ont pas pu être chargés. La création de l’annonce est suspendue ;
+          actualisez la page pour réessayer.
+        </Alerte>
+      ) : logements.length === 0 ? (
         <EtatVide
-          icone={<Illustration nom="plante" taille={200} decorative />}
+          icone={<House size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre="Aucun logement enregistré"
           description="Une annonce se rattache à un logement. Enregistrez-le d’abord."
           action={

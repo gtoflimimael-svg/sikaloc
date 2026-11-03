@@ -46,40 +46,33 @@ export default async function PageParametres({
   }
 
   return (
-    <div>
+    <div className="settings-index-page">
       <EnTetePage
         titre="Paramètres"
         description="Votre profil, votre signature, vos préférences et votre abonnement."
       />
 
-      <div className="grid gap-lg sm:grid-cols-2">
-        {SECTIONS_PARAMETRES.map((section, index) => {
+      <div className="settings-section-list">
+        {SECTIONS_PARAMETRES.map((section) => {
           const Icone = ICONES[section.cle]
 
           return (
             <Link
               key={section.cle}
               href={`/pro/parametres/${section.cle}`}
-              style={{ '--delai': `${index * 45}ms` } as React.CSSProperties}
-              className="card card-lg anim-monte group flex flex-col gap-md transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-surface-elevated hover:shadow-elevated focus-visible:-translate-y-0.5"
+              className="settings-link-card group"
             >
-              <span className="flex size-11 items-center justify-center rounded-lg bg-primary-pale text-ink-deep transition-transform duration-200 group-hover:scale-105">
+              <span className="settings-link-icon" aria-hidden="true">
                 <Icone size={21} strokeWidth={1.8} aria-hidden="true" />
               </span>
 
-              <span className="flex items-center justify-between gap-sm">
-                <span className="text-title-lg font-semibold text-ink">
+              <span className="settings-link-copy">
+                <span className="settings-link-title">
                   {section.titre}
                 </span>
-                <ChevronRight
-                  size={18}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                  className="shrink-0 text-mute transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-ink"
-                />
+                <span className="settings-link-description">{section.details}</span>
               </span>
-
-              <span className="text-body-sm text-mute">{section.details}</span>
+              <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" className="settings-link-arrow" />
             </Link>
           )
         })}

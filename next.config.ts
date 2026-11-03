@@ -1,4 +1,6 @@
 import type { NextConfig } from 'next'
+import { isMaintenanceEnabled } from './src/lib/maintenance-policy.mjs'
+import { getSupabaseCspOrigins } from './src/lib/supabase-csp.mjs'
 
 /**
  * Politique de sécurité du contenu (CSP) — spec §9 « protéger le site contre
@@ -17,21 +19,22 @@ import type { NextConfig } from 'next'
  * (`form-action 'self'`).
  *
  * `'unsafe-inline'` reste un compromis assumé plutôt qu'un oubli : l'audit du
- * code n'a trouvé que deux `dangerouslySetInnerHTML`
- * (`src/components/ui/illustration.tsx`, `src/app/layout.tsx`), tous deux sur
- * du contenu statique écrit par l'équipe, jamais sur une entrée utilisateur —
- * la surface XSS réelle que ce relâchement expose est donc quasi nulle.
+ * code ne repose plus sur l'injection SVG d'illustrations ; les usages
+ * conservés dans `src/app/layout.tsx` sont du balisage statique, jamais une
+ * entrée utilisateur.
  */
 const isDev = process.env.NODE_ENV === 'development'
-const maintenanceActive = process.env.SIKALOC_MAINTENANCE_MODE !== 'off'
+const maintenanceActive = isMaintenanceEnabled(process.env.SIKALOC_MAINTENANCE_MODE)
+const { httpOrigin: supabaseHttpOrigin, websocketOrigin: supabaseWebsocketOrigin } =
+  getSupabaseCspOrigins(process.env.NEXT_PUBLIC_SUPABASE_URL)
 
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://pzrixjydnclwvjwqfbal.supabase.co;
+  img-src 'self' blob: data: ${supabaseHttpOrigin};
   font-src 'self';
-  connect-src 'self' https://pzrixjydnclwvjwqfbal.supabase.co wss://pzrixjydnclwvjwqfbal.supabase.co;
+  connect-src 'self' ${supabaseHttpOrigin} ${supabaseWebsocketOrigin};
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -51,8 +54,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '4mb',
     },
   },
-  // `document-quittance.tsx` lit les fichiers de police de marque sur le
-  // disque à l'exécution (voir son commentaire d'en-tête) : un chemin construit
+  // `pdf/base.tsx` lit les polices statiques Manrope et Inter sur le disque à l'exécution
+  // (voir son commentaire d'en-tête) : un chemin construit
   // dynamiquement (`path.join(process.cwd(), …)`) n'est pas repéré par le
   // traçage statique de Next.js, donc les .ttf/.otf ne suivraient pas dans le
   // paquet déployé sans cette inclusion explicite.
@@ -61,7 +64,14 @@ const nextConfig: NextConfig = {
   // et la comparer suppose de la lire telle qu'elle est écrite. Comme pour les
   // polices, un chemin construit dynamiquement échappe au traçage statique.
   outputFileTracingIncludes: {
-    '/*': ['./src/app/fonts/Copernicus-*.ttf', './src/app/fonts/StyreneB-*.otf'],
+    '/*': [
+      './src/app/fonts/Inter-PDF-*.ttf',
+      './src/app/fonts/Inter-OFL.txt',
+      './src/app/fonts/Manrope-PDF-*.ttf',
+      './src/app/fonts/Manrope-OFL.txt',
+      './public/marque/sikaloc-officiel-noir.svg',
+      './public/documents/exemple-quittance-sikaloc.pdf',
+    ],
     // Le contrôle de schéma lit ce fichier pour connaître les colonnes
     // attendues. Les objets (contraintes, politiques…) passaient par le même
     // mécanisme, mais les migrations n'arrivaient pas dans la fonction
@@ -123,6 +133,11 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    const cspForPublicPdfPreview = cspHeader.replace(
+      "frame-ancestors 'none';",
+      "frame-ancestors 'self';",
+    )
+
     return [
       {
         // Toutes les routes : les API et les pages méritent la même
@@ -152,6 +167,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Seuls les PDF fictifs peuvent être intégrés dans les aperçus Sikaloc.
+      // Leur ouverture reste interdite depuis les pages d'une autre origine.
+      ...['/exemple-quittance', '/exemple-recu'].map((source) => ({
+        source,
+        headers: [
+          { key: 'Content-Security-Policy', value: cspForPublicPdfPreview },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        ],
+      })),
     ]
   },
 }

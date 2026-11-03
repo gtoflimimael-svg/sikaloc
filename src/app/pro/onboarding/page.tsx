@@ -1,19 +1,20 @@
 import type { Metadata } from 'next'
+import styles from '@/components/app/onboarding.module.css'
 import { redirect } from 'next/navigation'
 
 import { AssistantOnboarding } from '@/components/app/onboarding'
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { SikalocSpaceBrand } from '@/components/ui/logo'
 import { bailleurCourant } from '@/lib/session'
 import { ESPACE_PRO } from '@/lib/roles'
 
 export const metadata: Metadata = { title: 'Bienvenue' }
 
 /**
- * Onboarding guidé en 4 étapes (§6.1.2).
+ * Onboarding facultatif en deux étapes.
  *
  * L'étape 1 (« Votre activité ») est déjà remplie par le formulaire
- * d'inscription : nom, téléphone, email, mot de passe et nombre de logements y
- * sont collectés. On la montre en lecture, cochée, plutôt que de la redemander.
+ * d'inscription : nom, téléphone et email y sont collectés. On les montre en
+ * lecture, plutôt que de les redemander.
  *
  * L'étape 2 recueille la signature. Elle ne peut pas vivre dans le formulaire
  * d'inscription : à ce moment-là le compte n'existe pas encore, et il n'y a
@@ -25,17 +26,16 @@ export default async function PageOnboarding() {
   if (bailleur.onboarding_termine) redirect(ESPACE_PRO.tableauDeBord)
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
-      <header className="flex h-16 items-center justify-center border-b border-hairline bg-canvas px-lg">
-        <MarqueSikaloc href={null} taille="sm" />
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <SikalocSpaceBrand href={null} taille="sm" espace="Pro" />
       </header>
 
-      <main className="mx-auto max-w-[640px] px-lg py-3xl">
+      <main id="contenu" className={styles.main}>
         <AssistantOnboarding
           nomBailleur={bailleur.nom}
           telephoneBailleur={bailleur.telephone}
           emailBailleur={bailleur.email}
-          nbLogementsDeclare={bailleur.nb_logements_declare}
           signatureExistante={Boolean(bailleur.signature_chemin)}
         />
       </main>

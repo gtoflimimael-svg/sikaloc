@@ -87,7 +87,14 @@ export async function GET(
     const { data, error } = await admin.storage.from('quittances').download(acces.pdfChemin)
 
     if (!error && data) {
-      return reponsePdf(Buffer.from(await data.arrayBuffer()), acces.hash)
+      const pdf = Buffer.from(await data.arrayBuffer())
+      if (acces.hash && empreinte(pdf) !== acces.hash) {
+        return NextResponse.json(
+          { erreur: 'Le contenu du document ne correspond pas à son empreinte enregistrée. Contactez le support.' },
+          { status: 503, headers: { 'Cache-Control': 'private, no-store' } },
+        )
+      }
+      return reponsePdf(pdf, acces.hash)
     }
 
     // Le chemin existe mais le coffre n'a pas répondu : c'est un incident, pas

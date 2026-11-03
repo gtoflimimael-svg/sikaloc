@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import { SlidersHorizontal } from 'lucide-react'
 
 import { FormulairePreferencesLocataire } from '@/components/me/formulaire-preferences'
-import { EnTetePage } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
 import { mesPreferences } from '@/lib/locataire'
 import { locataireCourant } from '@/lib/session'
 
@@ -25,14 +27,15 @@ export default async function PagePreferences() {
 
   return (
     <div className="space-y-xl">
-      <EnTetePage
+      <IntroPageMe
         titre="Mes préférences"
         description="Ce que Sikaloc a le droit de vous envoyer."
+        icone={<SlidersHorizontal size={24} />}
       />
 
       <FormulairePreferencesLocataire actif={preferences.notifEmail} />
 
-      <p className="text-body-sm text-mute">
+      <p className={styles.privacy}>
         Les emails partent à <strong className="text-ink list-copy">{compte.email}</strong>,
         l’adresse de votre compte. Pour en changer, écrivez à votre bailleur : la
         fiche qu’il tient est celle qui sert d’adresse de contact.

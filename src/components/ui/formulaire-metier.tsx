@@ -24,15 +24,20 @@ export function FormulaireMetier({ action, etat, titre, children, onChange }: {
   }, [etat])
 
   return (
-    <form ref={formulaire} action={action} aria-label={titre} className="card card-lg"
+    <form ref={formulaire} action={action} aria-label={titre} className="card card-lg formulaire-metier"
       onChange={onChange}
       // Ces parcours redirigent à la réussite. Un refus doit conserver la saisie.
       onReset={(evenement) => evenement.preventDefault()}>
+      <div className="formulaire-metier-intro">
+        <h2>{titre}</h2>
+      </div>
+      <div className="formulaire-metier-corps">
       <ContenuFormulaire>
         <p className="text-caption text-mute">Les champs marqués d’un * sont obligatoires.</p>
         {etat.erreur ? <div tabIndex={-1} data-erreur-formulaire><Alerte ton="erreur">{etat.erreur}</Alerte></div> : null}
         {children}
       </ContenuFormulaire>
+      </div>
     </form>
   )
 }

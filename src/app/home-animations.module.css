@@ -1,0 +1,111 @@
+.root {
+  width: 100%;
+}
+
+/* Le balisage reste visible tant que le composant client n'est pas prêt. */
+.root[data-motion-ready='true'] :global([data-home-reveal]) {
+  opacity: 0;
+  translate: 0 16px;
+  transition: opacity 500ms var(--ease-doux), translate 600ms var(--ease-doux);
+}
+
+.root[data-motion-ready='true'] :global([data-home-reveal][data-home-revealed='true']) {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.root[data-motion-ready='true']:not([data-home-entered='true']) :global(.home-intro-item),
+.root[data-motion-ready='true']:not([data-home-entered='true']) :global([data-home-intro-art]) {
+  opacity: 0;
+}
+
+.root[data-motion-ready='true']:not([data-home-entered='true']) :global(.home-intro-item) {
+  translate: 0 14px;
+}
+
+.root[data-motion-ready='true']:not([data-home-entered='true']) :global([data-home-intro-art]) {
+  transform: translateY(10px) scale(0.99);
+}
+
+.root[data-home-entered='true'] :global(.home-intro-item) {
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity 520ms var(--ease-doux), translate 620ms var(--ease-doux);
+}
+
+.root[data-home-entered='true'] :global([data-home-intro-art]) {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 760ms var(--ease-doux), transform 900ms var(--ease-doux);
+  transition-delay: 150ms;
+}
+
+.root[data-home-entered='true'] :global(.home-intro-item[data-home-intro-step='1']) { transition-delay: 55ms; }
+.root[data-home-entered='true'] :global(.home-intro-item[data-home-intro-step='2']) { transition-delay: 115ms; }
+.root[data-home-entered='true'] :global(.home-intro-item[data-home-intro-step='3']) { transition-delay: 175ms; }
+.root[data-home-entered='true'] :global(.home-intro-item[data-home-intro-step='4']) { transition-delay: 235ms; }
+
+/* Les fragments superposés arrivent chacun à leur tour, sans toucher à leurs rotations. */
+.root :global(.home-problem-fragment:nth-child(2)) { transition-delay: 65ms; }
+.root :global(.home-problem-fragment:nth-child(3)) { transition-delay: 130ms; }
+
+/* Les photos répondent au pointeur avec un léger rapprochement, sans bouger la mise en page. */
+.root :global(.home-product-visual-frame img) {
+  transition: transform 560ms var(--ease-doux);
+}
+
+.root :global(.home-document-motion-preview) {
+  width: min(100%, 560px);
+  min-width: 0;
+  justify-self: end;
+}
+
+.root :global(.home-faq-motion-list) {
+  min-width: 0;
+}
+
+.root :global(.home-product-link svg),
+.root :global(.home-hero-actions .btn svg),
+.root :global(.home-final-action svg),
+.root :global(.home-faq-contact-button svg) {
+  transition: transform 180ms var(--ease-net);
+}
+
+.root :global(.home-product-link),
+.root :global(.home-final-action),
+.root :global(.home-hero-actions .btn),
+.root :global(.home-faq-contact-button) {
+  transition: transform 150ms var(--ease-net), background-color 180ms var(--ease-net), color 180ms var(--ease-net), border-color 180ms var(--ease-net);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .root :global(.home-product-visual-frame:hover img) { transform: scale(1.025); }
+  .root :global(.home-product-link:hover svg),
+  .root :global(.home-hero-actions a:hover svg),
+  .root :global(.home-final-action:hover svg),
+  .root :global(.home-faq-contact-button:hover svg) { transform: translateX(3px); }
+}
+
+.root :global(.home-product-link:active),
+.root :global(.home-final-action:active),
+.root :global(.home-hero-actions .btn:active),
+.root :global(.home-faq-contact-button:active) {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-motion-ready='true'] :global([data-home-reveal]),
+  .root[data-motion-ready='true'] :global(.home-intro-item),
+  .root[data-motion-ready='true'] :global([data-home-intro-art]) {
+    opacity: 1 !important;
+    translate: 0 0 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0ms !important;
+  }
+
+  .root :global(.home-product-visual-frame img) {
+    transform: none !important;
+    transition: none !important;
+  }
+}

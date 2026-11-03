@@ -1,0 +1,14 @@
+.page { min-height: 100svh; background: var(--color-canvas); }
+.header { display: flex; align-items: center; justify-content: center; min-height: 72px; padding: 16px 24px; border-bottom: 1px solid var(--color-hairline); }
+.main { max-width: 688px; margin: auto; padding: 56px 24px 72px; }
+.intro { margin-bottom: 36px; }
+.step { color: var(--color-mute); font-size: 13px; font-weight: 600; }
+.title { margin-top: 12px; color: var(--color-ink); font-size: clamp(30px, 4vw, 38px); font-weight: 700; line-height: 1.15; letter-spacing: -.04em; outline: none; }
+.description { margin-top: 16px; color: var(--color-mute); font-size: 16px; line-height: 1.65; }
+.facts { border-top: 1px solid var(--color-hairline); }
+.fact { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 24px; padding-block: 20px; border-bottom: 1px solid var(--color-hairline); font-size: 15px; line-height: 1.6; }
+.fact dt { color: var(--color-mute); }
+.fact dd { min-width: 0; color: var(--color-ink); font-weight: 550; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 32px; }
+.signature { border-top: 1px solid var(--color-hairline); padding-top: 28px; }
+@media (max-width: 639px) { .main { padding: 32px 20px 48px; } .fact { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 18px; } .actions { align-items: stretch; flex-direction: column; } .actions > button, .actions > form > button { width: 100%; } }

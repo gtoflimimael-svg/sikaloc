@@ -52,9 +52,9 @@ const CAS: Cas[] = [
   { mdp: 'Jonquille7Mn!', accepte: true, note: 'raisonnable' },
   { mdp: 'Zk9$mPq2wRt7', accepte: true, note: 'aléatoire, 12 caractères' },
   {
-    mdp: 'correct cheval batterie agrafe',
+    mdp: 'correct cheval batterie agrafe 7',
     accepte: true,
-    note: 'phrase de passe — régression : était refusée',
+    note: 'phrase de passe avec chiffre, conforme à GoTrue',
   },
   { mdp: 'Ab1!xyzwqr', accepte: true, note: 'correct' },
   { mdp: 'Moussa$K9pLvQ2wXz', accepte: true, note: 'prénom noyé : ne doit PAS pénaliser' },

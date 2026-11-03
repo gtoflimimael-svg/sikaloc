@@ -42,7 +42,7 @@ export async function GET() {
   }
 
   try {
-    const { archive, nomFichier } = await exporterDonnees(user.id)
+    const { archive, nomFichier } = await exporterDonnees(user.id, supabase)
 
     return new NextResponse(archive as unknown as BodyInit, {
       headers: {

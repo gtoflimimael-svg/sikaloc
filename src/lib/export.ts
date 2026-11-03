@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createHash } from 'node:crypto'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { zipSync } from 'fflate'
 
@@ -63,10 +64,13 @@ export interface ResultatExport {
   archive: Buffer
   nomFichier: string
   /** Pour le journal : ce que l'archive contient réellement. */
-  resume: { paiements: number; quittances: number; pdf: number; pdfManquants: number }
+  resume: { baux: number; loyersHistoriques: number; paiements: number; quittances: number; pdf: number; pdfManquants: number }
 }
 
-export async function exporterDonnees(bailleurId: string): Promise<ResultatExport> {
+export async function exporterDonnees(
+  bailleurId: string,
+  clientUtilisateur: SupabaseClient<Database>,
+): Promise<ResultatExport> {
   const admin = creerClientAdmin()
 
   const debut = Date.now()
@@ -122,6 +126,56 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
   const baux = await lire('baux')
   const paiements = await lire('paiements')
   const quittances = await lire('quittances')
+
+  // `baux_loyers` retire explicitement les droits de `service_role` et n'accorde
+  // la lecture qu'à `authenticated` sous RLS. Utiliser ici le client de la
+  // session évite de contourner cette frontière; la politique limite chaque
+  // ligne aux baux de auth.uid(). Les identifiants sont également issus de la
+  // lecture propriétaire ci-dessus et le résultat reste borné à ces baux.
+  const loyersHistoriques: Database['public']['Tables']['baux_loyers']['Row'][] = []
+  const identifiantsBaux = (baux.data ?? []).map((bail) => bail.id)
+  for (let debutLot = 0; debutLot < identifiantsBaux.length; debutLot += 100) {
+    const lot = identifiantsBaux.slice(debutLot, debutLot + 100)
+    const initial = await clientUtilisateur
+      .from('baux_loyers')
+      .select('bail_id', { count: 'exact', head: true })
+      .in('bail_id', lot)
+      .abortSignal(signal())
+    if (initial.error || initial.count === null || initial.count > 50_000) {
+      throw new Error('Lecture des loyers historiques indisponible ou trop volumineuse.')
+    }
+
+    const lignesLot: Database['public']['Tables']['baux_loyers']['Row'][] = []
+    for (let offset = 0; ; offset += 500) {
+      const resultat = await clientUtilisateur
+        .from('baux_loyers')
+        .select('*')
+        .in('bail_id', lot)
+        .order('bail_id')
+        .order('periode_debut')
+        .range(offset, offset + 499)
+        .abortSignal(signal())
+      if (resultat.error || !resultat.data) {
+        throw new Error('Une page des loyers historiques est indisponible.')
+      }
+      for (const ligne of resultat.data) {
+        if (!lot.includes(ligne.bail_id)) throw new Error('Loyer historique hors périmètre.')
+        compter(Buffer.byteLength(JSON.stringify(ligne)))
+        lignesLot.push(ligne)
+      }
+      if (resultat.data.length < 500) break
+    }
+
+    const final = await clientUtilisateur
+      .from('baux_loyers')
+      .select('bail_id', { count: 'exact', head: true })
+      .in('bail_id', lot)
+      .abortSignal(signal())
+    if (final.error || final.count !== initial.count || lignesLot.length !== initial.count) {
+      throw new Error('Historique des loyers modifié pendant l’export ; réessayez.')
+    }
+    loyersHistoriques.push(...lignesLot)
+  }
   paiements.data.sort((a, b) => (a.date_paiement ?? '').localeCompare(b.date_paiement ?? '') || a.id.localeCompare(b.id))
   quittances.data.sort((a, b) => a.date_generation.localeCompare(b.date_generation) || a.id.localeCompare(b.id))
 
@@ -139,6 +193,59 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
     (baux.data ?? []).map((b) => [b.id, { locataire: b.locataire_id, logement: b.logement_id }]),
   )
 
+  fichiers['baux.csv'] = [
+    texte(
+      versCsv(
+        [
+          'Identifiant bail',
+          'Identifiant logement',
+          'Adresse logement',
+          'Identifiant locataire',
+          'Locataire',
+          'Loyer mensuel actuel (FCFA)',
+          'Début',
+          'Fin',
+          'Jour échéance',
+          'Tolérance (jours)',
+          'Dépôt de garantie (FCFA)',
+          'Statut',
+          'Historique déclaré le',
+        ],
+        (baux.data ?? []).map((b) => [
+          b.id,
+          b.logement_id,
+          adresseLogement.get(b.logement_id) ?? '',
+          b.locataire_id,
+          nomLocataire.get(b.locataire_id) ?? '',
+          b.loyer_mensuel,
+          formaterDate(b.date_debut),
+          formaterDate(b.date_fin),
+          b.jour_echeance,
+          b.tolerance_jours,
+          b.depot_garantie,
+          b.statut,
+          formaterDate(b.historique_declare_le),
+        ]),
+      ),
+    ),
+    { level: 6 },
+  ]
+
+  fichiers['loyers-historiques.csv'] = [
+    texte(
+      versCsv(
+        ['Identifiant bail', 'Période effective', 'Loyer mensuel (FCFA)', 'Enregistré le'],
+        loyersHistoriques.map((loyer) => [
+          loyer.bail_id,
+          formaterDate(loyer.periode_debut),
+          loyer.loyer_mensuel,
+          formaterHorodatage(loyer.cree_le),
+        ]),
+      ),
+    ),
+    { level: 6 },
+  ]
+
   fichiers['paiements.csv'] = [
     texte(
       versCsv(
@@ -154,7 +261,7 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
             p.montant,
             p.mode_paiement,
             p.type_paiement,
-            p.est_partiel ? 'oui' : 'non',
+            p.est_partiel === null ? 'à déterminer' : p.est_partiel ? 'oui' : 'non',
             p.statut,
           ]
         }),
@@ -235,6 +342,8 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
         `Généré le ${formaterHorodatage(new Date().toISOString())}`,
         '',
         'CONTENU',
+        '  baux.csv                  vos baux et leurs conditions actuelles',
+        '  loyers-historiques.csv    loyers enregistrés par période, lorsque disponibles',
         '  paiements.csv    tous vos paiements enregistrés',
         '  quittances.csv   la liste de vos quittances, avec leur empreinte',
         '  logements.csv    vos logements',
@@ -251,8 +360,9 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
         '',
         'VÉRIFIER UN DOCUMENT',
         '  Chaque quittance a une empreinte SHA-256, notée dans quittances.csv.',
-        '  Elle permet de démontrer qu’un PDF n’a pas été modifié depuis son',
-        '  émission : recalculez l’empreinte du fichier et comparez-la.',
+        '  Comparez l’empreinte calculée au hash enregistré pour détecter une',
+        '  différence. Ce hash n’est ni une signature électronique, ni une',
+        '  certification juridique du document.',
         '',
         pdfManquants > 0
           ? `NOTE — ${pdfManquants} quittance(s) n’ont pas de PDF associé dans le coffre.\n  Elles figurent dans quittances.csv, sans fichier correspondant.`
@@ -272,6 +382,8 @@ export async function exporterDonnees(bailleurId: string): Promise<ResultatExpor
     archive: Buffer.from(zipSync(fichiers)),
     nomFichier: `sikaloc-export-${horodatage}.zip`,
     resume: {
+      baux: (baux.data ?? []).length,
+      loyersHistoriques: loyersHistoriques.length,
       paiements: (paiements.data ?? []).length,
       quittances: (quittances.data ?? []).length,
       pdf,

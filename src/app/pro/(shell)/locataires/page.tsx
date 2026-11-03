@@ -1,133 +1,208 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { MoreHorizontal, Plus } from 'lucide-react'
 
-import { ResumeListe } from '@/components/ui/listes'
 import { BoutonInvitation } from '@/components/app/bouton-invitation'
-import { Illustration } from '@/components/ui/illustration'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
 import { ActionConfirmee } from '@/components/ui/action-confirmee'
-import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
+import { Alerte } from '@/components/ui/retours'
 import { supprimerLocataire } from '@/lib/actions/locataires'
-import { creerClientServeur } from '@/lib/supabase/serveur'
+import {
+  peutSupprimerLocataire,
+  presenterAccesMe,
+  presenterSituationLocative,
+  type InvitationLocatairePresentation,
+} from '@/lib/locataires-presentation'
+import { DELAI_RENVOI_SECONDES } from '@/lib/invitations'
 import { bailleurOnboarde } from '@/lib/session'
 import { formaterTelephone } from '@/lib/telephone'
+import { creerClientServeur } from '@/lib/supabase/serveur'
+import styles from './locataires.module.css'
 
 export const metadata: Metadata = { title: 'Locataires' }
 
+type BailListe = { id: string; statut: string }
+type LocataireListe = {
+  id: string
+  nom: string
+  email: string | null
+  telephone: string | null
+  compte_id: string | null
+  baux: BailListe[] | null
+}
+type InvitationListe = InvitationLocatairePresentation & {
+  locataire_id: string
+  cree_le: string
+}
+
 export default async function PageLocataires() {
   const supabase = await creerClientServeur()
-
-  // Le résultat de `bailleurOnboarde()` n'est même pas utilisé ici : il ne
-  // sert qu'à vérifier l'accès, ce que les RLS vérifient de toute façon sur la
-  // requête elle-même. Les deux partent donc en parallèle plutôt qu'à la suite.
-  const [, { data: locataires, error: erreurLocataires }] = await Promise.all([
+  const [, locatairesReponse] = await Promise.all([
     bailleurOnboarde(),
-    supabase.from('locataires').select('*, baux(id, statut)').order('nom', { ascending: true }),
+    // Seuls les champs nécessaires à cette liste sont lus : ni signature,
+    // consentement ni autres données personnelles ne sont chargés ici.
+    supabase
+      .from('locataires')
+      .select('id, nom, email, telephone, compte_id, baux(id, statut)')
+      .order('nom', { ascending: true }),
   ])
 
-  const liste = locataires ?? []
+  const { data: locataires, error: erreurLocataires } = locatairesReponse
+  const liste = (locataires ?? []) as unknown as LocataireListe[]
+  const invitationsParLocataire = new Map<string, InvitationListe>()
+  let erreurInvitations = false
 
-  // Les invitations encore en attente, pour distinguer « inviter » de
-  // « renvoyer ». Une requête pour toute la liste plutôt qu'une par ligne.
-  const { data: invitations, error: erreurInvitations } = await supabase
-    .from('invitations_locataire')
-    .select('locataire_id')
-    .is('utilisee_le', null)
-    .is('annulee_le', null)
-    .gt('expire_le', new Date().toISOString())
+  // RLS reste l'autorité. En plus, la lecture ne porte que sur les locataires
+  // de cette liste et ne sélectionne jamais l'empreinte du jeton.
+  if (!erreurLocataires && liste.length > 0) {
+    const { data: invitations, error } = await supabase
+      .from('invitations_locataire')
+      .select('locataire_id, expire_le, utilisee_le, annulee_le, cree_le')
+      .in('locataire_id', liste.map((locataire) => locataire.id))
+      .order('cree_le', { ascending: false })
 
-  const enAttente = new Set((invitations ?? []).map((i) => i.locataire_id))
+    erreurInvitations = Boolean(error)
+    for (const invitation of invitations ?? []) {
+      const ligne = invitation as InvitationListe
+      if (!invitationsParLocataire.has(ligne.locataire_id)) {
+        invitationsParLocataire.set(ligne.locataire_id, ligne)
+      }
+    }
+  }
 
   return (
-    <div>
-      <EnTetePage
-        titre="Locataires"
-        description="Les personnes à qui vous louez. Invitez-les sur Sikaloc_Me pour qu’elles suivent leurs loyers et leurs quittances."
-        action={
-          <Link href="/pro/locataires/nouveau" className="btn btn-primary">
-            Nouveau locataire
-          </Link>
-        }
-      />
-
-      {erreurInvitations ? <div className="mb-lg"><Alerte ton="attention">Le statut des invitations ne peut pas être chargé. Les informations d’invitation peuvent être incomplètes.</Alerte></div> : null}
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Locataires</h1>
+        <Link
+          href="/pro/locataires/nouveau"
+          className={`btn btn-primary ${styles.addAction}`}
+          aria-label="Ajouter un locataire"
+        >
+          Ajouter
+          <Plus size={17} strokeWidth={2} aria-hidden="true" />
+        </Link>
+      </header>
 
       {erreurLocataires ? (
-        <Alerte ton="erreur">Les locataires ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+        <Alerte ton="erreur">
+          Les locataires ne peuvent pas être chargés. Actualisez la page pour réessayer.
+        </Alerte>
       ) : liste.length === 0 ? (
-        <EtatVide
-          icone={<Illustration nom="attente" taille={200} decorative />}
-          titre="Aucun locataire enregistré"
-          description="Ajoutez un locataire, puis rattachez-lui un bail pour commencer à suivre ses loyers."
-          action={
-            <Link href="/pro/locataires/nouveau" className="btn btn-primary">
-              Ajouter un locataire
-            </Link>
-          }
-        />
+        <section className={styles.empty} aria-labelledby="empty-tenants-title">
+          <h2 id="empty-tenants-title">Ajoutez votre premier locataire.</h2>
+        </section>
       ) : (
-        <>
-        <ResumeListe>{liste.length} locataire{liste.length > 1 ? 's' : ''} enregistré{liste.length > 1 ? 's' : ''}</ResumeListe>
-        <ul className="space-y-sm" aria-label="Locataires enregistrés">
+        <ul className={styles.list} aria-label="Locataires">
           {liste.map((locataire) => {
-            const baux = (locataire.baux ?? []) as unknown as { id: string; statut: string }[]
-            const actifs = baux.filter((b) => b.statut === 'Actif').length
+            const baux = locataire.baux ?? []
+            const bauxActifs = baux.filter((bail) => bail.statut === 'Actif')
+            const email = locataire.email?.trim() ?? ''
+            const telephone = locataire.telephone?.trim() ?? ''
+            const accesMe = presenterAccesMe({
+              compteLie: Boolean(locataire.compte_id),
+              invitation: invitationsParLocataire.get(locataire.id) ?? null,
+              erreurChargement: erreurInvitations,
+              emailDisponible: Boolean(email),
+              delaiRenvoiSecondes: DELAI_RENVOI_SECONDES,
+            })
+            const contact = email
+              ? { valeur: email, href: `mailto:${encodeURIComponent(email)}` }
+              : telephone
+                ? {
+                    valeur: formaterTelephone(telephone),
+                    href: `tel:${telephone.replace(/[^\d+]/g, '')}`,
+                  }
+                : null
+            const bailPrincipal =
+              bauxActifs.length === 1 ? bauxActifs[0] : baux.length === 1 ? baux[0] : null
+            const invitationPrincipale = accesMe.action !== null && Boolean(email)
 
             return (
-              <li key={locataire.id} className="card list-card" aria-labelledby={`locataire-${locataire.id}`}>
-                <div className="list-row">
-                  <div className="flex min-w-0 items-start gap-sm">
-                    <AvatarPeep id={locataire.id} avatar={locataire.avatar} nom={locataire.nom} />
-                    <div className="min-w-0">
-                      <h2 id={`locataire-${locataire.id}`} className="list-title">
-                        {locataire.nom}
-                      </h2>
-                      <p className="list-copy text-body-sm text-mute">
-                        {formaterTelephone(locataire.telephone)}
-                        {locataire.email ? <span className="block">{locataire.email}</span> : null}
-                      </p>
-                      <div className="mt-sm">
-                        {actifs > 0 ? (
-                          <Badge ton="neutral">
-                            {actifs} {actifs > 1 ? 'baux' : 'bail'} actif{actifs > 1 ? 's' : ''}
-                          </Badge>
-                        ) : (
-                          <Badge ton="neutral">Aucun bail actif</Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+              <li key={locataire.id} className={styles.row}>
+                <div className={styles.identity}>
+                  <h2 className={styles.name}>{locataire.nom}</h2>
+                  {contact ? (
+                    <a className={styles.contact} href={contact.href}>
+                      {contact.valeur}
+                    </a>
+                  ) : (
+                    <span className={styles.contactMissing}>Coordonnée manquante</span>
+                  )}
+                </div>
 
-                  <div className="list-actions">
+                <div className={styles.statuses}>
+                  <p className={styles.accessStatus} data-tone={accesMe.ton}>
+                    <span className="sr-only">Accès à Sikaloc Me : </span>
+                    {accesMe.libelle}
+                  </p>
+                  <p className={styles.tenancyStatus}>
+                    <span className="sr-only">Situation locative : </span>
+                    {presenterSituationLocative(baux)}
+                  </p>
+                </div>
+
+                <div className={styles.actions} role="group" aria-label={`Actions pour ${locataire.nom}`}>
+                  {invitationPrincipale ? (
                     <BoutonInvitation
                       locataireId={locataire.id}
-                      nom={locataire.nom}
-                      email={locataire.email}
-                      rattache={Boolean(locataire.compte_id)}
-                      invitationEnAttente={enAttente.has(locataire.id)}
+                      libelle={accesMe.action === 'renvoyer' ? 'Renvoyer' : 'Inviter'}
                     />
-                    <Link
-                      href={`/pro/locataires/${locataire.id}/modifier`}
-                      aria-label={`Modifier le locataire ${locataire.nom}`}
-                      className="btn btn-tertiary btn-sm"
-                    >
-                      Modifier
+                  ) : bailPrincipal && accesMe.action === null ? (
+                    <Link href={`/pro/baux/${bailPrincipal.id}`} className={styles.primaryAction}>
+                      Voir le bail
                     </Link>
-                    <ActionConfirmee
-                      action={supprimerLocataire.bind(null, locataire.id)}
-                      libelle="Supprimer"
-                      varianteDeclencheur="tertiary"
-                      titreConfirmation={`Supprimer ${locataire.nom} ?`}
-                      messageConfirmation="Cette action est définitive. Elle échouera si le locataire est rattaché à un bail — c'est la protection de vos historiques de paiement."
-                      libelleConfirmation="Supprimer définitivement"
-                    />
-                  </div>
+                  ) : null}
+
+                  <details className={styles.moreActions}>
+                    <summary aria-label={`Autres actions pour ${locataire.nom}`}>
+                      <MoreHorizontal size={19} strokeWidth={2} aria-hidden="true" />
+                    </summary>
+                    <div className={styles.actionMenu}>
+                      <Link href={`/pro/locataires/${locataire.id}/modifier`} className={styles.menuAction}>
+                        Modifier
+                      </Link>
+
+                      {accesMe.emailRequis ? (
+                        <p className={styles.menuHint}>Ajoutez un e-mail pour l’invitation.</p>
+                      ) : null}
+                      {accesMe.renvoiTemporise ? (
+                        <p className={styles.menuHint}>Patientez avant un nouvel envoi.</p>
+                      ) : null}
+
+                      {baux.map((bail, index) => {
+                        if (!invitationPrincipale && bail.id === bailPrincipal?.id) return null
+
+                        return (
+                          <Link
+                            key={bail.id}
+                            href={`/pro/baux/${bail.id}`}
+                            className={styles.menuAction}
+                            aria-label={`Voir le bail ${bail.statut.toLowerCase()} de ${locataire.nom}, ${index + 1} sur ${baux.length}`}
+                          >
+                            Voir le bail {bail.statut.toLowerCase()}
+                          </Link>
+                        )
+                      })}
+
+                      {peutSupprimerLocataire(baux.length) ? (
+                        <div className={styles.destructiveAction}>
+                          <ActionConfirmee
+                            action={supprimerLocataire.bind(null, locataire.id)}
+                            libelle="Supprimer"
+                            varianteDeclencheur="tertiary"
+                            titreConfirmation={`Supprimer ${locataire.nom} ?`}
+                            messageConfirmation="Cette action est définitive."
+                            libelleConfirmation="Supprimer définitivement"
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  </details>
                 </div>
               </li>
             )
           })}
         </ul>
-        </>
       )}
     </div>
   )

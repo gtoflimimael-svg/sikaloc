@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import styles from '@/components/find/parcours.module.css'
+import { ArrowLeft, ArrowRight, House, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 
@@ -166,43 +168,35 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
   ]
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <div className={styles.root}>
       <EnTeteFind connecte={Boolean(utilisateur)} />
 
-      <main id="contenu" className="mx-auto max-w-[1200px] app-main">
-        <Link href="/find" className="text-body-sm text-mute hover:text-ink">
-          ← Tous les logements
+      <main id="contenu" className={styles.main}>
+        <Link href="/find" className="inline-flex min-h-11 items-center gap-xs text-body-sm font-medium text-mute hover:text-ink">
+          <ArrowLeft size={16} aria-hidden="true" /> Tous les logements
         </Link>
 
-        <header className="mt-lg">
-              <p className="text-caption font-medium text-mute">
-                {a.type} à louer
-              </p>
-              <h1 className="mt-xs page-title">
-                {titre}
-              </h1>
-              <p className="mt-xs text-body-lg text-body">{lieu(a)}</p>
-          <div className="mt-md flex flex-wrap items-center justify-between gap-md lg:hidden">
-            <p className="text-title-lg font-semibold money text-ink">{formaterFCFA(a.loyer)} <span className="text-body-sm font-normal text-mute">/ mois</span></p>
-            <Link href={`/find/${a.reference}/candidater`} className="btn btn-primary">Candidater</Link>
-          </div>
+        <header className={styles.hero}>
+          <p>Annonce {a.reference}</p>
+          <h1>{titre}</h1>
+          <p className={styles.location}><MapPin size={18} aria-hidden="true" /> {lieu(a)}</p>
+          <p className={styles.mobilePrice}>{formaterFCFA(a.loyer)} <span>/ mois</span></p>
         </header>
-        <div className="mt-lg grid gap-2xl lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="min-w-0 space-y-2xl">
+        <div className={styles.grid}>
+          <div className={styles.gallery}>
             <Galerie
               reference={a.reference}
               photos={photos}
               photoPrincipale={a.photo_position}
               description={`${titre} à louer — ${lieu(a)}`}
             />
-
-
-
+          </div>
+          <div className={styles.body}>
             <section aria-labelledby="titre-infos">
               <h2 id="titre-infos" className="section-title">
-                Le logement
+                <House size={23} aria-hidden="true" className="inline-block align-middle text-primary-deep" /> Le logement
               </h2>
-              <dl className="card list-card mt-md grid gap-lg sm:grid-cols-2">
+              <dl className={styles.facts}>
                 {caracteristiques.map(([terme, valeur]) => (
                   <div key={terme} className="min-w-0">
                     <dt className="text-body-sm text-mute">{terme}</dt>
@@ -217,9 +211,9 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
                 <h2 id="titre-equipements" className="section-title">
                   Équipements
                 </h2>
-                <ul className="mt-md flex flex-wrap gap-sm">
+                <ul className={styles.equipment}>
                   {equipements.map((e) => (
-                    <li key={e} className="badge badge-neutral">
+                    <li key={e}>
                       {LIBELLES_EQUIPEMENT[e]}
                     </li>
                   ))}
@@ -238,12 +232,12 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
             ) : null}
           </div>
 
-          <aside className="space-y-lg lg:sticky lg:top-24 lg:self-start">
-            <section aria-labelledby="titre-prix" className="card card-lg">
+          <aside className={styles.side}>
+            <section aria-labelledby="titre-prix">
               <h2 id="titre-prix" className="sr-only">
                 Prix et disponibilité
               </h2>
-              <p className="flex flex-wrap items-baseline gap-xs text-title-lg font-semibold text-ink">
+              <p className={styles.price}>
                 <span className="money">{formaterFCFA(a.loyer)}</span>
                 <span className="text-body-md font-normal text-mute"> / mois</span>
               </p>
@@ -252,9 +246,9 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
               <h3 className="mt-lg text-body-sm font-medium text-mute">
                 Conditions financières
               </h3>
-              <dl className="mt-sm space-y-xs text-body-sm">
+              <dl className={styles.conditions}>
                 {conditions.map(([terme, valeur]) => (
-                  <div key={terme} className="flex flex-col gap-xxs">
+                  <div key={terme}>
                     <dt className="text-mute">{terme}</dt>
                     <dd className="font-medium text-ink">{valeur}</dd>
                   </div>
@@ -263,7 +257,7 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
             </section>
 
             {profil?.nom_affiche ? (
-              <section aria-labelledby="titre-bailleur" className="card">
+              <section aria-labelledby="titre-bailleur" className={styles.publisher}>
                 <h2 id="titre-bailleur" className="text-body-sm font-medium text-mute">
                   Publiée par
                 </h2>
@@ -276,9 +270,9 @@ export default async function PageFiche({ params }: { params: Promise<{ referenc
               </section>
             ) : null}
 
-            <section className="card space-y-md text-body-sm text-body">
+            <section className={styles.application}>
               <Link href={`/find/${a.reference}/candidater`} className="btn btn-primary w-full">
-                Candidater
+                Candidater <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <p>
                 Le bailleur verra votre nom et votre message. Ni votre téléphone, ni votre email ne

@@ -1,3 +1,4 @@
+import styles from '@/components/app/annonce.module.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -49,7 +50,7 @@ export default async function PageAnnonce({
   if (!UUID.test(id)) notFound()
 
   const supabase = await creerClientServeur()
-  const [, { data: annonce }, { data: photos }] = await Promise.all([
+  const [, reponseAnnonce, reponsePhotos] = await Promise.all([
     bailleurOnboarde(),
     supabase.from('annonces').select('*').eq('id', id).maybeSingle(),
     supabase
@@ -58,9 +59,19 @@ export default async function PageAnnonce({
       .eq('annonce_id', id)
       .order('position'),
   ])
+  const { data: annonce, error: erreurAnnonce } = reponseAnnonce
+  const { data: photos, error: erreurPhotos } = reponsePhotos
+  if (erreurAnnonce) {
+    return (
+      <div className="space-y-md">
+        <Alerte ton="erreur">Cette annonce n’a pas pu être chargée. Actualisez la page pour réessayer.</Alerte>
+        <Link href="/pro/annonces" className="btn btn-secondary">Retour aux annonces</Link>
+      </div>
+    )
+  }
   if (!annonce) notFound()
 
-  const { data: logement } = annonce.logement_id
+  const { data: logement, error: erreurLogement } = annonce.logement_id
     ? await supabase.from('logements').select('adresse, ville').eq('id', annonce.logement_id).maybeSingle()
     : { data: null }
 
@@ -69,10 +80,10 @@ export default async function PageAnnonce({
   const titre = `${libelleChambres(annonce.chambres) ?? annonce.type}${annonce.quartier ? ` · ${annonce.quartier}` : ''}`
 
   const confirmationPublication =
-    'Elle rejoindra le catalogue public de Sikaloc_Find : type, ville, quartier, prix, équipements, description, disponibilité et photos. L’adresse exacte, votre téléphone et votre email ne sont jamais publiés.'
+    'Elle rejoindra le catalogue public de Sikaloc Find : type, ville, quartier, prix, équipements, description, disponibilité et photos. L’adresse exacte, votre téléphone et votre email ne sont jamais publiés.'
 
   return (
-    <div className="mx-auto max-w-[56rem] space-y-xl">
+    <div className="listing-detail-page mx-auto max-w-[56rem] space-y-xl">
       <div>
         <Link href="/pro/annonces" className="text-body-sm text-mute hover:text-ink">
           ← Annonces
@@ -94,6 +105,9 @@ export default async function PageAnnonce({
       {existante ? (
         <Alerte ton="info">Ce logement avait déjà une annonce en cours : la voici.</Alerte>
       ) : null}
+      {erreurLogement ? (
+        <Alerte ton="attention">Les informations du logement associé n’ont pas pu être chargées.</Alerte>
+      ) : null}
 
       {annonce.statut === 'brouillon' ? (
         <Alerte ton="info">
@@ -104,12 +118,12 @@ export default async function PageAnnonce({
       {annonce.statut === 'publiee' ? (
         <Alerte ton="succes">
           Publiée le {formaterDate(annonce.publiee_le)} : elle figure dans le catalogue public de
-          Sikaloc_Find, où chacun peut la consulter et candidater.
+          Sikaloc Find, où chacun peut la consulter et candidater.
         </Alerte>
       ) : null}
       {annonce.statut === 'suspendue' ? (
         <Alerte ton="attention">
-          Suspendue : elle n’est plus visible dans Sikaloc_Find. Ses photos, ses informations et sa
+          Suspendue : elle n’est plus visible dans Sikaloc Find. Ses photos, ses informations et sa
           référence sont conservées ; reprenez la publication quand vous le souhaitez.
         </Alerte>
       ) : null}
@@ -121,7 +135,7 @@ export default async function PageAnnonce({
       ) : null}
 
       {annonce.statut !== 'brouillon' ? (
-        <section className="card flex flex-wrap items-center justify-between gap-md">
+        <section className={`${styles.shortcut} flex flex-wrap items-center justify-between gap-md`}>
           <div>
             <p className="text-body-md font-semibold text-ink">Candidatures reçues</p>
             <p className="text-body-sm text-mute">
@@ -134,7 +148,7 @@ export default async function PageAnnonce({
         </section>
       ) : null}
 
-      <section className="card space-y-md">
+      <section className={`${styles.controls} space-y-md`}>
         <p className="text-body-sm text-mute">
           Logement :{' '}
           <span className="text-ink">
@@ -173,7 +187,7 @@ export default async function PageAnnonce({
               variante="secondary"
               compact={false}
               titreConfirmation="Suspendre cette annonce ?"
-              messageConfirmation="Elle disparaîtra de Sikaloc_Find. Vous pourrez la reprendre plus tard, telle quelle."
+              messageConfirmation="Elle disparaîtra de Sikaloc Find. Vous pourrez la reprendre plus tard, telle quelle."
               libelleConfirmation="Suspendre"
             />
           </div>
@@ -219,15 +233,21 @@ export default async function PageAnnonce({
         ) : null}
       </section>
 
-      <PhotosAnnonce
-        annonceId={annonce.id}
-        photos={listePhotos}
-        modifiable={!cloturee}
-        publiee={annonce.statut === 'publiee'}
-      />
+      {erreurPhotos ? (
+        <Alerte ton="erreur">
+          Les photos n’ont pas pu être chargées. Les actions photo sont désactivées jusqu’à une nouvelle tentative.
+        </Alerte>
+      ) : (
+        <PhotosAnnonce
+          annonceId={annonce.id}
+          photos={listePhotos}
+          modifiable={!cloturee}
+          publiee={annonce.statut === 'publiee'}
+        />
+      )}
 
       {cloturee ? (
-        <section className="card card-lg">
+        <section className={styles.controls}>
           <dl className="grid gap-md text-body-sm sm:grid-cols-2">
             <div>
               <dt className="text-mute">Loyer</dt>

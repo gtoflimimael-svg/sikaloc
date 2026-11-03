@@ -1,19 +1,18 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ChevronRight, Plus } from 'lucide-react'
 
-import { ResumeListe } from '@/components/ui/listes'
-import { LienFiltre } from '@/components/ui/lien-filtre'
-import { Illustration } from '@/components/ui/illustration'
-import { AvatarPeep } from '@/components/ui/avatar-peep'
-import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
-import { formaterDate, formaterFCFA } from '@/lib/format'
+import { Alerte } from '@/components/ui/retours'
+import { formaterFCFA } from '@/lib/format'
+import { formaterDateBail, normaliserFiltreBail } from '@/lib/baux-presentation'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { StatutBail } from '@/lib/types/database'
+import styles from './baux.module.css'
 
 export const metadata: Metadata = { title: 'Baux' }
 
-const FILTRES: { valeur: string; libelle: string }[] = [
+const FILTRES: { valeur: 'tous' | StatutBail; libelle: string }[] = [
   { valeur: 'tous', libelle: 'Tous' },
   { valeur: 'Actif', libelle: 'Actifs' },
   { valeur: 'Résilié', libelle: 'Résiliés' },
@@ -22,18 +21,19 @@ const FILTRES: { valeur: string; libelle: string }[] = [
 export default async function PageBaux({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string }>
+  searchParams: Promise<{ statut?: string | string[] }>
 }) {
   await bailleurOnboarde()
-  const { statut } = await searchParams
-  const filtre = statut && statut !== 'tous' ? (statut as StatutBail) : null
 
+  const { statut } = await searchParams
+  const filtre = normaliserFiltreBail(typeof statut === 'string' ? statut : undefined)
+  const filtreActif = filtre ?? 'tous'
   const supabase = await creerClientServeur()
 
   let requete = supabase
     .from('baux')
     .select(
-      '*, logement:logements(id, adresse, ville, type), locataire:locataires(id, nom, telephone)',
+      'id, statut, date_debut, loyer_mensuel, logement:logements(id, adresse, ville, type), locataire:locataires(id, nom)',
     )
     .order('created_at', { ascending: false })
 
@@ -43,98 +43,109 @@ export default async function PageBaux({
   const liste = baux ?? []
 
   return (
-    <div>
-      <EnTetePage
-        titre="Baux"
-        description="Le contrat qui relie un logement, un locataire et un loyer."
-        action={
-          <Link href="/pro/baux/nouveau" className="btn btn-primary">
-            Nouveau bail
-          </Link>
-        }
-      />
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Baux</h1>
+        <Link href="/pro/baux/nouveau" className={`btn btn-primary ${styles.newLease}`}>
+          Nouveau bail
+          <Plus size={17} strokeWidth={2} aria-hidden="true" />
+        </Link>
+      </header>
 
-      <nav aria-label="Filtrer les baux par statut" className="mb-lg flex flex-wrap gap-xs">
+      <nav className={styles.filters} aria-label="Filtrer les baux par statut">
         {FILTRES.map((option) => {
-          const actif = (statut ?? 'tous') === option.valeur
+          const actif = filtreActif === option.valeur
+          const href =
+            option.valeur === 'tous'
+              ? '/pro/baux'
+              : `/pro/baux?statut=${encodeURIComponent(option.valeur)}`
 
           return (
-            <LienFiltre
+            <Link
               key={option.valeur}
-              href={option.valeur === 'tous' ? '/pro/baux' : `/pro/baux?statut=${option.valeur}`}
-              actif={actif}
+              href={href}
+              className={styles.filter}
+              aria-current={actif ? 'page' : undefined}
             >
               {option.libelle}
-            </LienFiltre>
+            </Link>
           )
         })}
       </nav>
 
       {erreurBaux ? (
-        <Alerte ton="erreur">Les baux ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
+        <Alerte ton="erreur">
+          Les baux ne peuvent pas être chargés. Actualisez la page pour réessayer.
+        </Alerte>
       ) : liste.length === 0 ? (
-        <EtatVide
-          icone={<Illustration nom="lecture" taille={200} decorative />}
-          titre={filtre ? `Aucun bail ${filtre.toLowerCase()}` : 'Aucun bail enregistré'}
-          description="Un bail relie un logement à un locataire. C’est lui qui déclenche le suivi des loyers et la détection des impayés."
-          action={
-            <Link href="/pro/baux/nouveau" className="btn btn-primary">
-              Créer un bail
+        <section className={styles.empty} aria-labelledby="leases-empty-title" aria-live="polite">
+          <h2 id="leases-empty-title">
+            {filtre === 'Actif'
+              ? 'Aucun bail actif.'
+              : filtre === 'Résilié'
+                ? 'Aucun bail résilié.'
+                : 'Aucun bail pour le moment.'}
+          </h2>
+          {filtre ? (
+            <Link href="/pro/baux" className={styles.allLeases}>
+              Voir tous les baux
             </Link>
-          }
-        />
+          ) : null}
+        </section>
       ) : (
-        <>
-        <ResumeListe>{liste.length} {liste.length > 1 ? 'baux' : 'bail'} affiché{liste.length > 1 ? 's' : ''}</ResumeListe>
-        <ul className="space-y-sm" aria-label="Baux affichés">
+        <ul className={styles.list} aria-label="Baux">
           {liste.map((bail) => {
             const logement = Array.isArray(bail.logement) ? bail.logement[0] : bail.logement
             const locataire = Array.isArray(bail.locataire) ? bail.locataire[0] : bail.locataire
+            const caracteristiques = [logement?.type, logement?.ville].filter(Boolean)
+            const dateDebut = formaterDateBail(bail.date_debut)
+            const identite = logement?.adresse ?? locataire?.nom ?? 'ce bail'
 
             return (
-              <li key={bail.id}>
-              <Link
-                href={`/pro/baux/${bail.id}`}
-                className="card list-card block transition-colors hover:border-hairline-strong"
-              >
-                <div className="list-row">
-                  <div className="flex min-w-0 items-start gap-sm">
-                    <AvatarPeep
-                      id={locataire?.id ?? bail.locataire_id}
-                      avatar={locataire?.avatar}
-                      nom={locataire?.nom}
-                    />
-                    <div className="min-w-0">
-                      <h2 className="list-title">
-                        {locataire?.nom ?? 'Locataire inconnu'}
-                      </h2>
-                      <p className="list-copy text-body-sm text-mute">
-                        {logement?.adresse ?? '—'}
-                        {logement?.ville ? `, ${logement.ville}` : ''}
-                      </p>
-                      <p className="mt-sm text-body-sm text-body">
-                        Depuis le {formaterDate(bail.date_debut)} · échéance le{' '}
-                        {bail.jour_echeance} du mois · tolérance {bail.tolerance_jours} j
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="list-aside">
-                    <Badge ton={bail.statut === 'Actif' ? 'positive' : 'neutral'}>
-                      {bail.statut}
-                    </Badge>
-                    <p className="money text-body-md font-semibold text-ink">
-                      {formaterFCFA(bail.loyer_mensuel)}
-                      <span className="text-caption font-normal text-mute"> /mois</span>
-                    </p>
-                  </div>
+              <li key={bail.id} className={styles.row}>
+                <div className={styles.property}>
+                  <h2 className={styles.propertyName}>
+                    {logement?.adresse ?? 'Logement indisponible'}
+                  </h2>
+                  {caracteristiques.length > 0 ? (
+                    <p className={styles.propertyMeta}>{caracteristiques.join(' · ')}</p>
+                  ) : null}
                 </div>
-              </Link>
+
+                <div className={styles.tenant}>
+                  <p className={styles.tenantName}>
+                    {locataire?.nom ?? 'Locataire indisponible'}
+                  </p>
+                  {dateDebut ? (
+                    <p className={styles.leaseStart}>
+                      <span className="sr-only">Début du bail : </span>
+                      Depuis le {dateDebut}
+                    </p>
+                  ) : null}
+                </div>
+
+                <p className={styles.status} data-status={bail.statut}>
+                  {bail.statut}
+                </p>
+
+                <p className={styles.rent}>
+                  <span>{formaterFCFA(bail.loyer_mensuel)}</span>
+                  <span className={styles.rentPeriod} aria-hidden="true">/mois</span>
+                  <span className="sr-only">par mois</span>
+                </p>
+
+                <Link
+                  href={`/pro/baux/${bail.id}`}
+                  className={styles.viewLease}
+                  aria-label={`Voir le bail de ${identite}`}
+                >
+                  Voir le bail
+                  <ChevronRight size={16} strokeWidth={1.8} aria-hidden="true" />
+                </Link>
               </li>
             )
           })}
         </ul>
-        </>
       )}
     </div>
   )

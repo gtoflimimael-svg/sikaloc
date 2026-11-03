@@ -37,6 +37,7 @@ export function CaptureSignature({
 }) {
   const [mode, setMode] = useState<Mode>('dessiner')
   const [apercu, setApercu] = useState<string | null>(null)
+  const [revisionDessin, setRevisionDessin] = useState(0)
 
   const champFichier = useRef<HTMLInputElement>(null)
 
@@ -58,10 +59,15 @@ export function CaptureSignature({
 
   function changerMode(suivant: Mode) {
     if (suivant === mode) return
-    // Changer de mode invalide ce qui a été produit dans l'autre : garder
-    // l'aperçu ferait croire que la signature affichée vient du mode courant.
+    // Changer de mode invalide l’aperçu et le tracé de l’autre méthode.
     recevoir(null, null)
+    setRevisionDessin((revision) => revision + 1)
     setMode(suivant)
+  }
+
+  function recommencer() {
+    recevoir(null, null)
+    setRevisionDessin((revision) => revision + 1)
   }
 
   return (
@@ -76,7 +82,7 @@ export function CaptureSignature({
         tabIndex={-1}
       />
 
-      <div role="tablist" aria-label="Méthode de signature" className="flex gap-xs">
+      <div role="group" aria-label="Méthode de signature" className="flex gap-xs">
         <BoutonMode
           actif={mode === 'dessiner'}
           onClick={() => changerMode('dessiner')}
@@ -91,11 +97,10 @@ export function CaptureSignature({
         />
       </div>
 
-      {/* Le mode dessin reste monté quand on affiche l'aperçu : démonter le
-          canvas effacerait le tracé, et « Recommencer » repartirait de zéro
-          alors que l'utilisateur veut souvent juste retoucher son geste. */}
+      {/* Le dessin reste monté derrière l’aperçu pour préserver son tracé; une
+          nouvelle clé ne le réinitialise que lorsque l’utilisateur le demande. */}
       <div className={mode === 'dessiner' ? undefined : 'hidden'}>
-        <SignatureDessin onSignature={recevoir} />
+        <SignatureDessin key={revisionDessin} onSignature={recevoir} />
       </div>
 
       {mode === 'importer' ? <SignatureImport onSignature={recevoir} /> : null}
@@ -119,7 +124,7 @@ export function CaptureSignature({
             </BoutonSoumettre>
             <button
               type="button"
-              onClick={() => recevoir(null, null)}
+              onClick={recommencer}
               className="btn btn-secondary"
             >
               <RotateCcw size={15} strokeWidth={2} aria-hidden="true" />
@@ -151,8 +156,7 @@ function BoutonMode({
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={actif}
+      aria-pressed={actif}
       onClick={onClick}
       className={`inline-flex flex-1 items-center justify-center gap-xs rounded-md px-md py-sm text-body-sm font-medium transition-colors duration-150 sm:flex-none ${
         actif

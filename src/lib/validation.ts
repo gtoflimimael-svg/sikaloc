@@ -4,6 +4,7 @@ import { LONGUEUR_MAXIMALE, messageRefus } from '@/lib/mot-de-passe'
 import { MESSAGES_TELEPHONE, validerTelephone } from '@/lib/telephone'
 import { evaluerMotDePasse } from '@/lib/mot-de-passe-evaluation'
 import { EQUIPEMENTS_ANNONCE } from '@/lib/types/database'
+import { verifierConditionsPremierLoyer } from '@/lib/premier-loyer'
 
 /**
  * Schémas de validation partagés.
@@ -36,17 +37,22 @@ const texteObligatoire = (champ: string, min = 2, max = 200) =>
  * La migration 20260912000600 a converti les numéros déjà enregistrés : plus
  * aucun formulaire ne se rouvre sur huit chiffres.
  */
-const telephone = z
-  .string()
-  .trim()
-  .transform((v, ctx) => {
-    const verdict = validerTelephone(v, { obligatoire: true })
-    if (!verdict.valide) {
-      ctx.addIssue({ code: 'custom', message: MESSAGES_TELEPHONE[verdict.motif!] })
-      return z.NEVER
-    }
-    return verdict.canonique!
-  })
+function schemaTelephone(options: { exigerPrefixeActuel?: boolean } = {}) {
+  return z
+    .string()
+    .trim()
+    .transform((v, ctx) => {
+      const verdict = validerTelephone(v, { obligatoire: true, ...options })
+      if (!verdict.valide) {
+        ctx.addIssue({ code: 'custom', message: MESSAGES_TELEPHONE[verdict.motif!] })
+        return z.NEVER
+      }
+      return verdict.canonique!
+    })
+}
+
+const telephone = schemaTelephone()
+const telephoneInscription = schemaTelephone({ exigerPrefixeActuel: true })
 
 /**
  * La mesure vient de `@/lib/mot-de-passe-evaluation` : la jauge affichée pendant
@@ -57,13 +63,15 @@ const telephone = z
  * saisie et rien d'autre : il tourne sur la machine de l'utilisateur, donc sous
  * son contrôle. Une requête forgée qui contournerait la page passe ici.
  *
- * 72 caractères est la limite de bcrypt, utilisé par GoTrue : au-delà, la fin du
- * mot de passe serait silencieusement ignorée.
+ * Ces règles reflètent GoTrue (`letters_digits`, minimum 8) et le plafond bcrypt
+ * de 72 caractères. L'évaluation de robustesse reste un contrôle distinct.
  */
 const motDePasse = z
   .string()
+  .min(1, 'Le mot de passe est obligatoire.')
   .max(LONGUEUR_MAXIMALE, `Le mot de passe ne peut pas dépasser ${LONGUEUR_MAXIMALE} caractères.`)
   .superRefine((valeur, contexte) => {
+    if (!valeur) return
     const force = evaluerMotDePasse(valeur)
     if (force.acceptable) return
 
@@ -115,28 +123,13 @@ const montant = z.coerce
 
 // ─── Authentification ───────────────────────────────────────────────────────
 
-/**
- * Un avatar est une suite d'index « tenue-coiffure-visage-pilosite-accessoire ».
- * Cette valeur finit dans un segment d'URL : le motif est donc strict, et
- * n'accepte que des chiffres et des tirets. Il double la contrainte CHECK posée
- * en base — la validation la plus proche de la donnée reste celle de Postgres.
- */
-export const avatarOptionnel = z
-  .string()
-  .trim()
-  .regex(/^\d{1,3}(-\d{1,3}){4}$/, 'Avatar invalide.')
-  .optional()
-  .or(z.literal(''))
-
 export const schemaInscription = z
   .object({
-    nom: texteObligatoire('Le nom', 2, 120),
+    nom: z.string().transform((valeur) => valeur.trim().replace(/\s+/g, ' ')).pipe(texteObligatoire('Le nom', 2, 120)),
     email: z.email('Adresse email invalide.').trim().toLowerCase(),
-    telephone,
+    telephone: telephoneInscription,
     motDePasse,
     codeParrain: z.string().trim().max(20).optional().or(z.literal('')),
-    nbLogements: z.coerce.number().int().min(0).max(1000).optional(),
-    avatar: avatarOptionnel,
   })
   .superRefine((valeurs, contexte) =>
     refuserMotDePasseContextuel(valeurs, contexte, [
@@ -198,7 +191,6 @@ export const schemaLocataire = z.object({
     message:
       'Vous devez attester avoir informé le locataire de la collecte de ses données.',
   }),
-  avatar: avatarOptionnel,
 })
 
 export const schemaLogement = z.object({
@@ -272,6 +264,14 @@ export const schemaBail = z
     locataireId: z.uuid('Sélectionnez un locataire.'),
     loyerMensuel: montant,
     dateDebut: dateISO,
+    premierLoyerMontant: z.preprocess(
+      vide,
+      z.coerce.number({ error: 'Montant du premier loyer invalide.' })
+        .min(0, 'Le premier loyer ne peut pas être négatif.')
+        .max(999_999_999, 'Le montant est trop élevé.')
+        .optional(),
+    ),
+    premierLoyerDuLe: z.preprocess(vide, dateISO.optional()),
     dateFin: dateISO.optional().or(z.literal('')),
     jourEcheance: z.coerce
       .number({ error: "Jour d'échéance invalide." })
@@ -293,6 +293,34 @@ export const schemaBail = z
   .refine((d) => !d.dateFin || d.dateFin >= d.dateDebut, {
     message: 'La date de fin doit être postérieure à la date de début.',
     path: ['dateFin'],
+  })
+  .superRefine((d, contexte) => {
+    const conditions = verifierConditionsPremierLoyer({
+      dateDebut: d.dateDebut,
+      montant: d.premierLoyerMontant,
+      exigibleLe: d.premierLoyerDuLe,
+    })
+    if (conditions.etat === 'incomplet') {
+      contexte.addIssue({
+        code: 'custom',
+        message: 'Renseignez à la fois le montant convenu et sa date d’exigibilité.',
+        path: ['premierLoyerMontant'],
+      })
+    }
+    if (conditions.etat === 'date_avant_debut') {
+      contexte.addIssue({
+        code: 'custom',
+        message: 'Le premier loyer ne peut pas être exigible avant le début du bail.',
+        path: ['premierLoyerDuLe'],
+      })
+    }
+    if (conditions.etat === 'date_invalide') {
+      contexte.addIssue({
+        code: 'custom',
+        message: 'Vérifiez les dates du bail et du premier loyer.',
+        path: ['premierLoyerDuLe'],
+      })
+    }
   })
 
 export const schemaPaiement = z.object({

@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 
 import { PiedDePage } from '@/components/marketing/pied-de-page'
-import { MarqueSikaloc } from '@/components/ui/logo'
+import { EnteteEditorial } from '@/components/marketing/entete-editorial'
+import styles from '@/components/marketing/editorial.module.css'
 import { ARTICLES } from '@/lib/articles'
 
 export const metadata: Metadata = {
@@ -27,43 +29,36 @@ export const metadata: Metadata = {
  */
 export default function PageBlog() {
   return (
-    <>
-      <header className="border-b border-hairline px-xl py-lg">
-        <div className="mx-auto flex max-w-[56rem] items-center justify-between gap-lg">
-          <Link href="/" aria-label="Sikaloc — accueil">
-            <MarqueSikaloc taille="sm" />
-          </Link>
-          <Link href="/inscription" className="btn btn-primary btn-sm">
-            Commencer
-          </Link>
-        </div>
-      </header>
+    <div className={styles.editorialPage}>
+      <EnteteEditorial contexte="Ressources" action={{ href: '/inscription', libelle: 'Commencer' }} />
 
-      <main className="mx-auto max-w-[56rem] px-xl py-5xl">
-        <p className="text-caption-uppercase uppercase text-primary">Le blog</p>
-        <h1 className="mt-sm text-display-lg font-extrabold tracking-tight text-ink">
-          Comment fonctionnent vos quittances
-        </h1>
-        <p className="mt-md max-w-[42rem] text-body-lg text-mute">
+      <main id="contenu" className={styles.blogMain}>
+        <header className={styles.intro}>
+        <p className={styles.eyebrow}>Ressources · Comprendre Sikaloc</p>
+        <h1>La location, plus lisible.</h1>
+        <p>
           Ce que le document contient, ce qu&apos;il calcule, et comment il parvient
           à votre locataire. Tout ce qui est écrit ici se vérifie en ouvrant un
           document réel.
         </p>
+        </header>
 
-        <ul role="list" className="anim-cascade mt-3xl space-y-xl">
-          {ARTICLES.map((article) => (
-            <li key={article.slug} className="border-t border-hairline-strong pt-lg">
-              <h2 className="text-display-sm font-bold text-ink">
-                <Link href={`/blog/${article.slug}`} className="lien-anime">
-                  {article.titre}
-                </Link>
-              </h2>
-              <p className="mt-sm max-w-[42rem] text-body-md text-body">{article.resume}</p>
+        <ol className={styles.articleList} aria-label="Articles Sikaloc">
+          {ARTICLES.map((article, index) => (
+            <li key={article.slug}>
+              <Link href={`/blog/${article.slug}`} className={styles.articleLink} aria-labelledby={`article-${article.slug}`}>
+                <span className={styles.articleNumber} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <h2 id={`article-${article.slug}`}>{article.titre}</h2>
+                  <p>{article.resume}</p>
+                </div>
+                <ArrowUpRight size={22} className={styles.articleArrow} aria-hidden="true" />
+              </Link>
             </li>
           ))}
-        </ul>
+        </ol>
 
-        <p className="mt-3xl text-body-sm text-mute">
+        <p className={styles.disclaimer}>
           Ces articles décrivent le fonctionnement de Sikaloc. Ils ne constituent pas
           un conseil juridique et ne remplacent pas l&apos;avis d&apos;un professionnel
           du droit.
@@ -71,6 +66,6 @@ export default function PageBlog() {
       </main>
 
       <PiedDePage />
-    </>
+    </div>
   )
 }

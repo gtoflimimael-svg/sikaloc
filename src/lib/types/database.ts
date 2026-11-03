@@ -76,15 +76,15 @@ export type Bailleur = {
   statut_abonnement: StatutAbonnement
   date_echec_paiement: string | null
   dernier_rappel_envoye: string | null
-  /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
+  /** Colonne historique conservée en base; l’interface avatar n’est plus utilisée. */
   avatar: string | null
   /** Fin de la visite guidée, menée à son terme. NULL = jamais terminée. */
   tutoriel_vu_le: string | null
   /** Sortie de la visite avant la fin. Renseignée = ne plus l'ouvrir d'elle-même. */
   visite_quittee_le: string | null
-  /** Chemin de la photo dans le bucket privé `photos`. Renseignée = prime sur l'avatar. */
+  /** Colonne historique conservée en base; la photo de profil n’est plus affichée. */
   photo_chemin: string | null
-  /** Début de la période où l'avatar tient lieu de photo. NULL = pas de période. */
+  /** Colonne historique conservée pour compatibilité avec les anciennes données. */
   avatar_temporaire_depuis: string | null
   /**
    * Validation d'un code OTP envoyé au numéro. NULL = jamais vérifié.
@@ -150,7 +150,7 @@ export type Locataire = {
   email: string | null
   consentement_donnees: boolean
   date_consentement: string | null
-  /** Avatar Open Peeps « tenue-coiffure-visage-pilosite-accessoire ». NULL = dérivé de l'id. */
+  /** Colonne historique conservée en base; l’interface avatar n’est plus utilisée. */
   avatar: string | null
   /** Chemin dans le bucket `signatures`. NULL = aucune signature recueillie. */
   signature_chemin: string | null
@@ -326,6 +326,10 @@ export type Bail = {
   logement_id: string
   locataire_id: string
   loyer_mensuel: number
+  /** Montant du premier loyer explicitement convenu; NULL si inconnu. */
+  premier_loyer_montant: number | null
+  /** Date d'exigibilité du premier loyer; NULL si inconnue. */
+  premier_loyer_du_le: string | null
   date_debut: string
   date_fin: string | null
   jour_echeance: number
@@ -348,6 +352,14 @@ export type Bail = {
   created_at: string
 }
 
+/** Tarif contractuel d'un bail, effectif à partir du mois indiqué. */
+export type BailLoyer = {
+  bail_id: string
+  periode_debut: string
+  loyer_mensuel: number
+  cree_le: string
+}
+
 export type Paiement = {
   id: string
   bailleur_id: string
@@ -362,7 +374,7 @@ export type Paiement = {
   periode_fin: string
   mode_paiement: ModePaiement
   type_paiement: TypePaiement
-  est_partiel: boolean
+  est_partiel: boolean | null
   statut: StatutPaiement
   valide_le: string | null
   /**
@@ -507,6 +519,22 @@ export type InscriptionGuide = {
   dernier_envoi_le: string | null
 }
 
+/** Demande de contact publique, lisible uniquement par les opérateurs autorisés. */
+export type QuestionVisiteur = {
+  id: string
+  nom: string
+  sujet: string
+  question: string
+  canal_reponse: 'email' | 'whatsapp'
+  coordonnees: string
+  consentement: boolean
+  consentie_le: string
+  statut: 'nouvelle' | 'en_cours' | 'repondue'
+  repondue_le: string | null
+  cree_le: string
+  modifie_le: string
+}
+
 export type JournalPurge = {
   id: string
   bailleur_id: string
@@ -553,12 +581,16 @@ export type Echeance = {
   logement_id: string
   periode_debut: string
   periode_fin: string
-  date_echeance: string
-  loyer_mensuel: number
+  date_echeance: string | null
+  loyer_mensuel: number | null
   tolerance_jours: number
   montant_paye: number
-  montant_du: number
-  jours_de_retard: number
+  montant_du: number | null
+  /** Part payée au-delà du loyer de ce mois, non affectée au mois suivant. */
+  montant_excedentaire: number | null
+  jours_de_retard: number | null
+  /** NULL lorsque le contrat ne permet pas d'établir le premier montant dû. */
+  montant_exigible: number | null
   /** L'échéance était déjà échue quand le bail a été enregistré dans Sikaloc. */
   anterieure: boolean
   historique_declare: boolean
@@ -724,11 +756,13 @@ export type EcheanceLocataire = {
   bail_id: string
   periode_debut: string
   periode_fin: string
-  date_echeance: string
-  loyer_mensuel: number
+  date_echeance: string | null
+  loyer_mensuel: number | null
   montant_paye: number
-  montant_du: number
-  jours_de_retard: number
+  montant_du: number | null
+  montant_excedentaire: number | null
+  jours_de_retard: number | null
+  montant_exigible: number | null
   etat: EtatEcheance
 }
 
@@ -743,7 +777,7 @@ export type PaiementLocataire = {
   periode_fin: string
   mode_paiement: ModePaiement
   type_paiement: TypePaiement
-  est_partiel: boolean
+  est_partiel: boolean | null
   historique: boolean
   quittance_id: string | null
   quittance_numero: string | null
@@ -806,6 +840,7 @@ export type MetriquesDashboard = {
   ca_du_mois: number
   nb_impayes: number
   montant_impaye_total: number
+  nb_loyers_a_determiner_mois: number
 }
 
 /**
@@ -878,6 +913,7 @@ export interface Database {
       locataires: Ligne<Locataire>
       logements: Ligne<Logement>
       baux: Ligne<Bail>
+      baux_loyers: Ligne<BailLoyer>
       paiements: Ligne<Paiement>
       quittances: Ligne<Quittance>
       abonnements_transactions: Ligne<AbonnementTransaction>
@@ -890,6 +926,7 @@ export interface Database {
       journal_purges: Ligne<JournalPurge>
       compteurs_documents: Ligne<CompteurDocuments>
       inscriptions_guide: Ligne<InscriptionGuide>
+      questions_visiteurs: Ligne<QuestionVisiteur>
       codes_verification: Ligne<CodeVerification>
       invitations_locataire: Ligne<InvitationLocataire>
       annonces: Ligne<Annonce>
@@ -904,6 +941,55 @@ export interface Database {
       v_echeances: Vue<Echeance>
     }
     Functions: {
+      /** Change le statut du bail propre à l'appelant avec les effets de la transition en base. */
+      definir_statut_bail: {
+        Args: { p_bail_id: string; p_statut: StatutBail }
+        Returns: StatutBail
+      }
+      /** Définit ou efface le chemin de signature du bailleur appelant, après contrôle de statut et de format. */
+      definir_signature_bailleur: {
+        Args: { p_chemin: string | null }
+        Returns: undefined
+      }
+      /** Définit ou efface le chemin de signature d'un locataire propriétaire, après contrôle d'abonnement. */
+      definir_signature_locataire: {
+        Args: { p_locataire_id: string; p_chemin: string | null }
+        Returns: undefined
+      }
+      /** Crée un brouillon en calculant le cumul et le propriétaire en base. */
+      creer_paiement_brouillon: {
+        Args: {
+          p_bail_id: string
+          p_date_paiement: string
+          p_montant: number
+          p_periode_debut: string
+          p_mode_paiement: ModePaiement
+          p_type_paiement?: TypePaiement
+        }
+        Returns: string
+      }
+      /** Corrige un paiement du bailleur appelant dans les conditions métier. */
+      corriger_paiement: {
+        Args: {
+          p_paiement_id: string
+          p_bail_id: string
+          p_date_paiement: string
+          p_montant: number
+          p_periode_debut: string
+          p_mode_paiement: ModePaiement
+          p_type_paiement: TypePaiement
+        }
+        Returns: string
+      }
+      supprimer_paiement: {
+        Args: { p_paiement_id: string }
+        Returns: boolean
+      }
+      /** Crée les lignes historiques et pose leur marqueur dans une seule transaction. */
+      declarer_paiements_historiques: {
+        Args: { p_bail_id: string; p_periodes: string[] }
+        Returns: number
+      }
       reserver_notification: {
         Args: { p_file: string; p_operationnel: boolean }
         Returns: Record<string, unknown>[]
@@ -1129,6 +1215,11 @@ export interface Database {
       executer_purge_j90: {
         Args: Record<string, never>
         Returns: { bailleur: string; locataires: number; fichiers: number }[]
+      }
+      /** Incrémente atomiquement la limite anonyme des questions, réservé au serveur. */
+      consommer_limite_questions: {
+        Args: { p_empreinte: string }
+        Returns: { autorisee: boolean; reessayer_apres: number }[]
       }
     }
     Enums: {

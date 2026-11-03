@@ -1,38 +1,24 @@
 import Link from 'next/link'
+import { ArrowRight, MapPin } from 'lucide-react'
 
 import { LIBELLES_EQUIPEMENT, libelleChambres } from '@/lib/annonces/libelles'
 import { formaterDate, formaterFCFA } from '@/lib/format'
 import type { AnnoncePublique, EquipementAnnonce } from '@/lib/types/database'
 
-/**
- * Une annonce dans le catalogue public.
- *
- * Elle ne reçoit qu'une `AnnoncePublique` — la projection de S2 — et ne peut
- * donc rien afficher d'autre : ni adresse, ni bailleur, ni statut. Ce qui
- * n'est pas dans la projection n'existe pas pour elle.
- *
- * Toute la carte mène à la fiche (`/find/[reference]`), par UN seul lien —
- * celui du titre, étendu à la carte par un pseudo-élément. Un lien par zone
- * cliquable aurait fait trois arrêts au clavier pour une seule destination, et
- * un lecteur d'écran aurait lu trois fois la même annonce.
- *
- * `<img>` et non `next/image` : l'optimiseur de Next recompresserait une image
- * déjà réduite et nettoyée (S3), et multiplierait les lectures du coffre.
- */
+import { PhotoAnnonce } from './photo-annonce'
 
-/** Les équipements qui départagent le plus souvent deux logements, dans cet ordre. */
 const EQUIPEMENTS_PRIORITAIRES: EquipementAnnonce[] = [
-  'compteur_electrique_individuel',
-  'compteur_eau_individuel',
   'douche_interieure',
   'wc_interieur',
   'cuisine_interieure',
   'cour_cloturee',
   'climatisation',
   'parking',
-  'gardien',
+  'compteur_eau_individuel',
+  'compteur_electrique_individuel',
   'eau_courante',
   'electricite',
+  'gardien',
 ]
 
 function disponibilite(disponibleLe: string | null, aujourdhui: string): string {
@@ -40,75 +26,78 @@ function disponibilite(disponibleLe: string | null, aujourdhui: string): string 
   return `Disponible le ${formaterDate(disponibleLe)}`
 }
 
+/** Une annonce publique construite uniquement à partir de la projection Find. */
 export function CarteAnnonce({
   annonce,
   aujourdhui,
   prioritaire = false,
 }: {
   annonce: AnnoncePublique
-  /** Date du jour, `AAAA-MM-JJ`, fixée une fois par page. */
+  /** Date civile fixée une seule fois pour toutes les cartes de la page. */
   aujourdhui: string
-  /** Première rangée : l'image se charge sans attendre le défilement. */
+  /** Les images de la première rangée peuvent commencer à charger immédiatement. */
   prioritaire?: boolean
 }) {
-  const logement = libelleChambres(annonce.chambres)
-  const lieu = annonce.quartier ? `${annonce.quartier}, ${annonce.ville}` : annonce.ville
-  const titre = logement ? `${annonce.type} · ${logement}` : annonce.type
-  const equipements = EQUIPEMENTS_PRIORITAIRES.filter((e) => annonce.equipements.includes(e)).slice(0, 3)
+  const chambres = libelleChambres(annonce.chambres)
+  const localisation = annonce.quartier ? `${annonce.quartier}, ${annonce.ville}` : annonce.ville
+  const titre = chambres ? `${annonce.type} · ${chambres}` : annonce.type
+  const equipement = EQUIPEMENTS_PRIORITAIRES.find((item) => annonce.equipements.includes(item))
+  const photo = annonce.photo_position === null
+    ? null
+    : `/find/photo/${annonce.reference}/${annonce.photo_position}`
 
   return (
-    <article className="card find-card relative flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-hairline-strong has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-primary">
-      <div className="aspect-[4/3] w-full bg-canvas-soft">
-        {annonce.photo_position !== null ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={`/find/photo/${annonce.reference}/${annonce.photo_position}`}
-            alt={`${titre} à louer — ${lieu}`}
-            width={annonce.photo_largeur ?? undefined}
-            height={annonce.photo_hauteur ?? undefined}
-            loading={prioritaire ? 'eager' : 'lazy'}
-            decoding="async"
-            className="size-full object-cover"
-          />
-        ) : null}
+    <article className="find-property-card">
+      <div className="find-property-media">
+        <PhotoAnnonce
+          src={photo}
+          alt={`${titre} à louer à ${localisation}`}
+          largeur={annonce.photo_largeur}
+          hauteur={annonce.photo_hauteur}
+          prioritaire={prioritaire}
+        />
+        <span className="find-availability">{disponibilite(annonce.disponible_le, aujourdhui)}</span>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-sm p-md">
-        <p className="text-caption font-medium text-mute">{annonce.type}</p>
-        <h2 className="list-copy text-body-lg font-semibold text-ink">
+      <div className="find-property-content">
+        <p className="find-property-location">
+          <span>{annonce.type}</span>
+          <span aria-hidden="true">·</span>
+          <MapPin size={15} aria-hidden="true" />
+          <span>{localisation}</span>
+        </p>
+
+        <h3 className="find-property-title">
           <Link
             href={`/find/${annonce.reference}`}
-            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+            className="find-property-link"
+            aria-label={`Voir le logement : ${titre}, ${localisation}`}
           >
-            {logement ?? annonce.type}
-            <span className="block text-body-sm font-normal text-body">{lieu}</span>
+            {titre}
           </Link>
-        </h2>
+        </h3>
 
-        <p className="flex flex-wrap items-baseline gap-xxs text-body-md text-ink">
-          <span className="font-semibold money">{formaterFCFA(annonce.loyer)}</span>
-          <span className="text-mute"> / mois</span>
+        <p className="find-property-price">
+          <span className="find-property-amount">{formaterFCFA(annonce.loyer)}</span>
+          <span className="find-property-period">/ mois</span>
         </p>
-        <ul className="space-y-xxs text-body-sm text-body">
-          {annonce.charges === 0 ? <li>Sans charges</li> : null}
-          {annonce.charges !== null && annonce.charges > 0 ? (
-            <li>+ {formaterFCFA(annonce.charges)} de charges par mois</li>
-          ) : null}
-          {annonce.surface_m2 !== null ? <li>{annonce.surface_m2} m²</li> : null}
-          <li>{disponibilite(annonce.disponible_le, aujourdhui)}</li>
-        </ul>
 
-        {equipements.length > 0 ? (
-          <ul className="flex flex-wrap gap-xs" aria-label="Équipements">
-            {equipements.map((e) => (
-              <li key={e} className="badge badge-neutral">
-                {LIBELLES_EQUIPEMENT[e]}
-              </li>
-            ))}
-          </ul>
+        {annonce.charges !== null && annonce.charges > 0 ? (
+          <p className="find-property-charges">+ {formaterFCFA(annonce.charges)} de charges par mois</p>
         ) : null}
 
-        <p className="mt-auto pt-sm text-caption text-mute">Réf. {annonce.reference}</p>
+        <div className="find-property-facts" aria-label="Caractéristiques principales">
+          {chambres ? <span>{chambres}</span> : null}
+          {annonce.surface_m2 !== null ? <span>{annonce.surface_m2} m²</span> : null}
+          {equipement ? <span>{LIBELLES_EQUIPEMENT[equipement]}</span> : null}
+        </div>
+
+        <div className="find-property-footer">
+          <span className="find-property-reference">Réf. {annonce.reference}</span>
+          <span className="find-property-action" aria-hidden="true">
+            Voir le logement <ArrowRight size={16} aria-hidden="true" />
+          </span>
+        </div>
       </div>
     </article>
   )

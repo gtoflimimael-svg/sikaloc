@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 
 import { ActionsFormulaire, FormulaireMetier, SectionFormulaire } from '@/components/ui/formulaire-metier'
 import { ChampMontant, ChampSelection, ChampTexte } from '@/components/ui/champs'
@@ -29,6 +29,10 @@ export function FormulaireBail({
   locataires: OptionEntite[]
 }) {
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
+  const [logementChoisi, choisirLogement] = useState(bail?.logement_id ?? '')
+  const [locataireChoisi, choisirLocataire] = useState(bail?.locataire_id ?? '')
+  const logement = logements.find((option) => option.valeur === logementChoisi)
+  const locataire = locataires.find((option) => option.valeur === locataireChoisi)
 
   // Garde-fou : les pages appelantes diagnostiquent le manque en amont (voir
   // `bail-impossible.tsx`) et n'affichent pas ce formulaire dans ce cas. Ce
@@ -54,7 +58,16 @@ export function FormulaireBail({
   }
 
   return (
-    <FormulaireMetier action={envoyer} etat={etat} titre="Informations du bail">
+    <FormulaireMetier
+      action={envoyer}
+      etat={etat}
+      titre="Informations du bail"
+      onChange={(evenement) => {
+        const champ = evenement.target as HTMLSelectElement
+        if (champ.name === 'logementId') choisirLogement(champ.value)
+        if (champ.name === 'locataireId') choisirLocataire(champ.value)
+      }}
+    >
       <SectionFormulaire titre="Logement et locataire" description="Associez un logement à son locataire.">
 
         <ChampSelection
@@ -63,6 +76,7 @@ export function FormulaireBail({
           placeholder="Sélectionnez un logement"
           options={logements}
           valeurDefaut={bail?.logement_id}
+          aide={logement && logement.libelle.length > 32 ? `Logement sélectionné : ${logement.libelle}` : undefined}
           requis
           erreur={etat.erreursChamps?.logementId}
         />
@@ -73,6 +87,7 @@ export function FormulaireBail({
           placeholder="Sélectionnez un locataire"
           options={locataires}
           valeurDefaut={bail?.locataire_id}
+          aide={locataire && locataire.libelle.length > 32 ? `Locataire sélectionné : ${locataire.libelle}` : undefined}
           requis
           erreur={etat.erreursChamps?.locataireId}
         />
@@ -87,6 +102,13 @@ export function FormulaireBail({
           requis
           erreur={etat.erreursChamps?.loyerMensuel}
         />
+        {bail ? (
+          <p className="-mt-md text-caption text-mute">
+            Le nouveau montant prend effet sur la période du mois en cours (ou au
+            début du bail s’il commence plus tard). Les périodes passées sont
+            conservées; un loyer déjà saisi pour la période empêche sa modification.
+          </p>
+        ) : null}
 
         <div className="grid gap-lg sm:grid-cols-2">
           <ChampTexte
@@ -107,6 +129,33 @@ export function FormulaireBail({
           />
         </div>
 
+      </SectionFormulaire>
+      <SectionFormulaire
+        titre="Premier loyer"
+        description="Saisissez le montant et la date convenus au contrat. Sikaloc ne calcule pas de prorata."
+      >
+        <div className="grid gap-lg sm:grid-cols-2">
+          <ChampMontant
+            nom="premierLoyerMontant"
+            libelle="Montant exigible"
+            valeurDefaut={bail?.premier_loyer_montant ?? undefined}
+            requis={!bail}
+            erreur={etat.erreursChamps?.premierLoyerMontant}
+          />
+          <ChampTexte
+            nom="premierLoyerDuLe"
+            libelle="Exigible à partir du"
+            type="date"
+            valeurDefaut={bail?.premier_loyer_du_le ?? undefined}
+            requis={!bail}
+            erreur={etat.erreursChamps?.premierLoyerDuLe}
+          />
+        </div>
+        {bail && !bail.premier_loyer_du_le ? (
+          <p className="text-caption text-mute">
+            Conditions du premier loyer non établies. Laissez les deux champs vides tant qu’elles ne sont pas vérifiées.
+          </p>
+        ) : null}
       </SectionFormulaire>
       <SectionFormulaire titre="Échéance et garantie">
         <div className="grid gap-lg sm:grid-cols-2">

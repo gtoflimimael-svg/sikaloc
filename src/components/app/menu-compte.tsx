@@ -2,25 +2,17 @@
 
 import { ChevronDown } from 'lucide-react'
 
-import { PhotoProfil } from '@/components/ui/photo-profil'
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState, type KeyboardEvent as EvenementClavierReact } from 'react'
 
 import { deconnecter } from '@/lib/actions/auth'
 
-/** Avatar bailleur + menu déroulant, en haut à droite du shell desktop. */
+/** Nom du bailleur + menu déroulant, en haut à droite du shell desktop. */
 export function MenuCompte({
-  id,
-  avatar,
-  aPhoto,
   nom,
   email,
   plan,
 }: {
-  id: string
-  avatar: string | null
-  /** Le bailleur a-t-il une photo réelle ? Elle prime sur l'avatar. */
-  aPhoto: boolean
   nom: string
   email: string
   plan: string
@@ -85,7 +77,6 @@ export function MenuCompte({
         aria-expanded={ouvert}
         className="flex items-center gap-sm rounded-pill py-xs pl-xs pr-md hover:bg-canvas-soft"
       >
-        <PhotoProfil id={id} avatar={avatar} nom={nom} aPhoto={aPhoto} taille={32} />
         <span className="text-body-sm font-semibold text-ink">{nom}</span>
         <ChevronDown size={16} strokeWidth={2} aria-hidden="true" />
       </button>

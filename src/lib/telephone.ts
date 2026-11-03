@@ -102,12 +102,13 @@ export function chiffresSaisis(saisie: string): string {
   return (chiffresNationaux(saisie) ?? '').slice(0, LONGUEUR_NATIONALE)
 }
 
-export type MotifTelephone = 'vide' | 'trop_court' | 'trop_long' | 'invalide'
+export type MotifTelephone = 'vide' | 'trop_court' | 'trop_long' | 'prefixe_invalide' | 'invalide'
 
 export const MESSAGES_TELEPHONE: Record<MotifTelephone, string> = {
   vide: 'Le numéro de téléphone est obligatoire.',
   trop_court: `Un numéro béninois compte ${LONGUEUR_NATIONALE} chiffres après l’indicatif.`,
   trop_long: `Un numéro béninois compte ${LONGUEUR_NATIONALE} chiffres après l’indicatif.`,
+  prefixe_invalide: 'Un numéro béninois actuel doit commencer par 01.',
   invalide: 'Ce numéro ne semble pas valide. Vérifiez les chiffres saisis.',
 }
 
@@ -122,7 +123,11 @@ export const MESSAGES_TELEPHONE: Record<MotifTelephone, string> = {
  */
 export function validerTelephone(
   saisie: string | null | undefined,
-  options: { obligatoire?: boolean; tolererAncien?: boolean } = {},
+  options: {
+    obligatoire?: boolean
+    tolererAncien?: boolean
+    exigerPrefixeActuel?: boolean
+  } = {},
 ): { valide: boolean; motif?: MotifTelephone; canonique?: string } {
   const brut = (saisie ?? '').trim()
 
@@ -146,6 +151,14 @@ export function validerTelephone(
       valide: false,
       motif: national.length < LONGUEUR_NATIONALE ? 'trop_court' : 'trop_long',
     }
+  }
+
+  if (
+    options.exigerPrefixeActuel &&
+    national.length === LONGUEUR_NATIONALE &&
+    !national.startsWith('01')
+  ) {
+    return { valide: false, motif: 'prefixe_invalide' }
   }
 
   const canonique = normaliserTelephone(brut)

@@ -2,6 +2,7 @@ import 'server-only'
 
 import { deposerCourrierLocal, pileLocale } from '@/lib/courrier-local'
 import { formaterFCFA } from '@/lib/format'
+import { COULEUR_MARQUE, COULEUR_MARQUE_SUR_SOMBRE } from '@/lib/marque'
 import { PRIX_STANDARD_FCFA } from '@/lib/plan'
 
 /**
@@ -47,6 +48,7 @@ export type ModeleEmail =
   | 'candidature_acceptee'
   | 'candidature_refusee'
   | 'candidature_retiree'
+  | 'question_recue'
 
 export interface VariablesEmail {
   nom?: string
@@ -108,6 +110,10 @@ function urlLogo(): string {
   return `${urlBase()}/marque/logo-email.png`
 }
 
+function urlGestionQuestions(): string {
+  return new URL('/questions/gestion', urlBase()).toString()
+}
+
 export function composer(modele: ModeleEmail, variables: VariablesEmail): Message {
   const prenom = String(variables.nom ?? '').trim().split(/\s+/)[0] || 'Bonjour'
   const action = { libelle: 'Régler mon abonnement', url: urlAbonnement() }
@@ -125,6 +131,20 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
   const candidat = (): string => String(variables.candidat_nom ?? '').trim() || 'Un candidat'
 
   switch (modele) {
+    // Alerte d'exploitation sans nom, coordonnées ni contenu de la question.
+    case 'question_recue': {
+      return {
+        ton: 'info',
+        sujet: 'Nouvelle question reçue — Sikaloc',
+        titre: 'Une nouvelle question a été reçue',
+        corps: [
+          'Un visiteur a envoyé une demande depuis le formulaire de contact.',
+          'Le message et la coordonnée de réponse sont disponibles dans l’espace interne protégé.',
+        ],
+        action: { libelle: 'Ouvrir les demandes', url: urlGestionQuestions() },
+      }
+    }
+
     // ─── Une candidature arrive ───────────────────────────────────────
     //
     // Le message ne promet rien au bailleur et ne lui demande rien : il
@@ -393,45 +413,51 @@ function echapperHtml(valeur: string): string {
 /** Gabarit HTML — tokens du design system, en styles inline (contrainte email). */
 function rendreHtml(message: Message): string {
   const accent =
-    message.ton === 'grave' ? '#A63A3A' : message.ton === 'attention' ? '#A37B12' : '#5555BC'
+    message.ton === 'grave' ? '#8F1E27' : message.ton === 'attention' ? '#3E2D0A' : COULEUR_MARQUE
 
   const paragraphes = message.corps
     .map(
       (p) =>
-        `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3A3A3D;">${p}</p>`,
+        `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#424940;">${p}</p>`,
     )
     .join('')
 
   const bouton = message.action
     ? `<a href="${message.action.url}"
-          style="display:inline-block;background:#5555BC;color:#FFFFFF;text-decoration:none;
-                 font-weight:600;font-size:16px;padding:14px 24px;border-radius:24px;">
+          style="display:inline-block;background:${COULEUR_MARQUE_SUR_SOMBRE};color:#111810;text-decoration:none;
+                 font-weight:600;font-size:16px;line-height:1.3;padding:14px 24px;border-radius:12px;">
          ${message.action.libelle}
        </a>`
     : ''
 
   return `<!doctype html>
-<html lang="fr"><body style="margin:0;padding:0;background:#E8E8F5;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-         style="background:#E8E8F5;padding:32px 16px;">
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${echapperHtml(message.sujet)}</title>
+</head>
+<body style="margin:0;padding:0;background:#EAF1E7;">
+  <table role="presentation" lang="fr" dir="ltr" width="100%" cellpadding="0" cellspacing="0"
+         style="background:#EAF1E7;padding:24px 16px;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-             style="max-width:560px;background:#F4F4FB;border:1px solid #D8D8E6;border-radius:24px;">
-        <tr><td style="padding:32px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+             style="max-width:560px;background:#FFFFFF;border:1px solid #D6E0D2;border-radius:16px;">
+        <tr><td style="padding:28px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 
-          <img src="${urlLogo()}" width="124" height="28" alt="Sikaloc"
+          <img src="${urlLogo()}" width="120" height="28" alt="Sikaloc"
                style="display:block;width:124px;height:28px;border:0;" />
 
           <div style="height:4px;width:48px;background:${accent};border-radius:2px;margin:24px 0;"></div>
 
           <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;line-height:1.3;
-                     color:#131314;letter-spacing:-0.5px;">${echapperHtml(message.titre)}</h1>
+                     color:#111810;letter-spacing:-0.5px;">${echapperHtml(message.titre)}</h1>
 
           ${paragraphes}
           ${bouton}
 
-          <p style="margin:32px 0 0;padding-top:16px;border-top:1px solid #D8D8E6;
-                    font-size:12px;line-height:1.5;color:#82828E;">
+          <p style="margin:32px 0 0;padding-top:16px;border-top:1px solid #D6E0D2;
+                    font-size:13px;line-height:1.5;color:#636D63;">
             Sikaloc — gestion locative au Bénin. Vous recevez ce message parce que
             vous avez un compte Sikaloc. Données hébergées en Europe.
           </p>

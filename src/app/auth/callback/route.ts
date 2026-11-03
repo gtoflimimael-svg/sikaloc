@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import {
+  contexteDepuisSuite,
+  lienConnexion,
+  normaliserSuiteConnexion,
+} from '@/lib/auth-contexte'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
 /**
@@ -45,6 +50,8 @@ export async function GET(request: NextRequest) {
     : request.nextUrl.origin
   const code = searchParams.get('code')
   const demande = searchParams.get('next')
+  const suite = normaliserSuiteConnexion(searchParams.get('suite')) ?? '/entrer'
+  const contexte = contexteDepuisSuite(suite) ?? 'general'
 
   // Seule la réinitialisation de mot de passe passe encore par ici. Tout autre
   // usage — dont un ancien lien de confirmation d'inscription — est renvoyé
@@ -53,18 +60,22 @@ export async function GET(request: NextRequest) {
     return redirectionPrivee(`${origin}/verification`)
   }
 
-  const suite = demande
-
   if (!code) {
-    return redirectionPrivee(`${origin}/connexion?erreur=lien_invalide`)
+    const url = new URL(lienConnexion(contexte, suite), origin)
+    url.searchParams.set('erreur', 'lien_invalide')
+    return redirectionPrivee(url.toString())
   }
 
   const supabase = await creerClientServeur()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return redirectionPrivee(`${origin}/connexion?erreur=lien_expire`)
+    const url = new URL(lienConnexion(contexte, suite), origin)
+    url.searchParams.set('erreur', 'lien_expire')
+    return redirectionPrivee(url.toString())
   }
 
-  return redirectionPrivee(`${origin}${suite}`)
+  const retour = new URL('/reinitialiser-mot-de-passe', origin)
+  retour.searchParams.set('suite', suite)
+  return redirectionPrivee(retour.toString())
 }

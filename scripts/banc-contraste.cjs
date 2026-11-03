@@ -20,13 +20,15 @@
  * Le seuil suit la spécification : 3:1 à partir de 24 px, ou 18,66 px en gras.
  */
 const { chromium } = require('playwright-core')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
 
 const BASE = process.env.BASE_CONTRASTE || 'http://localhost:3000'
 
 /** Les pages accessibles sans session. Le reste demande une connexion. */
 const PAGES = [
   '/',
-  '/exemple-quittance',
   '/connexion',
   '/inscription',
   '/mot-de-passe-oublie',
@@ -138,10 +140,20 @@ const MESURE = () => {
 }
 
 ;(async () => {
-  const navigateur = await chromium.launch({
-    executablePath:
-      require('os').homedir() + '/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-  })
+  const navigateurs = [
+    process.env.CHROME_BIN,
+    chromium.executablePath(),
+    path.join(os.homedir(), '.cache/ms-playwright/chromium-1234/chrome-linux64/chrome'),
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+  ].filter(Boolean)
+  const executablePath = navigateurs.find((candidat) => fs.existsSync(candidat))
+  if (!executablePath) {
+    throw new Error('Aucun navigateur Chromium trouvé. Définissez CHROME_BIN ou installez Chromium.')
+  }
+  const navigateur = await chromium.launch({ executablePath })
 
   // Un argument explicite l'emporte : utile pour n'inspecter qu'une page.
   const cibles = process.argv[2]
@@ -160,7 +172,7 @@ const MESURE = () => {
     await page.addInitScript((t) => window.localStorage.setItem('sikaloc-theme', t), theme)
 
     try {
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
     } catch {
       console.log(`  ✗ ${url} [${theme}] — page injoignable`)
       total++

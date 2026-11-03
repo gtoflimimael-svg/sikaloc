@@ -1,15 +1,17 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { Receipt } from 'lucide-react'
 
 import { ResumeListe, TableauListe } from '@/components/ui/listes'
-import { Illustration } from '@/components/ui/illustration'
 import { Alerte, Badge, EnTetePage, EtatVide } from '@/components/ui/retours'
 import {
   formaterDateCourte,
   formaterFCFA,
   formaterPeriode,
 } from '@/lib/format'
+import { libelleActionDocumentManquant } from '@/lib/paiement-utils'
+import { etatPaiementFinance } from '@/lib/documents-paiement'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -36,7 +38,7 @@ export default async function PageHistoriquePaiements({
   let requete = supabase
     .from('paiements')
     .select(
-      '*, bail:baux(id, locataire:locataires(nom), logement:logements(adresse)), quittance:quittances(id, numero_document, type)',
+      '*, bail:baux(id, locataire:locataires(nom), logement:logements(adresse)), quittance:quittances(id, numero_document, type, donnees_financieres)',
       { count: 'exact' },
     )
     // `nullsFirst: false` : un paiement historique n'a pas de date, et
@@ -74,9 +76,32 @@ export default async function PageHistoriquePaiements({
   const total = liste
     .filter((p) => p.statut === 'Validé')
     .reduce((somme, p) => somme + Number(p.montant), 0)
+  const bailSelectionne = (baux ?? []).find((bail) => bail.id === bailFiltre)
+  const locataireBailSelectionne = Array.isArray(bailSelectionne?.locataire)
+    ? bailSelectionne.locataire[0]
+    : bailSelectionne?.locataire
+  const logementBailSelectionne = Array.isArray(bailSelectionne?.logement)
+    ? bailSelectionne.logement[0]
+    : bailSelectionne?.logement
+  const libelleBailSelectionne = bailSelectionne
+    ? `${locataireBailSelectionne?.nom ?? 'Locataire'} — ${logementBailSelectionne?.adresse ?? 'logement'}`
+    : null
+
+  const paiementsAffiches = liste.map((paiement) => {
+    const bail = Array.isArray(paiement.bail) ? paiement.bail[0] : paiement.bail
+    const locataire = Array.isArray(bail?.locataire) ? bail.locataire[0] : bail?.locataire
+    const quittance = Array.isArray(paiement.quittance) ? paiement.quittance[0] : paiement.quittance
+    const etatFinancier = etatPaiementFinance({
+      statut: paiement.statut,
+      typePaiement: paiement.type_paiement,
+      estPartiel: paiement.est_partiel,
+      finances: quittance?.donnees_financieres,
+    })
+    return { paiement, locataire, quittance, etatFinancier }
+  })
 
   return (
-    <div>
+    <div className="payment-history-page">
       <EnTetePage
         titre="Historique des paiements"
         description="Tous les encaissements enregistrés, du plus récent au plus ancien."
@@ -108,6 +133,11 @@ export default async function PageHistoriquePaiements({
               )
             })}
           </select>
+          {libelleBailSelectionne ? (
+            <p className="payment-selected-bail text-caption text-mute">
+              Bail sélectionné : {libelleBailSelectionne}
+            </p>
+          ) : null}
         </div>
 
         <div>
@@ -137,7 +167,7 @@ export default async function PageHistoriquePaiements({
         <Alerte ton="erreur">Les paiements ne peuvent pas être chargés. Actualisez la page pour réessayer.</Alerte>
       ) : liste.length === 0 ? (
         <EtatVide
-          icone={<Illustration nom="courses" taille={200} decorative />}
+          icone={<Receipt size={24} strokeWidth={1.8} aria-hidden="true" />}
           titre={bailFiltre || statut ? "Aucun paiement pour ces filtres" : "Aucun paiement"}
           description={bailFiltre || statut ? "Modifiez les filtres pour consulter les autres paiements." : "Les paiements enregistrés apparaîtront ici, avec leur quittance."}
           action={
@@ -159,6 +189,37 @@ export default async function PageHistoriquePaiements({
             </span>
           </ResumeListe>
 
+          <ul className="payment-mobile-list sm:hidden" aria-label="Historique des paiements">
+            {paiementsAffiches.map(({ paiement, locataire, quittance, etatFinancier }) => (
+              <li key={paiement.id}>
+                <div className="payment-mobile-heading">
+                  <h3>{locataire?.nom ?? 'Locataire'}</h3>
+                  <strong className="money">{formaterFCFA(paiement.montant)}</strong>
+                </div>
+                <p className="mt-xs text-body-sm">{formaterPeriode(paiement.periode_debut)}</p>
+                <p className="mt-xs text-caption text-mute">
+                  {paiement.historique ? 'Avant Sikaloc · Paiement historique' : `${formaterDateCourte(paiement.date_paiement)} · ${paiement.mode_paiement}`}
+                </p>
+                <div className="mt-sm flex flex-wrap items-center justify-between gap-sm">
+                  <Badge ton={etatFinancier === 'Payé' ? 'positive' : 'warning'}>
+                    {etatFinancier}
+                  </Badge>
+                  {quittance ? (
+                    <Link href={`/pro/quittances/${quittance.id}`} className="inline-flex min-h-11 items-center font-semibold underline"
+                      aria-label={`Voir ${quittance.type} — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}>
+                      {quittance.type}
+                    </Link>
+                  ) : paiement.historique ? <span className="text-caption text-mute">Aucune quittance</span> : (
+                    <Link href={`/pro/paiements/${paiement.id}/confirmer`} className="inline-flex min-h-11 items-center font-semibold text-warning-content underline"
+                      aria-label={`${libelleActionDocumentManquant(paiement.statut)} — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}>
+                      {libelleActionDocumentManquant(paiement.statut)}
+                    </Link>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden sm:block">
           <TableauListe id="paiements" libelle="Historique des paiements">
             <table className="data-table table-paiements">
               <caption className="sr-only">Paiements affichés, avec leur statut et leur document</caption>
@@ -182,15 +243,7 @@ export default async function PageHistoriquePaiements({
                 </tr>
               </thead>
               <tbody>
-                {liste.map((paiement) => {
-                  const bail = Array.isArray(paiement.bail) ? paiement.bail[0] : paiement.bail
-                  const locataire = Array.isArray(bail?.locataire)
-                    ? bail?.locataire[0]
-                    : bail?.locataire
-                  const quittance = Array.isArray(paiement.quittance)
-                    ? paiement.quittance[0]
-                    : paiement.quittance
-
+                {paiementsAffiches.map(({ paiement, locataire, quittance, etatFinancier }) => {
                   return (
                     <tr key={paiement.id}>
                       <td className="font-semibold">{locataire?.nom ?? '—'}</td>
@@ -207,13 +260,9 @@ export default async function PageHistoriquePaiements({
                       </td>
                       <td className="hidden lg:table-cell">{paiement.mode_paiement}</td>
                       <td>
-                        {paiement.statut === 'Validé' ? (
-                          <Badge ton={paiement.est_partiel ? 'warning' : 'positive'}>
-                            {paiement.est_partiel ? 'Partiel' : 'Payé'}
-                          </Badge>
-                        ) : (
-                          <Badge ton="warning">Brouillon</Badge>
-                        )}
+                        <Badge ton={etatFinancier === 'Payé' ? 'positive' : 'warning'}>
+                          {etatFinancier}
+                        </Badge>
                         {/*
                           Dire d'où vient ce paiement évite de laisser croire
                           que Sikaloc était en service au moment de
@@ -251,10 +300,10 @@ export default async function PageHistoriquePaiements({
                         ) : (
                           <Link
                             href={`/pro/paiements/${paiement.id}/confirmer`}
-                            aria-label={`À confirmer — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}
+                            aria-label={`${libelleActionDocumentManquant(paiement.statut)} — ${locataire?.nom ?? 'locataire'}, ${formaterPeriode(paiement.periode_debut)}`}
                             className="font-semibold text-warning-content underline"
                           >
-                            À confirmer
+                            {libelleActionDocumentManquant(paiement.statut)}
                           </Link>
                         )}
                       </td>
@@ -264,6 +313,7 @@ export default async function PageHistoriquePaiements({
               </tbody>
             </table>
           </TableauListe>
+          </div>
           {pages > 1 ? (
             <nav aria-label="Pagination des paiements" className="mt-lg flex flex-wrap items-center justify-between gap-sm">
               {page > 1 ? <Link href={urlPage(page - 1)} rel="prev" className="btn btn-secondary">← Page précédente</Link> : <span />}

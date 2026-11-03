@@ -1,7 +1,9 @@
 import { Banknote, Download } from 'lucide-react'
 import type { Metadata } from 'next'
 
-import { EnTetePage, EtatVide } from '@/components/ui/retours'
+import { IntroPageMe } from '@/components/me/intro-page'
+import styles from '@/components/me/espace.module.css'
+import { EtatVide } from '@/components/ui/retours'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
 import { mesBaux, mesPaiements } from '@/lib/locataire'
 import type { BailLocataire, PaiementLocataire } from '@/lib/types/database'
@@ -30,9 +32,10 @@ export default async function PagePaiements() {
 
   return (
     <div className="space-y-xl">
-      <EnTetePage
+      <IntroPageMe
         titre="Mes paiements"
         description="Tout ce que votre bailleur a enregistré, et les quittances émises."
+        icone={<Banknote size={24} />}
       />
 
       {paiements.length === 0 ? (
@@ -42,7 +45,7 @@ export default async function PagePaiements() {
           description="Dès que votre bailleur enregistrera un versement, il apparaîtra ici avec sa quittance."
         />
       ) : (
-        <ul aria-label="Paiements enregistrés" className="space-y-md">
+        <ul aria-label="Paiements enregistrés" className={styles.paymentList}>
           {paiements.map((paiement) => (
             <LignePaiement
               key={paiement.paiement_id}
@@ -73,7 +76,7 @@ function LignePaiement({
   montrerAdresse: boolean
 }) {
   return (
-    <li className="card list-card">
+    <li className={styles.paymentRow}>
       <div className="flex flex-wrap items-start justify-between gap-md">
         <div className="min-w-0 list-copy">
           <p className="text-body-md font-semibold text-ink">
@@ -97,7 +100,10 @@ function LignePaiement({
               : 'Date de versement non précisée'}
             {' · '}
             {paiement.mode_paiement}
-            {paiement.est_partiel ? ' · versement partiel' : null}
+            {paiement.est_partiel === true ? ' · versement partiel' : null}
+            {paiement.type_paiement === 'Loyer' && paiement.est_partiel === null
+              ? ' · solde à déterminer'
+              : null}
           </p>
 
           {montrerAdresse && bail ? (

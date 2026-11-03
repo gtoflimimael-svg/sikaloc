@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
+import styles from './onboarding.module.css'
 
 import { CaptureSignature } from '@/components/app/capture-signature'
 import { Alerte } from '@/components/ui/retours'
@@ -45,27 +46,31 @@ export function AssistantOnboarding({
   nomBailleur,
   telephoneBailleur,
   emailBailleur,
-  nbLogementsDeclare,
   signatureExistante,
 }: {
   nomBailleur: string
   telephoneBailleur: string
   emailBailleur: string
-  nbLogementsDeclare: number | null
   signatureExistante: boolean
 }) {
   const [etape, setEtape] = useState<Etape>(1)
+  const titre = useRef<HTMLHeadingElement>(null)
+  const premiereEtape = useRef(true)
+  useEffect(() => {
+    if (premiereEtape.current) { premiereEtape.current = false; return }
+    titre.current?.focus()
+  }, [etape])
 
   return (
     <div className="mx-auto max-w-[40rem]">
-      <header className="mb-2xl">
-        <p className="text-caption-uppercase uppercase text-primary">
+      <header className={styles.intro}>
+        <p className={styles.step}>
           Étape {etape} sur 2
         </p>
-        <h1 className="mt-sm text-display-md font-extrabold tracking-tight text-ink">
+        <h1 ref={titre} tabIndex={-1} className={styles.title}>
           {TITRES[etape].titre}
         </h1>
-        <p className="mt-md text-body-md text-mute">{TITRES[etape].aide}</p>
+        <p className={styles.description}>{TITRES[etape].aide}</p>
 
         <div className="mt-lg flex gap-xs" aria-hidden="true">
           {([1, 2] as const).map((numero) => (
@@ -81,20 +86,14 @@ export function AssistantOnboarding({
 
       {/* ── Étape 1 — récapitulatif ──────────────────────────────────── */}
       {etape === 1 ? (
-        <div className="card card-lg anim-apparait">
-          <dl className="space-y-lg">
+        <div >
+          <dl className={styles.facts}>
             <Ligne terme="Nom" definition={nomBailleur} />
             <Ligne terme="Téléphone" definition={formaterTelephone(telephoneBailleur)} />
             <Ligne terme="Email" definition={emailBailleur} />
-            <Ligne
-              terme="Logements gérés"
-              definition={
-                nbLogementsDeclare !== null ? String(nbLogementsDeclare) : 'Non précisé'
-              }
-            />
           </dl>
 
-          <div className="mt-2xl flex flex-wrap gap-md">
+          <div className={styles.actions}>
             <button type="button" onClick={() => setEtape(2)} className="btn btn-primary">
               Continuer
             </button>
@@ -136,19 +135,19 @@ function EtapeSignature({
   const enregistree = dejaEnregistree || Boolean(etat.succes)
 
   return (
-    <div className="space-y-lg anim-apparait">
+    <div className="space-y-lg">
       {enregistree ? (
         <Alerte ton="succes">
           Votre signature est enregistrée. Elle apparaîtra sur chaque quittance.
         </Alerte>
       ) : null}
 
-      <form action={action} className="card card-lg space-y-lg">
+      <form action={action} className={`${styles.signature} space-y-lg`}>
         {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
         <CaptureSignature />
       </form>
 
-      <div className="flex flex-wrap gap-md">
+      <div className={styles.actions}>
         <form action={terminerOnboarding}>
           <button type="submit" className="btn btn-primary">
             {enregistree ? 'Voir mon tableau de bord' : 'Je la mettrai plus tard'}
@@ -164,7 +163,7 @@ function EtapeSignature({
 
 function Ligne({ terme, definition }: { terme: string; definition: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-lg border-b border-hairline-soft pb-md last:border-0 last:pb-0">
+    <div className={styles.fact}>
       <dt className="text-body-sm text-mute">{terme}</dt>
       <dd className="text-body-md font-semibold text-ink">{definition}</dd>
     </div>

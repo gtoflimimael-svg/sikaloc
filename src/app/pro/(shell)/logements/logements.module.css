@@ -1,0 +1,474 @@
+.page {
+  width: 100%;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 18px 22px;
+  margin-bottom: 28px;
+}
+
+.headerQuota {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.headerQuota .capacity {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.title {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3vw, 36px);
+  font-weight: 750;
+  letter-spacing: -.045em;
+  line-height: 1.12;
+}
+
+.addAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty {
+  margin-top: 46px;
+}
+
+.empty h2 {
+  margin: 0;
+  color: var(--color-mute);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 620;
+  letter-spacing: -.015em;
+  line-height: 1.45;
+}
+
+.dataNotice {
+  margin: 0 0 18px;
+}
+
+.capacity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--color-mute);
+  font-size: 13px;
+  font-weight: 520;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.capacity a {
+  color: var(--color-ink-deep);
+  font-weight: 620;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-ink-deep) 36%, transparent);
+  text-underline-offset: 3px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.capacity a:hover {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
+.capacity a:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--color-ink-deep);
+  outline-offset: 3px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-hairline);
+  list-style: none;
+}
+
+.property {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.15fr) minmax(max-content, .8fr) auto;
+  grid-template-areas: "identity occupation rent actions";
+  align-items: center;
+  gap: 16px clamp(14px, 1.6vw, 22px);
+  min-width: 0;
+  padding: 21px 0;
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.identity,
+.occupation,
+.rent {
+  min-width: 0;
+}
+
+.identity { grid-area: identity; }
+.occupation { grid-area: occupation; }
+.rent { grid-area: rent; }
+
+.identity h3 {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(17px, 1.55vw, 20px);
+  font-weight: 680;
+  letter-spacing: -.025em;
+  line-height: 1.3;
+}
+
+.identity > p {
+  margin: 4px 0 0;
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.occupation { min-width: 0; }
+
+.statusLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 9px;
+  min-width: 0;
+}
+
+.tenantName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-body);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.advertStatus {
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.advertStatus[data-tone='positive'] { color: var(--color-positive-deep); }
+.advertStatus[data-tone='warning'] { color: var(--color-warning-deep); }
+
+.rent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 6px;
+  margin: 0;
+  color: var(--color-mute);
+  font-size: 13px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.rent > span {
+  white-space: nowrap;
+}
+
+.rent strong {
+  white-space: nowrap;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(16px, 1.45vw, 19px);
+  font-weight: 680;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 5px;
+}
+
+.rowAction {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 9px;
+  border-radius: 4px;
+  color: var(--color-ink-deep);
+  font-size: 14px;
+  font-weight: 620;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.rowAction:hover {
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+}
+
+.rowAction:focus-visible,
+.moreActions summary:focus-visible {
+  outline: 2px solid var(--color-ink-deep);
+  outline-offset: 2px;
+}
+
+.moreActions {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.moreActions summary {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: var(--color-mute);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 590;
+  line-height: 1.35;
+  list-style: none;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.moreActions summary::-webkit-details-marker {
+  display: none;
+}
+
+.moreActions summary::marker {
+  content: '';
+}
+
+.moreActions summary:hover,
+.moreActions[open] summary {
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+}
+
+.menuAction {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: 5px;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.menuAction:hover {
+  background: var(--color-canvas-soft);
+}
+
+.menuAction:focus-visible {
+  outline: 2px solid var(--color-ink-deep);
+  outline-offset: 1px;
+}
+
+.actionMenu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(19rem, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 9px;
+  background: var(--color-canvas);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+.actionMenu :global([role='group'][aria-labelledby]) {
+  max-width: 100%;
+  padding: 12px;
+}
+
+.actionMenu :global(.space-y-md > :last-child) {
+  max-width: min(100%, 21rem);
+}
+
+.property:has(.moreActions[open]) {
+  position: relative;
+  z-index: 2;
+}
+
+.formPage {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+.capacityState {
+  padding: 25px 0;
+  border-top: 1px solid var(--color-hairline);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.capacityState h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 690;
+  letter-spacing: -.03em;
+  line-height: 1.25;
+}
+
+.capacityState p {
+  max-width: 58ch;
+  margin: 8px 0 0;
+  color: var(--color-mute);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.capacityStateActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.formCapacity {
+  margin: -7px 0 22px;
+  color: var(--color-mute);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.formError {
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1279px) {
+  .property {
+    grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+    grid-template-areas: "identity rent" "occupation actions";
+    align-items: center;
+    gap: 10px 24px;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .rent {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 14px;
+  }
+
+  .capacity {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
+  .headerQuota .capacity {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .addAction {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 679px) {
+  .header {
+    margin-bottom: 22px;
+  }
+
+  .title {
+    font-size: clamp(28px, 8vw, 32px);
+  }
+
+  .capacity {
+    font-size: 12px;
+  }
+
+  .empty {
+    margin-top: 38px;
+  }
+
+  .property {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "identity identity" "occupation occupation" "rent actions";
+    align-items: center;
+    gap: 8px 10px;
+    padding-block: 18px;
+  }
+
+  .statusLine {
+    gap: 6px 8px;
+  }
+
+  .rent {
+    justify-self: start;
+  }
+
+  .actions {
+    justify-content: flex-end;
+    gap: 3px 5px;
+  }
+
+  .rowAction,
+  .moreActions summary {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+
+  .actionMenu {
+    right: 0;
+    left: auto;
+  }
+
+  .capacityStateActions :global(.btn) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 359px) {
+  .property {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "identity" "occupation" "rent" "actions";
+    gap: 9px;
+  }
+
+  .actions {
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .addAction,
+  .capacity a,
+  .rowAction,
+  .moreActions summary,
+  .menuAction {
+    transition: none;
+  }
+}

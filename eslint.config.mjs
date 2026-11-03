@@ -56,6 +56,8 @@ export default defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Worker PDF.js empaqueté tel quel depuis la dépendance amont.
+    'public/vendor/**',
 
     // Produit par `npm run generer:objets` : une liste de données, relue en
     // revue mais jamais écrite à la main.

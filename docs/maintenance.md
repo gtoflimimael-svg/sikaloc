@@ -24,3 +24,17 @@ est de rester en maintenance.
 
 Les redirections configurées dans `next.config.ts` sont suspendues en mode
 maintenance afin que même les anciennes URL retournent directement 503.
+
+## Livraison et retour arrière
+
+Avant une réouverture, faire passer les contrôles de la workflow Quality gates,
+valider le déploiement d'aperçu avec un projet Supabase de test, puis obtenir une
+revue explicite du changement d'environnement Production. La maintenance doit
+rester activée par défaut dans les previews et les builds CI. Ne jamais recopier
+un fichier d'environnement local contenant les identifiants de production.
+
+Pour rouvrir, définir exactement `SIKALOC_MAINTENANCE_MODE=off` en Production et
+déployer une version validée. Pour revenir immédiatement en maintenance, retirer
+la variable ou lui donner une autre valeur, puis redéployer le commit de
+maintenance vérifié. La page et son garde sont dans le commit ; aucune donnée ni
+migration n'est nécessaire pour l'activation ou le retour arrière.

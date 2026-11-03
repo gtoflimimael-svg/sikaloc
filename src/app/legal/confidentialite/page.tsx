@@ -18,7 +18,7 @@ export default function PageConfidentialite() {
           Politique de confidentialité
         </h1>
         <p className="mt-sm text-body-sm text-mute">
-          Dernière mise à jour : 17 août 2026
+          Dernière mise à jour : 23 octobre 2026
         </p>
       </header>
 
@@ -85,6 +85,34 @@ export default function PageConfidentialite() {
           désinscription. Un seul clic suffit, sans justification et sans étape
           intermédiaire. La date du retrait est conservée, précisément pour ne
           pas vous réinscrire par erreur.
+        </p>
+      </Section>
+
+      <Section titre="3 ter. Questions adressées à Sikaloc">
+        <p>
+          Lorsque vous utilisez le formulaire de contact, Sikaloc traite le nom
+          que vous indiquez, le sujet et le contenu de votre question, le canal
+          choisi et une seule coordonnée correspondante (adresse e-mail ou
+          numéro WhatsApp), ainsi que la date de votre consentement. Ces données
+          servent uniquement à recevoir et à traiter votre demande. Elles ne
+          servent pas à vous inscrire à une newsletter ni à vous contacter sur
+          un autre canal que celui que vous avez choisi. Une personne de
+          l&apos;équipe prépare la réponse manuellement ; l&apos;ouverture d&apos;un
+          logiciel de messagerie ne signifie pas qu&apos;un message a été envoyé.
+        </p>
+        <p>
+          Les demandes sont conservées dans un espace privé accessible aux
+          personnes administratrices explicitement autorisées. Elles sont
+          supprimées lorsqu&apos;elles ne sont plus nécessaires au traitement ou
+          à la demande de la personne concernée. La suppression est actuellement
+          effectuée par une personne autorisée ; une purge automatique des
+          demandes n&apos;est pas configurée.
+        </p>
+        <p>
+          Pour limiter les envois abusifs, le serveur peut calculer une empreinte
+          temporaire à partir de l&apos;adresse réseau de la requête. L&apos;adresse
+          brute n&apos;est pas enregistrée dans la demande ; le compteur est prévu
+          pour être nettoyé après 24 heures d&apos;inactivité.
         </p>
       </Section>
 

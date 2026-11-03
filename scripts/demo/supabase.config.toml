@@ -1,0 +1,100 @@
+# Configuration réservée à la pile Supabase locale Sikaloc de démonstration.
+# Jamais utilisée par `supabase config push` et aucune connexion distante.
+project_id = "__PROJECT_ID__"
+
+[api]
+enabled = true
+port = 54821
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54822
+shadow_port = 54820
+health_timeout = "2m"
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+# Le seed.sql historique contient un autre compte de démonstration. La pile
+# dédiée ne le charge jamais : seuls les scripts sous scripts/demo la peuplent.
+[db.seed]
+enabled = false
+sql_paths = []
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54823
+api_url = "http://127.0.0.1"
+
+[local_smtp]
+enabled = true
+port = 54824
+smtp_port = 54825
+pop3_port = 54826
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[storage.s3_protocol]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000"]
+jwt_expiry = 3600
+jwt_issuer = "supabase-demo"
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 8
+password_requirements = "letters_digits"
+
+[auth.rate_limit]
+email_sent = 100
+sms_sent = 0
+anonymous_users = 0
+token_refresh = 150
+sign_in_sign_ups = 100
+token_verifications = 100
+web3 = 0
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "1s"
+otp_length = 6
+otp_expiry = 3600
+
+# Le formulaire /verification attend un code saisi par l'utilisateur, pas un
+# lien qui ouvrirait une session. Ces gabarits sont copiés dans l'instance
+# privée Demo par scripts/demo/local.mjs avant le démarrage de Supabase.
+[auth.email.template.confirmation]
+subject = "Sikaloc — confirmez votre compte"
+content_path = "./templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Sikaloc — réinitialisez votre mot de passe"
+content_path = "./templates/recovery.html"
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false

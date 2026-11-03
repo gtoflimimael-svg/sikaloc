@@ -11,9 +11,8 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
  * référence publique et ne servira que les annonces publiées. Celle-ci sert
  * toutes les photos du bailleur connecté — brouillons compris — et à lui seul.
  *
- * Même choix que `/api/photo` : une route authentifiée plutôt qu'une URL
- * signée, qui expirerait sur une page restée ouverte et resterait valable
- * ailleurs une fois copiée.
+ * Une route authentifiée évite une URL signée qui expirerait sur une page
+ * restée ouverte et resterait valable ailleurs une fois copiée.
  *
  * L'autorisation est faite par la session : la ligne n'est lisible que par son
  * bailleur. Une photo d'un autre renvoie la même 404 qu'une photo inexistante.
