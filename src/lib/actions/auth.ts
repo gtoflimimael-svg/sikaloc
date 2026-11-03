@@ -132,8 +132,8 @@ export async function inscrire(
       email,
       password: motDePasse,
       options: {
-        // Le gabarit d'email envoie un code à six chiffres. L'inscription
-        // continue vers l'écran existant de vérification, sans ouvrir l'accès.
+        // Le gabarit envoie le code OTP configuré pour l'environnement.
+        // L'inscription continue vers l'écran de vérification, sans ouvrir l'accès.
         emailRedirectTo,
         // Le trigger crée le profil avec le plan Gratuit par défaut ; ces
         // métadonnées ne déterminent aucune autorisation.

@@ -8,7 +8,7 @@ import { BoutonSoumettre } from '@/components/ui/boutons'
 import { Alerte } from '@/components/ui/retours'
 import { declarerHistorique } from '@/lib/actions/historique'
 import { parAnnee, totalDu } from '@/lib/echeances'
-import { formaterFCFA, formaterPeriode } from '@/lib/format'
+import { formaterDateCourte, formaterFCFA, formaterPeriode } from '@/lib/format'
 import type { Echeance } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
 
@@ -35,12 +35,10 @@ const ETAT_INITIAL: EtatFormulaire = {}
 export function FormulaireHistorique({
   bailId,
   echeances,
-  loyerMensuel,
 }: {
   bailId: string
-  /** Les échéances antérieures non réglées, dans l'ordre. */
+  /** Les périodes antérieures non réglées avec montant et exigibilité établis. */
   echeances: Echeance[]
-  loyerMensuel: number
 }) {
   const action = declarerHistorique.bind(null, bailId)
   const [etat, envoyer] = useActionState(action, ETAT_INITIAL)
@@ -166,8 +164,7 @@ export function FormulaireHistorique({
 
       <div className="flex flex-wrap items-baseline justify-between gap-md">
         <p className="text-body-sm text-mute">
-          {echeances.length} mois à renseigner ·{' '}
-          <strong className="text-ink">{formaterFCFA(loyerMensuel)}</strong> par mois
+          {echeances.length} mois à renseigner. Le montant et l’échéance affichés sont propres à chaque période.
         </p>
 
         <button
@@ -216,7 +213,17 @@ export function FormulaireHistorique({
                         {formaterPeriode(e.periode_debut)}
                       </span>
                       <span className="block text-caption text-mute">
-                        {coche ? 'Réglé' : 'Sera compté en retard'}
+                        {typeof e.montant_exigible === 'number' &&
+                        Number.isFinite(e.montant_exigible) &&
+                        typeof e.date_echeance === 'string' &&
+                        e.date_echeance.length > 0 ? (
+                          <>
+                            {formaterFCFA(e.montant_exigible)} exigibles · échéance{' '}
+                            {formaterDateCourte(e.date_echeance)} · {coche ? 'Réglé' : 'Sera compté en retard'}
+                          </>
+                        ) : (
+                          'Informations insuffisantes : cette période ne peut pas être déclarée ici.'
+                        )}
                       </span>
                     </span>
                   </label>

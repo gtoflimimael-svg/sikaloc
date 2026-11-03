@@ -2,7 +2,13 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
-import { parAnnee } from '../src/lib/echeances.ts'
+import {
+  echeancesADeclarer,
+  echeancesIndetermineesAReviser,
+  historiqueNecessaire,
+  parAnnee,
+  totalDu,
+} from '../src/lib/echeances.ts'
 import {
   apercuDocumentPaiement,
   apercuQuittanceFinance,
@@ -21,6 +27,156 @@ const confirmation = await readFile(
   new URL('src/app/pro/(shell)/paiements/[id]/confirmer/page.tsx', racine),
   'utf8',
 )
+const pageHistorique = await readFile(
+  new URL('src/app/pro/(shell)/baux/[id]/historique/page.tsx', racine),
+  'utf8',
+)
+const formulaireHistorique = await readFile(
+  new URL('src/components/app/formulaire-historique.tsx', racine),
+  'utf8',
+)
+
+const echeanceHistorique = (modifications = {}) => ({
+  bail_id: 'bail-test',
+  bailleur_id: 'bailleur-test',
+  locataire_id: 'locataire-test',
+  logement_id: 'logement-test',
+  periode_debut: '2026-10-01',
+  periode_fin: '2026-10-31',
+  date_echeance: '2026-10-05',
+  loyer_mensuel: 100000,
+  tolerance_jours: 0,
+  montant_paye: 0,
+  montant_du: 100000,
+  montant_excedentaire: 0,
+  jours_de_retard: null,
+  montant_exigible: 100000,
+  anterieure: true,
+  historique_declare: false,
+  etat: 'À déterminer',
+  locataire_nom: 'Locataire test',
+  locataire_telephone: '',
+  logement_adresse: 'Adresse test',
+  logement_ville: 'Ville test',
+  ...modifications,
+})
+
+test('une période passée au montant inconnu est à vérifier, pas à déclarer comme dette', () => {
+  const periode = echeanceHistorique({
+    montant_exigible: null,
+    montant_du: null,
+    anterieure: false,
+  })
+
+  assert.deepEqual(echeancesIndetermineesAReviser([periode], '2026-11-03'), [periode])
+  assert.deepEqual(echeancesADeclarer([periode]), [])
+  assert.equal(historiqueNecessaire([periode], '2026-11-03'), true)
+})
+
+test('une période passée à la date d’exigibilité inconnue reste à vérifier sans solde', () => {
+  const periode = echeanceHistorique({
+    date_echeance: null,
+    montant_du: null,
+    jours_de_retard: null,
+    anterieure: false,
+  })
+
+  assert.deepEqual(echeancesIndetermineesAReviser([periode], '2026-11-03'), [periode])
+  assert.deepEqual(echeancesADeclarer([periode]), [])
+})
+
+test('un champ absent de la vue n’est pas interprété comme un montant nul ou une exigibilité connue', () => {
+  const incomplete = echeanceHistorique({
+    montant_exigible: undefined,
+    montant_du: undefined,
+    date_echeance: undefined,
+    anterieure: true,
+  })
+
+  assert.deepEqual(echeancesADeclarer([incomplete]), [])
+  assert.deepEqual(echeancesIndetermineesAReviser([incomplete], '2026-11-03'), [incomplete])
+})
+
+test('une période future indéterminée ne déclenche ni historique ni redirection évitée', () => {
+  const future = echeanceHistorique({
+    periode_debut: '2026-12-01',
+    periode_fin: '2026-12-31',
+    montant_exigible: null,
+    montant_du: null,
+    date_echeance: null,
+    anterieure: false,
+  })
+
+  assert.deepEqual(echeancesIndetermineesAReviser([future], '2026-11-03'), [])
+  assert.equal(historiqueNecessaire([future], '2026-11-03'), false)
+})
+
+test('une période historique renseignée reste dans le parcours de déclaration existant', () => {
+  const connue = echeanceHistorique()
+
+  assert.deepEqual(echeancesADeclarer([connue]), [connue])
+  assert.deepEqual(echeancesIndetermineesAReviser([connue], '2026-11-03'), [])
+  assert.equal(historiqueNecessaire([connue], '2026-11-03'), true)
+})
+
+test('un bail sans période connue à déclarer ou inconnue à vérifier ne garde pas la page ouverte', () => {
+  const future = echeanceHistorique({
+    periode_debut: '2026-12-01',
+    montant_exigible: null,
+    montant_du: null,
+    date_echeance: null,
+    anterieure: false,
+    etat: 'À déterminer',
+  })
+  const reglee = echeanceHistorique({
+    periode_debut: '2026-09-01',
+    etat: 'Réglé',
+    anterieure: true,
+    montant_paye: 100000,
+    montant_du: 0,
+  })
+
+  assert.equal(historiqueNecessaire([future, reglee], '2026-11-03'), false)
+})
+
+test('la page ne redirige pas si seules des périodes incertaines passées restent à vérifier', () => {
+  assert.match(pageHistorique, /const dateReference = new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/)
+  assert.match(pageHistorique, /const aPreciser = echeancesIndetermineesAReviser\(echeances, dateReference\)/)
+  assert.match(pageHistorique, /if \(!historiqueNecessaire\(echeances, dateReference\)\) redirect/)
+  assert.match(pageHistorique, /\{aPreciser\.map\(/)
+  assert.match(pageHistorique, /aDeclarer\.length > 0 \?\s*\(\s*<div[\s\S]*?<FormulaireHistorique/)
+})
+
+test('les périodes incertaines n’affichent ni dette ni retard inventé et conservent les paiements validés', () => {
+  assert.match(pageHistorique, /Ces périodes ne sont ni déclarées impayées ni considérées comme réglées/)
+  assert.match(pageHistorique, /Aucun solde\s*ni retard n’est calculé/)
+  assert.match(pageHistorique, /const montantConnu =\s*typeof e\.montant_exigible === 'number'[\s\S]*?montantConnu \?\s*\([\s\S]*?Montant documenté pour cette période/)
+  assert.match(pageHistorique, /e\.montant_paye > 0[\s\S]*?Paiements validés enregistrés/)
+  assert.doesNotMatch(pageHistorique, /loyerMensuel=\{Number\(bail\.loyer_mensuel\)\}/)
+  assert.doesNotMatch(formulaireHistorique, /loyerMensuel/)
+  assert.match(formulaireHistorique, /formaterFCFA\(e\.montant_exigible\)/)
+  assert.match(formulaireHistorique, /formaterDateCourte\(e\.date_echeance\)/)
+})
+
+test('le total des périodes dont le montant est établi conserve le calcul existant', () => {
+  const periodeAvecPaiementPartiel = echeanceHistorique({
+    montant_paye: 40000,
+    montant_du: 60000,
+    etat: 'Impayé',
+  })
+  const autrePeriode = echeanceHistorique({
+    periode_debut: '2026-09-01',
+    periode_fin: '2026-09-30',
+    montant_exigible: 80000,
+    montant_du: 30000,
+    montant_paye: 50000,
+    etat: 'Impayé',
+  })
+
+  assert.equal(echeancesADeclarer([periodeAvecPaiementPartiel, autrePeriode]).length, 2)
+  assert.equal(totalDu([periodeAvecPaiementPartiel, autrePeriode]), 90000)
+  assert.match(formulaireHistorique, /totalDu\(impayes\)/)
+})
 
 test('les échéances incluent les baux résiliés jusqu’à leur date de fin', () => {
   assert.match(migration, /where b\.statut in \('Actif'::public\.statut_bail, 'Résilié'::public\.statut_bail\)/)

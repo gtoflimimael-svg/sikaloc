@@ -303,9 +303,18 @@ function lireFichierPrive(chemin, base, libelle, limiteOctets = Number.POSITIVE_
   }
 
   const fichier = statSync(cheminReel)
-  const dossier = statSync(path.dirname(cheminReel))
-  if (process.platform !== 'win32' && ((fichier.mode & 0o077) !== 0 || (dossier.mode & 0o077) !== 0)) {
-    throw new Error(`${libelle} : permissions trop ouvertes; fichier privé et dossier 0700 requis.`)
+  const cheminDossier = path.dirname(cheminReel)
+  const dossierLstat = lstatSync(cheminDossier)
+  const dossier = statSync(cheminDossier)
+  const uid = typeof process.getuid === 'function' ? process.getuid() : undefined
+  if (
+    dossierLstat.isSymbolicLink() || !dossier.isDirectory() ||
+    (process.platform !== 'win32' && (
+      (fichier.mode & 0o077) !== 0 || (dossier.mode & 0o077) !== 0 ||
+      (uid !== undefined && (fichier.uid !== uid || dossier.uid !== uid))
+    ))
+  ) {
+    throw new Error(`${libelle} : fichier et dossier doivent être privés, non symboliques et appartenir à l’utilisateur.`)
   }
   if (fichier.size > limiteOctets) {
     throw new Error(`${libelle} : taille supérieure à la limite autorisée.`)
@@ -374,6 +383,182 @@ function lireRapport(reference, base, libelle) {
   }
 }
 
+function comparerEntreesEnregistrees(attendues, obtenues) {
+  if (!attendues || !obtenues || typeof attendues !== 'object' || typeof obtenues !== 'object') {
+    return false
+  }
+  return Object.entries(attendues).every(([cle, valeur]) => obtenues[cle] === valeur)
+}
+
+function verifierFichierLegacy(base, nom, reference, libelle) {
+  if (typeof nom !== 'string' || !nom || path.basename(nom) !== nom) {
+    throw new Error(`${libelle} : nom de fichier inattendu.`)
+  }
+  const fichier = lireFichierPrive(path.join(base, nom), base, libelle)
+  const dossier = statSync(base)
+  const empreinte = calculerSha256(fichier.chemin)
+  if (
+    (process.platform !== 'win32' && (fichier.taille === 0 || (dossier.mode & 0o777) !== 0o700)) ||
+    reference?.mode !== '600' ||
+    (process.platform !== 'win32' && (statSync(fichier.chemin).mode & 0o777) !== 0o600) ||
+    !Number.isSafeInteger(reference?.bytes) || reference.bytes !== fichier.taille ||
+    typeof reference?.sha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(reference.sha256) ||
+    empreinte !== reference.sha256.toLowerCase()
+  ) {
+    throw new Error(`${libelle} : taille, permissions ou empreinte SHA-256 incohérente.`)
+  }
+  return { ...fichier, sha256: empreinte }
+}
+
+function verifierPreuvesLegacySikalocTest(contenu, base) {
+  const cible = contenu.target
+  if (
+    contenu.schema_version !== 1 ||
+    cible?.environment !== 'Sikaloc-Test' ||
+    cible?.project_ref !== SI_TEST_REF ||
+    cible?.region !== 'eu-central-1' ||
+    cible?.postgres_version !== '17.11' ||
+    contenu.local_protection?.directory_mode !== '0700' ||
+    contenu.local_protection?.files_mode !== '0600' ||
+    contenu.local_protection?.encrypted_at_rest !== false
+  ) {
+    throw new Error('Manifeste historique : environnement, protection locale ou référence Test incohérents.')
+  }
+
+  const postgres = contenu.postgres
+  if (postgres?.format !== 'pg_dump custom') {
+    throw new Error('Manifeste historique : format PostgreSQL inattendu.')
+  }
+  const dump = verifierFichierLegacy(
+    base,
+    postgres.file,
+    postgres.archive,
+    'Archive PostgreSQL historique',
+  )
+  const rapports = lireFichierPrive(
+    path.join(base, 'restoration-validation.json'),
+    base,
+    'Rapport historique de restauration',
+    2 * 1024 * 1024,
+  )
+  if (
+    process.platform !== 'win32' &&
+    (statSync(rapports.chemin).mode & 0o777) !== 0o600
+  ) {
+    throw new Error('Rapport historique de restauration : permissions 0600 requises.')
+  }
+  let restauration
+  try {
+    restauration = JSON.parse(readFileSync(rapports.chemin, 'utf8'))
+  } catch {
+    throw new Error('Rapport historique de restauration : JSON illisible.')
+  }
+
+  const source = restauration.source
+  const archiveDb = restauration.postgres_archive
+  const restaurationIsolee = restauration.isolated_restore
+  const restaurationManifeste = postgres.restoration
+  const comptes = postgres.rows_verified_from_archive
+  const catalogues = postgres.source_catalog_counts_verified
+  const schemasRequis = ['auth', 'public', 'storage', 'supabase_migrations']
+  const tablesRequises = [
+    'auth.users', 'auth.identities', 'public.bailleurs', 'public.logements',
+    'public.locataires', 'public.baux', 'public.paiements', 'public.quittances',
+    'public.signatures_apposees', 'storage.objects', 'supabase_migrations.schema_migrations',
+  ]
+  const cataloguesRequis = [
+    'functions', 'triggers', 'policies', 'constraints', 'row_security_tables',
+  ]
+  if (
+    source?.environment !== 'Sikaloc-Test' || source?.project_ref !== SI_TEST_REF ||
+    source?.postgres_version !== '17.11' ||
+    archiveDb?.file !== postgres.file || archiveDb?.format !== 'pg_dump custom' ||
+    archiveDb?.bytes !== dump.taille || archiveDb?.sha256 !== postgres.archive.sha256 ||
+    archiveDb?.pg_restore_list !== 'passed' ||
+    restaurationManifeste?.status !== 'succeeded' ||
+    restaurationManifeste?.source_server_version !== '17.11' ||
+    restaurationManifeste?.restored_server_version !== '17.6' ||
+    restaurationManifeste?.network_mode !== 'none' ||
+    !String(restaurationManifeste?.data_storage ?? '').toLowerCase().includes('tmpfs') ||
+    !schemasRequis.every((schema) => archiveDb.schemas_covered?.includes(schema)) ||
+    !tablesRequises.every((table) => Number.isSafeInteger(comptes?.[table]) && comptes[table] >= 0) ||
+    !comparerEntreesEnregistrees(comptes, archiveDb.row_counts_verified_after_restore) ||
+    !comparerEntreesEnregistrees(comptes, restaurationManifeste?.verified_row_counts) ||
+    !cataloguesRequis.every((nom) => Number.isSafeInteger(catalogues?.[nom]) && catalogues[nom] >= 0) ||
+    !comparerEntreesEnregistrees(catalogues, restaurationManifeste?.verified_catalog_counts) ||
+    !comparerEntreesEnregistrees(catalogues, archiveDb.source_and_restored_catalog_counts) ||
+    restaurationIsolee?.status !== 'success' ||
+    restaurationIsolee?.postgres_version !== '17.6' ||
+    restaurationIsolee?.network !== 'none' ||
+    restaurationIsolee?.bind_mounts !== 0 ||
+    restaurationIsolee?.persistent_volumes !== 0 ||
+    !String(restaurationIsolee?.data_directory ?? '').toLowerCase().includes('tmpfs')
+  ) {
+    throw new Error('Restauration PostgreSQL historique : périmètre Test ou contrôles isolés incohérents.')
+  }
+
+  const storage = contenu.storage
+  const archiveStorage = verifierFichierLegacy(
+    base,
+    storage?.archive,
+    storage?.archive_integrity,
+    'Archive Storage historique',
+  )
+  const manifesteStorage = verifierFichierLegacy(
+    base,
+    storage?.manifest,
+    storage?.manifest_integrity,
+    'Manifeste Storage historique',
+  )
+  let inventaire
+  try {
+    inventaire = JSON.parse(readFileSync(manifesteStorage.chemin, 'utf8'))
+  } catch {
+    throw new Error('Manifeste Storage historique : JSON illisible.')
+  }
+  const objets = inventaire.files
+  const comptesParBucket = Array.isArray(objets)
+    ? objets.reduce((comptesBucket, objet) => {
+      if (typeof objet.bucket === 'string' && objet.bucket) {
+        comptesBucket[objet.bucket] = (comptesBucket[objet.bucket] ?? 0) + 1
+      }
+      return comptesBucket
+    }, {})
+    : {}
+  const tailleTotaleObjets = Array.isArray(objets)
+    ? objets.reduce((total, objet) => total + (Number.isSafeInteger(objet.bytes) ? objet.bytes : 0), 0)
+    : 0
+  if (
+    inventaire.project_ref !== SI_TEST_REF ||
+    !Array.isArray(objets) || objets.length !== storage.objects ||
+    objets.some((objet) =>
+      typeof objet.bucket !== 'string' || !objet.bucket ||
+      typeof objet.path !== 'string' || !objet.path ||
+      !Number.isSafeInteger(objet.bytes) || objet.bytes < 0 ||
+      typeof objet.sha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(objet.sha256)) ||
+    tailleTotaleObjets !== storage.bytes ||
+    !comparerEntreesEnregistrees(storage.by_bucket, comptesParBucket) ||
+    restauration.storage_archive?.sha256 !== archiveStorage.sha256 ||
+    restauration.storage_archive?.manifest_sha256 !== manifesteStorage.sha256 ||
+    restauration.storage_archive?.objects_expected_and_archived !== objets.length ||
+    restauration.storage_archive?.extracted_file_count !== objets.length ||
+    restauration.storage_archive?.extracted_hash_and_size_matches !== objets.length ||
+    restauration.storage_archive?.storage_service_import_tested !== false
+  ) {
+    throw new Error('Restauration Storage historique : inventaire, empreintes ou compteurs incohérents.')
+  }
+
+  const etapesInterdites = [
+    'production_project_accessed', 'hosted_test_written', 'hosted_migrations_applied',
+    'auth_accounts_created', 'emails_sent', 'payments_triggered', 'push_or_deployment',
+  ]
+  if (!etapesInterdites.every((nom) => restauration.safety?.[nom] === false)) {
+    throw new Error('Rapport historique : une opération hors périmètre est déclarée.')
+  }
+
+  return { postgres: true, storageObjects: objets.length, legacy: true, encryptedAtRest: false }
+}
+
 function chargerManifesteRecette(cheminManifest) {
   if (typeof cheminManifest !== 'string' || !path.isAbsolute(cheminManifest)) {
     throw new Error('Manifeste de sauvegarde : chemin absolu externe requis.')
@@ -392,18 +577,39 @@ function chargerManifesteRecette(cheminManifest) {
     throw new Error('Manifeste de sauvegarde : JSON illisible.')
   }
 
-  if (contenu.format !== 'sikaloc-test-evidence/v1' || contenu.projectRef !== SI_TEST_REF) {
+  const formatNouveau = contenu.format === 'sikaloc-test-evidence/v1' && contenu.projectRef === SI_TEST_REF
+  const formatHistorique = contenu.schema_version === 1 && contenu.target?.project_ref === SI_TEST_REF
+  if (!formatNouveau && !formatHistorique) {
     throw new Error('Manifeste de sauvegarde : format ou référence de projet incorrecte.')
   }
-  const date = Date.parse(contenu.createdAt)
+  const date = Date.parse(formatHistorique ? contenu.created_at : contenu.createdAt)
   if (!Number.isFinite(date) || date > Date.now() || Date.now() - date > 7 * 24 * 60 * 60 * 1000) {
     throw new Error('Manifeste de sauvegarde : date absente, future ou âgée de plus de 7 jours.')
   }
-  return { contenu, base: path.dirname(manifeste.chemin) }
+  return {
+    contenu,
+    base: path.dirname(manifeste.chemin),
+    historique: formatHistorique,
+    fichier: manifeste,
+  }
 }
 
 function verifierPreuvesSauvegardes(cheminManifest) {
-  const { contenu, base } = chargerManifesteRecette(cheminManifest)
+  const { contenu, base, historique, fichier } = chargerManifesteRecette(cheminManifest)
+  if (historique) {
+    const dossier = statSync(base)
+    if (
+      process.platform !== 'win32' &&
+      (
+        (dossier.mode & 0o777) !== 0o700 ||
+        (statSync(fichier.chemin).mode & 0o777) !== 0o600 ||
+        fichier.taille === 0
+      )
+    ) {
+      throw new Error('Manifeste historique : dossier privé 0700 et fichier non vide requis.')
+    }
+    return verifierPreuvesLegacySikalocTest(contenu, base)
+  }
   const dump = verifierArchiveChiffree(contenu.postgres?.archive, base, 'Archive PostgreSQL')
   const rapportDb = lireRapport(contenu.postgres?.restoreReport, base, 'Rapport de restauration PostgreSQL').rapport
   if (
@@ -529,7 +735,10 @@ export function diagnostiquerPrerequisRecette(source = process.env, nomsEnvCharg
   })
   ajouter('Sauvegardes et restauration', () => {
     const preuves = verifierPreuvesSauvegardes(source.SIKALOC_TEST_BACKUP_MANIFEST ?? '')
-    return `PostgreSQL et Storage restaurés en isolation; ${preuves.storageObjects} objets vérifiés`
+    const protection = preuves.legacy
+      ? 'manifeste historique cohérent; archives en clair dans un dossier 0700 privé'
+      : 'archives chiffrées et preuves récentes vérifiées'
+    return `PostgreSQL et Storage restaurés en isolation; ${preuves.storageObjects} objets vérifiés; ${protection}`
   })
   ajouter('Email Supabase Auth', () => {
     verifierPreuveEmailAuth(source.SIKALOC_TEST_BACKUP_MANIFEST ?? '')
@@ -683,7 +892,15 @@ export async function verifierConnexionProjetTest(source = process.env, fetcher 
   return { projectRef: SI_TEST_REF, method: 'GET', path: '/auth/v1/settings', server, publicClient }
 }
 
-export function construireEnvironnementRecette(source = process.env, nomsEnvCharges = []) {
+export function construireEnvironnementRecette(
+  source = process.env,
+  nomsEnvCharges = [],
+  { mode = 'complete' } = {},
+) {
+  if (!['complete', 'otp-initial'].includes(mode)) {
+    throw new Error('Mode de recette inconnu; seuls complete et otp-initial sont autorisés.')
+  }
+  const otpInitial = mode === 'otp-initial'
   const inconnues = nomsEnvCharges.filter((nom) => !variablesControlees.has(nom))
   if (inconnues.length) {
     throw new Error(
@@ -693,12 +910,12 @@ export function construireEnvironnementRecette(source = process.env, nomsEnvChar
 
   const configuration = verifierConfigurationCles(source)
   verifierPreuvesSauvegardes(source.SIKALOC_TEST_BACKUP_MANIFEST ?? '')
-  verifierPreuveEmailAuth(source.SIKALOC_TEST_BACKUP_MANIFEST ?? '')
+  if (!otpInitial) verifierPreuveEmailAuth(source.SIKALOC_TEST_BACKUP_MANIFEST ?? '')
   const { url, clePublique, cleService } = configuration
 
-  const secretFedapay = source.SIKALOC_TEST_FEDAPAY_SECRET_KEY?.trim() ?? ''
-  const cleFedapayPublique = source.SIKALOC_TEST_FEDAPAY_PUBLIC_KEY?.trim() ?? ''
-  const secretWebhookFedapay = source.SIKALOC_TEST_FEDAPAY_WEBHOOK_SECRET?.trim() ?? ''
+  const secretFedapay = otpInitial ? '' : source.SIKALOC_TEST_FEDAPAY_SECRET_KEY?.trim() ?? ''
+  const cleFedapayPublique = otpInitial ? '' : source.SIKALOC_TEST_FEDAPAY_PUBLIC_KEY?.trim() ?? ''
+  const secretWebhookFedapay = otpInitial ? '' : source.SIKALOC_TEST_FEDAPAY_WEBHOOK_SECRET?.trim() ?? ''
   const fedapayPartiel = Boolean(secretFedapay || cleFedapayPublique || secretWebhookFedapay)
 
   if (fedapayPartiel && !(secretFedapay && cleFedapayPublique && secretWebhookFedapay)) {
@@ -729,12 +946,14 @@ export function construireEnvironnementRecette(source = process.env, nomsEnvChar
     NEXT_PUBLIC_SUPABASE_ANON_KEY: clePublique,
     SUPABASE_SERVICE_ROLE_KEY: cleService,
     APP_NAME: 'Sikaloc | recette Test',
+    SIKALOC_TEST_RECETTE_MODE: mode,
     SIKALOC_MAINTENANCE_MODE: 'off',
     SIKALOC_DEMO_LOCAL: '',
     SIKALOC_DEMO_EXPECTED_PROJECT_ID: '',
     OTP_SECRET: source.SIKALOC_TEST_OTP_SECRET || randomBytes(32).toString('base64url'),
-    CRON_SECRET: source.SIKALOC_TEST_CRON_SECRET || randomBytes(32).toString('base64url'),
-    NEXT_PUBLIC_EMAIL_OTP_LENGTH: '6',
+    CRON_SECRET: otpInitial ? '' : source.SIKALOC_TEST_CRON_SECRET || randomBytes(32).toString('base64url'),
+    // Valeur vérifiée dans Auth > Email sur Sikaloc-Test (8 chiffres).
+    NEXT_PUBLIC_EMAIL_OTP_LENGTH: '8',
     OTP_CANAL_DEV: '0',
     FEDAPAY_ENV: 'sandbox',
     FEDAPAY_PUBLIC_KEY: cleFedapayPublique,
@@ -782,10 +1001,11 @@ export function afficherPreflightRecette(source = process.env, nomsEnvCharges = 
   return controles
 }
 
-export function lancerRecette(source = process.env, repertoire = racine) {
+export function lancerRecette(source = process.env, repertoire = racine, { mode = 'complete' } = {}) {
   const environnement = construireEnvironnementRecette(
     source,
     collecterNomsEnvNext(repertoire),
+    { mode },
   )
 
   if (Number(process.versions.node.split('.')[0]) !== 22) {
@@ -795,14 +1015,22 @@ export function lancerRecette(source = process.env, repertoire = racine) {
   const binaireNext = path.join(repertoire, 'node_modules', 'next', 'dist', 'bin', 'next')
   const serveur = spawn(
     process.execPath,
-    [binaireNext, 'dev', '--hostname', '127.0.0.1', '--port', '3000'],
+    ['--dns-result-order=ipv4first', binaireNext, 'dev', '--hostname', '127.0.0.1', '--port', '3000'],
     { cwd: repertoire, env: environnement, stdio: 'inherit' },
   )
 
-  console.info(
-    `Recette isolée Sikaloc-Test (${SI_TEST_REF}) sur http://localhost:3000. ` +
-    `Emails, SMS et WhatsApp sont désactivés ; FedaPay sandbox ${environnement.FEDAPAY_SECRET_KEY ? 'configuré' : 'désactivé'}.`,
-  )
+  if (mode === 'otp-initial') {
+    console.info(
+      `Démarrage OTP initial limité à Sikaloc-Test (${SI_TEST_REF}) sur http://127.0.0.1:3000. ` +
+      'Aucun compte ni email n’est créé au démarrage; FedaPay et Cron sont désactivés. ' +
+      'Ce mode ne valide pas la recette complète et ne remplace pas sa preuve email.',
+    )
+  } else {
+    console.info(
+      `Recette isolée Sikaloc-Test (${SI_TEST_REF}) sur http://127.0.0.1:3000. ` +
+      `Emails applicatifs, SMS et WhatsApp sont désactivés ; FedaPay sandbox ${environnement.FEDAPAY_SECRET_KEY ? 'configuré' : 'désactivé'}.`,
+    )
+  }
 
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.on(signal, () => serveur.kill(signal))
@@ -818,8 +1046,17 @@ export function lancerRecette(source = process.env, repertoire = racine) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
+    const argumentsCli = process.argv.slice(2)
+    const commandesConnues = new Set(['--check-connection', '--preflight', '--otp-initial'])
+    if (
+      argumentsCli.length > 1 ||
+      argumentsCli.some((argument) => !commandesConnues.has(argument))
+    ) {
+      throw new Error('Une seule commande explicite est autorisée : --check-connection, --preflight ou --otp-initial.')
+    }
+    const commande = argumentsCli[0] ?? ''
     const source = fusionnerConfigurationRecettePrivee(process.env)
-    if (process.argv.includes('--check-connection')) {
+    if (commande === '--check-connection') {
       const resultat = await verifierConnexionProjetTest(source)
       for (const [nom, controle] of Object.entries({ serveur: resultat.server, publique: resultat.publicClient })) {
         const statut = controle.status === null ? 'erreur réseau' : `HTTP ${controle.status}`
@@ -830,8 +1067,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         'Ce contrôle ne valide pas les sauvegardes ou les emails Auth et ne débloque pas le lancement de la recette.',
       )
       if (!resultat.server.accepted || !resultat.publicClient.accepted) process.exitCode = 1
-    } else if (process.argv.includes('--preflight')) {
+    } else if (commande === '--preflight') {
       afficherPreflightRecette(source, collecterNomsEnvNext())
+    } else if (commande === '--otp-initial') {
+      lancerRecette(source, racine, { mode: 'otp-initial' })
     } else {
       lancerRecette(source)
     }

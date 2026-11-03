@@ -101,6 +101,139 @@ function configurationValide(surcharges = {}) {
   }
 }
 
+function creerPreuvesLegacyValides() {
+  const dump = ecrireFichier('legacy-postgres.dump', 'legacy postgres archive fixture')
+  const storageArchiveFixture = ecrireFichier('legacy-storage.tar.gz', 'legacy storage archive fixture')
+  const storageInventory = ecrireJson('legacy-storage-manifest.json', {
+    project_ref: SI_TEST_REF,
+    files: [{ bucket: 'quittances', path: 'fixture.pdf', bytes: 12, sha256: 'a'.repeat(64) }],
+  })
+  const postgresCounts = {
+    'auth.users': 1,
+    'auth.identities': 1,
+    'public.bailleurs': 1,
+    'public.logements': 1,
+    'public.locataires': 1,
+    'public.baux': 1,
+    'public.paiements': 1,
+    'public.quittances': 1,
+    'public.signatures_apposees': 1,
+    'storage.objects': 1,
+    'supabase_migrations.schema_migrations': 56,
+  }
+  const catalogCounts = {
+    functions: 3,
+    triggers: 2,
+    policies: 4,
+    constraints: 5,
+    row_security_tables: 2,
+  }
+  const schemaNames = ['auth', 'public', 'storage', 'supabase_migrations']
+  const storageSha = storageArchiveFixture.sha256
+  const inventorySha = storageInventory.sha256
+  const restauration = ecrireJson('restoration-validation.json', {
+    source: {
+      environment: 'Sikaloc-Test',
+      project_ref: SI_TEST_REF,
+      postgres_version: '17.11',
+    },
+    postgres_archive: {
+      file: 'legacy-postgres.dump',
+      format: 'pg_dump custom',
+      bytes: Buffer.byteLength('legacy postgres archive fixture'),
+      sha256: dump.sha256,
+      pg_restore_list: 'passed',
+      schemas_covered: schemaNames,
+      row_counts_verified_after_restore: postgresCounts,
+      source_and_restored_catalog_counts: catalogCounts,
+    },
+    isolated_restore: {
+      status: 'success',
+      postgres_version: '17.6',
+      network: 'none',
+      data_directory: 'new tmpfs directory',
+      bind_mounts: 0,
+      persistent_volumes: 0,
+      verified_row_counts: postgresCounts,
+      verified_catalog_counts: catalogCounts,
+    },
+    storage_archive: {
+      sha256: storageSha,
+      manifest_sha256: inventorySha,
+      objects_expected_and_archived: 1,
+      extracted_file_count: 1,
+      extracted_hash_and_size_matches: 1,
+      storage_service_import_tested: false,
+    },
+    safety: {
+      production_project_accessed: false,
+      hosted_test_written: false,
+      hosted_migrations_applied: false,
+      auth_accounts_created: false,
+      emails_sent: false,
+      payments_triggered: false,
+      push_or_deployment: false,
+    },
+  })
+  const manifest = ecrireJson('legacy-backup-manifest.json', {
+    schema_version: 1,
+    created_at: new Date().toISOString(),
+    target: {
+      environment: 'Sikaloc-Test',
+      project_ref: SI_TEST_REF,
+      region: 'eu-central-1',
+      postgres_version: '17.11',
+    },
+    postgres: {
+      file: 'legacy-postgres.dump',
+      format: 'pg_dump custom',
+      archive: {
+        bytes: Buffer.byteLength('legacy postgres archive fixture'),
+        sha256: dump.sha256,
+        mode: '600',
+      },
+      rows_verified_from_archive: postgresCounts,
+      source_catalog_counts_verified: catalogCounts,
+      restoration: {
+        status: 'succeeded',
+        source_server_version: '17.11',
+        restored_server_version: '17.6',
+        network_mode: 'none',
+        data_storage: 'new tmpfs directory',
+        verified_row_counts: postgresCounts,
+        verified_catalog_counts: catalogCounts,
+      },
+    },
+    storage: {
+      archive: 'legacy-storage.tar.gz',
+      archive_integrity: {
+        bytes: Buffer.byteLength('legacy storage archive fixture'),
+        sha256: storageSha,
+        mode: '600',
+      },
+      manifest: 'legacy-storage-manifest.json',
+      manifest_integrity: {
+        bytes: Buffer.byteLength(JSON.stringify({
+          project_ref: SI_TEST_REF,
+          files: [{ bucket: 'quittances', path: 'fixture.pdf', bytes: 12, sha256: 'a'.repeat(64) }],
+        })),
+        sha256: inventorySha,
+        mode: '600',
+      },
+      objects: 1,
+      by_bucket: { quittances: 1 },
+      bytes: 12,
+    },
+    local_protection: {
+      directory_mode: '0700',
+      files_mode: '0600',
+      encrypted_at_rest: false,
+    },
+    restoration_validation: restauration.path,
+  })
+  return manifest.path
+}
+
 test('la recette force le projet Test et neutralise les intégrations réelles', () => {
   const environnement = construireEnvironnementRecette(
     {
@@ -217,6 +350,75 @@ test('vérifie les empreintes réelles et les rapports de restauration isolée',
       SIKALOC_TEST_BACKUP_MANIFEST: manifesteNonChiffre.path,
     })),
     /en-tête d’archive OpenPGP est invalide/,
+  )
+})
+
+test('reconnaît le manifeste historique uniquement avec ses archives privées et preuves croisées Test', () => {
+  const cheminLegacy = creerPreuvesLegacyValides()
+  const config = configurationValide({ SIKALOC_TEST_BACKUP_MANIFEST: cheminLegacy })
+  assert.doesNotThrow(() => construireEnvironnementRecette(config, [], { mode: 'otp-initial' }))
+
+  const contenu = JSON.parse(readFileSync(cheminLegacy, 'utf8'))
+  const mauvaisProjet = ecrireJson('legacy-wrong-project.json', {
+    ...contenu,
+    target: { ...contenu.target, project_ref: 'pzrixjydnclwvjwqfbal' },
+  })
+  assert.throws(
+    () => construireEnvironnementRecette(
+      configurationValide({ SIKALOC_TEST_BACKUP_MANIFEST: mauvaisProjet.path }),
+      [],
+      { mode: 'otp-initial' },
+    ),
+    /format ou référence de projet incorrecte/,
+  )
+
+  const mauvaisHash = ecrireJson('legacy-wrong-hash.json', {
+    ...contenu,
+    postgres: { ...contenu.postgres, archive: { ...contenu.postgres.archive, sha256: '0'.repeat(64) } },
+  })
+  assert.throws(
+    () => construireEnvironnementRecette(
+      configurationValide({ SIKALOC_TEST_BACKUP_MANIFEST: mauvaisHash.path }),
+      [],
+      { mode: 'otp-initial' },
+    ),
+    /empreinte SHA-256 incohérente/,
+  )
+})
+
+test('le mode OTP initial diffère uniquement la preuve email et ferme Cron et les paiements', () => {
+  const sansEmail = JSON.parse(readFileSync(manifeste.path, 'utf8'))
+  delete sansEmail.authEmail
+  const manifesteSansEmail = ecrireJson('evidence-without-email-proof.json', sansEmail)
+  const source = configurationValide({
+    SIKALOC_TEST_BACKUP_MANIFEST: manifesteSansEmail.path,
+    SIKALOC_TEST_CRON_SECRET: 'secret-cron-test',
+    SIKALOC_TEST_FEDAPAY_PUBLIC_KEY: 'pk_sandbox_test',
+    SIKALOC_TEST_FEDAPAY_SECRET_KEY: 'sk_sandbox_test',
+    SIKALOC_TEST_FEDAPAY_WEBHOOK_SECRET: 'webhook-sandbox-test',
+  })
+
+  const environnement = construireEnvironnementRecette(source, [], { mode: 'otp-initial' })
+  assert.equal(environnement.SIKALOC_TEST_RECETTE_MODE, 'otp-initial')
+  assert.equal(environnement.CRON_SECRET, '')
+  assert.equal(environnement.FEDAPAY_PUBLIC_KEY, '')
+  assert.equal(environnement.FEDAPAY_SECRET_KEY, '')
+  assert.equal(environnement.FEDAPAY_WEBHOOK_SECRET, '')
+  assert.equal(environnement.RESEND_API_KEY, '')
+  assert.equal(environnement.NEXT_PUBLIC_EMAIL_OTP_LENGTH, '8')
+  assert.throws(
+    () => construireEnvironnementRecette(source),
+    /Preuve email Auth : chemin manquant/,
+  )
+  assert.throws(
+    () => construireEnvironnementRecette(source, [], { mode: 'deployment' }),
+    /Mode de recette inconnu/,
+  )
+  const sansSauvegarde = { ...source }
+  delete sansSauvegarde.SIKALOC_TEST_BACKUP_MANIFEST
+  assert.throws(
+    () => construireEnvironnementRecette(sansSauvegarde, [], { mode: 'otp-initial' }),
+    /Manifeste de sauvegarde/,
   )
 })
 

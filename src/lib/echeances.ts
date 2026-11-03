@@ -50,13 +50,49 @@ export const TON_ETAT: Record<EtatEcheance, 'positif' | 'negatif' | 'neutre' | '
  */
 export function echeancesADeclarer(echeances: Echeance[]): Echeance[] {
   return echeances
-    .filter((e) => e.anterieure && e.etat !== 'Réglé')
+    .filter(
+      (e) =>
+        e.anterieure &&
+        e.etat !== 'Réglé' &&
+        typeof e.montant_exigible === 'number' &&
+        Number.isFinite(e.montant_exigible) &&
+        typeof e.date_echeance === 'string' &&
+        e.date_echeance.length > 0,
+    )
     .sort((a, b) => a.periode_debut.localeCompare(b.periode_debut))
 }
 
-/** Y a-t-il quelque chose à demander au bailleur ? */
-export function historiqueNecessaire(echeances: Echeance[]): boolean {
-  return echeances.some((e) => e.etat === 'À déterminer')
+/**
+ * Périodes déjà commencées dont le montant ou la date d'exigibilité reste
+ * inconnu. La période sert uniquement à exclure le futur : elle ne prouve ni
+ * une dette ni un retard.
+ */
+export function echeancesIndetermineesAReviser(
+  echeances: Echeance[],
+  dateReference = new Date().toISOString().slice(0, 10),
+): Echeance[] {
+  return echeances
+    .filter(
+      (e) =>
+        e.etat === 'À déterminer' &&
+        (typeof e.montant_exigible !== 'number' ||
+          !Number.isFinite(e.montant_exigible) ||
+          typeof e.date_echeance !== 'string' ||
+          e.date_echeance.length === 0) &&
+        e.periode_debut <= dateReference,
+    )
+    .sort((a, b) => a.periode_debut.localeCompare(b.periode_debut))
+}
+
+/** Y a-t-il une période établie à déclarer ou une période à préciser ? */
+export function historiqueNecessaire(
+  echeances: Echeance[],
+  dateReference = new Date().toISOString().slice(0, 10),
+): boolean {
+  return (
+    echeancesADeclarer(echeances).length > 0 ||
+    echeancesIndetermineesAReviser(echeances, dateReference).length > 0
+  )
 }
 
 /**
