@@ -1,7 +1,7 @@
 'use client'
 
 import { ImageUp, PenLine, RotateCcw } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { SignatureDessin } from '@/components/app/signature-dessin'
 import { SignatureImport } from '@/components/app/signature-import'
@@ -30,13 +30,17 @@ type Mode = 'dessiner' | 'importer'
 export function CaptureSignature({
   nom = 'signature',
   onFichier,
+  restaurerApresEchec = null,
 }: {
   nom?: string
   /** Notifie le parent (utilisé par l'onboarding pour activer son bouton). */
   onFichier?: (fichier: File | null) => void
+  /** Nouvelle réponse d'erreur de l'action : conserve le fichier pour réessayer. */
+  restaurerApresEchec?: unknown
 }) {
   const [mode, setMode] = useState<Mode>('dessiner')
   const [apercu, setApercu] = useState<string | null>(null)
+  const [fichierRetenu, setFichierRetenu] = useState<File | null>(null)
   const [revisionDessin, setRevisionDessin] = useState(0)
 
   const champFichier = useRef<HTMLInputElement>(null)
@@ -52,10 +56,22 @@ export function CaptureSignature({
       }
 
       setApercu(image)
+      setFichierRetenu(fichier)
       onFichier?.(fichier)
     },
     [onFichier],
   )
+
+  // Les formulaires Server Action peuvent réinitialiser leur input fichier
+  // après le retour de l'action. Le canvas et le File restent en mémoire côté
+  // client : on réinjecte le dernier fichier uniquement après une erreur pour
+  // permettre un nouvel essai sans refaire le dessin.
+  useEffect(() => {
+    if (!restaurerApresEchec || !fichierRetenu || !champFichier.current) return
+    const transfert = new DataTransfer()
+    transfert.items.add(fichierRetenu)
+    champFichier.current.files = transfert.files
+  }, [fichierRetenu, restaurerApresEchec])
 
   function changerMode(suivant: Mode) {
     if (suivant === mode) return
