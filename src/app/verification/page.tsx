@@ -9,7 +9,7 @@ import {
   FormulaireReprise,
 } from '@/components/verification/formulaires'
 import { ProgressionVerification } from '@/components/verification/progression'
-import { destinationApresConnexion } from '@/lib/roles'
+import { destinationApresVerification } from '@/lib/roles'
 import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { creerClientAdmin } from '@/lib/supabase/admin'
@@ -106,17 +106,21 @@ export default async function PageVerification() {
   // Le profil est lu avec la clé d'administration : `bailleurs` n'accorde au
   // rôle `authenticated` que la lecture de sa propre ligne, ce qui suffirait —
   // mais cette page doit fonctionner même sur un compte que les politiques
-  // futures restreindraient davantage, et elle ne lit que deux colonnes.
+  // futures restreindraient davantage. Elle ne lit que les champs utiles à la
+  // vérification et à l'aiguillage du compte.
   const admin = creerClientAdmin()
   const { data } = await admin
     .from('bailleurs')
-    .select('telephone, telephone_verifie_le, telephone_canal_verification')
+    .select('telephone, telephone_verifie_le, telephone_canal_verification, onboarding_termine')
     .eq('id', user.id)
     .single()
 
   const profil = data as Pick<
     Bailleur,
-    'telephone' | 'telephone_verifie_le' | 'telephone_canal_verification'
+    | 'telephone'
+    | 'telephone_verifie_le'
+    | 'telephone_canal_verification'
+    | 'onboarding_termine'
   > | null
 
   const etat = {
@@ -187,7 +191,10 @@ export default async function PageVerification() {
             href={
               temoinCandidature
                 ? `/find/${temoinCandidature}/candidater`
-                : destinationApresConnexion(await rolesDuCompte())
+                : destinationApresVerification(
+                    await rolesDuCompte(),
+                    profil?.onboarding_termine ?? null,
+                  )
             }
             className="btn btn-primary w-full"
           >

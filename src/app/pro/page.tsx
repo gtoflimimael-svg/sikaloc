@@ -136,7 +136,9 @@ export default async function PagePresentationPro({
 
     if (data) {
       const etat = await etatVerification(data as Bailleur)
-      if (etat.pleinementVerifie) redirect(ESPACE_PRO.tableauDeBord)
+      if (etat.pleinementVerifie) {
+        redirect(data.onboarding_termine ? ESPACE_PRO.tableauDeBord : '/pro/onboarding')
+      }
     }
   }
 
