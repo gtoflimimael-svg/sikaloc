@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { ESPACE_PRO } from '@/lib/roles'
+import type { EtatFormulaire } from '@/lib/validation'
 
 /**
  * Clôture de l'onboarding.
@@ -26,9 +27,11 @@ import { ESPACE_PRO } from '@/lib/roles'
  * : elle crée les trois entités dans une seule transaction, ce qui redeviendra
  * utile si un parcours guidé est proposé plus tard depuis le tableau de bord.
  */
-export async function terminerOnboarding(): Promise<void> {
-  await marquerTermine()
-  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
+export async function terminerOnboarding(
+  _etat: EtatFormulaire,
+  _donnees: FormData,
+): Promise<EtatFormulaire> {
+  return marquerTermineEtRediriger()
 }
 
 /**
@@ -37,21 +40,36 @@ export async function terminerOnboarding(): Promise<void> {
  * Même destination que la clôture normale, didacticiel compris : quelqu'un qui
  * passe l'assistant en a plus besoin, pas moins.
  */
-export async function ignorerOnboarding(): Promise<void> {
-  await marquerTermine()
-  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
+export async function ignorerOnboarding(
+  _etat: EtatFormulaire,
+  _donnees: FormData,
+): Promise<EtatFormulaire> {
+  return marquerTermineEtRediriger()
 }
 
-async function marquerTermine(): Promise<void> {
+async function marquerTermineEtRediriger(): Promise<EtatFormulaire> {
   const bailleur = await bailleurCourant()
-  const supabase = await creerClientServeur()
+  let termine = false
+  try {
+    const supabase = await creerClientServeur()
+    const { data, error } = await supabase
+      .from('bailleurs')
+      .update({ onboarding_termine: true })
+      .eq('id', bailleur.id)
+      .select('onboarding_termine')
+      .single()
 
-  await supabase
-    .from('bailleurs')
-    .update({ onboarding_termine: true })
-    .eq('id', bailleur.id)
+    termine = !error && data?.onboarding_termine === true
+  } catch {
+    termine = false
+  }
+
+  if (!termine) {
+    return { erreur: 'Impossible de terminer la configuration. Réessayez.' }
+  }
 
   revalidatePath('/pro', 'layout')
+  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
 }
 
 /**

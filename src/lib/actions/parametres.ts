@@ -1,10 +1,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
+import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
+import { ESPACE_PRO } from '@/lib/roles'
 import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
+import type { Bailleur } from '@/lib/types/database'
 import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
 import {
   erreursChamps,
@@ -86,6 +90,72 @@ export async function televerserSignature(
   _etat: EtatFormulaire,
   donnees: FormData,
 ): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
+
+  const resultat = await enregistrerSignaturePourBailleur(acces.bailleur, donnees)
+  if (resultat.erreur) return resultat
+
+  revalidatePath('/pro/parametres')
+  return resultat
+}
+
+/**
+ * Enregistre la signature pendant l'onboarding puis clôture celui-ci.
+ *
+ * Le garde métier habituel impose que l'onboarding soit déjà terminé. Ici,
+ * on garde l'authentification, l'identité et les droits d'écriture, mais on ne
+ * pose pas cette condition avant l'action qui doit précisément la satisfaire.
+ */
+export async function televerserSignatureOnboarding(
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const bailleur = await bailleurCourant()
+  if (!droits(bailleur).peutEcrire) {
+    return { erreur: MESSAGE_ECRITURE_BLOQUEE }
+  }
+
+  const resultat = await enregistrerSignaturePourBailleur(bailleur, donnees)
+  if (resultat.erreur) {
+    // Si le fichier a été persisté mais que la finalisation échoue ensuite,
+    // l'écran relit le profil et permet de terminer sans renvoyer la signature.
+    revalidatePath('/pro/onboarding')
+    return resultat
+  }
+
+  let onboardingTermine = false
+  try {
+    const supabase = await creerClientServeur()
+    const { data: profil, error } = await supabase
+      .from('bailleurs')
+      .update({ onboarding_termine: true })
+      .eq('id', bailleur.id)
+      .select('onboarding_termine')
+      .single()
+
+    onboardingTermine = !error && profil?.onboarding_termine === true
+  } catch {
+    onboardingTermine = false
+  }
+
+  if (!onboardingTermine) {
+    revalidatePath('/pro/onboarding')
+    return {
+      erreur:
+        'Votre signature est enregistrée, mais la configuration n’a pas pu être terminée. ' +
+        'Actualisez la page puis choisissez « Voir mon tableau de bord ».',
+    }
+  }
+
+  revalidatePath('/pro', 'layout')
+  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
+}
+
+async function enregistrerSignaturePourBailleur(
+  bailleur: Bailleur,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
   const fichier = donnees.get('signature')
 
   if (!(fichier instanceof File) || fichier.size === 0) {
@@ -100,7 +170,12 @@ export async function televerserSignature(
   // champ n'est qu'une chaîne envoyée par le client, au même titre que le nom du
   // fichier. C'est aussi lui qui décidera de l'extension et du `contentType`
   // enregistrés, pour qu'aucune valeur d'origine cliente ne subsiste.
-  const format = await reconnaitreFormat(fichier)
+  let format: Awaited<ReturnType<typeof reconnaitreFormat>>
+  try {
+    format = await reconnaitreFormat(fichier)
+  } catch {
+    return { erreur: 'L’image n’a pas pu être lue. Gardez votre tracé et réessayez.' }
+  }
 
   if (!format) {
     return { erreur: 'Formats acceptés : PNG, JPEG ou WebP.' }
@@ -108,35 +183,53 @@ export async function televerserSignature(
 
   const { type: typeReel, extension } = DESCRIPTION_FORMAT[format]
 
-  const acces = await bailleurAvecEcriture()
-  if (!acces.ok) return acces.etat
-  const bailleur = acces.bailleur
-  const supabase = await creerClientServeur()
-
   const chemin = `${bailleur.id}/signature.${extension}`
+  try {
+    const supabase = await creerClientServeur()
+    const { error: erreurUpload } = await supabase.storage
+      .from('signatures')
+      .upload(chemin, fichier, { contentType: typeReel, upsert: true })
 
-  const { error: erreurUpload } = await supabase.storage
-    .from('signatures')
-    .upload(chemin, fichier, { contentType: typeReel, upsert: true })
-
-  if (erreurUpload) return { erreur: `Téléversement impossible : ${erreurUpload.message}` }
-
-  const { error } = await supabase.rpc('definir_signature_bailleur', { p_chemin: chemin })
-
-  if (error) {
-    if (bailleur.signature_chemin !== chemin) {
-      await supabase.storage.from('signatures').remove([chemin])
+    if (erreurUpload) {
+      return { erreur: 'Le téléversement a échoué. Gardez votre tracé et réessayez.' }
     }
-    return { erreur: `Enregistrement impossible : ${error.message}` }
-  }
 
-  // Un changement d'extension laisserait l'ancien fichier derrière lui.
-  if (bailleur.signature_chemin && bailleur.signature_chemin !== chemin) {
-    await supabase.storage.from('signatures').remove([bailleur.signature_chemin])
-  }
+    const { error: erreurRpc } = await supabase.rpc('definir_signature_bailleur', {
+      p_chemin: chemin,
+    })
 
-  revalidatePath('/pro/parametres')
-  return { succes: 'Signature enregistrée. Elle apparaîtra sur vos prochaines quittances.' }
+    if (erreurRpc) {
+      if (bailleur.signature_chemin !== chemin) {
+        await supabase.storage.from('signatures').remove([chemin])
+      }
+      return { erreur: 'La signature n’a pas pu être enregistrée. Gardez votre tracé et réessayez.' }
+    }
+
+    // Confirmer la référence persistée du compte authentifié avant d'annoncer
+    // la réussite ou de clôturer l'onboarding.
+    const { data: profil, error: erreurLecture } = await supabase
+      .from('bailleurs')
+      .select('signature_chemin')
+      .eq('id', bailleur.id)
+      .single()
+
+    if (erreurLecture || profil?.signature_chemin !== chemin) {
+      return {
+        erreur:
+          'Le fichier a été transmis, mais sa sauvegarde n’a pas pu être confirmée. ' +
+          'Actualisez la page avant de réessayer.',
+      }
+    }
+
+    // Un changement d'extension laisserait l'ancien fichier derrière lui.
+    if (bailleur.signature_chemin && bailleur.signature_chemin !== chemin) {
+      await supabase.storage.from('signatures').remove([bailleur.signature_chemin])
+    }
+
+    return { succes: 'Signature enregistrée. Elle apparaîtra sur vos prochaines quittances.' }
+  } catch {
+    return { erreur: 'Une erreur réseau a interrompu l’enregistrement. Gardez votre tracé et réessayez.' }
+  }
 }
 
 export async function supprimerSignature(): Promise<EtatFormulaire> {

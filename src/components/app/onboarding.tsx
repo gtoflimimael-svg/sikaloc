@@ -6,7 +6,7 @@ import styles from './onboarding.module.css'
 import { CaptureSignature } from '@/components/app/capture-signature'
 import { Alerte } from '@/components/ui/retours'
 import { ignorerOnboarding, terminerOnboarding } from '@/lib/actions/onboarding'
-import { televerserSignature } from '@/lib/actions/parametres'
+import { televerserSignatureOnboarding } from '@/lib/actions/parametres'
 import type { EtatFormulaire } from '@/lib/validation'
 import { formaterTelephone } from '@/lib/telephone'
 
@@ -54,6 +54,7 @@ export function AssistantOnboarding({
   signatureExistante: boolean
 }) {
   const [etape, setEtape] = useState<Etape>(1)
+  const [etatIgnorer, actionIgnorer] = useActionState(ignorerOnboarding, ETAT_INITIAL)
   const titre = useRef<HTMLHeadingElement>(null)
   const premiereEtape = useRef(true)
   useEffect(() => {
@@ -97,12 +98,13 @@ export function AssistantOnboarding({
             <button type="button" onClick={() => setEtape(2)} className="btn btn-primary">
               Continuer
             </button>
-            <form action={ignorerOnboarding}>
+            <form action={actionIgnorer}>
               <button type="submit" className="btn btn-secondary">
                 Aller directement au tableau de bord
               </button>
             </form>
           </div>
+          {etatIgnorer.erreur ? <Alerte ton="erreur">{etatIgnorer.erreur}</Alerte> : null}
         </div>
       ) : null}
 
@@ -124,14 +126,11 @@ function EtapeSignature({
   dejaEnregistree: boolean
   onRetour: () => void
 }) {
-  const [etat, action] = useActionState(televerserSignature, ETAT_INITIAL)
+  const [etat, action] = useActionState(televerserSignatureOnboarding, ETAT_INITIAL)
+  const [etatFinalisation, actionFinalisation] = useActionState(terminerOnboarding, ETAT_INITIAL)
 
-  // Déduit plutôt que mémorisé dans un état : une signature est enregistrée si
-  // elle l'était déjà, ou si l'action vient de réussir. Un `useState` synchronisé
-  // par un effet dirait la même chose avec un rendu de retard.
-  //
-  // La sortie de l'assistant reste une action distincte : on ne redirige pas de
-  // force, le bailleur voit que c'est enregistré puis décide de continuer.
+  // Une signature déjà persistée permet de reprendre la finalisation si le
+  // réseau s'est interrompu entre sa sauvegarde et la mise à jour du profil.
   const enregistree = dejaEnregistree || Boolean(etat.succes)
 
   return (
@@ -144,11 +143,12 @@ function EtapeSignature({
 
       <form action={action} className={`${styles.signature} space-y-lg`}>
         {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
-        <CaptureSignature />
+        <CaptureSignature restaurerApresEchec={etat.erreur ? etat : null} />
       </form>
 
       <div className={styles.actions}>
-        <form action={terminerOnboarding}>
+        <form action={actionFinalisation}>
+          {etatFinalisation.erreur ? <Alerte ton="erreur">{etatFinalisation.erreur}</Alerte> : null}
           <button type="submit" className="btn btn-primary">
             {enregistree ? 'Voir mon tableau de bord' : 'Je la mettrai plus tard'}
           </button>
