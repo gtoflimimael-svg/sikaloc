@@ -1,27 +1,26 @@
 /**
  * Le segment `/pro`, qui n'est plus entièrement privé.
  *
- * ─── Ce que ce layout gardait, et pourquoi il ne le garde plus ──────────────
+ * ─── Pourquoi ce layout ne pose pas de garde ───────────────────────────────
  *
- * Il appelait `bailleurCourant()`, ce qui protégeait d'un seul geste tout ce
- * qui vit sous `/pro`. C'était juste tant que `/pro` était le tableau de bord.
+ * Une garde ici protégerait d'un seul geste tout ce qui vit sous `/pro`. Ce
+ * serait incorrect : `/pro` est aussi la page de présentation de Sikaloc_Pro,
+ * destinée aux visiteurs sans compte.
  *
- * Ça ne l'est plus : `/pro` est la page de présentation de Sikaloc_Pro
- * (`src/app/pro/page.tsx`), qui s'adresse à quelqu'un qui n'a pas de compte.
- * Une garde posée ici la rendrait inatteignable pour son seul public —
- * exactement la faute déjà commise sur le lien d'invitation du locataire.
+ * Une garde posée ici rendrait cette présentation inatteignable pour son seul
+ * public — exactement la faute déjà commise sur le lien d'invitation du
+ * locataire.
  *
- * ─── Où la protection est passée : nulle part, elle y était déjà ────────────
+ * ─── Où se trouve la protection ────────────────────────────────────────────
  *
- * Aucune garde n'a été déplacée, parce qu'aucune n'a été perdue. Les deux
- * sous-arbres de `/pro` portaient déjà la leur, et la portent encore :
+ * Le shell privé porte sa garde avant d'afficher l'application ou le guide :
  *
- *     (shell)/layout.tsx      `bailleurCourant()` — toute l'application
+ *     (shell)/layout.tsx      `bailleurOnboarde()` — toute l'application
  *     onboarding/page.tsx     `bailleurCourant()` — l'écran d'installation
  *
- * S'y ajoute, sur chaque page, le `bailleurOnboarde()` qui exige en plus un
- * onboarding terminé. La garde retirée ici était un troisième tour de clé sur
- * une porte qui en avait déjà deux.
+ * Les pages opérationnelles conservent aussi `bailleurOnboarde()` comme
+ * défense en profondeur. L'onboarding reste hors du shell et peut donc être
+ * affiché aux comptes qui n'ont pas encore terminé leur installation.
  *
  * ─── Ce layout subsiste-t-il pour rien ? ────────────────────────────────────
  *

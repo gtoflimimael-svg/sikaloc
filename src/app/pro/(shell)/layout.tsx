@@ -7,7 +7,7 @@ import { BarreLaterale, ContextePro, EnTeteMobile } from '@/components/app/navig
 import { VisiteGuidee } from '@/components/app/visite-guidee'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { abonnementActif } from '@/lib/plan'
-import { bailleurCourant } from '@/lib/session'
+import { bailleurOnboarde } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -40,28 +40,28 @@ export default async function LayoutApplication({
 }: {
   children: React.ReactNode
 }) {
+  // La garde doit précéder la production du shell et du guide interactif.
+  // Une garde limitée à la page du tableau de bord peut arriver après qu'un
+  // layout parent a déjà été diffusé, laissant apparaître le dashboard avant
+  // la redirection vers l'onboarding.
+  const bailleur = await bailleurOnboarde()
   const supabase = await creerClientServeur()
 
-  // Le profil est d'abord résolu afin de borner explicitement les compteurs à
-  // ce bailleur. `head: true` ne rapatrie aucune ligne : seul le total voyage.
-  const [bailleur, { count }] = await Promise.all([
-    bailleurCourant(),
-    supabase.from('v_impayes').select('bail_id', { count: 'exact', head: true }),
-  ])
-
-  const impayes = count ?? 0
-
-  // La progression n'est lue que tant que la visite peut encore servir. Pour un
-  // bailleur qui l'a terminée — le cas de tous les jours — ce layout, qui
-  // enveloppe CHAQUE page, ne paie aucune requête supplémentaire.
+  // La progression n'est lue que tant que la visite peut encore servir. Les
+  // deux lectures sont parallèles, mais seulement après validation de l'accès.
   const visiteClose = Boolean(bailleur.tutoriel_vu_le)
-  const { data: progression } = visiteClose
+  const lectureProgression = visiteClose
     ? { data: null }
-    : await supabase
+    : supabase
         .from('v_progression_visite')
         .select('*')
         .eq('bailleur_id', bailleur.id)
         .maybeSingle()
+  const [{ count }, { data: progression }] = await Promise.all([
+    supabase.from('v_impayes').select('bail_id', { count: 'exact', head: true }),
+    lectureProgression,
+  ])
+  const impayes = count ?? 0
 
   const parcours = progression
     ? avancement(progression, {
