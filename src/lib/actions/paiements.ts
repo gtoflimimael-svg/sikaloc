@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { debutDeMois } from '@/lib/format'
-import { empreinte, genererEtStocker } from '@/lib/quittance'
+import { empreinte, genererEtStocker, SignatureQuittanceRequiseError } from '@/lib/quittance'
 import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -61,7 +61,8 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
     // Le générateur authentifie lui-même l'appelant; la RPC valide et autorise
     // avant tout effet PDF/Storage. Aucune opération lancée en parallèle.
     quittance = await genererEtStocker(id, true)
-  } catch {
+  } catch (erreur) {
+    if (erreur instanceof SignatureQuittanceRequiseError) return { signatureRequise: true }
     return { erreur: 'Validation ou émission impossible. Le paiement peut déjà être validé : consultez sa fiche puis relancez la génération si nécessaire.' }
   }
 
@@ -92,6 +93,7 @@ export async function regenererQuittance(paiementId: string): Promise<EtatFormul
     redirect(`/pro/quittances/${quittance.id}`)
   } catch (erreur) {
     if (erreur instanceof Error && erreur.message === 'NEXT_REDIRECT') throw erreur
+    if (erreur instanceof SignatureQuittanceRequiseError) return { signatureRequise: true }
     return {
       erreur:
         erreur instanceof Error

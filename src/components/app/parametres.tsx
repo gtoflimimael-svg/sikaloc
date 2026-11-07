@@ -91,7 +91,7 @@ export function FormulaireSignature({ signatureExistante }: { signatureExistante
         {etat.erreur ? <Alerte ton="erreur">{etat.erreur}</Alerte> : null}
         {etat.succes ? <Alerte ton="succes">{etat.succes}</Alerte> : null}
 
-        <CaptureSignature />
+        <CaptureSignature restaurerApresEchec={etat.erreur ? etat : null} />
       </form>
 
       {/*
@@ -100,8 +100,8 @@ export function FormulaireSignature({ signatureExistante }: { signatureExistante
         croire qu'il peut les corriger en changeant de signature.
       */}
       <p className="text-caption leading-relaxed text-mute">
-        Modifier votre signature ne change rien aux documents déjà émis : chacun
-        conserve la signature qui y a été apposée.
+        Une nouvelle quittance utilise la signature enregistrée au moment de sa
+        génération. Modifier votre signature ne change jamais les documents déjà émis.
       </p>
 
       {signatureExistante ? (

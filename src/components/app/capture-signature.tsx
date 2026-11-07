@@ -29,14 +29,20 @@ type Mode = 'dessiner' | 'importer'
  */
 export function CaptureSignature({
   nom = 'signature',
+  libelleEnregistrement = 'Enregistrer cette signature',
   onFichier,
   restaurerApresEchec = null,
+  compact = false,
 }: {
   nom?: string
+  /** Libellé adapté au contexte (paramètres ou reprise d'une quittance). */
+  libelleEnregistrement?: string
   /** Notifie le parent (utilisé par l'onboarding pour activer son bouton). */
   onFichier?: (fichier: File | null) => void
   /** Nouvelle réponse d'erreur de l'action : conserve le fichier pour réessayer. */
   restaurerApresEchec?: unknown
+  /** Réduit les espacements uniquement dans les parcours de signature intégrés. */
+  compact?: boolean
 }) {
   const [mode, setMode] = useState<Mode>('dessiner')
   const [apercu, setApercu] = useState<string | null>(null)
@@ -87,7 +93,7 @@ export function CaptureSignature({
   }
 
   return (
-    <div className="space-y-lg">
+    <div className={compact ? 'space-y-md' : 'space-y-lg'}>
       {/* Le champ réellement posté — jamais visible. */}
       <input
         ref={champFichier}
@@ -98,7 +104,11 @@ export function CaptureSignature({
         tabIndex={-1}
       />
 
-      <div role="group" aria-label="Méthode de signature" className="flex gap-xs">
+      <div
+        role="group"
+        aria-label="Méthode de signature"
+        className={`flex gap-xs ${compact ? 'flex-wrap' : ''}`}
+      >
         <BoutonMode
           actif={mode === 'dessiner'}
           onClick={() => changerMode('dessiner')}
@@ -123,20 +133,20 @@ export function CaptureSignature({
 
       {/* ── Aperçu et validation ───────────────────────────────────────────── */}
       {apercu ? (
-        <div className="anim-monte space-y-md border-t border-hairline pt-lg">
+        <div className={`anim-monte border-t border-hairline ${compact ? 'space-y-sm pt-md' : 'space-y-md pt-lg'}`}>
           <p className="field-label">Aperçu — tel qu’il apparaîtra sur vos quittances</p>
-          <div className="flex min-h-[7rem] items-center justify-center rounded-lg border border-hairline bg-white p-lg">
+          <div className={`flex items-center justify-center rounded-lg border border-hairline bg-white ${compact ? 'min-h-[5rem] p-md' : 'min-h-[7rem] p-lg'}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={apercu}
               alt="Aperçu de votre signature"
-              className="max-h-[9rem] w-auto max-w-full"
+              className={`${compact ? 'max-h-[7rem]' : 'max-h-[9rem]'} w-auto max-w-full`}
             />
           </div>
 
-          <div className="flex flex-wrap gap-md">
+          <div className={`flex flex-wrap ${compact ? 'gap-sm' : 'gap-md'}`}>
             <BoutonSoumettre libelleEnCours="Enregistrement…">
-              Enregistrer cette signature
+              {libelleEnregistrement}
             </BoutonSoumettre>
             <button
               type="button"

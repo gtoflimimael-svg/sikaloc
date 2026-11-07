@@ -21,7 +21,7 @@ import type {
   Quittance,
   TypePaiement,
 } from '@/lib/types/database'
-import { typeDocumentPaiement } from '@/lib/documents-paiement'
+import { apercuDocumentPaiement, typeDocumentPaiement } from '@/lib/documents-paiement'
 import { reconnaitreFormat } from '@/lib/signature/fichier'
 import type { EtatSignaturePdf } from '@/lib/pdf/document-quittance'
 
@@ -84,6 +84,14 @@ async function chargerSignature(chemin: string | null): Promise<SignatureChargee
   }
 }
 
+/**
+ * Résultat privé pour les routes d'étape : une référence de profil seule ne
+ * suffit pas, le fichier doit être présent et lisible dans le bucket privé.
+ */
+export async function signatureBailleurDisponible(chemin: string | null): Promise<boolean> {
+  return (await chargerSignature(chemin)).etat === 'apposee'
+}
+
 /** Les données du rendu proviennent d'une lecture SQL autorisée et cohérente. */
 interface ContexteQuittance {
   paiement: Paiement
@@ -117,6 +125,13 @@ function estPartielSnapshot(
 
 export const REFUS_QUITTANCE = 'Opération impossible ou non autorisée.'
 
+export class SignatureQuittanceRequiseError extends Error {
+  constructor() {
+    super('SIGNATURE_QUITTANCE_REQUISE')
+    this.name = 'SignatureQuittanceRequiseError'
+  }
+}
+
 async function identiteServeur(): Promise<string> {
   const client = await creerClientServeur()
   const { data: { user }, error } = await client.auth.getUser()
@@ -147,6 +162,10 @@ async function donneesDuContexte(
   ])
   const typePaiement = finances?.type_paiement ?? paiement.type_paiement
   const estPartiel = estPartielSnapshot(finances, paiement.est_partiel)
+  const typeDocument = typeDocumentPaiement(typePaiement, estPartiel)
+  if (typeDocument === 'Quittance' && signatureBailleur.etat !== 'apposee') {
+    throw new SignatureQuittanceRequiseError()
+  }
   const loyerMensuel = typePaiement === 'Loyer'
     ? typeof finances?.loyer_mensuel === 'number' ? finances.loyer_mensuel : null
     : 0
@@ -224,7 +243,7 @@ async function donneesDuContexte(
   return {
     modeDocument: 'reel',
     numeroDocument: options.numeroDocument ?? '',
-    type: typeDocumentPaiement(typePaiement, montantExigible === null ? null : estPartiel),
+    type: typeDocument,
     dateGeneration: options.dateGeneration ?? new Date().toISOString(),
     pays: logement.pays ?? 'Bénin',
     bailleurNom: bailleur.nom, bailleurTelephone: bailleur.telephone,
@@ -273,7 +292,8 @@ export async function rassemblerDonnees(
       numeroDocument: options.numeroDocument ?? document.quittance.numero_document ?? '',
       dateGeneration: options.dateGeneration ?? document.quittance.date_generation,
     })
-  } catch {
+  } catch (erreur) {
+    if (erreur instanceof SignatureQuittanceRequiseError) throw erreur
     return null
   }
 }
@@ -301,6 +321,82 @@ export interface QuittanceGeneree {
 }
 
 /**
+ * Précontrôle en lecture seule avant la RPC qui peut valider un paiement.
+ * Sans lui, une signature absente ne serait détectée qu'après la RPC et un
+ * paiement brouillon pourrait déjà être passé à « Validé ».
+ *
+ * Le type documentaire est calculé avec la même vue et la même règle que la
+ * confirmation. Les reçus ne sont donc pas bloqués par l'absence de signature.
+ */
+async function verifierSignatureAvantPreparation({
+  paiementId,
+  acteur,
+  bailleur,
+  valider,
+}: {
+  paiementId: string
+  acteur: string
+  bailleur: Bailleur
+  valider: boolean
+}): Promise<void> {
+  const client = await creerClientServeur()
+  const { data: paiement, error: erreurPaiement } = await client
+    .from('paiements')
+    .select('id,bailleur_id,bail_id,montant,periode_debut,type_paiement,statut')
+    .eq('id', paiementId)
+    .eq('bailleur_id', acteur)
+    .maybeSingle()
+
+  if (erreurPaiement || !paiement || paiement.bailleur_id !== acteur) {
+    throw new Error(REFUS_QUITTANCE)
+  }
+  if (paiement.type_paiement !== 'Loyer') return
+  if (!valider && paiement.statut !== 'Validé') return
+
+  // Une confirmation répétée d'un paiement déjà émis reste idempotente : la
+  // RPC décidera si le document existant correspond toujours à ce paiement.
+  if (valider && paiement.statut === 'Validé') {
+    const { data: existante, error: erreurQuittance } = await client
+      .from('quittances')
+      .select('pdf_chemin,hash_sha256')
+      .eq('paiement_id', paiementId)
+      .eq('bailleur_id', acteur)
+      .maybeSingle()
+    if (erreurQuittance) throw new Error(REFUS_QUITTANCE)
+    if (existante?.pdf_chemin && existante.hash_sha256) return
+  }
+
+  const { data: echeance, error: erreurEcheance } = await client
+    .from('v_echeances')
+    .select('montant_exigible,montant_paye')
+    .eq('bail_id', paiement.bail_id)
+    .eq('periode_debut', paiement.periode_debut)
+    .maybeSingle()
+
+  if (erreurEcheance) throw new Error(REFUS_QUITTANCE)
+
+  const loyerApplicable = typeof echeance?.montant_exigible === 'number'
+    ? Number(echeance.montant_exigible)
+    : null
+  const montantPaye = echeance ? Number(echeance.montant_paye) : null
+  const cumulValideAvant = montantPaye === null
+    ? null
+    : montantPaye - (paiement.statut === 'Validé' ? Number(paiement.montant) : 0)
+  const apercu = apercuDocumentPaiement({
+    typePaiement: paiement.type_paiement,
+    montant: Number(paiement.montant),
+    loyerApplicable,
+    cumulValideAvant,
+  })
+
+  if (!apercu.typeDocument) throw new Error(REFUS_QUITTANCE)
+  if (apercu.typeDocument !== 'Quittance') return
+
+  const signature = await chargerSignature(bailleur.signature_chemin)
+  if (signature.etat !== 'apposee') throw new SignatureQuittanceRequiseError()
+}
+
+/**
  * Autorisation/validation atomiques, rendu d'un instantané, puis publication
  * conditionnelle. Aucun écrasement Storage : chaque émission a son propre jeton.
  * Une correction concurrente ou une autre émission invalide la publication.
@@ -313,10 +409,19 @@ export async function genererEtStocker(
   if (!UUID.test(paiementId)) throw new Error(REFUS_QUITTANCE)
   const acces = await bailleurAvecEcriture()
   if (!acces.ok || acces.bailleur.id !== acteur) throw new Error(REFUS_QUITTANCE)
+  await verifierSignatureAvantPreparation({
+    paiementId,
+    acteur,
+    bailleur: acces.bailleur,
+    valider,
+  })
   const admin = creerClientAdmin()
   const { data, error } = await admin.rpc('preparer_emission_quittance', {
     p_acteur: acteur, p_paiement: paiementId, p_valider: valider,
   })
+  if (error?.message.includes('SIGNATURE_QUITTANCE_REQUISE')) {
+    throw new SignatureQuittanceRequiseError()
+  }
   if (error || !data) throw new Error(REFUS_QUITTANCE)
   const emission = data as unknown as {
     jeton: string; contexte: ContexteQuittance; quittance: DocumentAutorise['quittance'];
@@ -375,7 +480,7 @@ export async function genererEtStocker(
           : estPartielSnapshot(contexte.finances, contexte.paiement.est_partiel),
       ),
     }
-  } catch {
+  } catch (erreur) {
     if (!publicationCommencee) {
       // Uniquement les objets de CETTE tentative; jamais un document antérieur.
       await admin.storage.from('quittances').remove([chemin]).catch(() => undefined)
@@ -384,6 +489,7 @@ export async function genererEtStocker(
         p_acteur: acteur, p_paiement: paiementId, p_jeton: jeton,
       }).then(() => undefined, () => undefined)
     }
+    if (erreur instanceof SignatureQuittanceRequiseError) throw erreur
     throw new Error(REFUS_QUITTANCE)
   }
 }

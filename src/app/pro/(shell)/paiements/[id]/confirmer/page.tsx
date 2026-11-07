@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
 import { BoutonAction, GroupeActions } from '@/components/ui/action-confirmee'
+import { GenererDocumentPaiement } from '@/components/app/generer-document-paiement'
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { supprimerPaiement, validerPaiement } from '@/lib/actions/paiements'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
@@ -185,8 +186,9 @@ export default async function PageConfirmationPaiement({
       </div>
 
       <GroupeActions>
-        <BoutonAction
+        <GenererDocumentPaiement
           action={validerPaiement.bind(null, id)}
+          signatureHref={`/pro/paiements/${id}/confirmer/signature?operation=valider`}
           libelle={paiementDejaValide ? 'Générer le document' : 'Confirmer et générer le document'}
           libelleEnCours="Génération…"
         />

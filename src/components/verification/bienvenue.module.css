@@ -1,0 +1,85 @@
+.page {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(ellipse at 50% 28%, color-mix(in srgb, var(--color-positive-pale) 65%, transparent), transparent 42%),
+    var(--color-canvas);
+}
+
+.card {
+  width: min(100%, 34rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--color-hairline);
+  border-radius: 1.25rem;
+  padding: clamp(1.5rem, 7vw, 3.25rem) clamp(1.25rem, 6vw, 3rem);
+  background: var(--color-canvas);
+  box-shadow: 0 24px 72px rgb(21 50 37 / 8%);
+}
+
+.logo {
+  margin-bottom: clamp(2.5rem, 8vw, 3.75rem);
+}
+
+.check {
+  width: 5.25rem;
+  height: 5.25rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-positive) 30%, transparent);
+  border-radius: 50%;
+  color: var(--color-positive-deep);
+  background: var(--color-positive-pale);
+  animation: confirmation 520ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.title {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.description {
+  max-width: 34ch;
+  margin: 1rem 0 0;
+  color: var(--color-body);
+  font-family: var(--font-sans), var(--font-inter), sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.progression {
+  margin: 2rem 0 0;
+  color: var(--color-ink-deep);
+  font-family: var(--font-sans), var(--font-inter), sans-serif;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+.recovery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+@keyframes confirmation {
+  from { opacity: 0; transform: scale(.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check { animation: none; }
+}

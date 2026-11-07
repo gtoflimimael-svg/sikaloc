@@ -12,6 +12,10 @@ const ContexteActions = createContext<{
   liberer: () => void
 } | null>(null)
 
+export function useVerrouGroupeActions() {
+  return useContext(ContexteActions)
+}
+
 /** Des commandes alternatives ne doivent pas partir simultanément. */
 export function GroupeActions({ children }: { children: ReactNode }) {
   const verrou = useRef(false)

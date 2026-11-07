@@ -128,23 +128,8 @@ export function destinationApresConnexion(roles: Roles): string {
   return '/entrer'
 }
 
-/**
- * Destination après la vérification du compte, quand le statut d'onboarding
- * du profil Pro est déjà connu côté serveur.
- *
- * Le choix d'espace reste prioritaire pour les comptes à plusieurs rôles.
- * Pour un bailleur seul, une intégration incomplète ne passe jamais par le
- * tableau de bord ; si le statut n'a pas pu être lu, le garde du shell reste
- * l'autorité et bloque tout rendu prématuré.
- */
-export function destinationApresVerification(
-  roles: Roles,
-  onboardingTermine: boolean | null,
-): string {
-  if (roles.estBailleur && !roles.estLocataire && onboardingTermine === false) {
-    return '/pro/onboarding'
-  }
-
+/** Après vérification, l'onboarding n'est plus une condition d'accès. */
+export function destinationApresVerification(roles: Roles): string {
   return destinationApresConnexion(roles)
 }
 

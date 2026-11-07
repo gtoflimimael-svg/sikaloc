@@ -140,7 +140,11 @@ export function VisiteGuidee({
    * choses différentes.
    */
   const rejeuDemande = useSearchParams().get('visite') === '1'
-  const doitOuvrir = ouvertAuDemarrage || rejeuDemande
+  // L'ouverture initiale appartient au dashboard chargé, jamais à une page
+  // intermédiaire d'authentification ou à un autre écran Pro. Une visite déjà
+  // ouverte reste ensuite montée pendant les premières opérations.
+  const doitOuvrir = chemin === '/pro/tableau-de-bord'
+    && (ouvertAuDemarrage || rejeuDemande)
 
   // `createPortal` exige `document`, absent au rendu serveur.
   // eslint-disable-next-line react-hooks/set-state-in-effect

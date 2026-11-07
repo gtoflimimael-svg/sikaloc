@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { FenetreCorrection } from '@/components/app/fenetre-correction'
+import { GenererDocumentPaiement } from '@/components/app/generer-document-paiement'
 import { BoutonAction } from '@/components/ui/action-confirmee'
 import { Alerte, Badge } from '@/components/ui/retours'
 import { BlocSigne } from '@/components/app/bloc-signe'
@@ -178,8 +179,9 @@ export default async function PageQuittance({
             d’origine.
           </p>
         ) : (
-          <BoutonAction
+          <GenererDocumentPaiement
             action={regenererQuittance.bind(null, paiement.id)}
+            signatureHref={`/pro/paiements/${paiement.id}/confirmer/signature?operation=regenerer&origine=quittance`}
             libelle="Générer le document"
             libelleEnCours="Génération…"
           />
@@ -316,12 +318,12 @@ export default async function PageQuittance({
               {formaterHorodatage(quittance.date_generation)}.
             </p>
 
-            {!bailleur.signature_chemin ? (
+            {!bailleur.signature_chemin && quittance.type === 'Quittance' ? (
               <p className="text-caption text-warning-content">
-                Aucune signature enregistrée : le document sort avec un cadre de
-                signature vide.{' '}
+                Aucune signature actuelle n&apos;est enregistrée. Les documents
+                déjà émis conservent leur contenu d&apos;origine.{' '}
                 <Link href="/pro/parametres/signature" className="underline">
-                  Ajouter ma signature
+                  Gérer ma signature
                 </Link>
               </p>
             ) : null}
