@@ -34,8 +34,8 @@ export default async function PageSignature() {
           </Alerte>
         ) : (
           <Alerte ton="attention">
-            Aucune signature enregistrée : vos quittances sortent avec un cadre de
-            signature vide.
+            Une signature est requise pour générer une nouvelle quittance de loyer.
+            Vous pouvez l&apos;enregistrer maintenant ou plus tard depuis cette page.
           </Alerte>
         )}
 

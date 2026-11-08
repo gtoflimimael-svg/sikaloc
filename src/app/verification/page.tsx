@@ -1,6 +1,6 @@
-import { CheckCircle2 } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { CarteAuth } from '@/components/auth/carte-auth'
 import {
@@ -111,7 +111,7 @@ export default async function PageVerification() {
   const admin = creerClientAdmin()
   const { data } = await admin
     .from('bailleurs')
-    .select('telephone, telephone_verifie_le, telephone_canal_verification, onboarding_termine')
+    .select('telephone, telephone_verifie_le, telephone_canal_verification')
     .eq('id', user.id)
     .single()
 
@@ -120,7 +120,6 @@ export default async function PageVerification() {
     | 'telephone'
     | 'telephone_verifie_le'
     | 'telephone_canal_verification'
-    | 'onboarding_termine'
   > | null
 
   const etat = {
@@ -153,56 +152,10 @@ export default async function PageVerification() {
 
   // ── Tout est fait ────────────────────────────────────────────────────────
   if (comptePleinementVerifie(etat, { telephoneExigible })) {
-    return (
-      <CarteAuth titre={telephoneExigible ? 'Compte vérifié' : 'Votre compte est prêt'}>
-        <div className="space-y-xl">
-          <div className="flex items-start gap-md rounded-md border border-positive/30 bg-positive-pale p-lg">
-            <CheckCircle2
-              size={20}
-              strokeWidth={2}
-              aria-hidden="true"
-              className="mt-xxs shrink-0 text-positive-deep"
-            />
-            <p className="text-body-sm text-positive-deep">
-              {compteLocataire
-                ? 'Votre adresse email est confirmée. Votre compte est prêt.'
-                : etat.telephoneVerifie
-                  ? 'Votre adresse email et votre numéro de téléphone sont confirmés.'
-                  : 'Votre adresse email est confirmée. Votre compte est prêt ; votre numéro reste non vérifié et ne bloque pas votre accès.'}
-            </p>
-          </div>
-
-          <ProgressionVerification
-            etat={etat}
-            courante={null}
-            telephoneConcerne={telephoneExigible}
-          />
-
-          {/*
-            La destination dépend des rôles : un locataire venu d'une
-            invitation n'a rien à faire dans l'espace du bailleur, et l'y
-            envoyer le ferait rebondir aussitôt.
-
-            Le témoin de candidature passe avant : quelqu'un qui a créé son
-            compte depuis une annonce revient à cette annonce, pas sur un
-            catalogue où il devrait la retrouver.
-          */}
-          <Link
-            href={
-              temoinCandidature
-                ? `/find/${temoinCandidature}/candidater`
-                : destinationApresVerification(
-                    await rolesDuCompte(),
-                    profil?.onboarding_termine ?? null,
-                  )
-            }
-            className="btn btn-primary w-full"
-          >
-            {temoinCandidature ? 'Reprendre ma candidature' : 'Accéder à Sikaloc'}
-          </Link>
-        </div>
-      </CarteAuth>
-    )
+    const destination = temoinCandidature
+      ? `/find/${temoinCandidature}/candidater`
+      : destinationApresVerification(await rolesDuCompte())
+    redirect(destination)
   }
 
   // ── Reste le téléphone ───────────────────────────────────────────────────

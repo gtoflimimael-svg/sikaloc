@@ -1,10 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-
-import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
-import { ESPACE_PRO } from '@/lib/roles'
 import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
@@ -98,58 +94,6 @@ export async function televerserSignature(
 
   revalidatePath('/pro/parametres')
   return resultat
-}
-
-/**
- * Enregistre la signature pendant l'onboarding puis clôture celui-ci.
- *
- * Le garde métier habituel impose que l'onboarding soit déjà terminé. Ici,
- * on garde l'authentification, l'identité et les droits d'écriture, mais on ne
- * pose pas cette condition avant l'action qui doit précisément la satisfaire.
- */
-export async function televerserSignatureOnboarding(
-  _etat: EtatFormulaire,
-  donnees: FormData,
-): Promise<EtatFormulaire> {
-  const bailleur = await bailleurCourant()
-  if (!droits(bailleur).peutEcrire) {
-    return { erreur: MESSAGE_ECRITURE_BLOQUEE }
-  }
-
-  const resultat = await enregistrerSignaturePourBailleur(bailleur, donnees)
-  if (resultat.erreur) {
-    // Si le fichier a été persisté mais que la finalisation échoue ensuite,
-    // l'écran relit le profil et permet de terminer sans renvoyer la signature.
-    revalidatePath('/pro/onboarding')
-    return resultat
-  }
-
-  let onboardingTermine = false
-  try {
-    const supabase = await creerClientServeur()
-    const { data: profil, error } = await supabase
-      .from('bailleurs')
-      .update({ onboarding_termine: true })
-      .eq('id', bailleur.id)
-      .select('onboarding_termine')
-      .single()
-
-    onboardingTermine = !error && profil?.onboarding_termine === true
-  } catch {
-    onboardingTermine = false
-  }
-
-  if (!onboardingTermine) {
-    revalidatePath('/pro/onboarding')
-    return {
-      erreur:
-        'Votre signature est enregistrée, mais la configuration n’a pas pu être terminée. ' +
-        'Actualisez la page puis choisissez « Voir mon tableau de bord ».',
-    }
-  }
-
-  revalidatePath('/pro', 'layout')
-  redirect(`${ESPACE_PRO.tableauDeBord}?bienvenue=1`)
 }
 
 async function enregistrerSignaturePourBailleur(

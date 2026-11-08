@@ -698,7 +698,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "preparer_emission_quittance",
-    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+    "migration": "20261107205525_exiger_signature_pour_quittance.sql"
   },
   {
     "categorie": "fonction",
@@ -733,7 +733,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "publier_emission_quittance",
-    "migration": "20261015193157_fiabiliser_paiements_fractionnes_documents.sql"
+    "migration": "20261107205525_exiger_signature_pour_quittance.sql"
   },
   {
     "categorie": "fonction",

@@ -157,17 +157,12 @@ export async function bailleurCourant(): Promise<Bailleur> {
 }
 
 /**
- * Variante qui impose d'avoir terminé l'onboarding.
- *
- * Utilisée par toutes les pages de l'app sauf l'onboarding lui-même : un
- * bailleur sans bail n'a rien à faire sur un tableau de bord vide.
+ * Alias historique conservé pour éviter une réécriture risquée de tous les
+ * appels. L'onboarding n'est plus une condition d'accès : la session, la
+ * confirmation et les droits de chaque action restent contrôlés par le serveur.
  */
 export async function bailleurOnboarde(): Promise<Bailleur> {
-  const bailleur = await bailleurCourant()
-
-  if (!bailleur.onboarding_termine) redirect('/pro/onboarding')
-
-  return bailleur
+  return bailleurCourant()
 }
 
 /**

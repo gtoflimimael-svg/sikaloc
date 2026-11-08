@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { empreinte, obtenirDocumentAutorise, rassemblerDonnees, rendrePdf } from '@/lib/quittance'
+import {
+  empreinte,
+  obtenirDocumentAutorise,
+  rassemblerDonnees,
+  rendrePdf,
+  SignatureQuittanceRequiseError,
+} from '@/lib/quittance'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -162,10 +168,21 @@ export async function GET(
   }
 
   // Non signé et jamais déposé : le repli garde son sens, rien n'est figé.
-  const donnees = await rassemblerDonnees(acces.paiementId, {
-    numeroDocument: acces.numeroDocument ?? '',
-    dateGeneration: acces.dateGeneration,
-  })
+  let donnees: Awaited<ReturnType<typeof rassemblerDonnees>>
+  try {
+    donnees = await rassemblerDonnees(acces.paiementId, {
+      numeroDocument: acces.numeroDocument ?? '',
+      dateGeneration: acces.dateGeneration,
+    })
+  } catch (erreur) {
+    if (erreur instanceof SignatureQuittanceRequiseError) {
+      return NextResponse.json(
+        { erreur: 'Enregistrez votre signature avant de générer cette quittance.' },
+        { status: 409 },
+      )
+    }
+    throw erreur
+  }
 
   if (!donnees) {
     return NextResponse.json({ erreur: 'Document incomplet.' }, { status: 404 })

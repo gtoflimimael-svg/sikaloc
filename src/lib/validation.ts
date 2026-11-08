@@ -380,6 +380,8 @@ export interface EtatFormulaire {
   erreur?: string
   erreursChamps?: Record<string, string>
   succes?: string
+  /** Génération bloquée côté serveur jusqu'à la persistance d'une signature valide. */
+  signatureRequise?: boolean
 }
 
 /** Transforme les erreurs Zod en dictionnaire champ → premier message. */

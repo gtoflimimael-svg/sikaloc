@@ -5,7 +5,9 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { finaliserInvitationEnAttente } from '@/lib/actions/rejoindre'
-import { bailleurNonVerifie } from '@/lib/session'
+import { bailleurCourant, bailleurNonVerifie, rolesDuCompte } from '@/lib/session'
+import { destinationApresVerification } from '@/lib/roles'
+import { lireTemoinCandidature } from '@/lib/candidatures/temoin'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -118,6 +120,14 @@ export async function verifierCodeEmail(
     }
   }
 
+  // `verifyOtp` doit avoir effectivement créé une session confirmée avant
+  // d'ouvrir l'écran de bienvenue. Ne pas annoncer une réussite sur un simple
+  // retour sans cookie/session exploitable.
+  const { data: sessionConfirmee, error: erreurSession } = await supabase.auth.getUser()
+  if (erreurSession || !sessionConfirmee.user?.email_confirmed_at) {
+    return { erreur: 'Votre adresse semble confirmée, mais la session n’a pas pu être ouverte. Reconnectez-vous pour continuer.' }
+  }
+
   // L'adresse est confirmée et la session ouverte : le témoin n'a plus d'objet.
   await retirerTemoinVerification()
 
@@ -132,10 +142,21 @@ export async function verifierCodeEmail(
   revalidatePath('/', 'layout')
 
   if (rattache) {
-    return { succes: 'Adresse email vérifiée. Votre logement vous attend.' }
+    redirect('/me')
   }
 
-  return { succes: 'Adresse email vérifiée.' }
+  const candidature = await lireTemoinCandidature()
+  if (candidature) redirect(`/find/${candidature}/candidater`)
+
+  const roles = await rolesDuCompte()
+  if (roles.estBailleur && !roles.estLocataire) {
+    // Conserve la vérification téléphonique uniquement lorsqu'un canal réel
+    // la rend exigible ; sinon, le nouveau bailleur passe directement à Pro.
+    await bailleurCourant()
+    redirect('/verification/reussie')
+  }
+
+  redirect(destinationApresVerification(roles))
 }
 
 /** Renvoie un code email. GoTrue applique son propre délai minimal (1 minute). */
