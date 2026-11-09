@@ -30,6 +30,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verifier:migrations
+      - run: npm run test:find-archive
+      - run: npm run test:find-api-revocation
       - run: node --import tsx tests/schema-objets.test.mjs
       - run: npm run test:maintenance
       - run: npm run test:security-mutations

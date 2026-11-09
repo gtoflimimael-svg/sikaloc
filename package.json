@@ -16,6 +16,7 @@
     "test:loyers": "node --experimental-strip-types tests/loyers-echeances.test.mjs",
     "test:pro-shell": "node tests/pro-shell.test.mjs",
     "test:find-archive": "node --test tests/find-archive.test.mjs",
+    "test:find-api-revocation": "node --test tests/find-api-revocation.test.mjs",
     "test:lot2b": "node --experimental-strip-types tests/lot2b-parcours.test.mjs",
     "test:routes": "node --test tests/route-coverage.test.mjs",
     "test:hydration-ui": "node --test tests/hydratation-ui.test.mjs",
