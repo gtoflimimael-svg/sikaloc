@@ -79,7 +79,6 @@ export function EnTetePage({
     /logement/i.test(titre) ? 'Parc immobilier' :
     /locataire/i.test(titre) ? 'Relations locataires' :
     /bail/i.test(titre) ? 'Contrats locatifs' :
-    /annonce|candidature/i.test(titre) ? 'Diffusion locative' :
     /paiement|quittance|reçu/i.test(titre) ? 'Finances' :
     /paramètre|profil|préférence|signature|abonnement|parrainage|donnée/i.test(titre) ? 'Configuration' :
     'Espace Pro'

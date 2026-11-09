@@ -14,7 +14,6 @@ export default function PageIntrouvable() {
       <p className={styles.stateCopy}>L’adresse a peut-être changé ou le lien est incomplet. Vous pouvez retrouver les espaces Sikaloc depuis l’accueil.</p>
       <div className={styles.stateActions}>
         <Link href="/" className="btn btn-primary">Retour à l’accueil</Link>
-        <Link href="/find" className="btn btn-secondary">Chercher un logement</Link>
       </div>
     </main>
   </div>

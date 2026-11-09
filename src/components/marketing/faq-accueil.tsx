@@ -16,16 +16,6 @@ const QUESTIONS = [
       'Le locataire rejoint son espace à partir de l’invitation de son bailleur. Il y consulte uniquement les informations et les documents mis à sa disposition.',
   },
   {
-    question: 'Les logements publiés sur Find sont-ils toujours disponibles ?',
-    reponse:
-      'Find présente les annonces publiées. Leur disponibilité peut évoluer : vérifiez les informations de l’annonce et prenez contact selon le parcours proposé.',
-  },
-  {
-    question: 'Que se passe-t-il après une candidature sur Find ?',
-    reponse:
-      'La candidature est transmise au bailleur pour examen. Elle ne réserve pas le logement et ne crée pas automatiquement de bail ; le bailleur décide de la suite.',
-  },
-  {
     question: 'Comment retrouver les paiements et les quittances ?',
     reponse:
       'Dans Pro, le bailleur retrouve les paiements enregistrés et les documents disponibles selon leur état. Un locataire invité peut consulter les éléments partagés dans Me.',

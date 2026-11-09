@@ -82,7 +82,7 @@ export function EnTetePublic({
    * commentaire. Laissé `undefined` ici, `/pro` n'a rien à changer.
    */
   destinationTableauDeBord?: string
-  /** « Pro », « Me » ou « Find » accolé au wordmark. Omis sur la marque globale. */
+  /** « Pro » ou « Me » accolé au wordmark. Omis sur la marque globale. */
   espace?: SuffixeEspace
   /** Destination du logo. */
   marqueHref?: string

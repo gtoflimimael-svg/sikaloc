@@ -3,7 +3,7 @@ import 'server-only'
 import type { ResultatEnvoi } from '@/lib/emails'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 
-export type FileNotification = 'emails_a_envoyer' | 'notifications_candidature' | 'notifications_whatsapp'
+export type FileNotification = 'emails_a_envoyer'
 export type TransportNotification = (destinataire: string, modele: string, variables: Record<string, unknown>, idempotence: string) => Promise<ResultatEnvoi>
 
 /** Une réservation par envoi : les suivants ne vieillissent pas pendant l’I/O. */

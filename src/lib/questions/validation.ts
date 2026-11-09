@@ -5,7 +5,6 @@ import { validerTelephone } from '@/lib/telephone'
 export const VALEURS_SUJETS_QUESTIONS = [
   'pro',
   'me',
-  'find',
   'tarifs_abonnements',
   'compte_connexion',
   'autre',
@@ -14,7 +13,6 @@ export const VALEURS_SUJETS_QUESTIONS = [
 export const SUJETS_QUESTIONS = [
   { valeur: 'pro', libelle: 'Sikaloc Pro' },
   { valeur: 'me', libelle: 'Sikaloc Me' },
-  { valeur: 'find', libelle: 'Sikaloc Find' },
   { valeur: 'tarifs_abonnements', libelle: 'Tarifs et abonnements' },
   { valeur: 'compte_connexion', libelle: 'Compte et connexion' },
   { valeur: 'autre', libelle: 'Autre question' },

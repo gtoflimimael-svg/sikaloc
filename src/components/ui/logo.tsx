@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import { COULEUR_MARQUE, TRACES_ICONE, TRANSFORM_ICONE } from '@/lib/marque'
 
-export type SuffixeEspace = 'Pro' | 'Me' | 'Find'
+export type SuffixeEspace = 'Pro' | 'Me'
 
 const HAUTEURS = { sm: 25, md: 35, lg: 49 } as const
 

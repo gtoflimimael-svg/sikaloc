@@ -8,7 +8,6 @@ import {
   LogOut,
   ScrollText,
   SlidersHorizontal,
-  Send,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -36,8 +35,6 @@ import styles from './espace.module.css'
  * ─── Un seul repère de navigation, jamais deux ──────────────────────────────
  *
  * Les cinq rubriques restent visibles au téléphone grâce à des libellés courts.
- * Le compte qui possède aussi un rôle candidat garde un sixième accès et le
- * défilement horizontal; l’onglet courant reste amené dans la zone visible.
  */
 
 const ONGLETS = [
@@ -57,7 +54,6 @@ function estActif(href: string, chemin: string): boolean {
 export function EnTeteMe({
   email,
   aussiBailleur,
-  aussiCandidat,
 }: {
   email: string
   /**
@@ -68,7 +64,6 @@ export function EnTeteMe({
    * déconnecter pour changer d'espace.
    */
   aussiBailleur: boolean
-  aussiCandidat: boolean
 }) {
   const chemin = usePathname()
   const navigation = useRef<HTMLElement>(null)
@@ -117,8 +112,8 @@ export function EnTeteMe({
         aria-label="Sections locataires"
         className="mx-auto max-w-[900px] overflow-x-auto px-md sm:px-lg"
       >
-        <ul className={`${styles.tabs} ${aussiCandidat ? styles.tabsExtended : ''}`}>
-          {[...ONGLETS, ...(aussiCandidat ? [{ href: '/me/candidatures', libelle: 'Candidatures', court: 'Demandes', Icone: Send }] : [])].map(({ href, libelle, court, Icone }) => {
+        <ul className={styles.tabs}>
+          {ONGLETS.map(({ href, libelle, court, Icone }) => {
             const actif = estActif(href, chemin)
             return (
               <li key={href}>

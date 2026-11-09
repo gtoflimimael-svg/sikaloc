@@ -52,7 +52,7 @@ export default async function PageEntrer({
   // ferait rien de visible.
   if (user && choix !== '1') {
     // La règle d'aiguillage est écrite une seule fois, dans `roles.ts`, et un
-    // banc l'exerce. La redire ici a déjà coûté un oubli : un candidat sans
+    // banc l'exerce. La redire ici a déjà coûté un oubli : un rôle sans
     // autre rôle se voyait offrir deux espaces où il n'a rien à faire.
     const destination = destinationApresConnexion(await rolesDuCompte())
     if (destination !== '/entrer') redirect(destination)

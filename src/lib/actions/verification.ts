@@ -7,7 +7,6 @@ import { redirect } from 'next/navigation'
 import { finaliserInvitationEnAttente } from '@/lib/actions/rejoindre'
 import { bailleurCourant, bailleurNonVerifie, rolesDuCompte } from '@/lib/session'
 import { destinationApresVerification } from '@/lib/roles'
-import { lireTemoinCandidature } from '@/lib/candidatures/temoin'
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { EtatFormulaire } from '@/lib/validation'
@@ -144,9 +143,6 @@ export async function verifierCodeEmail(
   if (rattache) {
     redirect('/me')
   }
-
-  const candidature = await lireTemoinCandidature()
-  if (candidature) redirect(`/find/${candidature}/candidater`)
 
   const roles = await rolesDuCompte()
   if (roles.estBailleur && !roles.estLocataire) {

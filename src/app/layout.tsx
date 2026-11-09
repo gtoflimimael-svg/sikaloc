@@ -44,9 +44,7 @@ const outfit = Outfit({
 /**
  * Ce que Sikaloc fait AUJOURD'HUI, pour tout le site.
  *
- * Rien sur Sikaloc_Find : cette phrase s'affiche sous le lien de n'importe
- * quelle page du site dans un résultat de recherche. `/find` porte sa propre
- * description, qui dit ce qu'on y trouve réellement.
+ * La description reste limitée aux deux espaces actifs : Pro et Me.
  */
 const DESCRIPTION_GLOBALE =
   'Sikaloc accompagne la location au Bénin : les bailleurs suivent leurs loyers ' +

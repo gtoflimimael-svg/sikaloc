@@ -20,14 +20,7 @@ export type Role = 'bailleur' | 'locataire'
 export interface Roles {
   estBailleur: boolean
   estLocataire: boolean
-  /**
-   * Ce compte a un profil candidat (Sikaloc_Find).
-   *
-   * Les trois se cumulent sans difficulté : quelqu'un qui met un logement en
-   * location, en loue un autre, et cherche à déménager porte les trois. Le
-   * modèle n'a jamais interdit le cumul, et ce booléen ne l'interdit pas non
-   * plus — il constate.
-   */
+  /** Profil candidat historique conservé en base, sans espace actif. */
   estCandidat: boolean
 }
 
@@ -36,9 +29,6 @@ export const AUCUN_ROLE: Roles = {
   estLocataire: false,
   estCandidat: false,
 }
-
-/** Où un candidat retrouve ses candidatures. */
-export const CANDIDATURES = '/me/candidatures'
 
 export interface Espace {
   role: Role
@@ -122,9 +112,10 @@ export function destinationApresConnexion(roles: Roles): string {
   // et y renvoyer quelqu'un qui vient de se connecter serait absurde.
   if (roles.estBailleur && !roles.estLocataire) return ESPACE_PRO.tableauDeBord
   if (roles.estLocataire && !roles.estBailleur) return ESPACE_ME.tableauDeBord
-  // Candidat, et rien d'autre : la page de choix ne lui proposerait que deux
-  // espaces où il n'a rien à faire. Ses candidatures, elles, l'attendent.
-  if (roles.estCandidat && !roles.estBailleur && !roles.estLocataire) return CANDIDATURES
+  // Le rôle candidat reste historique en base, mais son espace a été archivé.
+  // Il ne confère aucun droit Pro/Me ; une destination publique évite les
+  // redirections vers une route retirée ou un espace non autorisé.
+  if (roles.estCandidat && !roles.estBailleur && !roles.estLocataire) return '/'
   return '/entrer'
 }
 

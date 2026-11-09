@@ -1,12 +1,11 @@
 import { cheminProtege, cheminPublic } from '@/lib/roles'
 
-export type ContexteConnexion = 'pro' | 'me' | 'find' | 'general'
+export type ContexteConnexion = 'pro' | 'me' | 'general'
 
 const ORIGINE_INTERNE = 'https://sikaloc.invalid'
-const REFERENCE_FIND = /^[0-9a-hjkmnp-tv-z]{10}$/
 
 export function normaliserContexteConnexion(valeur: unknown): ContexteConnexion | null {
-  return valeur === 'pro' || valeur === 'me' || valeur === 'find' || valeur === 'general'
+  return valeur === 'pro' || valeur === 'me' || valeur === 'general'
     ? valeur
     : null
 }
@@ -37,15 +36,13 @@ export function normaliserSuiteConnexion(valeur: unknown): string | null {
   if (url.origin !== ORIGINE_INTERNE || url.hash) return null
 
   const chemin = url.pathname
-  const candidature = chemin.match(/^\/find\/([^/]+)\/candidater$/)
-  const annonce = chemin.match(/^\/find\/([^/]+)$/)
-  const cheminFindValide =
-    chemin === '/find' ||
-    Boolean(candidature && REFERENCE_FIND.test(candidature[1])) ||
-    Boolean(annonce && REFERENCE_FIND.test(annonce[1]))
+  // Les liens historiques ne doivent plus devenir une destination de retour
+  // vers un espace désormais archivé.
+  if (chemin === '/find' || chemin.startsWith('/find/') || chemin === '/me/candidatures' || chemin.startsWith('/me/candidatures/')) {
+    return null
+  }
   const cheminInterneProtege = cheminProtege(chemin) && !cheminPublic(chemin)
-  const cheminInterneConnu =
-    chemin === '/entrer' || chemin === '/questions/gestion' || cheminFindValide
+  const cheminInterneConnu = chemin === '/entrer' || chemin === '/questions/gestion'
 
   if (!cheminInterneProtege && !cheminInterneConnu) return null
 
@@ -56,8 +53,6 @@ export function contexteDepuisSuite(suite: string | null): ContexteConnexion | n
   if (!suite) return null
 
   const chemin = new URL(suite, ORIGINE_INTERNE).pathname
-  if (chemin === '/me/candidatures') return 'find'
-  if (chemin === '/find' || chemin.startsWith('/find/')) return 'find'
   if (chemin === '/me' || chemin.startsWith('/me/')) return 'me'
   if (chemin === '/pro' || chemin.startsWith('/pro/')) return 'pro'
   return null
@@ -69,8 +64,6 @@ export function destinationParDefautConnexion(contexte: ContexteConnexion): stri
       return '/pro/tableau-de-bord'
     case 'me':
       return '/me'
-    case 'find':
-      return '/find'
     default:
       return '/entrer'
   }
