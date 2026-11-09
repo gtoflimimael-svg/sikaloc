@@ -1,24 +1,10 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 
 import { MarqueSikaloc, SikalocSpaceBrand } from '@/components/ui/logo'
 import { lienConnexion } from '@/lib/auth-contexte'
-
-const manropeMe = localFont({
-  src: [
-    { path: '../../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
-    { path: '../../fonts/Manrope-PDF-Medium.ttf', weight: '500' },
-    { path: '../../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
-    { path: '../../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
-    { path: '../../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
-  ],
-  variable: '--font-me-display',
-  display: 'swap',
-  preload: false,
-})
 
 export const metadata: Metadata = {
   title: 'Rejoindre Sikaloc Me',
@@ -46,7 +32,7 @@ const etapes = [
 
 export default function PageRejoindre() {
   return (
-    <main id="contenu-principal" tabIndex={-1} className={`me-join ${manropeMe.variable}`}>
+    <main id="contenu-principal" tabIndex={-1} className="me-join">
       <a href="#contenu-principal" className="skip-link">
         Aller au contenu
       </a>

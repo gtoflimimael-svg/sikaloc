@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -15,19 +14,6 @@ import { ESPACE_PRO } from '@/lib/roles'
 import { creerClientServeur, obtenirUtilisateur } from '@/lib/supabase/serveur'
 import type { Bailleur } from '@/lib/types/database'
 import { etatVerification } from '@/lib/verification/etat'
-
-const manropePro = localFont({
-  src: [
-    { path: '../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
-    { path: '../fonts/Manrope-PDF-Medium.ttf', weight: '500' },
-    { path: '../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
-    { path: '../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
-    { path: '../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
-  ],
-  variable: '--font-pro-display',
-  display: 'swap',
-  preload: false,
-})
 
 const TITRE_PRO = `Gestion locative au Bénin — ${ESPACE_PRO.nom}`
 const DESCRIPTION_PRO =
@@ -143,7 +129,7 @@ export default async function PagePresentationPro({
   }
 
   return (
-    <div className={`pro-sales min-h-screen bg-canvas text-ink ${manropePro.variable}`}>
+    <div className="pro-sales min-h-screen bg-canvas text-ink">
       <EnTetePublic
         connecte={Boolean(utilisateur)}
         espace="Pro"

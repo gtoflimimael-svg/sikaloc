@@ -73,16 +73,18 @@
   --color-on-negative: #ffffff;
 
   /* ── Typographie ──────────────────────────────────────────────────────── */
-  /* Inter globale ; certains espaces chargent Manrope localement et la
-     déclarent dans leur propre portée sans dépendance réseau. */
+  /* Outfit pour l’interface ; Manrope reste réservée aux titres et accroches. */
   --font-sans:
-    var(--font-inter), 'Inter', system-ui, -apple-system,
+    var(--font-outfit), Outfit, system-ui, -apple-system,
     BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: var(--font-manrope, var(--font-inter)), 'Inter', system-ui, sans-serif;
+  /* Alias de compatibilité pour les feuilles existantes hors périmètre de ce lot. */
+  --font-inter: var(--font-outfit), Outfit, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-manrope), Manrope, var(--font-outfit), Outfit, system-ui, sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Display — Manrope/Inter, graisse forte, approches négatives. */
+  /* Display — Manrope, graisse forte, approches négatives. */
   --text-display-mega: clamp(40px, 6vw, 96px);
   --text-display-mega--line-height: 1.05;
   --text-display-mega--letter-spacing: -2px;
@@ -117,7 +119,7 @@
   --text-display-xs--line-height: 1.3;
   --text-display-xs--font-weight: 700;
 
-  /* Titres Manrope, textes courants Inter. */
+  /* Titres Manrope, textes courants Outfit. */
   --text-title-lg: 22px;
   --text-title-lg--line-height: 1.3;
   --text-title-lg--font-weight: 500;
@@ -275,7 +277,7 @@
    ========================================================================= */
 
 @layer components {
-  /* ── Boutons — cible tactile 44px, rayon md, Inter 14/500 ─────────────── */
+  /* ── Boutons — cible tactile 44px, rayon md, Outfit 14/500 ────────────── */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -1906,7 +1908,7 @@
 
 /* Espace Pro — finition produit, isolée du site public et de Me. */
 .pro-shell {
-  --font-display: var(--font-pro-display), var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-display: var(--font-manrope), Manrope, var(--font-outfit), Outfit, system-ui, sans-serif;
   --pro-workspace: color-mix(in srgb, var(--color-canvas) 94%, var(--color-canvas-soft));
   background: var(--pro-workspace);
   color: var(--color-ink);
@@ -2338,12 +2340,12 @@
 }
 
 /* Sikaloc Pro — page commerciale éditoriale. Tout reste dans ce périmètre. */
-.pro-sales { font-family: var(--font-inter), Inter, system-ui, sans-serif; }
+.pro-sales { font-family: var(--font-sans); }
 .pro-sales h1,
 .pro-sales h2,
 .pro-sales h3,
 .pro-sales .pro-sales-price-value,
-.pro-sales .pro-sales-overview-display { font-family: var(--font-pro-display), var(--font-display), sans-serif; }
+.pro-sales .pro-sales-overview-display { font-family: var(--font-display), sans-serif; }
 .pro-sales-wrap { width: min(100% - 48px, 1200px); margin-inline: auto; }
 .pro-sales-hero { padding: clamp(76px, 9vw, 132px) 0 88px; text-align: center; }
 .pro-sales-eyebrow { margin: 0; color: var(--color-ink-deep); font-size: 12px; font-weight: 700; letter-spacing: .12em; line-height: 1.4; text-transform: uppercase; }
@@ -2376,7 +2378,7 @@
 .pro-sales-copy { max-width: 43rem; margin: 20px 0 0; color: var(--color-body); font-size: 17px; line-height: 1.7; text-wrap: pretty; }
 .pro-sales-issue-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--color-hairline-strong); }
 .pro-sales-issue-list li { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 18px; padding: 23px 0; border-bottom: 1px solid var(--color-hairline); }
-.pro-sales-number { color: var(--color-ink-deep); font-family: var(--font-pro-display), var(--font-display), sans-serif; font-size: 14px; font-weight: 800; }
+.pro-sales-number { color: var(--color-ink-deep); font-family: var(--font-display), sans-serif; font-size: 14px; font-weight: 800; }
 .pro-sales-issue-list h3 { margin: 0; color: var(--color-ink); font-size: 21px; font-weight: 750; letter-spacing: -.035em; }
 .pro-sales-issue-list p { max-width: 520px; margin: 7px 0 0; color: var(--color-body); font-size: 14px; line-height: 1.65; }
 .pro-sales-feature { padding: 118px 0; }
@@ -2419,7 +2421,7 @@
 .pro-sales-overview-display { margin: 44px 0 32px; color: var(--color-on-dark); font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -.065em; line-height: 1.03; }
 .pro-sales-overview-index { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: auto 0 0; padding: 0; list-style: none; }
 .pro-sales-overview-index li { min-width: 0; border-top: 1px solid rgb(255 255 255 / .2); padding-top: 12px; }
-.pro-sales-overview-index li > span { color: var(--color-primary); font-family: var(--font-pro-display), var(--font-display), sans-serif; font-size: 11px; font-weight: 800; }
+.pro-sales-overview-index li > span { color: var(--color-primary); font-family: var(--font-display), sans-serif; font-size: 11px; font-weight: 800; }
 .pro-sales-overview-index h3 { margin: 9px 0 0; color: var(--color-on-dark); font-size: 16px; font-weight: 750; letter-spacing: -.025em; }
 .pro-sales-overview-index p { margin: 5px 0 0; color: var(--color-on-dark-mute); font-size: 11px; line-height: 1.5; }
 .pro-sales-overview-caption { margin-top: 15px; color: var(--color-on-dark-mute); font-size: 10px; line-height: 1.5; }
@@ -2429,7 +2431,7 @@
 .pro-sales-section-intro-centered .pro-sales-copy { margin-inline: auto; }
 .pro-sales-step-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin: 60px 0 0; padding: 0; list-style: none; }
 .pro-sales-step-list li { border-top: 1px solid var(--color-hairline-strong); padding-top: 18px; }
-.pro-sales-step-list li > span { color: var(--color-ink-deep); font-family: var(--font-pro-display), var(--font-display), sans-serif; font-size: 15px; font-weight: 800; }
+.pro-sales-step-list li > span { color: var(--color-ink-deep); font-family: var(--font-display), sans-serif; font-size: 15px; font-weight: 800; }
 .pro-sales-step-list h3 { margin: 22px 0 0; color: var(--color-ink); font-size: 22px; font-weight: 750; letter-spacing: -.035em; }
 .pro-sales-step-list p { max-width: 330px; margin: 9px 0 0; color: var(--color-body); font-size: 14px; line-height: 1.65; }
 .pro-sales-pricing { padding: 116px 0; }
@@ -2442,7 +2444,7 @@
 .pro-sales-price-card-featured .pro-sales-price-name { color: var(--color-on-dark); }
 .pro-sales-price-top span { border-radius: 999px; background: rgb(184 243 109 / .16); padding: 7px 10px; color: var(--color-primary); font-size: 10px; font-weight: 700; }
 .pro-sales-price-value { margin: 24px 0 0; color: var(--color-ink); font-size: clamp(35px, 5vw, 52px); font-weight: 800; letter-spacing: -.065em; line-height: 1; }
-.pro-sales-price-value span { font-family: var(--font-inter), Inter, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.pro-sales-price-value span { font-family: var(--font-sans); font-size: 14px; font-weight: 600; letter-spacing: 0; }
 .pro-sales-price-card-featured .pro-sales-price-value { color: var(--color-on-dark); }
 .pro-sales-price-caption { min-height: 22px; margin: 9px 0 0; color: var(--color-mute); font-size: 12px; }
 .pro-sales-price-card-featured .pro-sales-price-caption { color: var(--color-on-dark-mute); }
@@ -2591,7 +2593,7 @@
 .me-join-eyebrow { margin: 0; color: var(--color-ink-deep); font-size: 12px; font-weight: 750; letter-spacing: .075em; line-height: 1.45; text-transform: uppercase; }
 .me-join-title,
 .me-join-section-heading h2,
-.me-join-invitation-panel h2 { color: var(--color-ink); font-family: var(--font-me-display), var(--font-display), sans-serif; font-weight: 800; letter-spacing: -.065em; text-wrap: balance; }
+.me-join-invitation-panel h2 { color: var(--color-ink); font-family: var(--font-display), sans-serif; font-weight: 800; letter-spacing: -.065em; text-wrap: balance; }
 .me-join-title { max-width: 15ch; margin: 20px 0 0; font-size: clamp(46px, 5.25vw, 72px); line-height: 1; }
 .me-join-title-line { display: inline; }
 .me-join-lead { max-width: 51ch; margin: 23px 0 0; color: var(--color-body); font-size: clamp(16px, 1.35vw, 18px); line-height: 1.68; }
@@ -2612,8 +2614,8 @@
 .me-join-section-heading h2 { max-width: 17ch; margin: 15px 0 0; font-size: clamp(36px, 4.1vw, 56px); line-height: 1.06; }
 .me-join-step-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3.4vw, 42px); margin: clamp(34px, 4.5vw, 54px) 0 0; padding: 0; list-style: none; }
 .me-join-step { min-width: 0; padding: 20px 0 0; border-top: 1px solid var(--color-hairline-strong); }
-.me-join-step-number { display: block; margin-bottom: 26px; color: var(--color-ink-deep); font-family: var(--font-me-display), var(--font-display), sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -.035em; }
-.me-join-step h3 { max-width: 20ch; margin: 0; color: var(--color-ink); font-family: var(--font-me-display), var(--font-display), sans-serif; font-size: clamp(18px, 1.6vw, 21px); font-weight: 750; letter-spacing: -.03em; line-height: 1.35; }
+.me-join-step-number { display: block; margin-bottom: 26px; color: var(--color-ink-deep); font-family: var(--font-display), sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -.035em; }
+.me-join-step h3 { max-width: 20ch; margin: 0; color: var(--color-ink); font-family: var(--font-display), sans-serif; font-size: clamp(18px, 1.6vw, 21px); font-weight: 750; letter-spacing: -.03em; line-height: 1.35; }
 .me-join-step p { max-width: 38ch; margin: 10px 0 0; color: var(--color-body); font-size: 15px; line-height: 1.65; }
 .me-join-invitation { padding: 0 0 clamp(64px, 7.5vw, 94px); }
 .me-join-invitation-panel { padding: clamp(26px, 4.5vw, 52px); border-radius: var(--radius-xl); background: var(--color-canvas-sage); }
@@ -2714,7 +2716,7 @@
   max-width: 13ch;
   margin: 18px 0 0;
   color: var(--color-ink);
-  font-family: var(--font-connexion-display), var(--font-display), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: clamp(48px, 5.25vw, 76px);
   font-weight: 800;
   letter-spacing: -.068em;
@@ -2754,7 +2756,7 @@
 .connexion-form-heading h2 {
   margin: 0;
   color: var(--color-ink);
-  font-family: var(--font-connexion-display), var(--font-display), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: clamp(30px, 3vw, 38px);
   font-weight: 750;
   letter-spacing: -.052em;
@@ -2913,7 +2915,7 @@
   max-width: 12ch;
   margin: 17px 0 0;
   color: var(--color-ink);
-  font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: clamp(46px, 5.1vw, 72px);
   font-weight: 800;
   letter-spacing: -.066em;
@@ -2951,7 +2953,7 @@
 .signup-form-heading h2 {
   margin: 0;
   color: var(--color-ink);
-  font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: clamp(29px, 2.8vw, 36px);
   font-weight: 750;
   letter-spacing: -.05em;
@@ -3025,7 +3027,7 @@
 .signup-listing-title {
   margin: 7px 0 0;
   color: var(--color-ink);
-  font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: 17px;
   font-weight: 750;
   letter-spacing: -.025em;
@@ -3078,7 +3080,7 @@
     display: block;
     margin: 0 0 20px;
     color: var(--color-ink);
-    font-family: var(--font-inscription-display), var(--font-display), sans-serif;
+    font-family: var(--font-display), sans-serif;
     font-size: clamp(31px, 8vw, 38px);
     font-weight: 800;
     letter-spacing: -.06em;
@@ -3707,7 +3709,7 @@
 
 /* Sikaloc Pro — système de travail ouvert, centré sur les données. */
 .pro-shell {
-  --font-display: var(--font-pro-display), var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-display: var(--font-manrope), Manrope, var(--font-outfit), Outfit, system-ui, sans-serif;
   --pro-divider: color-mix(in srgb, var(--color-ink) 15%, transparent);
   --pro-divider-soft: color-mix(in srgb, var(--color-ink) 9%, transparent);
   --pro-hover: color-mix(in srgb, var(--color-ink) 4%, var(--color-canvas));

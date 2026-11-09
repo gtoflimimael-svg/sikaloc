@@ -42,7 +42,7 @@
   max-width: 18ch;
   margin: 0;
   color: var(--color-ink);
-  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: clamp(1.75rem, 7vw, 2.5rem);
   font-weight: 800;
   letter-spacing: -.045em;
@@ -54,7 +54,7 @@
   max-width: 34ch;
   margin: 1rem 0 0;
   color: var(--color-body);
-  font-family: var(--font-sans), var(--font-inter), sans-serif;
+  font-family: var(--font-sans), sans-serif;
   font-size: 1rem;
   line-height: 1.65;
 }
@@ -62,7 +62,7 @@
 .progression {
   margin: 2rem 0 0;
   color: var(--color-ink-deep);
-  font-family: var(--font-sans), var(--font-inter), sans-serif;
+  font-family: var(--font-sans), sans-serif;
   font-size: .875rem;
   font-weight: 600;
 }
