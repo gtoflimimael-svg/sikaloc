@@ -1,18 +1,9 @@
-import localFont from 'next/font/local'
 import Image from 'next/image'
 import Link from 'next/link'
 
 import { COULEUR_MARQUE, TRACES_ICONE, TRANSFORM_ICONE } from '@/lib/marque'
 
 export type SuffixeEspace = 'Pro' | 'Me' | 'Find'
-
-const manropeEspace = localFont({
-  src: '../../app/fonts/Manrope-PDF-SemiBold.ttf',
-  variable: '--font-space-brand',
-  display: 'swap',
-  weight: '600',
-  preload: false,
-})
 
 const HAUTEURS = { sm: 25, md: 35, lg: 49 } as const
 
@@ -45,8 +36,8 @@ export function MarqueSikaloc({
       {espace ? (
         <span
           aria-hidden="true"
-          className={`inline-flex h-[18px] shrink-0 items-center whitespace-nowrap border-l pl-2 text-sm font-semibold leading-none tracking-tight ${manropeEspace.variable} ${surSombre ? 'border-white/40 text-white' : 'border-hairline-strong text-ink'}`}
-          style={{ fontFamily: 'var(--font-space-brand)' }}
+          className={`inline-flex h-[18px] shrink-0 items-center whitespace-nowrap border-l pl-2 text-sm font-semibold leading-none tracking-tight ${surSombre ? 'border-white/40 text-white' : 'border-hairline-strong text-ink'}`}
+          style={{ fontFamily: 'var(--font-manrope)' }}
         >
           {espace}
         </span>

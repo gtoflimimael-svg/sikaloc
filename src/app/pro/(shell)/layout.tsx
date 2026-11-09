@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
 
 import { BandeauAbonnement } from '@/components/app/bandeau-abonnement'
 import { MenuCompte } from '@/components/app/menu-compte'
@@ -10,19 +9,6 @@ import { abonnementActif } from '@/lib/plan'
 import { bailleurOnboarde } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
-
-const manropePro = localFont({
-  src: [
-    { path: '../../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
-    { path: '../../fonts/Manrope-PDF-Medium.ttf', weight: '500' },
-    { path: '../../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
-    { path: '../../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
-    { path: '../../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
-  ],
-  variable: '--font-pro-display',
-  display: 'swap',
-  preload: false,
-})
 
 /**
  * Le titre des onglets de l'espace bailleur.
@@ -72,7 +58,7 @@ export default async function LayoutApplication({
   const plan = abonnementActif(bailleur) ? 'Standard' : 'Gratuit'
 
   return (
-    <div className={`${manropePro.variable} pro-shell flex min-h-screen`}>
+    <div className="pro-shell flex min-h-screen">
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
       <BarreLaterale impayes={impayes} />
 

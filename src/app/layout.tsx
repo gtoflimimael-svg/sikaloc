@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
+import { Outfit } from 'next/font/google'
 
 import { BandeauDemoLocal } from '@/components/demo/bandeau-local'
 import { MouvementPages } from '@/components/ui/mouvement-pages'
@@ -7,15 +8,28 @@ import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
 
 import './globals.css'
 
-/**
- * Inter est servie localement pour le texte global, sans accès réseau au build
- * ni au navigateur. Le shell Pro charge localement Manrope pour ses titres.
- */
-const inter = localFont({
-  src: './fonts/Inter-Variable.ttf',
-  variable: '--font-inter',
+/** Manrope unique de l’interface, partagée par tous les espaces Sikaloc. */
+const manrope = localFont({
+  src: [
+    { path: './fonts/Manrope-PDF-Regular.ttf', weight: '400' },
+    { path: './fonts/Manrope-PDF-Medium.ttf', weight: '500' },
+    { path: './fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
+    { path: './fonts/Manrope-PDF-Bold.ttf', weight: '700' },
+    { path: './fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
+  ],
+  variable: '--font-manrope',
   display: 'swap',
-  weight: '100 900',
+  preload: false,
+  fallback: ['system-ui', 'sans-serif'],
+})
+
+/** Outfit officielle, auto-hébergée par next/font au moment du build. */
+const outfit = Outfit({
+  subsets: ['latin', 'latin-ext'],
+  weight: 'variable',
+  variable: '--font-outfit',
+  display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
 })
 
 /**
@@ -130,7 +144,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
       // Le script anti-flash pose data-theme avant l’hydratation, volontairement.
       suppressHydrationWarning
-      className={inter.variable}
+      className={`${manrope.variable} ${outfit.variable}`}
     >
       <body>
         {/* S’exécute au parsing, avant le contenu visible et la première frame. */}

@@ -40,7 +40,7 @@ const PAGE_MAINTENANCE = `<!doctype html>
     <meta name="theme-color" content="#EAF1E7">
     <title>Sikaloc — Maintenance</title>
     <style>
-      :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111810; background: #F6F8F5; }
+      :root { color-scheme: light; font-family: Outfit, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111810; background: #F6F8F5; }
       * { box-sizing: border-box; }
       body { min-height: 100vh; min-height: 100svh; margin: 0; display: grid; place-items: center; padding: 24px; }
       main { width: min(100%, 620px); padding: clamp(28px, 7vw, 56px) 0; border-top: 3px solid #17311C; text-align: left; }

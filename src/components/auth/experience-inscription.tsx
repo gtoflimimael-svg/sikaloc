@@ -1,22 +1,8 @@
-import localFont from 'next/font/local'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import { SikalocSpaceBrand, type SuffixeEspace } from '@/components/ui/logo'
-
-const manropeInscription = localFont({
-  src: [
-    { path: '../../app/fonts/Manrope-PDF-Regular.ttf', weight: '400' },
-    { path: '../../app/fonts/Manrope-PDF-Medium.ttf', weight: '500' },
-    { path: '../../app/fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
-    { path: '../../app/fonts/Manrope-PDF-Bold.ttf', weight: '700' },
-    { path: '../../app/fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
-  ],
-  variable: '--font-inscription-display',
-  display: 'swap',
-  preload: false,
-})
 
 export function ExperienceInscription({
   espace,
@@ -50,7 +36,7 @@ export function ExperienceInscription({
   return (
     <main
       id="contenu"
-      className={`signup-experience signup-experience-${espace.toLowerCase()} ${manropeInscription.variable}`}
+      className={`signup-experience signup-experience-${espace.toLowerCase()}`}
     >
       <a href="#signup-form-title" className="skip-link">Passer au formulaire</a>
       <div className="signup-experience-grid">

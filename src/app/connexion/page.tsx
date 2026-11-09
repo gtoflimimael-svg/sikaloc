@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
@@ -15,18 +14,6 @@ import {
   suitePourContexteConnexion,
   type ContexteConnexion,
 } from '@/lib/auth-contexte'
-
-const manropeConnexion = localFont({
-  src: [
-    { path: '../fonts/Manrope-PDF-Regular.ttf', weight: '400' },
-    { path: '../fonts/Manrope-PDF-SemiBold.ttf', weight: '600' },
-    { path: '../fonts/Manrope-PDF-Bold.ttf', weight: '700' },
-    { path: '../fonts/Manrope-PDF-Extrabold.ttf', weight: '800' },
-  ],
-  variable: '--font-connexion-display',
-  display: 'swap',
-  preload: false,
-})
 
 export const metadata: Metadata = { title: 'Connexion', robots: { index: false, follow: false } }
 
@@ -142,7 +129,7 @@ export default async function PageConnexion({
   const espaceMarque = contexte === 'pro' ? 'Pro' : contexte === 'me' ? 'Me' : contexte === 'find' ? 'Find' : null
 
   return (
-    <main id="contenu-principal" tabIndex={-1} className={`connexion-page ${manropeConnexion.variable}`}>
+    <main id="contenu-principal" tabIndex={-1} className="connexion-page">
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
 
       <div className="connexion-layout">
