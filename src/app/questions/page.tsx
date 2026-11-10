@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 
 const liens = [
   { href: '/#faq', libelle: 'Questions fréquentes' },
-  { href: '/find', libelle: 'Trouver un logement' },
   { href: '/pro', libelle: 'Sikaloc Pro' },
 ]
 

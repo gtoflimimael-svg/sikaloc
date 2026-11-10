@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js'
 import { chromium } from 'playwright-core'
 
 const role = process.argv[2] || 'public'
-if (!['public', 'pro', 'me', 'find'].includes(role)) throw new Error('Rôle attendu : public, pro, me ou find')
+if (!['public', 'pro', 'me'].includes(role)) throw new Error('Rôle attendu : public, pro ou me')
 const base = process.env.REVUE_URL || 'http://127.0.0.1:3000'
 const destination = new URL(base)
 if (!['127.0.0.1', 'localhost'].includes(destination.hostname)) throw new Error('La revue est limitée au serveur local')
@@ -32,11 +32,10 @@ if (role !== 'public') {
 }
 const articles = [...(await readFile('src/lib/articles.ts', 'utf8')).matchAll(/slug: '([^']+)'/g)].map(m => `/blog/${m[1]}`)
 let routes = role === 'public'
-  ? ['/', '/pro?presentation=1', '/me/rejoindre', '/me/invitation/invitation-invalide-revue-ux', '/entrer', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/verification', '/questions', '/blog', ...articles, '/legal/conditions', '/legal/confidentialite', '/legal/mentions', '/guide/confirmer', '/guide/desinscription', '/find', '/find/introuvable']
+  ? ['/', '/pro?presentation=1', '/me/rejoindre', '/me/invitation/invitation-invalide-revue-ux', '/entrer', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/verification', '/questions', '/blog', ...articles, '/legal/conditions', '/legal/confidentialite', '/legal/mentions', '/guide/confirmer', '/guide/desinscription']
   : role === 'pro'
-    ? ['/pro/tableau-de-bord', '/pro/logements', '/pro/logements/nouveau', '/pro/locataires', '/pro/locataires/nouveau', '/pro/baux', '/pro/baux/nouveau', '/pro/paiements', '/pro/paiements/nouveau', '/pro/impayes', '/pro/annonces', '/pro/annonces/nouvelle', '/pro/parametres', ...['profil', 'signature', 'preferences', 'abonnement', 'parrainage', 'donnees'].map(x => `/pro/parametres/${x}`), '/pro/onboarding']
-    : role === 'me' ? ['/me', '/me/bail', '/me/loyers', '/me/paiements', '/me/preferences', '/me/candidatures']
-      : ['/find', '/me/candidatures']
+    ? ['/pro/tableau-de-bord', '/pro/logements', '/pro/logements/nouveau', '/pro/locataires', '/pro/locataires/nouveau', '/pro/baux', '/pro/baux/nouveau', '/pro/paiements', '/pro/paiements/nouveau', '/pro/impayes', '/pro/parametres', ...['profil', 'signature', 'preferences', 'abonnement', 'parrainage', 'donnees'].map(x => `/pro/parametres/${x}`), '/pro/onboarding']
+    : ['/me', '/me/bail', '/me/loyers', '/me/paiements', '/me/preferences']
 if (role === 'pro') {
   for (const [table, build] of [
     ['logements', id => [`/pro/logements/${id}/modifier`]],
@@ -44,17 +43,11 @@ if (role === 'pro') {
     ['baux', id => [`/pro/baux/${id}`, `/pro/baux/${id}/historique`, `/pro/baux/${id}/modifier`]],
     ['paiements', id => [`/pro/paiements/${id}/confirmer`, `/pro/paiements/${id}/modifier`]],
     ['quittances', id => [`/pro/quittances/${id}`]],
-    ['annonces', id => [`/pro/annonces/${id}`, `/pro/annonces/${id}/candidatures`]],
   ]) {
     const { data, error } = await client.from(table).select('id').limit(1)
     if (error) throw new Error(`Lecture autorisée impossible : ${table} (${error.code})`)
     if (data?.[0]) routes.push(...build(data[0].id))
   }
-}
-if (role === 'find' || role === 'public') {
-  const { data, error } = await client.rpc('annonces_recherche', { p_limite: 1, p_decalage: 0 })
-  if (error) throw new Error(`Catalogue indisponible (${error.code})`)
-  if (data?.[0]?.reference) routes.push(`/find/${data[0].reference}`, `/find/${data[0].reference}/candidater`)
 }
 if (process.env.REVUE_ROUTES) routes = process.env.REVUE_ROUTES.split(',')
 const largeurs = (process.env.REVUE_LARGEURS || '375,1440').split(',').map(Number)
@@ -75,7 +68,6 @@ if (compte) {
 const resultats = []
 function espaceCapture(route) {
   const pathname = new URL(route, base).pathname
-  if (pathname.startsWith('/find')) return 'Find'
   if (/^\/(connexion|entrer|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe|verification)(\/|$)/.test(pathname)) return 'Authentification'
   if (pathname === '/me/rejoindre' || pathname.startsWith('/me/invitation/')) return 'Authentification'
   if (pathname === '/pro' && route.includes('presentation=1')) return 'Public'

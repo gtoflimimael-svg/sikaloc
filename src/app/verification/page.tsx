@@ -21,7 +21,6 @@ import {
   masquerEmail,
   masquerTelephone,
 } from '@/lib/verification/regles'
-import { lireTemoinCandidature } from '@/lib/candidatures/temoin'
 import { lireTemoinInvitation, lireTemoinVerification } from '@/lib/verification/temoin'
 
 export const metadata: Metadata = { title: 'Vérification de votre compte' }
@@ -59,13 +58,11 @@ export default async function PageVerification() {
      * existe, mais rien ne permet de le lire tant que l'email n'est pas
      * confirmé.
      *
-     * Les témoins d'invitation et de candidature identifient les parcours
-     * non-bailleur, qui ne doivent pas recevoir l'étape téléphone du bailleur.
+     * Le témoin d'invitation identifie le parcours locataire, qui ne doit pas
+     * recevoir l'étape téléphone réservée au bailleur.
      */
     const invitationEnAttente = Boolean(await lireTemoinInvitation())
-    const candidatureEnAttente = Boolean(await lireTemoinCandidature())
-    const telephoneExigible =
-      verificationTelephoneExigible() && !invitationEnAttente && !candidatureEnAttente
+    const telephoneExigible = verificationTelephoneExigible() && !invitationEnAttente
 
     return (
       <CarteAuth
@@ -135,15 +132,10 @@ export default async function PageVerification() {
    * explicitement un profil bailleur. Son numéro, son bailleur le détient déjà
    * et l'a saisi lui-même — Sikaloc ne le lui redemandera jamais.
    *
-   * Sans cette distinction, l'écran pourrait annoncer à un locataire ou un
-   * candidat une étape téléphone qui ne viendra pas.
-   *
-   * Un candidat (Sikaloc_Find) n'a pas non plus de ligne `bailleurs`, et prend
-   * donc le même chemin : son numéro est déjà dans son profil candidat, et
-   * aucun code ne lui sera demandé.
+   * Sans cette distinction, l'écran pourrait annoncer à un locataire une étape
+   * téléphone qui ne viendra pas.
    */
   const compteLocataire = profil === null
-  const temoinCandidature = await lireTemoinCandidature()
 
   // Un compte non-bailleur et un canal non opérationnel ne peuvent pas imposer
   // une vérification téléphone. La présence de clés seules ne suffit pas.
@@ -152,10 +144,7 @@ export default async function PageVerification() {
 
   // ── Tout est fait ────────────────────────────────────────────────────────
   if (comptePleinementVerifie(etat, { telephoneExigible })) {
-    const destination = temoinCandidature
-      ? `/find/${temoinCandidature}/candidater`
-      : destinationApresVerification(await rolesDuCompte())
-    redirect(destination)
+    redirect(destinationApresVerification(await rolesDuCompte()))
   }
 
   // ── Reste le téléphone ───────────────────────────────────────────────────

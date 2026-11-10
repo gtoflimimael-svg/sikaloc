@@ -5,7 +5,7 @@ import { EnTeteMe } from '@/components/me/navigation'
 import styles from '@/components/me/espace.module.css'
 import { TransitionPage } from '@/components/ui/transition-page'
 import { mesBaux } from '@/lib/locataire'
-import { CANDIDATURES, ESPACE_ME } from '@/lib/roles'
+import { ESPACE_ME } from '@/lib/roles'
 import { locataireCourant, rolesDuCompte } from '@/lib/session'
 
 /**
@@ -38,14 +38,14 @@ export default async function LayoutMe({ children }: { children: React.ReactNode
     mesBaux(),
   ])
 
-  // Sans bail rattaché : l'explication de l'invitation, sauf pour un candidat,
-  // qui vient chercher autre chose.
-  if (baux.length === 0) redirect(roles.estCandidat ? CANDIDATURES : '/me/rejoindre')
+  // Sans bail rattaché : l'explication de l'invitation. Le rôle candidat
+  // historique ne donne plus accès à une destination séparée.
+  if (baux.length === 0) redirect(roles.estBailleur ? '/pro/tableau-de-bord' : '/me/rejoindre')
 
   return (
     <div className={`me-space-root flex min-h-screen flex-col ${styles.root}`}>
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
-      <EnTeteMe email={compte.email} aussiBailleur={roles.estBailleur} aussiCandidat={roles.estCandidat} />
+      <EnTeteMe email={compte.email} aussiBailleur={roles.estBailleur} />
 
       <main id="contenu-principal" tabIndex={-1} className={`me-space-page flex-1 ${styles.main}`}>
         <div className="mx-auto max-w-[900px]">

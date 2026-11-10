@@ -3,12 +3,8 @@
  * enregistrements métier déjà présents.
  */
 export type EtatDashboardPro = 'demarrage' | 'intermediaire' | 'operationnel'
-export type ActionPrincipaleDemarrage = 'logement' | 'find' | 'bail'
-export type ActionContextuelleDashboard =
-  | 'enregistrer-paiement'
-  | 'creer-bail'
-  | 'preparer-annonce'
-  | 'aucune'
+export type ActionPrincipaleDemarrage = 'logement' | 'locataire' | 'bail'
+export type ActionContextuelleDashboard = 'enregistrer-paiement' | 'creer-bail' | 'aucune'
 
 export type RecouvrementDashboard = {
   attendu: number
@@ -82,7 +78,7 @@ export function compterEtapesConfigurees({
   return [nbLogements > 0, nbLocataires > 0, nbBaux > 0].filter(Boolean).length
 }
 
-/** Une fiche locataire n'est pas obligatoire pour proposer un logement vacant. */
+/** Après un logement, la fiche locataire précède la création du bail. */
 export function determinerActionPrincipaleDemarrage({
   nbLogements,
   nbLocataires,
@@ -91,7 +87,7 @@ export function determinerActionPrincipaleDemarrage({
   nbLocataires: number
 }): ActionPrincipaleDemarrage {
   if (nbLogements === 0) return 'logement'
-  if (nbLocataires === 0) return 'find'
+  if (nbLocataires === 0) return 'locataire'
   return 'bail'
 }
 
@@ -117,7 +113,6 @@ export function determinerActionContextuelleDashboard({
   nbLocataires,
   loyerAttendu,
   loyerPercu,
-  logementLibreSansAnnonce,
   suiviUrgentConnu = true,
   nbImpayes = 0,
   nbBrouillons = 0,
@@ -127,7 +122,6 @@ export function determinerActionContextuelleDashboard({
   nbLocataires: number
   loyerAttendu: number
   loyerPercu: number
-  logementLibreSansAnnonce: boolean
   suiviUrgentConnu?: boolean
   nbImpayes?: number
   nbBrouillons?: number
@@ -137,6 +131,5 @@ export function determinerActionContextuelleDashboard({
   if (!suiviUrgentConnu || nbImpayes > 0 || nbBrouillons > 0) return 'aucune'
   if (nbBauxActifs > 0 && loyerAttendu > loyerPercu) return 'enregistrer-paiement'
   if (peutCreerBail({ nbLogementsLibres, nbLocataires })) return 'creer-bail'
-  if (nbLogementsLibres > 0 && logementLibreSansAnnonce) return 'preparer-annonce'
   return 'aucune'
 }

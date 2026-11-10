@@ -99,13 +99,13 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
         erreur: 'Ce logement est associé à un bail et ne peut pas être supprimé tant que ce bail existe.',
       }
     }
-    // Une annonce vivante (brouillon, publiée, suspendue) retient son
-    // logement : `annonces_logement_si_vivante`. Une annonce clôturée, elle,
-    // lui survit et ne bloque rien.
+    // Les règles historiques d'annonce restent en base. Le module étant
+    // archivé, on ne les contourne pas : un logement encore référencé reste
+    // protégé jusqu'à une décision métier distincte.
     if (error.code === '23514' && error.message.includes('annonces_logement_si_vivante')) {
       return {
         erreur:
-          'Ce logement a une annonce en cours. Supprimez le brouillon ou clôturez l’annonce avant de retirer le logement.',
+          'Ce logement est encore lié à une annonce historique conservée. Sa suppression reste bloquée par la protection des données ; contactez le support pour examiner ce dossier.',
       }
     }
     return { erreur: `Suppression impossible : ${error.message}` }

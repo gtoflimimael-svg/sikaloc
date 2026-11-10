@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import {
+  accesAutorise,
   destinationApresConnexion,
   destinationApresVerification,
   ESPACE_ME,
   ESPACE_PRO,
-  CANDIDATURES,
 } from '../src/lib/roles.ts'
 
 const racine = new URL('../', import.meta.url)
@@ -20,7 +20,7 @@ test('un bailleur confirmé entre directement dans Pro, quel que soit son marque
   assert.equal(destinationApresConnexion(bailleurSeul), ESPACE_PRO.tableauDeBord)
 })
 
-test('les comptes à rôles multiples, locataires et candidats conservent leur aiguillage', () => {
+test('les comptes à rôles multiples et locataires conservent leur aiguillage', () => {
   assert.equal(
     destinationApresVerification(
       { estBailleur: true, estLocataire: true, estCandidat: false },
@@ -33,12 +33,14 @@ test('les comptes à rôles multiples, locataires et candidats conservent leur a
     ),
     ESPACE_ME.tableauDeBord,
   )
-  assert.equal(
-    destinationApresVerification(
-      { estBailleur: false, estLocataire: false, estCandidat: true },
-    ),
-    CANDIDATURES,
-  )
+})
+
+test('un rôle candidat historique seul reste public et ne reçoit pas d’accès Pro ou Me', () => {
+  const candidat = { estBailleur: false, estLocataire: false, estCandidat: true }
+  assert.equal(destinationApresVerification(candidat), '/')
+  assert.equal(destinationApresConnexion(candidat), '/')
+  assert.equal(accesAutorise(candidat, ESPACE_PRO), false)
+  assert.equal(accesAutorise(candidat, ESPACE_ME), false)
 })
 
 test('le shell authentifie avant les requêtes et le guide ne s’ouvre que sur le tableau de bord', async () => {
@@ -68,7 +70,7 @@ test('le shell authentifie avant les requêtes et le guide ne s’ouvre que sur 
 test('la page de vérification ne dépend plus du marqueur historique et redirige vers la destination du rôle', async () => {
   const verification = await lire('src/app/verification/page.tsx')
   assert.doesNotMatch(verification, /onboarding_termine/)
-  assert.match(verification, /redirect\(destination\)/)
+  assert.match(verification, /redirect\(destinationApresVerification\(await rolesDuCompte\(\)\)\)/)
   assert.doesNotMatch(verification, /Accéder à Sikaloc/)
 })
 

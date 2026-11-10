@@ -17,10 +17,6 @@ const cheminsPages = [
   'src/app/pro/(shell)/baux/[id]/page.tsx',
   'src/app/pro/(shell)/baux/[id]/modifier/page.tsx',
   'src/app/pro/(shell)/baux/[id]/historique/page.tsx',
-  'src/app/pro/(shell)/annonces/page.tsx',
-  'src/app/pro/(shell)/annonces/nouvelle/page.tsx',
-  'src/app/pro/(shell)/annonces/[id]/page.tsx',
-  'src/app/pro/(shell)/annonces/[id]/candidatures/page.tsx',
   'src/app/pro/(shell)/paiements/page.tsx',
   'src/app/pro/(shell)/paiements/nouveau/page.tsx',
   'src/app/pro/(shell)/paiements/[id]/modifier/page.tsx',
@@ -29,8 +25,8 @@ const cheminsPages = [
 
 const lire = (chemin) => readFile(new URL(chemin, racine), 'utf8')
 
-test('les 21 routes opérationnelles Pro du périmètre existent sans doublon', async () => {
-  assert.equal(new Set(cheminsPages).size, 21)
+test('les 17 routes opérationnelles Pro du périmètre existent sans doublon', async () => {
+  assert.equal(new Set(cheminsPages).size, 17)
   await Promise.all(cheminsPages.map((chemin) => access(new URL(chemin, racine))))
 })
 
@@ -38,7 +34,7 @@ test('la navigation Pro est regroupée par tâche et marque la route courante', 
   const navigation = await lire('src/components/app/navigation.tsx')
   assert.match(navigation, /titre: 'Pilotage'/)
   assert.match(navigation, /titre: 'Gestion locative'/)
-  assert.match(navigation, /titre: 'Commercialisation'/)
+  assert.doesNotMatch(navigation, /Annonces|Commercialisation|\/pro\/annonces/)
   assert.match(navigation, /titre: 'Compte'/)
   assert.match(navigation, /aria-current=\{courant\}/)
   assert.match(navigation, /chemin === lien\.href \? 'page' : actif \? 'location'/)
@@ -64,8 +60,6 @@ test('les états vides métier Pro ne réutilisent pas les anciennes illustratio
     'src/app/pro/(shell)/baux/page.tsx',
     'src/app/pro/(shell)/baux/[id]/page.tsx',
     'src/app/pro/(shell)/paiements/page.tsx',
-    'src/app/pro/(shell)/annonces/page.tsx',
-    'src/app/pro/(shell)/annonces/nouvelle/page.tsx',
   ]
   const contenus = await Promise.all(pages.map(lire))
   for (const contenu of contenus) assert.doesNotMatch(contenu, /IllustrationMarque/)

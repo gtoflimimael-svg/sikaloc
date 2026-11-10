@@ -9,15 +9,12 @@ import { formaterFCFA } from '@/lib/format'
 import { capacites } from '@/lib/plan'
 import { bailleurOnboarde } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
-import type { StatutAnnonce, TypeLogement } from '@/lib/types/database'
+import type { TypeLogement } from '@/lib/types/database'
 import {
   premiereRelation,
-  presenterStatutAnnonce,
-  presenterActionAnnonce,
   presenterLocalisationLogement,
   presenterQuotaLogements,
   peutSupprimerLogement,
-  trouverAnnonceVivante,
   trouverBailActif,
 } from '@/lib/logements-presentation'
 import styles from './logements.module.css'
@@ -31,8 +28,6 @@ type BailLogement = {
   locataire?: { nom?: string } | { nom?: string }[] | null
 }
 
-type AnnonceLogement = { id: string; statut: StatutAnnonce }
-
 type LogementAvecRelations = {
   id: string
   adresse: string
@@ -40,7 +35,6 @@ type LogementAvecRelations = {
   pays: string
   type: TypeLogement
   baux: BailLogement[] | null
-  annonces: AnnonceLogement[] | null
 }
 
 export default async function PageLogements() {
@@ -52,7 +46,7 @@ export default async function PageLogements() {
     bailleurOnboarde(),
     supabase
       .from('logements')
-      .select('*, baux(id, statut, loyer_mensuel, locataire:locataires(nom)), annonces(id, statut)')
+      .select('*, baux(id, statut, loyer_mensuel, locataire:locataires(nom))')
       .order('created_at', { ascending: false }),
     // Un seul identifiant suffit pour savoir si « Créer un bail » peut être
     // proposé. Aucune donnée personnelle de locataire n'est chargée ici.
@@ -118,13 +112,10 @@ export default async function PageLogements() {
                 const baux = logement.baux ?? []
                 const bailActif = trouverBailActif(baux)
                 const locataire = premiereRelation(bailActif?.locataire)
-                const annonce = trouverAnnonceVivante(logement.annonces ?? [])
-                const statutAnnonce = annonce ? presenterStatutAnnonce(annonce.statut) : null
-                const actionAnnonce = presenterActionAnnonce(annonce?.id, logement.id, Boolean(bailActif))
-                const suppressionPossible = peutSupprimerLogement(baux.length, Boolean(annonce))
+                const suppressionPossible = peutSupprimerLogement(baux.length)
                 const actionPrincipale = bailActif
                   ? { href: `/pro/baux/${bailActif.id}`, libelle: 'Voir le bail' }
-                  : actionAnnonce
+                  : null
 
                 return (
                   <li key={logement.id} className={styles.property}>
@@ -142,11 +133,6 @@ export default async function PageLogements() {
                           <span className={styles.tenantName}>
                             <span className="sr-only">Locataire : </span>
                             {locataire.nom}
-                          </span>
-                        ) : null}
-                        {statutAnnonce ? (
-                          <span className={styles.advertStatus} data-tone={statutAnnonce.ton}>
-                            {statutAnnonce.libelle}
                           </span>
                         ) : null}
                       </div>
@@ -179,11 +165,6 @@ export default async function PageLogements() {
                           <Link href={`/pro/logements/${logement.id}/modifier`} className={styles.menuAction}>
                             Modifier
                           </Link>
-                          {bailActif && actionAnnonce ? (
-                            <Link href={actionAnnonce.href} className={styles.menuAction}>
-                              Gérer l’annonce
-                            </Link>
-                          ) : null}
                           {!bailActif && locataireDisponible ? (
                             <Link href="/pro/baux/nouveau" className={styles.menuAction}>
                               Créer un bail
@@ -196,7 +177,7 @@ export default async function PageLogements() {
                               variante="danger"
                               varianteDeclencheur="tertiary"
                               titreConfirmation="Supprimer ce logement ?"
-                              messageConfirmation="Cette action est définitive. Si un bail ou une annonce en cours vient d’être associé, la suppression sera refusée."
+                              messageConfirmation="Cette action est définitive. La suppression sera refusée si un bail ou une donnée historique conservée est encore associé à ce logement."
                               libelleConfirmation="Supprimer définitivement"
                             />
                           ) : null}

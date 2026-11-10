@@ -5,7 +5,6 @@ import {
   House,
   LayoutDashboard,
   LogOut,
-  Megaphone,
   Menu,
   ScrollText,
   Settings,
@@ -27,7 +26,7 @@ export interface LienNav {
   href: string
   libelle: string
   icone: keyof typeof ICONES
-  groupe: 'pilotage' | 'gestion' | 'commercialisation' | 'compte'
+  groupe: 'pilotage' | 'gestion' | 'compte'
   pastille?: number
 }
 
@@ -36,7 +35,6 @@ const ICONES = {
   baux: ScrollText,
   locataires: Users,
   logements: House,
-  annonces: Megaphone,
   paiements: Banknote,
   impayes: TriangleAlert,
   parametres: Settings,
@@ -49,14 +47,12 @@ export const LIENS_NAV: LienNav[] = [
   { href: '/pro/locataires', libelle: 'Locataires', icone: 'locataires', groupe: 'gestion' },
   { href: '/pro/baux', libelle: 'Baux', icone: 'baux', groupe: 'gestion' },
   { href: '/pro/paiements', libelle: 'Paiements', icone: 'paiements', groupe: 'gestion' },
-  { href: '/pro/annonces', libelle: 'Annonces', icone: 'annonces', groupe: 'commercialisation' },
   { href: '/pro/parametres', libelle: 'Paramètres', icone: 'parametres', groupe: 'compte' },
 ]
 
 const GROUPES_NAV: { id: LienNav['groupe']; titre: string }[] = [
   { id: 'pilotage', titre: 'Pilotage' },
   { id: 'gestion', titre: 'Gestion locative' },
-  { id: 'commercialisation', titre: 'Commercialisation' },
   { id: 'compte', titre: 'Compte' },
 ]
 
@@ -130,7 +126,6 @@ function LiensNavigation({
 function groupeContexte(chemin: string): string {
   if (chemin === ESPACE_PRO.tableauDeBord || chemin.startsWith('/pro/impayes')) return 'Pilotage'
   if (/^\/pro\/(logements|locataires|baux|paiements|quittances)(\/|$)/.test(chemin)) return 'Gestion locative'
-  if (chemin.startsWith('/pro/annonces')) return 'Commercialisation'
   return 'Compte'
 }
 

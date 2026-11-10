@@ -10,7 +10,7 @@ import { TableauListe } from '@/components/ui/listes'
 import { bailleurOnboarde } from '@/lib/session'
 import { avancement, ouvertureAutomatique } from '@/lib/visite/etapes'
 import { creerClientServeur } from '@/lib/supabase/serveur'
-import type { Echeance, Impaye, MetriquesDashboard, StatutAnnonce } from '@/lib/types/database'
+import type { Echeance, Impaye, MetriquesDashboard } from '@/lib/types/database'
 import { compterEtapesConfigurees, determinerActionContextuelleDashboard, determinerActionPrincipaleDemarrage, determinerEtatDashboardPro, periodeCouranteDashboard, peutCreerBail, presenterRecouvrementDashboard } from '@/lib/dashboard/etat'
 import { formaterDateCourte, formaterFCFA, formaterPeriode } from '@/lib/format'
 
@@ -22,7 +22,6 @@ type LogementDashboard = {
   type: string
   ville: string
   baux: { id: string; statut: string }[] | null
-  annonces: { id: string; statut: StatutAnnonce }[] | null
 }
 
 type PaiementDashboard = {
@@ -56,10 +55,6 @@ type ImpayeDashboard = Pick<
 
 function logementOccupe(logement: LogementDashboard) {
   return logement.baux?.some((bail) => bail.statut === 'Actif') ?? false
-}
-
-function annonceVivante(logement: LogementDashboard) {
-  return logement.annonces?.find((annonce) => annonce.statut !== 'cloturee')
 }
 
 function nomLocataire(
@@ -158,13 +153,11 @@ function ActionContextuelle({
   nbLogementsLibres,
   nbLocataires,
   montantRestant,
-  logementSansAnnonce,
 }: {
-  type: 'enregistrer-paiement' | 'creer-bail' | 'preparer-annonce'
+  type: 'enregistrer-paiement' | 'creer-bail'
   nbLogementsLibres: number
   nbLocataires: number
   montantRestant: number
-  logementSansAnnonce?: LogementDashboard
 }) {
   const contenu = {
     'enregistrer-paiement': {
@@ -178,16 +171,6 @@ function ActionContextuelle({
       description: `${nbLogementsLibres} logement${nbLogementsLibres > 1 ? 's' : ''} libre${nbLogementsLibres > 1 ? 's' : ''} · ${nbLocataires} fiche${nbLocataires > 1 ? 's' : ''} locataire.`,
       href: '/pro/baux/nouveau',
       action: 'Créer un bail',
-    },
-    'preparer-annonce': {
-      titre: 'Proposer un logement disponible',
-      description: logementSansAnnonce
-        ? `${logementSansAnnonce.type} · ${logementSansAnnonce.ville}`
-        : 'Préparez une annonce depuis un logement libre.',
-      href: logementSansAnnonce
-        ? `/pro/annonces/nouvelle?logement=${encodeURIComponent(logementSansAnnonce.id)}`
-        : '/pro/annonces',
-      action: 'Préparer une annonce',
     },
   }[type]
 
@@ -301,11 +284,10 @@ function MiseEnRoute({
 }) {
   const progression = compterEtapesConfigurees({ nbLogements, nbLocataires, nbBaux })
   const bailPossible = peutCreerBail({ nbLogementsLibres, nbLocataires })
-  // Un locataire n'est pas un prérequis pour commercialiser un logement vacant.
-  // Quand il n'existe pas encore de fiche locataire, l'alternative Find prend
-  // le premier plan plutôt que de laisser croire qu'il faut en créer une.
+  // Le parcours de démarrage suit la gestion locative : logement, locataire,
+  // puis bail.
   const actionPrincipale = determinerActionPrincipaleDemarrage({ nbLogements, nbLocataires })
-  const etapePrincipale = actionPrincipale === 'logement' ? 1 : actionPrincipale === 'bail' ? 3 : 0
+  const etapePrincipale = actionPrincipale === 'logement' ? 1 : actionPrincipale === 'locataire' ? 2 : 3
 
   return (
     <section className="dashboard-setup" aria-labelledby="mise-en-route">
@@ -378,17 +360,8 @@ function ResumeLogements({ logements, total }: { logements: LogementDashboard[];
       </div>
       <ul className="dashboard-homes-list">
         {visibles.map((logement) => {
-          const annonce = annonceVivante(logement)
           const occupe = logementOccupe(logement)
-          const etat = occupe
-            ? 'Loué'
-            : annonce
-              ? annonce.statut === 'publiee'
-                ? 'Annonce publiée'
-                : annonce.statut === 'brouillon'
-                  ? 'Brouillon'
-                  : 'Annonce suspendue'
-              : 'Disponible'
+          const etat = occupe ? 'Loué' : 'Disponible'
 
           return (
             <li key={logement.id} className="dashboard-home-row">
@@ -413,66 +386,6 @@ function ResumeLogements({ logements, total }: { logements: LogementDashboard[];
   )
 }
 
-function PisteFind({
-  logements,
-  sansLogement,
-  prioritaire = false,
-}: {
-  logements: LogementDashboard[]
-  sansLogement: boolean
-  prioritaire?: boolean
-}) {
-  const logementLibre = logements.find((logement) => !logementOccupe(logement) && !annonceVivante(logement))
-  const logementOccupeSansAnnonce = logements.find((logement) => logementOccupe(logement) && !annonceVivante(logement))
-  const annoncesExistantes = logements.some((logement) => Boolean(annonceVivante(logement)))
-  const logementCible = logementLibre ?? logementOccupeSansAnnonce
-
-  const action = sansLogement
-    ? null
-    : logementCible
-      ? {
-          href: `/pro/annonces/nouvelle?logement=${encodeURIComponent(logementCible.id)}`,
-          libelle: logementLibre ? 'Préparer une annonce' : 'Préparer un brouillon',
-        }
-      : annoncesExistantes
-        ? { href: '/pro/annonces', libelle: 'Gérer mes annonces' }
-        : null
-
-  const description = sansLogement
-    ? 'Ajoutez d’abord un logement : chaque annonce Sikaloc | Find est rattachée à un bien enregistré.'
-    : logementLibre
-      ? 'Proposez un logement disponible aux candidats. L’annonce commence en brouillon ; vous décidez ensuite de sa publication.'
-      : logementOccupeSansAnnonce
-        ? 'Vous pouvez préparer un brouillon pendant le bail ; sa publication attendra la fin du bail en cours.'
-        : 'Consultez vos annonces et leur état de publication depuis votre espace de commercialisation.'
-  const titre = sansLogement
-    ? 'Proposez vos logements sur Sikaloc Find.'
-    : logementLibre
-      ? 'Votre logement est disponible à la location ?'
-      : logementOccupeSansAnnonce
-        ? 'Anticipez la prochaine mise en location.'
-        : annoncesExistantes
-          ? 'Suivez vos annonces sur Sikaloc Find.'
-          : 'Proposez vos logements sur Sikaloc Find.'
-
-  return (
-    <section className="dashboard-find-callout" aria-labelledby="find-callout-title">
-      <div className="dashboard-find-copy">
-        <h2 id="find-callout-title">{titre}</h2>
-        <p>{description}</p>
-      </div>
-      {action ? (
-        <Link
-          href={action.href}
-          className={`btn ${prioritaire ? 'btn-primary' : 'btn-secondary'} dashboard-find-action`}
-        >
-          {action.libelle} <ArrowRight size={16} aria-hidden="true" />
-        </Link>
-      ) : null}
-    </section>
-  )
-}
-
 export default async function PageTableauDeBord({
   searchParams,
 }: {
@@ -486,7 +399,7 @@ export default async function PageTableauDeBord({
   const [logementsReponse, locatairesReponse, bauxReponse, progressionReponse] = await Promise.all([
     supabase
       .from('logements')
-      .select('id, adresse, type, ville, baux(id, statut), annonces(id, statut)', { count: 'exact' })
+      .select('id, adresse, type, ville, baux(id, statut)', { count: 'exact' })
       .eq('bailleur_id', bailleur.id)
       .order('created_at', { ascending: false }),
     supabase.from('locataires').select('id', { count: 'exact', head: true }).eq('bailleur_id', bailleur.id),
@@ -525,13 +438,12 @@ export default async function PageTableauDeBord({
 
   if (etat !== 'operationnel') {
     const nbLogementsLibres = logements.filter((logement) => !logementOccupe(logement)).length
-    const actionPrincipale = determinerActionPrincipaleDemarrage({ nbLogements, nbLocataires })
     const titre = etat === 'demarrage'
       ? 'Bienvenue dans votre espace Pro.'
       : 'Votre premier logement est enregistré.'
     const description = etat === 'demarrage'
       ? 'Organisez vos locations, en commençant par votre premier logement.'
-      : 'Vous pouvez maintenant organiser sa location ou le proposer sur Find.'
+      : 'Ajoutez le locataire concerné pour pouvoir créer le bail.'
 
     return (
       <div className="dashboard-home dashboard-first-run">
@@ -552,11 +464,6 @@ export default async function PageTableauDeBord({
           nbLogementsLibres={nbLogementsLibres}
         />
 
-        <PisteFind
-          logements={logements}
-          sansLogement={etat === 'demarrage'}
-          prioritaire={etat === 'intermediaire' && actionPrincipale === 'find'}
-        />
       </div>
     )
   }
@@ -612,9 +519,6 @@ export default async function PageTableauDeBord({
   )
   const nbLogementsLibres = logements.filter((logement) => !logementOccupe(logement)).length
 
-  const logementLibreSansAnnonce = logements.find(
-    (logement) => !logementOccupe(logement) && !annonceVivante(logement),
-  )
   const suiviUrgentConnu = !impayesReponse.error && !brouillonsReponse.error
   const actionContextuelle = metriques && recouvrement?.attenduComplet
     ? determinerActionContextuelleDashboard({
@@ -623,7 +527,6 @@ export default async function PageTableauDeBord({
         nbLocataires,
         loyerAttendu: recouvrement.attendu,
         loyerPercu: recouvrement.valide,
-        logementLibreSansAnnonce: Boolean(logementLibreSansAnnonce),
         suiviUrgentConnu,
         nbImpayes: Number(impayesReponse.count ?? impayes.length),
         nbBrouillons: Number(brouillonsReponse.count ?? brouillons.length),
@@ -677,7 +580,6 @@ export default async function PageTableauDeBord({
           nbLogementsLibres={nbLogementsLibres}
           nbLocataires={nbLocataires}
           montantRestant={recouvrement?.reste ?? 0}
-          logementSansAnnonce={logementLibreSansAnnonce}
         />
       ) : null}
 

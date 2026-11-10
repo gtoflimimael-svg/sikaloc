@@ -49,15 +49,6 @@ const CONTENUS: Record<ContexteConnexion, {
     titreFormulaire: 'Bon retour',
     aideFormulaire: 'Utilisez le compte associé à votre invitation déjà acceptée.',
   },
-  find: {
-    label: 'Sikaloc Find',
-    titre: 'Votre prochain logement commence ici.',
-    description: 'Connectez-vous ou créez un compte pour envoyer votre candidature.',
-    image: '/images/find/sikaloc-find-login-kitchen-visit.webp',
-    alt: 'Image illustrative : une candidate examine les rangements d’une cuisine pendant la visite d’un appartement.',
-    titreFormulaire: 'Continuez votre candidature',
-    aideFormulaire: 'Connectez-vous pour reprendre le parcours du logement choisi.',
-  },
   general: {
     label: 'Sikaloc',
     titre: 'Bienvenue sur Sikaloc.',
@@ -69,7 +60,7 @@ const CONTENUS: Record<ContexteConnexion, {
   },
 }
 
-function LiensSecondaires({ contexte, suite }: { contexte: ContexteConnexion; suite: string }) {
+function LiensSecondaires({ contexte }: { contexte: ContexteConnexion }) {
   if (contexte === 'pro') {
     return (
       <p>
@@ -84,21 +75,6 @@ function LiensSecondaires({ contexte, suite }: { contexte: ContexteConnexion; su
       <p>
         <span>Vous n’avez pas encore reçu d’invitation ?</span>
         <Link href="/me/rejoindre">Comment accéder à Sikaloc Me ?</Link>
-      </p>
-    )
-  }
-
-  if (contexte === 'find') {
-    const annonceCandidature = /^\/find\/[0-9a-hjkmnp-tv-z]{10}\/candidater(?:\?|$)/.test(suite)
-    return annonceCandidature ? (
-      <p>
-        Pas encore de compte candidat ?{' '}
-        <Link href={suite}>Créer un compte pour cette candidature</Link>
-      </p>
-    ) : (
-      <p>
-        La création d’un compte candidat se fait au moment d’une candidature.{' '}
-        <Link href="/find">Explorer les annonces</Link>
       </p>
     )
   }
@@ -126,7 +102,7 @@ export default async function PageConnexion({
     contexte,
   )
   const contenu = CONTENUS[contexte]
-  const espaceMarque = contexte === 'pro' ? 'Pro' : contexte === 'me' ? 'Me' : contexte === 'find' ? 'Find' : null
+  const espaceMarque = contexte === 'pro' ? 'Pro' : contexte === 'me' ? 'Me' : null
 
   return (
     <main id="contenu-principal" tabIndex={-1} className="connexion-page">
@@ -180,7 +156,7 @@ export default async function PageConnexion({
             <FormulaireConnexion suite={suite} contexte={contexte} />
 
             <div className="connexion-secondary-links" data-context={contexte}>
-              <LiensSecondaires contexte={contexte} suite={suite} />
+              <LiensSecondaires contexte={contexte} />
             </div>
 
             <Link href="/" className="connexion-home-link">

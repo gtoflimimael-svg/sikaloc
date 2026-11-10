@@ -8,7 +8,7 @@ export function BandeauDemoLocal() {
 
   return (
     <aside className={styles.banner} role="status">
-      Démonstration locale · comptes, annonces et données fictifs · aucun service de production
+      Démonstration locale · comptes et données fictifs · aucun service de production
     </aside>
   )
 }

@@ -29,7 +29,7 @@ export default async function PageNouveauLogement() {
     <div className={`${styles.formPage} property-form-page`}>
       <EnTetePage
         titre="Nouveau logement"
-        description="Décrivez le bien pour le retrouver dans votre parc, puis le rattacher à un bail ou préparer une annonce."
+        description="Décrivez le bien pour le retrouver dans votre parc et, si besoin, le rattacher à un bail."
       />
 
       {quotaIndisponible ? (

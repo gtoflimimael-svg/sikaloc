@@ -34,20 +34,6 @@ export type ModeleEmail =
   // qu'il a fait — inviter quelqu'un — et il n'a aucun autre moyen de savoir
   // que son invitation a abouti.
   | 'locataire_a_rejoint'
-  // ─── Les candidatures (Sikaloc_Find) ─────────────────────────────────
-  //
-  // Le premier va au BAILLEUR : quelqu'un s'intéresse à son annonce, et rien
-  // dans Sikaloc ne le lui dirait autrement. Les trois suivants vont au
-  // CANDIDAT : il a écrit, on lui répond — sans cela, il n'a aucune raison
-  // de revenir voir. Le dernier revient au bailleur, quand le candidat s'en
-  // va de lui-même.
-  //
-  // Aucun ne transmet de coordonnées : le nom, l'annonce, et un lien.
-  | 'candidature_recue'
-  | 'candidature_en_etude'
-  | 'candidature_acceptee'
-  | 'candidature_refusee'
-  | 'candidature_retiree'
   | 'question_recue'
 
 export interface VariablesEmail {
@@ -87,25 +73,6 @@ function urlExport(): string {
  * `scripts/generer-logo-email.ts`) et affiché ici à sa taille /3 — la
  * technique standard pour rester net sur écran Retina en email.
  */
-/** Où le candidat retrouve ses candidatures. */
-function urlMesCandidatures(): string {
-  return `${urlBase()}/me/candidatures`
-}
-
-/**
- * Où le bailleur lit les candidatures d'une annonce.
- *
- * L'identifiant interne de l'annonce est le SEUL identifiant qui figure dans
- * un email, et seulement dans ce lien-ci : c'est l'adresse de la page, elle ne
- * s'écrit pas autrement. À défaut, la liste des annonces fait l'affaire.
- */
-function urlCandidaturesPro(annonceId: unknown): string {
-  const id = String(annonceId ?? '')
-  return /^[0-9a-f-]{36}$/i.test(id)
-    ? `${urlBase()}/pro/annonces/${id}/candidatures`
-    : `${urlBase()}/pro/annonces`
-}
-
 function urlLogo(): string {
   return `${urlBase()}/marque/logo-email.png`
 }
@@ -117,18 +84,6 @@ function urlGestionQuestions(): string {
 export function composer(modele: ModeleEmail, variables: VariablesEmail): Message {
   const prenom = String(variables.nom ?? '').trim().split(/\s+/)[0] || 'Bonjour'
   const action = { libelle: 'Régler mon abonnement', url: urlAbonnement() }
-
-  /** « Appartement à Fidjrossè, Cotonou » — ce que Find publie, rien de plus. */
-  const logementPublic = (): string => {
-    const type = String(variables.type ?? 'Logement')
-    const quartier = String(variables.quartier ?? '').trim()
-    const ville = String(variables.ville ?? '').trim()
-    const lieu = [quartier, ville].filter(Boolean).join(', ')
-    return lieu ? `${type} à ${lieu}` : type
-  }
-  const reference = (): string => `réf. ${String(variables.reference ?? '')}`
-  /** Le nom du candidat, ou un libellé neutre si le compte a disparu. */
-  const candidat = (): string => String(variables.candidat_nom ?? '').trim() || 'Un candidat'
 
   switch (modele) {
     // Alerte d'exploitation sans nom, coordonnées ni contenu de la question.
@@ -142,91 +97,6 @@ export function composer(modele: ModeleEmail, variables: VariablesEmail): Messag
           'Le message et la coordonnée de réponse sont disponibles dans l’espace interne protégé.',
         ],
         action: { libelle: 'Ouvrir les demandes', url: urlGestionQuestions() },
-      }
-    }
-
-    // ─── Une candidature arrive ───────────────────────────────────────
-    //
-    // Le message ne promet rien au bailleur et ne lui demande rien : il
-    // signale, et ouvre la porte. Le nom du candidat suffit à donner sa
-    // consistance au message ; son téléphone et son adresse ne sont pas là,
-    // et le mail le dit, pour qu'il ne les cherche pas.
-    case 'candidature_recue': {
-      return {
-        ton: 'info',
-        sujet: `Nouvelle candidature — ${logementPublic()}`,
-        titre: `${candidat()} a candidaté à votre annonce`,
-        corps: [
-          `${logementPublic()}, ${reference()}.`,
-          'Vous pouvez lire son message et répondre depuis Sikaloc_Pro.',
-          'Ses coordonnées ne vous sont pas transmises, et Sikaloc ne lui promet aucune réponse de votre part.',
-        ],
-        action: {
-          libelle: 'Voir la candidature',
-          url: urlCandidaturesPro(variables.annonce_id),
-        },
-      }
-    }
-
-    // ─── Le bailleur a répondu ────────────────────────────────────────
-    //
-    // Trois messages voisins, volontairement factuels : ils annoncent un
-    // changement de statut, pas une décision de vie. « Acceptée » ne veut
-    // dire ni logement réservé, ni bail signé — et le message le dit, parce
-    // que c'est exactement ce qu'on lira entre les lignes sinon.
-    case 'candidature_en_etude': {
-      return {
-        ton: 'info',
-        sujet: `Votre candidature est à l’étude — ${logementPublic()}`,
-        titre: 'Votre candidature est à l’étude',
-        corps: [
-          `Le bailleur du ${logementPublic().toLowerCase()} (${reference()}) a mis votre candidature à l’étude.`,
-          'Cela signifie qu’il l’a vue. Sikaloc ne peut ni annoncer de décision, ni de délai.',
-        ],
-        action: { libelle: 'Voir mes candidatures', url: urlMesCandidatures() },
-      }
-    }
-
-    case 'candidature_acceptee': {
-      return {
-        ton: 'info',
-        sujet: `Votre candidature est acceptée — ${logementPublic()}`,
-        titre: 'Votre candidature est acceptée',
-        corps: [
-          `Le bailleur du ${logementPublic().toLowerCase()} (${reference()}) a accepté votre candidature.`,
-          'Cette acceptation ne réserve pas le logement et ne crée aucun bail : la suite se convient directement avec le bailleur.',
-        ],
-        action: { libelle: 'Voir mes candidatures', url: urlMesCandidatures() },
-      }
-    }
-
-    case 'candidature_refusee': {
-      return {
-        ton: 'info',
-        sujet: `Votre candidature n’a pas été retenue — ${logementPublic()}`,
-        titre: 'Votre candidature n’a pas été retenue',
-        corps: [
-          `Le bailleur du ${logementPublic().toLowerCase()} (${reference()}) n’a pas retenu votre candidature.`,
-          'D’autres logements sont publiés sur Sikaloc_Find.',
-        ],
-        action: { libelle: 'Voir mes candidatures', url: urlMesCandidatures() },
-      }
-    }
-
-    // ─── Le candidat se retire ────────────────────────────────────────
-    case 'candidature_retiree': {
-      return {
-        ton: 'info',
-        sujet: `Candidature retirée — ${logementPublic()}`,
-        titre: `${candidat()} a retiré sa candidature`,
-        corps: [
-          `${logementPublic()}, ${reference()}.`,
-          'Elle reste visible dans votre espace, marquée « retirée ». Aucune action n’est attendue de vous.',
-        ],
-        action: {
-          libelle: 'Voir les candidatures',
-          url: urlCandidaturesPro(variables.annonce_id),
-        },
       }
     }
 

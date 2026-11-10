@@ -31,50 +31,34 @@ import { obtenirUtilisateur } from '@/lib/supabase/serveur'
  *
  * ─── La règle qui a décidé de chaque lien ───────────────────────────────────
  *
- * Trois espaces, trois états différents, trois traitements :
+ * Deux espaces, deux accès complémentaires :
  *
- *     Sikaloc_Pro    existe et s'ouvre à tous       → lien vers /pro
- *     Sikaloc_Me     existe, mais on y entre sur
- *                    invitation de son bailleur     → lien vers /me/rejoindre,
- *                                                     qui explique comment
- *     Sikaloc_Find   existe depuis S5 : le catalogue
- *                    des annonces publiées           → lien vers /find
- *
- * Le troisième a longtemps été le seul sans lien : annoncer une recherche de
- * logements avec un bouton menant à une page introuvable aurait été la
- * promesse en trompe-l'œil que ce produit s'interdit. Le lien n'est venu
- * qu'avec la page.
+ *     Sikaloc_Pro    gestion locative               → lien vers /pro
+ *     Sikaloc_Me     accès locataire sur invitation → lien vers /me/rejoindre
  */
 
 export const metadata: Metadata = {
   // `absolute` : le gabarit de la racine ajouterait « · Sikaloc » à un titre
   // qui commence déjà par le nom de la marque.
   title: { absolute: 'Sikaloc — gestion locative et logements au Bénin' },
-  // Au présent depuis S5 : `/find` existe. Tant qu'il n'existait pas, cette
-  // description disait « bientôt » — elle s'affiche seule dans un résultat de
-  // recherche, et promettait sinon une page qu'on ne trouvait pas en cliquant.
   description:
-    'Sikaloc relie recherche de logements, gestion locative et accès aux ' +
-    'informations de location au Bénin, avec un espace adapté à chaque usage.',
+    'Sikaloc accompagne la gestion locative au Bénin, avec un espace pour les ' +
+    'bailleurs et un accès aux informations partagées pour les locataires.',
   alternates: { canonical: '/' },
 }
 
 /**
  * Les ancres de l'en-tête.
  *
- * Trois, et courtes : la barre est mesurée au pixel près — à 1024 px elle
+ * Deux entrées courtes : la barre reste lisible sur ordinateur et mobile.
+ * La barre est mesurée au pixel près — à 1024 px elle
  * consommait 949 px pour 960 disponibles avant d'être élargie. Un quatrième
  * libellé la ferait déborder (voir les commentaires d'`EnTetePublic`).
  *
- * « Trouver un logement » a donc pris la place de « Comment ça marche », et
- * non une place de plus : une porte vers une page vaut mieux, dans la barre,
- * qu'une ancre vers une section qu'on atteint en faisant défiler. L'ancre
- * reste dans le tiroir et dans le pied de page.
  */
 const LIENS_ACCUEIL: LienEnTete[] = [
   { href: '#espaces', libelle: 'Les espaces' },
-  { href: '/find', libelle: 'Trouver un logement' },
-  { href: '/pro', libelle: 'Bailleurs' },
+  { href: '/pro', libelle: 'Sikaloc Pro' },
 ]
 
 /**
@@ -86,8 +70,7 @@ const LIENS_ACCUEIL: LienEnTete[] = [
 const LIENS_TIROIR_ACCUEIL: LienEnTete[] = [
   { href: '#espaces', libelle: 'Les espaces' },
   { href: '#parcours', libelle: 'Comment ça marche' },
-  { href: '/find', libelle: 'Trouver un logement' },
-  { href: '/pro', libelle: 'Bailleurs' },
+  { href: '/pro', libelle: 'Sikaloc Pro' },
   { href: '/me/rejoindre', libelle: 'Je suis locataire' },
 ]
 
@@ -101,7 +84,7 @@ export default async function PageAccueil() {
         Ni `espace`, ni `marqueHref` : ici la marque est Sikaloc tout court, et
         elle mène à sa propre page. C'est la seule page du site où le wordmark
         ne porte pas de suffixe — et c'est ce qui dit qu'on est au-dessus des
-        trois espaces, pas dans l'un d'eux.
+        deux espaces, pas dans l'un d'eux.
       */}
       <EnTetePublic
         connecte={Boolean(utilisateur)}
@@ -127,22 +110,22 @@ export default async function PageAccueil() {
                 </p>
 
                 <h1 className="home-hero-title text-balance home-intro-item" data-home-intro-step="1">
-                  <span className="home-hero-title-main">Un logement à trouver.</span>
+                  <span className="home-hero-title-main">Des locations à gérer.</span>
                   <span className="home-hero-title-support">Des loyers à suivre.</span>
-                  <span className="home-hero-title-support home-hero-title-mark">Des preuves à garder.</span>
+                  <span className="home-hero-title-support home-hero-title-mark">Des documents à retrouver.</span>
                 </h1>
 
                 <p className="public-hero-copy home-hero-description home-intro-item" data-home-intro-step="2">
-                  Sikaloc réunit la recherche de logements, le suivi locatif et les documents de location
-                  dans des espaces dédiés aux bailleurs, aux locataires invités et aux candidats.
+                  Sikaloc réunit la gestion locative et les documents de location
+                  dans un espace bailleur et un espace locataire accessible sur invitation.
                 </p>
 
                 <div className="home-hero-actions home-intro-item" data-home-intro-step="3">
                   <Link href="/pro?presentation=1" className="btn btn-primary">
                     Découvrir Sikaloc Pro <ArrowRight size={17} aria-hidden="true" />
                   </Link>
-                  <Link href="/find" className="btn btn-secondary home-hero-secondary">
-                    Trouver un logement <ArrowRight size={16} aria-hidden="true" />
+                  <Link href="/me/rejoindre" className="btn btn-secondary home-hero-secondary">
+                    Accéder à Sikaloc Me <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 </div>
 
@@ -279,36 +262,6 @@ export default async function PageAccueil() {
           </div>
         </section>
 
-        <section id="trouver" className="home-find-section" aria-labelledby="home-find-title">
-          <div className="home-find-layout mx-auto max-w-[1200px]">
-            <div className="home-find-copy" data-home-reveal>
-              <p className="home-product-label">Sikaloc Find</p>
-              <h2 id="home-find-title" className="home-product-title">
-                Cherchez avec vos propres repères.
-              </h2>
-              <p className="home-product-description">
-                Choisissez une ville, un type de bien et une fourchette de loyer.
-                Find affiche les annonces publiées qui correspondent à votre recherche.
-              </p>
-              <Link href="/find" className="home-product-link">
-                Explorer les annonces <ArrowRight size={18} aria-hidden="true" />
-              </Link>
-            </div>
-
-            <figure className="home-product-visual home-product-visual--find" data-home-reveal>
-              <div className="home-product-visual-frame">
-                <Image
-                  src="/images/home/sikaloc-find-editorial.webp"
-                  alt="Scène illustrative : un couple béninois découvre un appartement contemporain."
-                  width={1536}
-                  height={1024}
-                  sizes="(max-width: 900px) 92vw, (max-width: 1200px) 60vw, 700px"
-                />
-              </div>
-            </figure>
-          </div>
-        </section>
-
         {/* ── Le parcours ──────────────────────────────────────────────── */}
         <section id="parcours" className="home-journey-section">
           <div className="mx-auto max-w-[1200px]">
@@ -316,11 +269,9 @@ export default async function PageAccueil() {
               <p className="home-section-label">Comment les espaces se complètent</p>
               <h2 className="home-section-title">Chaque espace garde son rôle.</h2>
               <p className="home-journey-transition">
-                Dans <strong>Pro</strong>, le bailleur organise ses locations et
-                peut choisir de publier une annonce sur <strong>Find</strong>.
-                Les candidatures restent des demandes à examiner : elles ne
-                créent pas de bail. L’accès à <strong>Me</strong> se fait sur
-                invitation du bailleur.
+                Dans <strong>Pro</strong>, le bailleur organise ses logements,
+                ses baux et ses paiements. L’accès à <strong>Me</strong> se fait
+                sur invitation du bailleur.
               </p>
             </div>
           </div>
@@ -377,7 +328,7 @@ export default async function PageAccueil() {
                 <span>Votre manière d’avancer.</span>
               </h2>
               <p className="home-final-description">
-                Bailleur, locataire ou en recherche de logement : trouvez l&apos;espace qui vous correspond.
+                Bailleur ou locataire invité : retrouvez l&apos;espace qui correspond à votre rôle.
               </p>
             </div>
 
@@ -387,8 +338,8 @@ export default async function PageAccueil() {
                   <span>{utilisateur ? 'Ouvrir mon espace' : 'Créer un compte bailleur'}</span>
                   <ArrowRight size={18} aria-hidden="true" />
                 </Link>
-                <Link href="/find" className="home-final-action home-final-action--find">
-                  <span>Explorer les annonces</span>
+                <Link href="/me/rejoindre" className="home-final-action home-final-action--me">
+                  <span>Accéder à Sikaloc Me</span>
                   <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>

@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { droits, MESSAGE_ECRITURE_BLOQUEE } from '@/lib/acces'
 import {
   AUCUN_ROLE,
-  CANDIDATURES,
   destinationApresConnexion,
   ESPACE_PRO,
   type Roles,
@@ -113,13 +112,11 @@ export async function locataireCourant(): Promise<{ compteId: string; email: str
   const roles = await rolesDuCompte()
 
   if (!roles.estLocataire) {
-    // Un bailleur égaré : on le renvoie chez lui. Un candidat : vers ses
-    // candidatures — lui dire « demandez une invitation à votre bailleur »
-    // serait une réponse à une question qu'il n'a pas posée. Quelqu'un sans
-    // aucun rôle — un compte créé depuis une invitation dont le rattachement a
-    // échoué — atterrit sur l'explication, qui reste la seule réponse utile.
+    // Un bailleur égaré : on le renvoie chez lui. Un compte candidat historique
+    // sans rôle locataire ne reçoit aucun accès Me et retourne au site public.
+    // Quelqu'un sans rôle atterrit sur l'explication de l'invitation.
     if (roles.estBailleur) redirect(ESPACE_PRO.tableauDeBord)
-    redirect(roles.estCandidat ? CANDIDATURES : '/me/rejoindre')
+    redirect(roles.estCandidat ? '/' : '/me/rejoindre')
   }
 
   return { compteId: user.id, email: user.email ?? '' }
