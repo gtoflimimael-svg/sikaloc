@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs/config'
 import { isMaintenanceEnabled } from './src/lib/maintenance-policy.mjs'
 
 /**
@@ -142,4 +143,19 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+/**
+ * Sentry (OPS-01). Sans SENTRY_AUTH_TOKEN, aucune source map n'est envoyée et
+ * aucune release n'est créée : le build reste identique, local comme en CI.
+ * Les cartes côté client sont supprimées après envoi.
+ */
+const jetonSentry = process.env.SENTRY_AUTH_TOKEN
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: jetonSentry,
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: { disable: !jetonSentry, deleteSourcemapsAfterUpload: true },
+  release: { create: Boolean(jetonSentry) },
+})

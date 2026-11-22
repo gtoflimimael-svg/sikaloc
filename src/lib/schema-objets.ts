@@ -497,6 +497,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "colonnes_schema",
+    "migration": "20261122170000_colonnes_schema.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "conclure_tentative_connexion",
     "migration": "20261122150000_limiter_tentatives_connexion.sql"
   },

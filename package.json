@@ -66,10 +66,13 @@
     "banc:chemins": "tsx scripts/banc-chemins.ts",
     "banc:suppressions": "node scripts/banc-suppressions.cjs",
     "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts",
-    "test:securite": "node --import tsx --test tests/securite-applicative.test.mjs"
+    "test:securite": "node --import tsx --test tests/securite-applicative.test.mjs",
+    "verrouiller:migrations": "node scripts/verifier-migrations-statique.mjs --verrouiller",
+    "test": "node scripts/tests-tous.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
+    "@sentry/nextjs": "11.11.0",
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.112.3",
     "@zxcvbn-ts/core": "^4.2.0",

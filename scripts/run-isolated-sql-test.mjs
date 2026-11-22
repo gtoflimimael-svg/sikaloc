@@ -46,19 +46,25 @@ try {
   process.exit(2)
 }
 
-const fichier = fileURLToPath(new URL('../tests/receipt-historique-asof.integration.sql', import.meta.url))
-const resultat = spawnSync('psql', ['-X', '-v', 'ON_ERROR_STOP=1', '-f', fichier], {
-  env, encoding: 'utf8', timeout: 30000,
-})
-if (resultat.status !== 0) {
-  process.stderr.write('Échec du scénario SQL de reçu historique ; consulter la sortie locale de psql.\n')
+// Tous les scénarios `tests/*.integration.sql`, chacun devant prouver son
+// succès par une ligne « PASS: » (NOTICE psql) ; chaque scénario annule ses
+// propres fixtures.
+const dossierTests = new URL('../tests/', import.meta.url)
+const scenarios = readdirSync(dossierTests).filter((nom) => nom.endsWith('.integration.sql')).sort()
+if (scenarios.length === 0) {
+  process.stderr.write('Aucun scénario SQL d’intégration trouvé.\n')
   process.exit(1)
 }
-if (!resultat.stdout.includes('PASS: courant 50000/50000; reçu historique 30000/70000')) {
-  // psql envoie les NOTICE sur stderr selon sa configuration.
-  if (!resultat.stderr.includes('PASS: courant 50000/50000; reçu historique 30000/70000')) {
-    process.stderr.write('Le scénario SQL n’a pas produit sa preuve PASS attendue.\n')
+for (const nom of scenarios) {
+  const resultat = spawnSync('psql', ['-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', fileURLToPath(new URL(nom, dossierTests))], {
+    env, encoding: 'utf8', timeout: 60000,
+  })
+  const sortie = `${resultat.stdout ?? ''}\n${resultat.stderr ?? ''}`
+  const echec = sortie.split('\n').find((ligne) => /ERROR|FAIL/.test(ligne))
+  if (resultat.status !== 0 || !/PASS:/.test(sortie)) {
+    process.stderr.write(`ÉCHEC ${nom}${echec ? ` : ${echec.replace(/^.*?(ERROR|FAIL)/, '$1').slice(0, 300)}` : ''}\n`)
     process.exit(1)
   }
+  process.stdout.write(`PASS ${nom}\n`)
 }
-process.stdout.write('PASS : reçu historique à sa date, sur pile locale marquée jetable.\n')
+process.stdout.write(`${scenarios.length} scénario(s) SQL réussis sur pile locale marquée jetable.\n`)

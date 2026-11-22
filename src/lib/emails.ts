@@ -4,6 +4,7 @@ import { deposerCourrierLocal, pileLocale } from '@/lib/courrier-local'
 import { formaterFCFA } from '@/lib/format'
 import { COULEUR_MARQUE, COULEUR_MARQUE_SUR_SOMBRE } from '@/lib/marque'
 import { PRIX_STANDARD_FCFA } from '@/lib/plan'
+import { journaliserEchec } from '@/lib/journal'
 
 /**
  * Emails transactionnels via Resend — rappels du cycle de grâce (v2.1 §4).
@@ -460,6 +461,7 @@ export async function envoyerEmail(
     if (typeof donnees?.id !== 'string' || !donnees.id.trim()) return { ok: false, etat: 'incertain', message: 'Confirmation transport absente.' }
     return { ok: true, id: donnees.id }
   } catch (erreur) {
+    journaliserEchec('emails.resend', erreur)
     return {
       ok: false,
       etat: 'incertain',

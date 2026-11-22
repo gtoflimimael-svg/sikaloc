@@ -14,6 +14,7 @@
  * Ce module ne dépend d'aucune API Node : il tourne dans le proxy.
  */
 
+import { getSentryCspOrigin } from './sentry-csp.mjs'
 import { getSupabaseCspOrigins } from './supabase-csp.mjs'
 
 export const EN_TETE_NONCE = 'x-nonce'
@@ -34,13 +35,17 @@ export function politiqueCsp({
   chemin,
   developpement = process.env.NODE_ENV === 'development',
   urlSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL,
+  dsnSentry = process.env.NEXT_PUBLIC_SENTRY_DSN,
 }: {
   nonce: string
   chemin: string
   developpement?: boolean
   urlSupabase?: string
+  dsnSentry?: string
 }): string {
   const { httpOrigin, websocketOrigin } = getSupabaseCspOrigins(urlSupabase)
+  // Envoi des erreurs du navigateur à Sentry (OPS-01) : origine seule, sans clé.
+  const sentry = getSentryCspOrigin(dsnSentry)
   const directives = [
     "default-src 'self'",
     // `unsafe-eval` en développement seulement : React s'en sert pour ses
@@ -49,7 +54,7 @@ export function politiqueCsp({
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' blob: data: ${httpOrigin}`,
     "font-src 'self'",
-    `connect-src 'self' ${httpOrigin} ${websocketOrigin}`,
+    `connect-src 'self' ${httpOrigin} ${websocketOrigin}${sentry ? ` ${sentry}` : ''}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

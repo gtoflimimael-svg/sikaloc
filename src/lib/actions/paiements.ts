@@ -11,6 +11,7 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaPaiement, type EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
 import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
+import { journaliserEchec } from '@/lib/journal'
 
 function lireFormulaire(donnees: FormData) {
   return schemaPaiement.safeParse({
@@ -64,6 +65,8 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
     quittance = await genererEtStocker(id, true)
   } catch (erreur) {
     if (erreur instanceof SignatureQuittanceRequiseError) return { signatureRequise: true }
+    // La cause réelle reste invisible à l'écran mais jamais perdue (OPS-07).
+    journaliserEchec('paiements.valider', erreur)
     return { erreur: 'Validation ou émission impossible. Le paiement peut déjà être validé : consultez sa fiche puis relancez la génération si nécessaire.' }
   }
 
@@ -95,6 +98,7 @@ export async function regenererQuittance(paiementId: string): Promise<EtatFormul
   } catch (erreur) {
     if (erreur instanceof Error && erreur.message === 'NEXT_REDIRECT') throw erreur
     if (erreur instanceof SignatureQuittanceRequiseError) return { signatureRequise: true }
+    journaliserEchec('paiements.regenerer', erreur)
     return {
       erreur:
         erreur instanceof Error
