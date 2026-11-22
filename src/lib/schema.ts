@@ -98,6 +98,32 @@ function colonnesAttendues(source: string, nomType: string): string[] {
   return [...source.slice(debut, fin).matchAll(/^\s{2}([a-z_][a-z0-9_]*)\??:/gm)].map((m) => m[1])
 }
 
+/** Colonnes par relation de `public`, lues dans le catalogue ; null si indisponible. */
+async function lireColonnesCatalogue(
+  fetchSupabase: typeof fetch,
+  url: string,
+  entetes: Record<string, string>,
+): Promise<Map<string, Set<string>> | null> {
+  try {
+    const reponse = await fetchSupabase(`${url}/rest/v1/rpc/colonnes_schema`, {
+      method: 'POST',
+      headers: { ...entetes, 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    if (!reponse.ok) return null
+    const lignes = (await reponse.json()) as { relation: string; colonne: string }[]
+    if (!Array.isArray(lignes) || lignes.length === 0) return null
+    const parRelation = new Map<string, Set<string>>()
+    for (const { relation, colonne } of lignes) {
+      if (!parRelation.has(relation)) parRelation.set(relation, new Set())
+      parRelation.get(relation)!.add(colonne)
+    }
+    return parRelation
+  } catch {
+    return null
+  }
+}
+
 export async function verifierSchema(): Promise<RapportSchema> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const cle = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -120,9 +146,29 @@ export async function verifierSchema(): Promise<RapportSchema> {
   const ecarts: EcartSchema[] = []
   let colonnesVerifiees = 0
 
+  // Source principale : le catalogue, via `colonnes_schema()`. Il répond quels
+  // que soient les droits de lecture : `baux_loyers` refuse volontairement
+  // service_role, ce qui rendait `v_echeances` « injoignable » chaque nuit.
+  // Repli sur la sonde PostgREST si la fonction n'est pas encore déployée.
+  const catalogue = await lireColonnesCatalogue(fetchSupabase, url, entetes)
+
   for (const [table, nomType] of Object.entries(TABLES)) {
     const attendues = colonnesAttendues(source, nomType)
     if (attendues.length === 0) continue
+
+    if (catalogue) {
+      const presentes = catalogue.get(table)
+      if (!presentes) {
+        ecarts.push({ table, colonnesManquantes: [], tableInaccessible: true })
+        continue
+      }
+      colonnesVerifiees += attendues.length
+      const manquantes = attendues.filter((colonne) => !presentes.has(colonne))
+      if (manquantes.length > 0) {
+        ecarts.push({ table, colonnesManquantes: manquantes, tableInaccessible: false })
+      }
+      continue
+    }
 
     if (!(await existe(table, '*'))) {
       ecarts.push({ table, colonnesManquantes: [], tableInaccessible: true })

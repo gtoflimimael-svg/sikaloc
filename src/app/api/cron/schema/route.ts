@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { requeteCronAutorisee } from '@/lib/cron-auth'
 import { decrireEcarts, verifierSchema } from '@/lib/schema'
+import { suivreCron } from '@/lib/cron-suivi'
 
 /**
  * Contrôle quotidien du schéma de la base.
@@ -156,6 +157,7 @@ export async function POST(request: NextRequest) {
  * inactive — les trois autres routes de `api/cron/` portaient bien ce délégué,
  * celle-ci seule l'avait perdu.
  */
+// Vercel Cron appelle GET : c'est là que se branche le suivi Sentry.
 export async function GET(request: NextRequest) {
-  return POST(request)
+  return suivreCron('schema', '45 2 * * *', request, () => POST(request))
 }

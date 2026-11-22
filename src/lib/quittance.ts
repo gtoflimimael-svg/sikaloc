@@ -24,6 +24,7 @@ import type {
 import { apercuDocumentPaiement, typeDocumentPaiement } from '@/lib/documents-paiement'
 import { reconnaitreFormat } from '@/lib/signature/fichier'
 import type { EtatSignaturePdf } from '@/lib/pdf/document-quittance'
+import { journaliserEchec } from '@/lib/journal'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -78,7 +79,8 @@ async function chargerSignature(chemin: string | null): Promise<SignatureChargee
       dataUri: `data:${typeMime};base64,${octets.toString('base64')}`,
       etat: 'apposee',
     }
-  } catch {
+  } catch (erreur) {
+    journaliserEchec('quittance.signature_illisible', erreur)
     // Le document peut être émis, mais l'état reste distinct d'une absence.
     return { dataUri: null, etat: 'indisponible' }
   }
@@ -135,7 +137,7 @@ export class SignatureQuittanceRequiseError extends Error {
 async function identiteServeur(): Promise<string> {
   const client = await creerClientServeur()
   const { data: { user }, error } = await client.auth.getUser()
-  if (error || !user) throw new Error(REFUS_QUITTANCE)
+  if (error || !user) throw refusQuittance('authentification', error)
   return user.id
 }
 
@@ -178,7 +180,7 @@ async function donneesDuContexte(
     ? Number(finances.cumul_loyer)
     : undefined
   const datePaiement = finances?.date_paiement ?? paiement.date_paiement
-  if (!datePaiement) throw new Error(REFUS_QUITTANCE)
+  if (!datePaiement) throw refusQuittance('date_paiement')
   const versementCourant: VersementPdf = {
     montant: Number(finances?.montant ?? paiement.montant),
     datePaiement,
@@ -193,15 +195,15 @@ async function donneesDuContexte(
     const ids = instantane.map((versement) => versement.id)
 
     if (new Set(ids).size !== ids.length || ids.some((id) => !UUID.test(id))) {
-      throw new Error(REFUS_QUITTANCE)
+      throw refusQuittance('versements_doublons')
     }
     if (ids.length > 0 && !ids.includes(paiement.id)) {
-      throw new Error(REFUS_QUITTANCE)
+      throw refusQuittance('versements_hors_periode')
     }
 
     if (ids.length === 1) {
       if (Math.abs((montantCumule ?? versementCourant.montant) - versementCourant.montant) > 0.001) {
-        throw new Error(REFUS_QUITTANCE)
+        throw refusQuittance('versement_montant')
       }
     } else if (ids.length > 1) {
       // Les identifiants viennent de l'instantané financier produit par la RPC
@@ -217,7 +219,7 @@ async function donneesDuContexte(
         .eq('type_paiement', 'Loyer')
         .eq('statut', 'Validé')
 
-      if (error || !data || data.length !== ids.length) throw new Error(REFUS_QUITTANCE)
+      if (error || !data || data.length !== ids.length) throw refusQuittance('versements_lecture', error)
 
       const lignes = data.map((ligne) => ({
         montant: Number(ligne.montant),
@@ -228,7 +230,7 @@ async function donneesDuContexte(
       if (
         data.some((ligne) => !ids.includes(ligne.id)) ||
         Math.abs(totalVersements - (montantCumule ?? 0)) > 0.001
-      ) throw new Error(REFUS_QUITTANCE)
+      ) throw refusQuittance('versements_coherence')
 
       versements = lignes.sort((a, b) =>
         (a.datePaiement ?? '').localeCompare(b.datePaiement ?? ''),
@@ -236,7 +238,7 @@ async function donneesDuContexte(
     } else if (Math.abs((montantCumule ?? versementCourant.montant) - versementCourant.montant) > 0.001) {
       // Pas de détail de versements fiable : ne pas émettre une quittance qui
       // afficherait un total collectif sans pouvoir l'expliquer.
-      throw new Error(REFUS_QUITTANCE)
+      throw refusQuittance('versements_controle')
     }
   }
 
@@ -348,7 +350,7 @@ async function verifierSignatureAvantPreparation({
     .maybeSingle()
 
   if (erreurPaiement || !paiement || paiement.bailleur_id !== acteur) {
-    throw new Error(REFUS_QUITTANCE)
+    throw refusQuittance('precontrole_paiement', erreurPaiement)
   }
   if (paiement.type_paiement !== 'Loyer') return
   if (!valider && paiement.statut !== 'Validé') return
@@ -362,7 +364,7 @@ async function verifierSignatureAvantPreparation({
       .eq('paiement_id', paiementId)
       .eq('bailleur_id', acteur)
       .maybeSingle()
-    if (erreurQuittance) throw new Error(REFUS_QUITTANCE)
+    if (erreurQuittance) throw refusQuittance('precontrole_quittance', erreurQuittance)
     if (existante?.pdf_chemin && existante.hash_sha256) return
   }
 
@@ -373,7 +375,7 @@ async function verifierSignatureAvantPreparation({
     .eq('periode_debut', paiement.periode_debut)
     .maybeSingle()
 
-  if (erreurEcheance) throw new Error(REFUS_QUITTANCE)
+  if (erreurEcheance) throw refusQuittance('precontrole_echeance', erreurEcheance)
 
   const loyerApplicable = typeof echeance?.montant_exigible === 'number'
     ? Number(echeance.montant_exigible)
@@ -389,11 +391,30 @@ async function verifierSignatureAvantPreparation({
     cumulValideAvant,
   })
 
-  if (!apercu.typeDocument) throw new Error(REFUS_QUITTANCE)
+  if (!apercu.typeDocument) throw refusQuittance('apercu_type_document')
   if (apercu.typeDocument !== 'Quittance') return
 
   const signature = await chargerSignature(bailleur.signature_chemin)
   if (signature.etat !== 'apposee') throw new SignatureQuittanceRequiseError()
+}
+
+/**
+ * Refus d'émission avec sa cause technique (OPS-07).
+ *
+ * Le message reste `REFUS_QUITTANCE` pour l'utilisateur ; l'étape et le code
+ * d'erreur d'origine voyagent dans `cause` jusqu'au journal serveur, sans
+ * donnée personnelle. Avant, toutes les causes se confondaient en un seul
+ * message, et un défaut de schéma restait invisible.
+ */
+export function refusQuittance(etape: string, origine?: unknown): Error {
+  const o = origine && typeof origine === 'object' ? origine as { code?: unknown; name?: unknown } : null
+  return new Error(REFUS_QUITTANCE, {
+    cause: {
+      etape,
+      code: typeof o?.code === 'string' ? o.code : undefined,
+      nom: typeof o?.name === 'string' ? o.name : undefined,
+    },
+  })
 }
 
 /**
@@ -406,9 +427,9 @@ export async function genererEtStocker(
   valider = false,
 ): Promise<QuittanceGeneree> {
   const acteur = await identiteServeur()
-  if (!UUID.test(paiementId)) throw new Error(REFUS_QUITTANCE)
+  if (!UUID.test(paiementId)) throw refusQuittance('identifiant_paiement')
   const acces = await bailleurAvecEcriture()
-  if (!acces.ok || acces.bailleur.id !== acteur) throw new Error(REFUS_QUITTANCE)
+  if (!acces.ok || acces.bailleur.id !== acteur) throw refusQuittance('acces_ecriture')
   await verifierSignatureAvantPreparation({
     paiementId,
     acteur,
@@ -422,7 +443,7 @@ export async function genererEtStocker(
   if (error?.message.includes('SIGNATURE_QUITTANCE_REQUISE')) {
     throw new SignatureQuittanceRequiseError()
   }
-  if (error || !data) throw new Error(REFUS_QUITTANCE)
+  if (error || !data) throw refusQuittance('preparation_emission', error)
   const emission = data as unknown as {
     jeton: string; contexte: ContexteQuittance; quittance: DocumentAutorise['quittance'];
     deja_publiee?: boolean; en_cours?: boolean
@@ -454,12 +475,12 @@ export async function genererEtStocker(
       const { error: depotSignature } = await admin.storage.from('signatures').upload(
         snapshot, octets, { contentType: donnees.signatureDataUri.slice(5).split(';')[0], upsert: false },
       )
-      if (depotSignature) throw new Error(REFUS_QUITTANCE)
+      if (depotSignature) throw refusQuittance('depot_signature', depotSignature)
     }
     const { error: depot } = await admin.storage.from('quittances').upload(
       chemin, pdf, { contentType: 'application/pdf', upsert: false },
     )
-    if (depot) throw new Error(REFUS_QUITTANCE)
+    if (depot) throw refusQuittance('depot_pdf', depot)
     publicationCommencee = true
     const { error: publication } = await admin.rpc('publier_emission_quittance', {
       p_acteur: acteur, p_paiement: paiementId, p_jeton: jeton,
@@ -468,7 +489,7 @@ export async function genererEtStocker(
     // Un SQLSTATE atteste un rejet SQL/rollback, contrairement à une erreur réseau.
     if (publication) {
       publicationCommencee = !/^[0-9A-Z]{5}$/.test(publication.code ?? '')
-      throw new Error(REFUS_QUITTANCE)
+      throw refusQuittance('publication', publication)
     }
     return {
       id: quittance.id,
@@ -490,7 +511,7 @@ export async function genererEtStocker(
       }).then(() => undefined, () => undefined)
     }
     if (erreur instanceof SignatureQuittanceRequiseError) throw erreur
-    throw new Error(REFUS_QUITTANCE)
+    throw refusQuittance('rendu_document', erreur)
   }
 }
 

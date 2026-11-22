@@ -2,6 +2,7 @@ import 'server-only'
 
 import type { ResultatEnvoi } from '@/lib/emails'
 import { creerClientAdmin } from '@/lib/supabase/admin'
+import { journaliserEchec } from '@/lib/journal'
 
 export type FileNotification = 'emails_a_envoyer'
 export type TransportNotification = (destinataire: string, modele: string, variables: Record<string, unknown>, idempotence: string) => Promise<ResultatEnvoi>
@@ -25,7 +26,8 @@ export async function viderNotifications(
     let envoi: ResultatEnvoi
     try {
       envoi = await envoyer(String(message.destinataire), String(message.modele), (message.variables ?? {}) as Record<string, unknown>, String(message.id))
-    } catch {
+    } catch (erreur) {
+      journaliserEchec('notifications.envoi', erreur, { file: table })
       envoi = { ok: false, etat: 'incertain' }
     }
     // « Accepté par le transport » ne prouve pas la réception dans la boîte finale.

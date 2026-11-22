@@ -5,6 +5,7 @@ import { identifiantTransactionValide, verifierTransaction } from '@/lib/fedapay
 import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { etatSansTransaction, type EtatReglement } from '@/lib/retour-abonnement'
+import { journaliserEchec } from '@/lib/journal'
 
 /**
  * Règlement d'une transaction d'abonnement FedaPay.
@@ -49,7 +50,8 @@ export async function reglerTransaction(transactionId: string): Promise<EtatRegl
     const resultat = await finaliserAbonnement(statut)
     return ['credite', 'deja_regle', 'en_attente', 'echec', 'inconnu', 'a_reconcilier'].includes(resultat)
       ? resultat as EtatReglement : 'indisponible'
-  } catch {
+  } catch (erreur) {
+    journaliserEchec('abonnement.reglement', erreur)
     return 'indisponible'
   }
 }
@@ -89,7 +91,8 @@ export async function reconcilierRetourGuichet(
     if (!enCours) return etatSansTransaction()
 
     return await reglerTransaction(enCours.transaction_id)
-  } catch {
+  } catch (erreur) {
+    journaliserEchec('abonnement.reglement', erreur)
     return 'indisponible'
   }
 }
