@@ -8,6 +8,7 @@ import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
 import { erreursChamps, schemaLocataire, type EtatFormulaire } from '@/lib/validation'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 const TAILLE_MAX_SIGNATURE = 2 * 1024 * 1024
 
@@ -41,7 +42,7 @@ export async function creerLocataire(
     date_consentement: aujourdhuiISO(),
   })
 
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Enregistrement impossible', 'actions.locataires') }
 
   revalidatePath('/pro/locataires')
   redirect('/pro/locataires')
@@ -95,7 +96,7 @@ export async function supprimerLocataire(id: string): Promise<EtatFormulaire> {
         erreur: 'Ce locataire est rattaché à un bail et ne peut pas être supprimé tant que ce bail existe.',
       }
     }
-    return { erreur: `Suppression impossible : ${error.message}` }
+    return { erreur: messageErreurUtilisateur(error, 'Suppression impossible', 'actions.locataires') }
   }
 
   if (!supprime) return { erreur: 'Suppression impossible : locataire introuvable ou non autorisé.' }
@@ -160,7 +161,7 @@ export async function televerserSignatureLocataire(
     .from('signatures')
     .upload(chemin, fichier, { contentType: typeReel, upsert: true })
 
-  if (erreurUpload) return { erreur: `Téléversement impossible : ${erreurUpload.message}` }
+  if (erreurUpload) return { erreur: messageErreurUtilisateur(erreurUpload, 'Téléversement impossible', 'actions.locataires') }
 
   const { error } = await supabase.rpc('definir_signature_locataire', {
     p_locataire_id: locataireId,
@@ -171,7 +172,7 @@ export async function televerserSignatureLocataire(
     if (locataire.signature_chemin !== chemin) {
       await supabase.storage.from('signatures').remove([chemin])
     }
-    return { erreur: `Enregistrement impossible : ${error.message}` }
+    return { erreur: messageErreurUtilisateur(error, 'Enregistrement impossible', 'actions.locataires') }
   }
 
   if (locataire.signature_chemin && locataire.signature_chemin !== chemin) {
@@ -201,7 +202,7 @@ export async function supprimerSignatureLocataire(locataireId: string): Promise<
     p_chemin: null,
   })
 
-  if (error) return { erreur: `Suppression impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Suppression impossible', 'actions.locataires') }
 
   if (locataire.signature_chemin) {
     await supabase.storage.from('signatures').remove([locataire.signature_chemin])

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
+import { conclureTentative, messageBlocage, reserverTentative } from '@/lib/rate-limit'
 import { normaliserSuiteConnexion } from '@/lib/auth-contexte'
 import { LONGUEUR_MAXIMALE, LONGUEUR_MINIMALE } from '@/lib/mot-de-passe'
 import { creerClientServeur } from '@/lib/supabase/serveur'
@@ -18,6 +18,7 @@ import {
   type EtatFormulaire,
 } from '@/lib/validation'
 import { poserTemoinVerification } from '@/lib/verification/temoin'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 async function urlDeBase(): Promise<string> {
   const enTetes = await headers()
@@ -193,13 +194,10 @@ export async function connecter(
 
   const { email, motDePasse } = analyse.data
 
-  const blocage = await verifierBlocage(email)
-  if (blocage.bloque) {
-    return {
-      erreur:
-        `Trop de tentatives de connexion. Réessayez dans ${blocage.minutesRestantes} minute` +
-        `${blocage.minutesRestantes > 1 ? 's' : ''}.`,
-    }
+  // Réservé AVANT l'appel à Auth : des essais parallèles ne passent pas tous.
+  const reservation = await reserverTentative(email, await adresseIp())
+  if (reservation.bloque) {
+    return { erreur: messageBlocage(reservation.minutesRestantes, 'Trop de tentatives de connexion') }
   }
 
   let error: { message: string } | null = null
@@ -230,15 +228,17 @@ export async function connecter(
     // existant au moment de l'inscription, à celui-là même qui vient de fournir
     // le bon mot de passe.
     if (/email not confirmed|not confirmed/i.test(error.message)) {
+      // Le mot de passe était bon : l'essai ne compte pas comme un échec.
+      await conclureTentative(reservation.tentativeId)
       await poserTemoinVerification(email)
       redirect('/verification')
     }
 
-    await enregistrerTentative(email, false, await adresseIp())
+    // L'échec est déjà compté par la réservation.
     return { erreur: 'Email ou mot de passe incorrect.' }
   }
 
-  await enregistrerTentative(email, true, await adresseIp())
+  await conclureTentative(reservation.tentativeId)
 
   revalidatePath('/', 'layout')
   // Le retour conserve une destination interne connue. Si le champ caché a
@@ -323,7 +323,7 @@ export async function definirNouveauMotDePasse(
   const { error } = await supabase.auth.updateUser({ password: analyse.data.motDePasse })
 
   if (error) {
-    return { erreur: `La mise à jour a échoué : ${error.message}` }
+    return { erreur: messageErreurUtilisateur(error, 'La mise à jour a échoué', 'actions.auth') }
   }
 
   revalidatePath('/', 'layout')

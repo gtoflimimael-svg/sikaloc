@@ -10,6 +10,7 @@ import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaPaiement, type EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 function lireFormulaire(donnees: FormData) {
   return schemaPaiement.safeParse({
@@ -44,7 +45,7 @@ export async function enregistrerPaiement(
     p_type_paiement: analyse.data.typePaiement,
   })
 
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Enregistrement impossible', 'actions.paiements') }
   if (!paiementId) return { erreur: 'Enregistrement impossible. Réessayez.' }
 
   // Écran de récapitulatif avant validation (§6.1.7, étape 4).
@@ -97,7 +98,7 @@ export async function regenererQuittance(paiementId: string): Promise<EtatFormul
     return {
       erreur:
         erreur instanceof Error
-          ? `Génération impossible : ${erreur.message}`
+          ? messageErreurUtilisateur(erreur, 'Génération impossible', 'actions.paiements')
           : 'Génération impossible.',
     }
   }
@@ -130,7 +131,7 @@ export async function corrigerPaiement(
 
   if (error) {
     // Le trigger `proteger_paiement_fige` remonte ici passé les 5 minutes.
-    return { erreur: error.message.replace(/^.*?:\s*/, '') }
+    return { erreur: messageErreurUtilisateur(error, 'Correction impossible', 'actions.paiements') }
   }
 
   if (!corrige) return { erreur: 'Paiement impossible ou non autorisé.' }

@@ -19,6 +19,7 @@ import {
 import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { EtatFormulaire } from '@/lib/validation'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 /**
  * L'invitation d'un locataire à Sikaloc_Me.
@@ -105,7 +106,7 @@ export async function inviterLocataire(
     cree_par: bailleur.id,
   })
 
-  if (error) return { erreur: `Invitation impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Invitation impossible', 'actions.invitations') }
 
   const logement = premierLogement(locataire)
 
@@ -171,7 +172,7 @@ export async function annulerInvitation(
     .is('utilisee_le', null)
     .is('annulee_le', null)
 
-  if (error) return { erreur: `Annulation impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Annulation impossible', 'actions.invitations') }
 
   revalidatePath('/pro/locataires')
   return { succes: 'Invitation annulée.' }

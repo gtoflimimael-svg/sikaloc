@@ -7,6 +7,7 @@ import { capacites, messageLimiteLogements } from '@/lib/plan'
 import { bailleurAvecEcriture } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaLogement, type EtatFormulaire } from '@/lib/validation'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 function lireFormulaire(donnees: FormData) {
   return schemaLogement.safeParse({
@@ -49,7 +50,7 @@ export async function creerLogement(
     pays: analyse.data.pays,
   })
 
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Enregistrement impossible', 'actions.logements') }
 
   revalidatePath('/pro/logements')
   redirect('/pro/logements')
@@ -79,7 +80,7 @@ export async function modifierLogement(
     .select('id')
     .maybeSingle()
 
-  if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Mise à jour impossible', 'actions.logements') }
   if (!modifie) return { erreur: 'Modification impossible : logement introuvable ou non autorisé.' }
 
   revalidatePath('/pro/logements')
@@ -108,7 +109,7 @@ export async function supprimerLogement(id: string): Promise<EtatFormulaire> {
           'Ce logement est encore lié à une annonce historique conservée. Sa suppression reste bloquée par la protection des données ; contactez le support pour examiner ce dossier.',
       }
     }
-    return { erreur: `Suppression impossible : ${error.message}` }
+    return { erreur: messageErreurUtilisateur(error, 'Suppression impossible', 'actions.logements') }
   }
 
   if (!supprime) return { erreur: 'Suppression impossible : logement introuvable ou non autorisé.' }
