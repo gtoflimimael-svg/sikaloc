@@ -68,7 +68,8 @@
     "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts",
     "test:securite": "node --import tsx --test tests/securite-applicative.test.mjs",
     "verrouiller:migrations": "node scripts/verifier-migrations-statique.mjs --verrouiller",
-    "test": "node scripts/tests-tous.mjs"
+    "test": "node scripts/tests-tous.mjs",
+    "test:ux": "node --import tsx --test tests/ux-performance.test.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

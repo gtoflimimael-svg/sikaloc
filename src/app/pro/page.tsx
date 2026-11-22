@@ -157,7 +157,7 @@ export default async function PagePresentationPro({
                 alt="Un propriétaire béninois observe une résidence contemporaine en tenant un dossier de location. Illustration éditoriale."
                 width={1536}
                 height={1024}
-                priority
+                preload
                 sizes="(max-width: 760px) 100vw, 88vw"
               />
               <span className="pro-sales-photo-caption">Une gestion plus lisible, au quotidien.</span>

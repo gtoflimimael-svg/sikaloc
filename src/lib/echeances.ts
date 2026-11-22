@@ -23,6 +23,17 @@ import type { Echeance, EtatEcheance } from '@/lib/types/database'
  * sait rien, et n'a pas le droit de supposer.
  */
 
+/**
+ * Jour courant à Cotonou (FN-03), même règle que `dateDuJourBenin` dans
+ * `format.ts`. Recopiée ici car ce module est chargé sans résolveur d'alias
+ * par les bancs Node (`--experimental-strip-types`).
+ */
+function dateDuJourBenin(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Porto-Novo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
+}
+
 export const LIBELLE_ETAT: Record<EtatEcheance, string> = {
   Réglé: 'Réglé',
   Impayé: 'Impayé',
@@ -69,7 +80,7 @@ export function echeancesADeclarer(echeances: Echeance[]): Echeance[] {
  */
 export function echeancesIndetermineesAReviser(
   echeances: Echeance[],
-  dateReference = new Date().toISOString().slice(0, 10),
+  dateReference = dateDuJourBenin(),
 ): Echeance[] {
   return echeances
     .filter(
@@ -87,7 +98,7 @@ export function echeancesIndetermineesAReviser(
 /** Y a-t-il une période établie à déclarer ou une période à préciser ? */
 export function historiqueNecessaire(
   echeances: Echeance[],
-  dateReference = new Date().toISOString().slice(0, 10),
+  dateReference = dateDuJourBenin(),
 ): boolean {
   return (
     echeancesADeclarer(echeances).length > 0 ||

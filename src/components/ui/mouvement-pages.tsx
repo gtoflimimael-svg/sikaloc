@@ -3,17 +3,20 @@
 import { usePathname } from 'next/navigation'
 import { useLayoutEffect } from 'react'
 
-import styles from '@/app/mouvement-pages.module.css'
-
 const ATTR_ENTREE = 'data-sikaloc-page-entered'
 const ATTR_PRET = 'data-sikaloc-page-ready'
-const ATTR_TITRE = 'data-sikaloc-motion-heading'
 const ATTR_REVEAL = 'data-sikaloc-motion-reveal'
 
 /**
  * Transition légère des pages, hors accueil qui possède son propre rythme.
  * Les contenus éditoriaux dévoilent leurs blocs à mesure du défilement ; les
  * chiffres, formulaires et tableaux ne sont ni décalés ni animés en cascade.
+ *
+ * Les marqueurs d'état sont posés sur <html>, jamais sur le contenu des pages
+ * (UX-02) : ce composant vit dans le layout racine et s'exécute avant que des
+ * segments chargés à part (espace Me) soient hydratés. Un attribut ajouté à
+ * leur h1 provoquait une erreur d'hydratation React. Les titres sont ciblés en
+ * CSS (`globals.css`, section « Mouvement des pages »).
  */
 export function MouvementPages() {
   const pathname = usePathname()
@@ -33,17 +36,14 @@ export function MouvementPages() {
     )
     if (preferenceMouvementReduit.matches) return
 
-    const titres = Array.from(main.querySelectorAll<HTMLElement>('h1'))
-    for (const titre of titres) titre.setAttribute(ATTR_TITRE, 'true')
-
+    const racine = document.documentElement
     const ciblesRevelees = trouverCiblesEditoriales(main, pathname)
-    main.classList.add(styles.page)
-    main.setAttribute(ATTR_PRET, 'true')
+    racine.setAttribute(ATTR_PRET, 'true')
 
     let observateur: IntersectionObserver | null = null
 
     const toutReveler = () => {
-      main.setAttribute(ATTR_ENTREE, 'true')
+      racine.setAttribute(ATTR_ENTREE, 'true')
       for (const cible of ciblesRevelees) cible.setAttribute(ATTR_REVEAL, 'visible')
       observateur?.disconnect()
     }
@@ -68,7 +68,7 @@ export function MouvementPages() {
     }
 
     const frameEntree = window.requestAnimationFrame(() => {
-      main.setAttribute(ATTR_ENTREE, 'true')
+      racine.setAttribute(ATTR_ENTREE, 'true')
     })
 
     const surPreferenceMouvement = (evenement: MediaQueryListEvent) => {
@@ -80,10 +80,8 @@ export function MouvementPages() {
       window.cancelAnimationFrame(frameEntree)
       preferenceMouvementReduit.removeEventListener('change', surPreferenceMouvement)
       observateur?.disconnect()
-      main.classList.remove(styles.page)
-      main.removeAttribute(ATTR_PRET)
-      main.removeAttribute(ATTR_ENTREE)
-      for (const titre of titres) titre.removeAttribute(ATTR_TITRE)
+      racine.removeAttribute(ATTR_PRET)
+      racine.removeAttribute(ATTR_ENTREE)
       for (const cible of ciblesRevelees) cible.removeAttribute(ATTR_REVEAL)
     }
   }, [pathname])
