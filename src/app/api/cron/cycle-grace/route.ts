@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { requeteCronAutorisee } from '@/lib/cron-auth'
 import { creerClientAdmin } from '@/lib/supabase/admin'
+import { suivreCron } from '@/lib/cron-suivi'
 
 /**
  * Fait progresser les comptes en impayé d'abonnement.
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
 }
 
 /** Vercel Cron appelle ses routes en GET. */
+// Vercel Cron appelle GET : c'est là que se branche le suivi Sentry.
 export async function GET(request: NextRequest) {
-  return POST(request)
+  return suivreCron('cycle-grace', '0 2 * * *', request, () => POST(request))
 }

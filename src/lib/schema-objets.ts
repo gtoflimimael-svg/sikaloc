@@ -492,6 +492,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "colonnes_schema",
+    "migration": "20261122170000_colonnes_schema.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "consommer_limite_questions",
     "migration": "20261022231507_questions_contact.sql"
   },

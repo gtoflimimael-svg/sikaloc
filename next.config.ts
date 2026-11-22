@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs/config'
 import { isMaintenanceEnabled } from './src/lib/maintenance-policy.mjs'
 import { getSupabaseCspOrigins } from './src/lib/supabase-csp.mjs'
+import { getSentryCspOrigin } from './src/lib/sentry-csp.mjs'
 
 /**
  * Politique de sécurité du contenu (CSP) — spec §9 « protéger le site contre
@@ -28,13 +30,15 @@ const maintenanceActive = isMaintenanceEnabled(process.env.SIKALOC_MAINTENANCE_M
 const { httpOrigin: supabaseHttpOrigin, websocketOrigin: supabaseWebsocketOrigin } =
   getSupabaseCspOrigins(process.env.NEXT_PUBLIC_SUPABASE_URL)
 
+const sentryOrigin = getSentryCspOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN)
+
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: ${supabaseHttpOrigin};
   font-src 'self';
-  connect-src 'self' ${supabaseHttpOrigin} ${supabaseWebsocketOrigin};
+  connect-src 'self' ${supabaseHttpOrigin} ${supabaseWebsocketOrigin}${sentryOrigin ? ` ${sentryOrigin}` : ''};
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -180,4 +184,19 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+/**
+ * Sentry (OPS-01). Sans SENTRY_AUTH_TOKEN, aucune source map n'est envoyée et
+ * aucune release n'est créée : le build reste identique, local comme en CI.
+ * Les cartes côté client sont supprimées après envoi.
+ */
+const jetonSentry = process.env.SENTRY_AUTH_TOKEN
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: jetonSentry,
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: { disable: !jetonSentry, deleteSourcemapsAfterUpload: true },
+  release: { create: Boolean(jetonSentry) },
+})
