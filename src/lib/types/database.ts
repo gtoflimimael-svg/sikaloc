@@ -973,6 +973,16 @@ export interface Database {
         Args: { p_paiement_id: string }
         Returns: { montant_exigible: number | null; cumul_valide_avant: number | null }[]
       }
+      /** Réserve un essai de connexion sous verrou (service_role uniquement). */
+      reserver_tentative_connexion: {
+        Args: { p_email: string; p_ip: string }
+        Returns: unknown
+      }
+      /** Marque un essai réservé comme réussi (service_role uniquement). */
+      conclure_tentative_connexion: {
+        Args: { p_tentative_id: number }
+        Returns: undefined
+      }
       /** Corrige un paiement du bailleur appelant dans les conditions métier. */
       corriger_paiement: {
         Args: {

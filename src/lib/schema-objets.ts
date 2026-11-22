@@ -497,6 +497,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "conclure_tentative_connexion",
+    "migration": "20261122150000_limiter_tentatives_connexion.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "consommer_limite_questions",
     "migration": "20261022231507_questions_contact.sql"
   },
@@ -797,6 +802,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "reserver_tentative_connexion",
+    "migration": "20261122150000_limiter_tentatives_connexion.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "retirer_candidature",
     "migration": "20260919000700_candidatures.sql"
   },
@@ -1064,6 +1074,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "tentatives_connexion_email_idx",
     "migration": "20260817000100_schema_initial.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "tentatives_connexion_ip_idx",
+    "migration": "20261122150000_limiter_tentatives_connexion.sql"
   },
   {
     "categorie": "politique",

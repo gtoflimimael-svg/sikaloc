@@ -9,71 +9,75 @@ import { creerClientAdmin } from '@/lib/supabase/admin'
  * Le comptage vit en base plutôt qu'en mémoire : sur Vercel, chaque requête
  * peut atterrir sur une instance différente, un compteur en mémoire ne
  * protégerait rien.
+ *
+ * L'essai est RÉSERVÉ avant l'appel à Supabase Auth, sous verrou, par
+ * `reserver_tentative_connexion` (SEC-03) : des requêtes parallèles ne peuvent
+ * plus toutes passer le contrôle avant la première écriture. La fonction
+ * applique trois limites sur 15 minutes : 5 échecs pour un couple email + IP,
+ * 20 pour un email toutes IP confondues, 30 pour une IP tous emails confondus.
  */
 
-const MAX_TENTATIVES = 5
-const FENETRE_MINUTES = 15
-
-export interface EtatBlocage {
+export interface ReservationTentative {
   bloque: boolean
   minutesRestantes: number
+  /** Identifiant de l'essai réservé, à conclure en cas de succès. */
+  tentativeId: number | null
 }
 
-const NON_BLOQUE: EtatBlocage = { bloque: false, minutesRestantes: 0 }
+const NON_BLOQUE: ReservationTentative = { bloque: false, minutesRestantes: 0, tentativeId: null }
 
-export async function verifierBlocage(email: string): Promise<EtatBlocage> {
+export async function reserverTentative(
+  email: string,
+  ip: string | null,
+): Promise<ReservationTentative> {
   try {
-    const admin = creerClientAdmin()
-    const depuis = new Date(Date.now() - FENETRE_MINUTES * 60_000).toISOString()
-
-    const { data, error } = await admin
-      .from('tentatives_connexion')
-      .select('tentee_le')
-      .eq('email', email.toLowerCase())
-      .eq('reussie', false)
-      .gte('tentee_le', depuis)
-      .order('tentee_le', { ascending: true })
-
-    if (error || !data || data.length < MAX_TENTATIVES) return NON_BLOQUE
-
-    // Le blocage court à partir de la plus ancienne tentative de la fenêtre.
-    const premiere = new Date(data[0].tentee_le).getTime()
-    const finBlocage = premiere + FENETRE_MINUTES * 60_000
-    const restant = Math.ceil((finBlocage - Date.now()) / 60_000)
-
-    if (restant <= 0) return NON_BLOQUE
-
-    return { bloque: true, minutesRestantes: restant }
-  } catch {
-    // Sans clé service_role, le compteur applicatif est indisponible. Supabase
-    // Auth applique son propre rate limiting côté serveur : on laisse passer
-    // plutôt que de bloquer toutes les connexions sur un défaut de config.
+    const { data, error } = await creerClientAdmin().rpc('reserver_tentative_connexion', {
+      p_email: email,
+      p_ip: ip ?? '',
+    })
+    if (error || !data || typeof data !== 'object') {
+      throw new Error(error?.code ?? 'reponse_invalide')
+    }
+    const reponse = data as { bloque?: boolean; minutes_restantes?: number; tentative_id?: number }
+    if (reponse.bloque) {
+      return {
+        bloque: true,
+        minutesRestantes: Math.max(1, Number(reponse.minutes_restantes) || 1),
+        tentativeId: null,
+      }
+    }
+    return {
+      bloque: false,
+      minutesRestantes: 0,
+      tentativeId: typeof reponse.tentative_id === 'number' ? reponse.tentative_id : null,
+    }
+  } catch (cause) {
+    // Supabase Auth applique aussi sa propre limitation côté serveur : une
+    // panne du compteur applicatif ne doit pas bloquer toutes les connexions.
+    // Elle doit en revanche être visible (supervision), sans donnée personnelle.
+    console.error('[auth.rate_limit] compteur de connexions indisponible', {
+      cause: cause instanceof Error ? cause.message.slice(0, 64) : 'inconnue',
+    })
     return NON_BLOQUE
   }
 }
 
-export async function enregistrerTentative(
-  email: string,
-  reussie: boolean,
-  ip?: string | null,
-): Promise<void> {
+/** Marque l'essai réservé comme réussi et efface les échecs du même couple. */
+export async function conclureTentative(tentativeId: number | null): Promise<void> {
+  if (tentativeId === null) return
   try {
-    const admin = creerClientAdmin()
-    await admin.from('tentatives_connexion').insert({
-      email: email.toLowerCase(),
-      reussie,
-      ip: ip ?? null,
+    const { error } = await creerClientAdmin().rpc('conclure_tentative_connexion', {
+      p_tentative_id: tentativeId,
     })
-
-    // Une connexion réussie remet le compteur à zéro.
-    if (reussie) {
-      await admin
-        .from('tentatives_connexion')
-        .delete()
-        .eq('email', email.toLowerCase())
-        .eq('reussie', false)
-    }
-  } catch {
-    // Voir verifierBlocage : la journalisation ne doit jamais casser le login.
+    if (error) throw new Error(error.code ?? 'erreur')
+  } catch (cause) {
+    // La connexion a réussi : un échec de journalisation ne doit pas la casser.
+    console.error('[auth.rate_limit] conclusion de tentative impossible', {
+      cause: cause instanceof Error ? cause.message.slice(0, 64) : 'inconnue',
+    })
   }
+}
+
+export function messageBlocage(minutesRestantes: number, prefixe = 'Trop de tentatives'): string {
+  return `${prefixe}. Réessayez dans ${minutesRestantes} minute${minutesRestantes > 1 ? 's' : ''}.`
 }

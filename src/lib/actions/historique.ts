@@ -9,6 +9,7 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { Echeance } from '@/lib/types/database'
 import type { EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 /**
  * Déclaration des loyers réglés avant l'usage de Sikaloc.
@@ -120,7 +121,7 @@ export async function declarerHistorique(
     p_periodes: retenues.map((e) => e.periode_debut),
   })
 
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Enregistrement impossible', 'actions.historique') }
   if (nombreInsere === null) return { erreur: 'Enregistrement impossible. Réessayez.' }
 
   revalidatePath('/pro/impayes')

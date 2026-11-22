@@ -8,6 +8,7 @@ import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaBail, type EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
 import { verifierConditionsPremierLoyer } from '@/lib/premier-loyer'
+import { estMessageMetier, messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 function lireFormulaire(donnees: FormData) {
   return schemaBail.safeParse({
@@ -31,9 +32,9 @@ function messageErreur(error: { code?: string; message: string }): string {
   }
   if (error.code === '23514') {
     // Les triggers de cohérence remontent avec ce code.
-    return error.message.replace(/^.*?:\s*/, '')
+    return estMessageMetier(error.message) ? error.message.trim() : 'Données du bail incohérentes.'
   }
-  return error.message
+  return messageErreurUtilisateur(error, 'Enregistrement du bail impossible', 'actions.baux')
 }
 
 export async function creerBail(
