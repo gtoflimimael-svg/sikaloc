@@ -27,6 +27,11 @@ const confirmation = await readFile(
   new URL('src/app/pro/(shell)/paiements/[id]/confirmer/page.tsx', racine),
   'utf8',
 )
+const baseApercu = await readFile(new URL('src/lib/apercu-paiement.ts', racine), 'utf8')
+const migrationApercu = await readFile(
+  new URL('supabase/migrations/20261122140000_apercu_echeance_paiement.sql', racine),
+  'utf8',
+)
 const pageHistorique = await readFile(
   new URL('src/app/pro/(shell)/baux/[id]/historique/page.tsx', racine),
   'utf8',
@@ -358,9 +363,18 @@ test('l’export annonce les baux et les loyers historiques réellement conserv�
 })
 
 test('l’aperçu de confirmation prend le loyer historisé et ne devine pas si la donnée manque', () => {
-  assert.match(confirmation, /\.from\('v_echeances'\)[\s\S]*\.eq\('periode_debut', paiement\.periode_debut\)/)
+  assert.match(confirmation, /lireBaseApercuPaiement\(supabase, paiement\)/)
   assert.match(confirmation, /Le montant exigible de cette période n’est pas disponible dans l’aperçu/)
-  assert.match(confirmation, /select\('montant_exigible, montant_paye'\)/)
+  // Source principale : le calcul de l'émission, valable pour un loyer payé
+  // d'avance (FN-05). Repli prudent sur la vue si la fonction manque.
+  assert.ok(baseApercu.indexOf("rpc('apercu_echeance_paiement'") < baseApercu.indexOf(".from('v_echeances')"))
+  assert.match(baseApercu, /\.from\('v_echeances'\)[\s\S]*\.eq\('periode_debut', paiement\.periode_debut\)/)
+  assert.match(baseApercu, /select\('montant_exigible, montant_paye'\)/)
+  assert.match(migrationApercu, /prive\.montant_exigible_bail_pour_periode\(v_paiement\.bail_id, v_paiement\.periode_debut\)/)
+  assert.match(migrationApercu, /x\.id <> v_paiement\.id/)
+  assert.match(migrationApercu, /p\.bailleur_id = v_acteur/)
+  assert.match(migrationApercu, /security definer set search_path = ''/)
+  assert.match(migrationApercu, /revoke all on function public\.apercu_echeance_paiement\(uuid\) from public, anon/)
   assert.match(confirmation, /paiementDejaValide \? 'Générer le document' : 'Confirmer et générer le document'/)
   assert.match(confirmation, /Le paiement déjà validé est de/)
 

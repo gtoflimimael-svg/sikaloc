@@ -968,6 +968,11 @@ export interface Database {
         }
         Returns: string
       }
+      /** Aperçu avant validation : montant exigible et cumul validé, comme à l'émission. */
+      apercu_echeance_paiement: {
+        Args: { p_paiement_id: string }
+        Returns: { montant_exigible: number | null; cumul_valide_avant: number | null }[]
+      }
       /** Corrige un paiement du bailleur appelant dans les conditions métier. */
       corriger_paiement: {
         Args: {

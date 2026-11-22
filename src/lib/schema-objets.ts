@@ -462,6 +462,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "apercu_echeance_paiement",
+    "migration": "20261122140000_apercu_echeance_paiement.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "appliquer_cycle_grace",
     "migration": "20260817000800_cycle_de_grace.sql"
   },

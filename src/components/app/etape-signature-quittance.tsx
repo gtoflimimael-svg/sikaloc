@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 
 import { CaptureSignature } from '@/components/app/capture-signature'
 import { Alerte } from '@/components/ui/retours'
-import { televerserSignature } from '@/lib/actions/parametres'
+import { televerserSignaturePourQuittance } from '@/lib/actions/parametres'
 import type { EtatFormulaire } from '@/lib/validation'
 
 const ETAT_INITIAL: EtatFormulaire = {}
@@ -16,7 +16,9 @@ export function EtapeSignatureQuittance({
   actionReprise: () => Promise<EtatFormulaire | void>
 }) {
   const [etatSignature, enregistrerSignature, signatureEnCours] = useActionState(
-    televerserSignature,
+    // Action sans revalidation : sinon la page se re-rend et redirige avant
+    // que la reprise ci-dessous ne parte (paiement laissé en brouillon).
+    televerserSignaturePourQuittance,
     ETAT_INITIAL,
   )
   const [erreurReprise, setErreurReprise] = useState<string | null>(null)
