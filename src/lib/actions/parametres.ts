@@ -5,7 +5,7 @@ import { bailleurAvecEcriture, bailleurCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { DESCRIPTION_FORMAT, reconnaitreFormat } from '@/lib/signature/fichier'
 import type { Bailleur } from '@/lib/types/database'
-import { enregistrerTentative, verifierBlocage } from '@/lib/rate-limit'
+import { conclureTentative, messageBlocage, reserverTentative } from '@/lib/rate-limit'
 import {
   erreursChamps,
   refusMotDePasseContextuel,
@@ -14,6 +14,7 @@ import {
   schemaProfil,
   type EtatFormulaire,
 } from '@/lib/validation'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 const TAILLE_MAX_SIGNATURE = 2 * 1024 * 1024
 
@@ -41,7 +42,7 @@ export async function modifierProfil(
     })
     .eq('id', bailleur.id)
 
-  if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Mise à jour impossible', 'actions.parametres') }
 
   // Le nom du bailleur apparaît dans le shell et sur les quittances : c'est
   // tout l'espace applicatif qu'il faut réinvalider, pas seulement cet écran.
@@ -70,7 +71,7 @@ export async function modifierPreferences(
     })
     .eq('id', bailleur.id)
 
-  if (error) return { erreur: `Mise à jour impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Mise à jour impossible', 'actions.parametres') }
 
   revalidatePath('/pro/parametres')
   return { succes: 'Préférences enregistrées.' }
@@ -184,7 +185,7 @@ export async function supprimerSignature(): Promise<EtatFormulaire> {
 
   const { error } = await supabase.rpc('definir_signature_bailleur', { p_chemin: null })
 
-  if (error) return { erreur: `Suppression impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Suppression impossible', 'actions.parametres') }
 
   if (bailleur.signature_chemin) {
     await supabase.storage.from('signatures').remove([bailleur.signature_chemin])
@@ -228,14 +229,9 @@ export async function changerMotDePasse(
   ])
   if (refus) return { erreursChamps: { motDePasse: refus } }
 
-  const blocage = await verifierBlocage(bailleur.email)
-  if (blocage.bloque) {
-    return {
-      erreur:
-        `Trop de tentatives. Réessayez dans ${blocage.minutesRestantes} minute` +
-        `${blocage.minutesRestantes > 1 ? 's' : ''}.`,
-    }
-  }
+  // Bailleur déjà connecté : l'essai est compté pour son email, sans IP.
+  const reservation = await reserverTentative(bailleur.email, null)
+  if (reservation.bloque) return { erreur: messageBlocage(reservation.minutesRestantes) }
 
   const supabase = await creerClientServeur()
 
@@ -247,17 +243,16 @@ export async function changerMotDePasse(
   })
 
   if (erreurReauth) {
-    await enregistrerTentative(bailleur.email, false, null)
     return {
       erreursChamps: { motDePasseActuel: 'Ce mot de passe ne correspond pas à votre compte.' },
     }
   }
 
-  await enregistrerTentative(bailleur.email, true, null)
+  await conclureTentative(reservation.tentativeId)
 
   const { error } = await supabase.auth.updateUser({ password: analyse.data.motDePasse })
 
-  if (error) return { erreur: `Changement impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Changement impossible', 'actions.parametres') }
 
   return {
     succes:
