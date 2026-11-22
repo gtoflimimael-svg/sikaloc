@@ -8,16 +8,18 @@ import { fileURLToPath } from 'node:url'
  *
  * 1. Structure : noms `AAAAMMJJHHMMSS_nom.sql`, versions uniques, fichiers non vides.
  * 2. Immuabilité (OPS-06) : `supabase/migrations.lock.json` garde l'empreinte
- *    SHA-256 de chaque migration livrée. Une migration déjà appliquée n'est
+ *    SHA-256 de chaque migration LIVRÉE EN PRODUCTION (et d'elles seules). Une migration déjà appliquée n'est
  *    jamais rejouée par Supabase : la réécrire laisse les bases existantes sur
  *    l'ancienne version, en silence. C'est arrivé le 31/10/2026 avec
  *    `20261020185126_fiabiliser_loyers_echeances.sql`. Désormais :
- *      • migration verrouillée modifiée ou supprimée → échec ;
- *      • nouvelle migration non verrouillée → échec ;
- *      • nouvelle migration plus ancienne que la dernière verrouillée → échec.
+ *      • migration livrée (verrouillée) modifiée ou supprimée → échec ;
+ *      • nouvelle migration plus ancienne que la dernière livrée → échec
+ *        (elle s'appliquerait dans le désordre) ;
+ *      • nouvelle migration non encore livrée → signalée, autorisée.
  *
- * `--verrouiller` ajoute au verrou les nouvelles migrations, et elles seules :
- * il ne réécrit jamais une empreinte existante.
+ * `--verrouiller` s'exécute APRÈS application en production (procédure de
+ * déploiement) : il ajoute les nouvelles migrations au verrou, et elles
+ * seules ; il ne réécrit jamais une empreinte existante.
  */
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -84,16 +86,15 @@ if (verrouiller && erreurs.length === 0 && nouvelles.length > 0) {
   const trie = Object.fromEntries(Object.keys(verrou).sort().map((nom) => [nom, verrou[nom]]))
   await writeFile(fichierVerrou, `${JSON.stringify(trie, null, 2)}\n`)
   console.log(`${nouvelles.length} migration(s) ajoutée(s) au verrou : ${nouvelles.join(', ')}`)
-} else if (!verrouiller) {
-  for (const nom of nouvelles) {
-    erreurs.push(`Migration non verrouillée : ${nom}. Lancez « npm run verrouiller:migrations » et commitez le verrou.`)
-  }
+} else if (!verrouiller && nouvelles.length > 0) {
+  console.log(`${nouvelles.length} migration(s) non encore livrée(s) : ${nouvelles.join(', ')}`)
+  console.log('Après leur application en production : npm run verrouiller:migrations, puis commit du verrou.')
 }
 
 if (erreurs.length) {
   console.error(erreurs.join('\n'))
   process.exitCode = 1
 } else {
-  console.log(`${noms.length} migrations : noms valides, versions uniques, ordre déterministe, empreintes verrouillées conformes.`)
+  console.log(`${noms.length} migrations : noms valides, versions uniques, ordre déterministe ; ${Object.keys(verrou).length} livrées, empreintes conformes.`)
   console.log('Contrôle statique seulement : la validation SQL réelle est faite par la CI sur une base jetable.')
 }
