@@ -75,7 +75,7 @@ export default function PageRejoindre() {
               width={1440}
               height={960}
               sizes="(max-width: 900px) 100vw, (max-width: 1200px) 48vw, 600px"
-              priority
+              preload
             />
           </figure>
         </div>

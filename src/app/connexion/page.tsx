@@ -55,8 +55,8 @@ const CONTENUS: Record<ContexteConnexion, {
     description: 'Retrouvez votre espace personnel et poursuivez votre parcours sur Sikaloc.',
     image: '/images/general/sikaloc-general-login-courtyard.webp',
     alt: 'Image illustrative d’une cour intérieure calme dans une résidence contemporaine.',
-    titreFormulaire: 'Connectez-vous à Sikaloc',
-    aideFormulaire: 'Saisissez les identifiants associés à votre compte.',
+    titreFormulaire: 'Connexion',
+    aideFormulaire: 'Saisissez les identifiants associés à votre compte Sikaloc.',
   },
 }
 
@@ -109,10 +109,12 @@ export default async function PageConnexion({
       <a href="#contenu-principal" className="skip-link">Aller au contenu</a>
 
       <div className="connexion-layout">
-        <aside className="connexion-editorial" aria-labelledby="connexion-context-title">
+        {/* UX-01 : un seul titre (le h1 du formulaire). Ce grand titre est
+            décoratif, sur grand écran seulement. */}
+        <aside className="connexion-editorial">
           <div className="connexion-editorial-copy">
             <p className="connexion-eyebrow">{contenu.label}</p>
-            <h1 id="connexion-context-title">{contenu.titre}</h1>
+            <p className="connexion-editorial-title" aria-hidden="true">{contenu.titre}</p>
             <p className="connexion-editorial-description">{contenu.description}</p>
           </div>
 
@@ -121,7 +123,7 @@ export default async function PageConnexion({
               src={contenu.image}
               alt={contenu.alt}
               fill
-              priority
+              preload
               sizes="(max-width: 900px) 100vw, (max-width: 1280px) 48vw, 620px"
             />
           </figure>
@@ -137,13 +139,8 @@ export default async function PageConnexion({
               )}
             </div>
 
-            <div className="connexion-mobile-context">
-              <p className="connexion-eyebrow">{contenu.label}</p>
-              <p>{contenu.description}</p>
-            </div>
-
             <header className="connexion-form-heading">
-              <h2 id="connexion-form-title">{contenu.titreFormulaire}</h2>
+              <h1 id="connexion-form-title">{contenu.titreFormulaire}</h1>
               <p>{contenu.aideFormulaire}</p>
             </header>
 

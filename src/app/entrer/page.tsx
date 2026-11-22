@@ -5,7 +5,14 @@ import { redirect } from 'next/navigation'
 
 import { MarqueSikaloc } from '@/components/ui/logo'
 import { lienConnexion } from '@/lib/auth-contexte'
-import { destinationApresConnexion, ESPACE_ME, ESPACE_PRO, type Espace } from '@/lib/roles'
+import { Alerte } from '@/components/ui/retours'
+import {
+  DESTINATION_COMPTE_FIND_ARCHIVE,
+  destinationApresConnexion,
+  ESPACE_ME,
+  ESPACE_PRO,
+  type Espace,
+} from '@/lib/roles'
 import { rolesDuCompte } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 
@@ -42,6 +49,7 @@ export default async function PageEntrer({
   searchParams: Promise<{ choix?: string }>
 }) {
   const { choix } = await searchParams
+  let compteFindArchive = false
   const supabase = await creerClientServeur()
   const {
     data: { user },
@@ -55,7 +63,9 @@ export default async function PageEntrer({
     // banc l'exerce. La redire ici a déjà coûté un oubli : un rôle sans
     // autre rôle se voyait offrir deux espaces où il n'a rien à faire.
     const destination = destinationApresConnexion(await rolesDuCompte())
-    if (destination !== '/entrer') redirect(destination)
+    // Compte candidat Find : on reste ici, avec une explication (UX-03).
+    if (destination === DESTINATION_COMPTE_FIND_ARCHIVE) compteFindArchive = true
+    else if (destination !== '/entrer') redirect(destination)
   }
 
   return (
@@ -71,6 +81,16 @@ export default async function PageEntrer({
             l&apos;habite. Les deux partagent les mêmes documents.
           </p>
         </div>
+
+        {compteFindArchive ? (
+          <div className="mb-2xl">
+            <Alerte ton="info">
+              L&apos;espace candidat Sikaloc Find a fermé le 9 novembre 2026. Votre compte reste
+              ouvert : si vous louez un logement, votre bailleur peut vous inviter dans Sikaloc Me ;
+              si vous êtes propriétaire, Sikaloc Pro vous permet de gérer vos locations.
+            </Alerte>
+          </div>
+        ) : null}
 
         {/*
           Une colonne sur téléphone, deux à partir de la tablette. Chaque

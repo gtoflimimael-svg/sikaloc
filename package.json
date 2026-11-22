@@ -65,7 +65,8 @@
     "banc:modeles-email": "tsx scripts/banc-modeles-email.ts",
     "banc:chemins": "tsx scripts/banc-chemins.ts",
     "banc:suppressions": "node scripts/banc-suppressions.cjs",
-    "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts"
+    "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts",
+    "test:ux": "node --import tsx --test tests/ux-performance.test.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",

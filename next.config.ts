@@ -121,9 +121,18 @@ const nextConfig: NextConfig = {
     // Les redirects du fichier de configuration sont exécutées avant Proxy.
     // Les suspendre en maintenance garantit notamment un 503 direct sur les
     // anciennes URL `/app/*`, sans détour ni redirection.
-    if (maintenanceActive) return []
+    // www.sikaloc.com servait le même contenu que l'apex (SEO-01) : une seule
+    // adresse officielle, même en maintenance. 308 préserve la méthode.
+    const versApex = {
+      source: '/:chemin*',
+      has: [{ type: 'host' as const, value: 'www.sikaloc.com' }],
+      destination: 'https://sikaloc.com/:chemin*',
+      permanent: true,
+    }
+    if (maintenanceActive) return [versApex]
 
     return [
+      versApex,
       {
         source: '/app/:chemin*',
         destination: '/pro/:chemin*',

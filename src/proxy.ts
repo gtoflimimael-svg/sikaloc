@@ -5,7 +5,7 @@ import {
   maintenanceDecision,
   maintenanceResponseSpec,
 } from '@/lib/maintenance-policy.mjs'
-import { cheminProtege, cheminPublic } from '@/lib/roles'
+import { cheminProtege, cheminPublic, cheminVitrine } from '@/lib/roles'
 import type { Database } from '@/lib/types/database'
 
 /*
@@ -97,6 +97,12 @@ export default async function proxy(request: NextRequest) {
   if (decisionMaintenance !== 'normal') {
     if (decisionMaintenance === 'technical') return NextResponse.next({ request })
     return reponseMaintenance(request)
+  }
+
+  // Pages vitrine en lecture : aucune session à rafraîchir ni à garder
+  // (PERF-01). On évite l'aller-retour vers Supabase Auth.
+  if ((request.method === 'GET' || request.method === 'HEAD') && cheminVitrine(chemin)) {
+    return NextResponse.next({ request })
   }
 
   let reponse = NextResponse.next({ request })
