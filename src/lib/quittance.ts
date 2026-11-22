@@ -21,6 +21,7 @@ import type {
   Quittance,
   TypePaiement,
 } from '@/lib/types/database'
+import { lireBaseApercuPaiement } from '@/lib/apercu-paiement'
 import { apercuDocumentPaiement, typeDocumentPaiement } from '@/lib/documents-paiement'
 import { reconnaitreFormat } from '@/lib/signature/fichier'
 import type { EtatSignaturePdf } from '@/lib/pdf/document-quittance'
@@ -366,22 +367,11 @@ async function verifierSignatureAvantPreparation({
     if (existante?.pdf_chemin && existante.hash_sha256) return
   }
 
-  const { data: echeance, error: erreurEcheance } = await client
-    .from('v_echeances')
-    .select('montant_exigible,montant_paye')
-    .eq('bail_id', paiement.bail_id)
-    .eq('periode_debut', paiement.periode_debut)
-    .maybeSingle()
-
-  if (erreurEcheance) throw new Error(REFUS_QUITTANCE)
-
-  const loyerApplicable = typeof echeance?.montant_exigible === 'number'
-    ? Number(echeance.montant_exigible)
-    : null
-  const montantPaye = echeance ? Number(echeance.montant_paye) : null
-  const cumulValideAvant = montantPaye === null
-    ? null
-    : montantPaye - (paiement.statut === 'Validé' ? Number(paiement.montant) : 0)
+  // Même base que l'écran de confirmation (apercu_echeance_paiement, repli
+  // sur v_echeances) : la signature est demandée avant l'émission, y compris
+  // pour un loyer payé d'avance.
+  const { loyerApplicable, cumulValideAvant, erreur } = await lireBaseApercuPaiement(client, paiement)
+  if (erreur) throw new Error(REFUS_QUITTANCE)
   const apercu = apercuDocumentPaiement({
     typePaiement: paiement.type_paiement,
     montant: Number(paiement.montant),

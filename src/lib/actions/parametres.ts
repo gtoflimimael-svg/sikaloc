@@ -96,6 +96,25 @@ export async function televerserSignature(
   return resultat
 }
 
+/**
+ * Même enregistrement, pour l'étape signature du parcours de quittance.
+ *
+ * Sans revalidation : une Server Action qui revalide renvoie la page courante
+ * re-rendue. L'étape signature, voyant alors la signature disponible,
+ * redirigerait vers le récapitulatif avant que le client ne relance la
+ * génération, et le paiement resterait en brouillon. La reprise
+ * (validerPaiement / regenererQuittance) revalide puis redirige elle-même.
+ */
+export async function televerserSignaturePourQuittance(
+  _etat: EtatFormulaire,
+  donnees: FormData,
+): Promise<EtatFormulaire> {
+  const acces = await bailleurAvecEcriture()
+  if (!acces.ok) return acces.etat
+
+  return enregistrerSignaturePourBailleur(acces.bailleur, donnees)
+}
+
 async function enregistrerSignaturePourBailleur(
   bailleur: Bailleur,
   donnees: FormData,
