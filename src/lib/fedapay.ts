@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { PRIX_STANDARD_FCFA } from '@/lib/plan'
 import { chiffresNationaux } from '@/lib/telephone'
 import { journaliserEchec } from '@/lib/journal'
+import { baseApiRemplacement } from '@/lib/fedapay-base'
 
 /**
  * Intégration FedaPay (Mobile Money) — remplace CinetPay depuis la v2.1.
@@ -44,13 +45,17 @@ export function configFedaPay(): ConfigFedaPay | null {
       ? 'sandbox'
       : 'live'
 
+  // Un remplacement local n'est pris qu'en sandbox : jamais avec une clé live.
+  const remplacement = environnement === 'sandbox' ? baseApiRemplacement(process.env.FEDAPAY_API_URL) : null
+
   return {
     cleSecrete,
     environnement,
     base:
-      environnement === 'sandbox'
+      remplacement ??
+      (environnement === 'sandbox'
         ? 'https://sandbox-api.fedapay.com/v1'
-        : 'https://api.fedapay.com/v1',
+        : 'https://api.fedapay.com/v1'),
   }
 }
 

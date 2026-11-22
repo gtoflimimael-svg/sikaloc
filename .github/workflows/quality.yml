@@ -72,3 +72,26 @@ jobs:
       - name: Arrêter la pile
         if: always()
         run: npx supabase stop --no-backup
+
+  # Parcours de bout en bout (QA-01, FN-01) : navigateur réel contre
+  # l'application en mode production, sur une pile Supabase jetable (SMTP réel
+  # coupé, FedaPay simulé localement). Aucune donnée ni service externe.
+  bout-en-bout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Démarrer une pile Supabase jetable
+        run: node scripts/e2e/pile.mjs demarrer "$RUNNER_TEMP/pile-e2e"
+      - name: Parcours de bout en bout
+        run: npm run test:e2e -- --workdir "$RUNNER_TEMP/pile-e2e"
+      - name: Arrêter la pile
+        if: always()
+        run: node scripts/e2e/pile.mjs arreter "$RUNNER_TEMP/pile-e2e"

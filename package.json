@@ -69,7 +69,8 @@
     "test:securite": "node --import tsx --test tests/securite-applicative.test.mjs",
     "verrouiller:migrations": "node scripts/verifier-migrations-statique.mjs --verrouiller",
     "test": "node scripts/tests-tous.mjs",
-    "test:ux": "node --import tsx --test tests/ux-performance.test.mjs"
+    "test:ux": "node --import tsx --test tests/ux-performance.test.mjs",
+    "test:e2e": "node scripts/e2e/lancer.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
