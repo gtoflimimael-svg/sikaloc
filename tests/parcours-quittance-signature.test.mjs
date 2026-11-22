@@ -43,7 +43,7 @@ test('le précontrôle serveur, limité au bailleur connecté, précède la RPC 
   assert.ok(precheckCall >= 0 && precheckCall < preparationCall)
   assert.match(helper, /\.eq\('bailleur_id', acteur\)/)
   assert.match(helper, /lireBaseApercuPaiement\(client, paiement\)/)
-  assert.match(helper, /if \(erreur\) throw new Error\(REFUS_QUITTANCE\)/)
+  assert.match(helper, /if \(erreur\) throw refusQuittance\('precontrole_echeance'\)/)
   assert.match(helper, /apercuDocumentPaiement\(/)
   assert.match(helper, /apercu\.typeDocument !== 'Quittance'\) return/)
   assert.match(helper, /chargerSignature\(bailleur\.signature_chemin\)/)
