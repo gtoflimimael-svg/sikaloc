@@ -47,7 +47,8 @@ test('les espaces publics et Pro ne proposent plus Find ni les annonces', async 
 
 test('les comptes candidat historiques ne reçoivent aucun accès Pro ou Me', async () => {
   const candidat = { estBailleur: false, estLocataire: false, estCandidat: true }
-  assert.equal(destinationApresConnexion(candidat), '/')
+  // Plus de renvoi muet vers l'accueil : /entrer explique la fermeture (UX-03).
+  assert.equal(destinationApresConnexion(candidat), '/entrer?espace=find-archive')
   assert.equal(accesAutorise(candidat, ESPACE_PRO), false)
   assert.equal(accesAutorise(candidat, ESPACE_ME), false)
   const contexte = await lire('src/lib/auth-contexte.ts')

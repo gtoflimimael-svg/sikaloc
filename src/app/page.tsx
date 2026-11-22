@@ -141,7 +141,7 @@ export default async function PageAccueil() {
                   alt="Cinq villas contemporaines indépendantes, aux façades claires et aux accents verts, alignées côte à côte"
                   width={1774}
                   height={887}
-                  priority
+                  preload
                   sizes="(max-width: 639px) 100vw, (max-width: 1199px) 94vw, 1100px"
                   className="home-hero-image"
                 />
