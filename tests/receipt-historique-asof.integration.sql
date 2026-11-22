@@ -19,9 +19,9 @@ begin
     insert into public.paiements(id,bailleur_id,bail_id,date_paiement,montant,periode_debut,periode_fin,mode_paiement,statut,valide_le) values
       (p1,u,b,current_date,30000,date_trunc('month',current_date)::date,(date_trunc('month',current_date)+interval '1 month - 1 day')::date,'Espèces','Validé',doc_at-interval '1 minute'),
       (p2,u,b,current_date,20000,date_trunc('month',current_date)::date,(date_trunc('month',current_date)+interval '1 month - 1 day')::date,'Espèces','Validé',doc_at+interval '1 minute');
-    insert into public.quittances(id,bailleur_id,paiement_id,bail_id,numero_document,type,date_generation,pdf_chemin)
-      values(q,u,p1,b,'FIXTURE-'||replace(q::text,'-',''),'Reçu',doc_at,'quittances/'||u::text||'/fixture.pdf');
-    select x into pay from public.paiements x where x.id=p1;
+    insert into public.quittances(id,bailleur_id,paiement_id,numero_document,type,date_generation,pdf_chemin)
+      values(q,u,p1,'FIXTURE-'||replace(q::text,'-',''),'Reçu',doc_at,'quittances/'||u::text||'/fixture.pdf');
+    select x.* into pay from public.paiements x where x.id=p1;
     current_fin:=prive.finances_paiement_locatif(pay,100000);
     receipt:=public.lire_quittance_autorisee(u,q)->'contexte'->'finances';
     if (current_fin->>'cumul_loyer')::numeric is distinct from 50000 or (current_fin->>'solde_restant')::numeric is distinct from 50000 then raise exception 'Le contrôle courant doit compter les deux versements.'; end if;

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { signatureWebhookValide } from '@/lib/fedapay'
 import { reglerTransaction } from '@/lib/reglement-abonnement'
+import { journaliserEchec } from '@/lib/journal'
 
 /**
  * Notification de paiement FedaPay.
@@ -43,7 +44,10 @@ export async function POST(request: NextRequest) {
   let evenement: Record<string, unknown>
   try {
     evenement = JSON.parse(corpsBrut)
-  } catch {
+  } catch (erreur) {
+    // Signature valide mais corps illisible : accusé de réception pour éviter
+    // les rejeux sans fin, et trace pour enquête.
+    journaliserEchec('fedapay.webhook_illisible', erreur)
     return NextResponse.json({ recu: true }, { status: 200 })
   }
 

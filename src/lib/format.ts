@@ -91,13 +91,26 @@ export function formaterHorodatage(iso: string | null | undefined): string {
   return `${date.getDate()} ${MOIS[date.getMonth()]} ${date.getFullYear()} à ${heures}:${minutes}`
 }
 
-/** Date du jour au format `YYYY-MM-DD`, dans le fuseau local. */
-export function aujourdhuiISO(): string {
-  const maintenant = new Date()
-  const mois = String(maintenant.getMonth() + 1).padStart(2, '0')
-  const jour = String(maintenant.getDate()).padStart(2, '0')
+/**
+ * Date du jour au format `YYYY-MM-DD`, à l'heure du Bénin (FN-03).
+ *
+ * Ni le fuseau du serveur (UTC sur Vercel) ni celui du navigateur : entre 23 h
+ * et minuit à Cotonou, l'un ou l'autre donnait la veille. Même règle qu'en
+ * base (`now() at time zone 'Africa/Porto-Novo'`).
+ */
+export function dateDuJourBenin(maintenant: Date = new Date()): string {
+  // en-CA formate en AAAA-MM-JJ.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Porto-Novo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(maintenant)
+}
 
-  return `${maintenant.getFullYear()}-${mois}-${jour}`
+/** Date du jour au format `YYYY-MM-DD`, à l'heure du Bénin. */
+export function aujourdhuiISO(): string {
+  return dateDuJourBenin()
 }
 
 /** Premier jour du mois d'une date ISO. */

@@ -37,8 +37,9 @@ test('les comptes à rôles multiples et locataires conservent leur aiguillage',
 
 test('un rôle candidat historique seul reste public et ne reçoit pas d’accès Pro ou Me', () => {
   const candidat = { estBailleur: false, estLocataire: false, estCandidat: true }
-  assert.equal(destinationApresVerification(candidat), '/')
-  assert.equal(destinationApresConnexion(candidat), '/')
+  // Public, mais plus muet : /entrer explique la fermeture de Find (UX-03).
+  assert.equal(destinationApresVerification(candidat), '/entrer?espace=find-archive')
+  assert.equal(destinationApresConnexion(candidat), '/entrer?espace=find-archive')
   assert.equal(accesAutorise(candidat, ESPACE_PRO), false)
   assert.equal(accesAutorise(candidat, ESPACE_ME), false)
 })

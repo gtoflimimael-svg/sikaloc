@@ -10,6 +10,8 @@ import { creerClientAdmin } from '@/lib/supabase/admin'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import { erreursChamps, schemaPaiement, type EtatFormulaire } from '@/lib/validation'
 import { ESPACE_PRO } from '@/lib/roles'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
+import { journaliserEchec } from '@/lib/journal'
 
 function lireFormulaire(donnees: FormData) {
   return schemaPaiement.safeParse({
@@ -44,7 +46,7 @@ export async function enregistrerPaiement(
     p_type_paiement: analyse.data.typePaiement,
   })
 
-  if (error) return { erreur: `Enregistrement impossible : ${error.message}` }
+  if (error) return { erreur: messageErreurUtilisateur(error, 'Enregistrement impossible', 'actions.paiements') }
   if (!paiementId) return { erreur: 'Enregistrement impossible. Réessayez.' }
 
   // Écran de récapitulatif avant validation (§6.1.7, étape 4).
@@ -63,6 +65,8 @@ export async function validerPaiement(id: string): Promise<EtatFormulaire> {
     quittance = await genererEtStocker(id, true)
   } catch (erreur) {
     if (erreur instanceof SignatureQuittanceRequiseError) return { signatureRequise: true }
+    // La cause réelle reste invisible à l'écran mais jamais perdue (OPS-07).
+    journaliserEchec('paiements.valider', erreur)
     return { erreur: 'Validation ou émission impossible. Le paiement peut déjà être validé : consultez sa fiche puis relancez la génération si nécessaire.' }
   }
 
@@ -94,10 +98,11 @@ export async function regenererQuittance(paiementId: string): Promise<EtatFormul
   } catch (erreur) {
     if (erreur instanceof Error && erreur.message === 'NEXT_REDIRECT') throw erreur
     if (erreur instanceof SignatureQuittanceRequiseError) return { signatureRequise: true }
+    journaliserEchec('paiements.regenerer', erreur)
     return {
       erreur:
         erreur instanceof Error
-          ? `Génération impossible : ${erreur.message}`
+          ? messageErreurUtilisateur(erreur, 'Génération impossible', 'actions.paiements')
           : 'Génération impossible.',
     }
   }
@@ -130,7 +135,7 @@ export async function corrigerPaiement(
 
   if (error) {
     // Le trigger `proteger_paiement_fige` remonte ici passé les 5 minutes.
-    return { erreur: error.message.replace(/^.*?:\s*/, '') }
+    return { erreur: messageErreurUtilisateur(error, 'Correction impossible', 'actions.paiements') }
   }
 
   if (!corrige) return { erreur: 'Paiement impossible ou non autorisé.' }

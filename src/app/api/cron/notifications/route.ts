@@ -4,6 +4,8 @@ import { requeteCronAutorisee } from '@/lib/cron-auth'
 import { emailOperationnel, envoyerEmail, type ModeleEmail, type VariablesEmail } from '@/lib/emails'
 import { viderNotifications, type TransportNotification } from '@/lib/file-notifications'
 import { creerClientAdmin } from '@/lib/supabase/admin'
+import { journaliserEchec } from '@/lib/journal'
+import { suivreCron } from '@/lib/cron-suivi'
 
 export const maxDuration = 300
 const parEmail: TransportNotification = (dest, modele, variables, id) =>
@@ -19,7 +21,10 @@ export async function POST(request: NextRequest) {
     ['grace', 'emails_a_envoyer', emailOperationnel(), parEmail],
   ] as const) {
     try { details[nom] = await viderNotifications(admin, table, disponible, transport, 200, Math.min(echeance, Date.now() + 70_000)) }
-    catch { details[nom] = { erreur: 'Traitement interrompu ; reprise conservée en file.' } }
+    catch (erreur) {
+      journaliserEchec('cron.notifications', erreur, { canal: nom })
+      details[nom] = { erreur: 'Traitement interrompu ; reprise conservée en file.' }
+    }
   }
   const valeurs = Object.values(details)
   return NextResponse.json({
@@ -29,4 +34,7 @@ export async function POST(request: NextRequest) {
     detail: details,
   }, { status: valeurs.some(v => 'erreur' in v) ? 500 : 200 })
 }
-export async function GET(request: NextRequest) { return POST(request) }
+// Vercel Cron appelle GET : c'est là que se branche le suivi Sentry.
+export async function GET(request: NextRequest) {
+  return suivreCron('notifications', '15 2 * * *', request, () => POST(request))
+}

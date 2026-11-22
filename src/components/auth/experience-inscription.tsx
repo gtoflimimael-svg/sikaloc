@@ -53,7 +53,8 @@ export function ExperienceInscription({
 
           <div className="signup-editorial-copy">
             <p className="signup-eyebrow">{label}</p>
-            <h1>{titreEditorial}</h1>
+            {/* Titre décoratif : le seul h1 est dans le formulaire (SEO-01). */}
+            <p className="signup-editorial-title" aria-hidden="true">{titreEditorial}</p>
             <p className="signup-editorial-description">{descriptionEditorial}</p>
           </div>
 
@@ -62,7 +63,7 @@ export function ExperienceInscription({
               src={image}
               alt={imageAlt}
               fill
-              priority
+              preload
               sizes="(max-width: 980px) 100vw, (max-width: 1440px) 50vw, 680px"
             />
           </figure>

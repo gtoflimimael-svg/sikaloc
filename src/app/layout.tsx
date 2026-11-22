@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from 'next'
+import { headers } from 'next/headers'
 import localFont from 'next/font/local'
 import { Outfit } from 'next/font/google'
 
 import { BandeauDemoLocal } from '@/components/demo/bandeau-local'
 import { MouvementPages } from '@/components/ui/mouvement-pages'
 import { SCRIPT_ANTI_FLASH } from '@/components/ui/theme'
+import { EN_TETE_NONCE } from '@/lib/csp'
 
 import './globals.css'
 
@@ -135,7 +137,9 @@ export const viewport: Viewport = {
   interactiveWidget: 'resizes-content',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nonce de la CSP posé par le proxy : seul script maison exécutable.
+  const nonce = (await headers()).get(EN_TETE_NONCE) ?? undefined
   return (
     <html
       lang="fr"
@@ -146,7 +150,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body>
         {/* S’exécute au parsing, avant le contenu visible et la première frame. */}
-        <script dangerouslySetInnerHTML={{ __html: SCRIPT_ANTI_FLASH }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: SCRIPT_ANTI_FLASH }} />
         <BandeauDemoLocal />
         <MouvementPages />
         {children}
