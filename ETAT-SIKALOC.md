@@ -47,7 +47,7 @@ mettre à jour ce tableau.
 | 3. Fiabilité | `fix/fiabilite` — #11 | OPS-01 (code), OPS-03, OPS-06, OPS-07 | validate ✓, base-reelle ✓ |
 | 4. UX, SEO, performance | `fix/ux-performance` — #12 | UX-01, UX-02, UX-03, SEO-01, PERF-01, FN-03, FN-06, DB-01 | validate ✓ |
 | 5. Tests de bout en bout | `fix/tests-e2e` — #13, cumulatif (lots 1 à 4) | QA-01, FN-01 (simulé) | validate ✓, base-reelle ✓, bout-en-bout ✓ |
-| 6. Documentation | `fix/documentation`, cumulatif (lots 1 à 5) | ARCH-02 | à exécuter |
+| 6. Documentation | `fix/documentation` — #14, cumulatif (lots 1 à 5) | ARCH-02 | voir la PR |
 
 Aucune de ces PR n'est fusionnée ; rien n'est déployé.
 
