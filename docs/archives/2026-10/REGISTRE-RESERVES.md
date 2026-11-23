@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Registre des réserves — lot 5
 
 État constaté le 21 octobre 2026. Ce registre distingue défaut prouvé et validation absente.

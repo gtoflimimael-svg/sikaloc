@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Sikaloc — priorité 1, sécurité et intégration
 
 Date : 21 octobre 2026. Branche locale `codex/securite-integration-1`, créée depuis `ef35bd35b49b890b706c8a7f577c2d0aa5e02412`. Verdict : **BLOQUÉ / NON VALIDÉ** pour le fonctionnement réel. Aucun projet distant n'a été modifié ou utilisé pour les tests.

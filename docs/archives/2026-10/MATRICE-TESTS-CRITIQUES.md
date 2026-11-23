@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Matrice des tests critiques — priorité sécurité/intégration
 
 Date : 21 octobre 2026. Les résultats « PASS local » ne valent jamais validation PostgreSQL ni Auth. `BLOQUÉ` signifie environnement absent ; `NON EXÉCUTÉ` signifie scénario prévu mais non lancé.

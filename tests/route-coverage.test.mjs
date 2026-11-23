@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const racine = fileURLToPath(new URL('../src/app/', import.meta.url))
-const matrice = readFileSync(new URL('../MATRICE-56-PAGES.md', import.meta.url), 'utf8')
+const matrice = readFileSync(new URL('../MATRICE-PAGES.md', import.meta.url), 'utf8')
 
 function pages(repertoire) {
   return readdirSync(repertoire, { withFileTypes: true }).flatMap((entree) => {

@@ -33,6 +33,11 @@ environnements **Production**, **Preview** et **Development**.
 | `EMAIL_FROM_NAME` | `Sikaloc` | non |
 | `APP_NAME` | `Sikaloc` | non |
 | `CRON_SECRET` | chaîne aléatoire (voir ci-dessous) | non |
+| `OTP_SECRET` | 32 caractères minimum, aléatoire | non |
+| `EMAIL_EXPLOITATION` | adresse réellement relevée (alertes du contrôle de schéma) | non |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | DSN du projet Sentry | oui (le DSN n'est pas un secret) |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | envoi des source maps au build | non |
+| `SIKALOC_MAINTENANCE_MODE` | `off` pour ouvrir le site ; absent = maintenance | non |
 
 Les valeurs réelles sont dans `.env.local`. Trois d'entre elles manquaient au
 brief et sont pourtant nécessaires :
@@ -45,8 +50,10 @@ brief et sont pourtant nécessaires :
   ```bash
   node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
   ```
-- **`FEDAPAY_WEBHOOK_SECRET`** — active la vérification de signature des
-  notifications de paiement.
+- **`FEDAPAY_WEBHOOK_SECRET`** — **obligatoire** : sans lui, le webhook répond
+  503 et aucune notification de paiement n'est traitée.
+- **`SENTRY_DSN`** — sans lui, la supervision est inerte : aucune erreur ni
+  cron manqué n'est signalé.
 
 ---
 
@@ -55,7 +62,9 @@ brief et sont pourtant nécessaires :
 ### 2.1 Côté Vercel
 
 *Project → Settings → Domains → Add* : ajouter `sikaloc.com`. Ajouter aussi
-`www.sikaloc.com` et le faire rediriger vers l'apex.
+`www.sikaloc.com`. L'application redirige elle-même `www` vers l'apex (308,
+`next.config.ts`), y compris en maintenance ; une redirection côté Vercel reste
+possible en complément.
 
 ### 2.2 Côté Spaceship (DNS)
 
@@ -100,13 +109,19 @@ dig +short sikaloc.com          # doit renvoyer 76.76.21.21
 
 ## 3. Tâches planifiées
 
-`vercel.json` déclare trois tâches, **volontairement décalées** :
+`vercel.json` déclare quatre tâches, **volontairement décalées** :
 
 ```json
 { "path": "/api/cron/cycle-grace",   "schedule": "0 2 * * *"  }
 { "path": "/api/cron/notifications", "schedule": "15 2 * * *" }
 { "path": "/api/cron/purge",         "schedule": "30 2 * * *" }
+{ "path": "/api/cron/schema",        "schedule": "45 2 * * *" }
 ```
+
+`/api/cron/schema` vérifie chaque nuit que les tables, vues et colonnes
+attendues par le code existent (`colonnes_schema()`), et alerte
+`EMAIL_EXPLOITATION` sinon. Chaque tâche autorisée envoie un *check-in* Sentry :
+une tâche qui ne tourne plus est signalée.
 
 Le brief proposait de tout lancer à `00:00`. L'ordre compte : le cycle de grâce
 **dépose** les rappels dans la file, les notifications les **expédient**. Lancés
@@ -126,7 +141,7 @@ select cron.unschedule('sika-purge-j90');
 ```
 
 > **Plan Vercel Hobby** : une seule tâche par jour, déclenchée à l'heure près
-> seulement. Avec trois tâches, il faut le plan **Pro**. À défaut, conserver
+> seulement. Avec quatre tâches, il faut le plan **Pro**. À défaut, conserver
 > pg_cron pour le cycle et la purge, et ne planifier que `/api/cron/notifications`
 > sur Vercel.
 
@@ -155,13 +170,32 @@ mot de passe seraient rejetés.
 - Récupérer le secret (« Click to reveal ») et le placer dans
   `FEDAPAY_WEBHOOK_SECRET` sur Vercel.
 
-Le crédit d'abonnement ne dépend pas de cette signature : la transaction est
-systématiquement revérifiée auprès de l'API FedaPay avec la clé secrète. La
-signature est une protection supplémentaire, pas l'unique rempart.
+La signature est obligatoire : absente ou fausse, la notification est refusée
+(401). Elle ne suffit pas pour autant : la transaction est systématiquement
+revérifiée auprès de l'API FedaPay avec la clé secrète, et c'est cette
+vérification qui décide du crédit.
 
 ---
 
 ## 6. Déployer
+
+### Ordre : base d'abord, code ensuite
+
+Le code d'une version peut appeler des fonctions SQL créées par ses nouvelles
+migrations. La liste de celles qui restent à livrer est tenue dans
+[`ETAT-SIKALOC.md`](../ETAT-SIKALOC.md) (§2). Pour chaque livraison :
+
+1. Sauvegarder la base de production et vérifier que la restauration a été
+   éprouvée (Sikaloc-Test).
+2. Appliquer les migrations sur Sikaloc-Test, puis y rejouer la recette.
+3. Appliquer les mêmes migrations en production, dans l'ordre. Elles sont
+   additives : l'ancien code continue de fonctionner pendant l'intervalle.
+4. Fusionner dans `main` (déploiement du code).
+5. `npm run verrouiller:migrations`, committer `supabase/migrations.lock.json`,
+   et mettre à jour `ETAT-SIKALOC.md`.
+
+Une migration déjà livrée n'est jamais modifiée : `npm run verifier:migrations`
+et la CI le refusent. Corriger par une nouvelle migration.
 
 ### Sans dépôt Git
 
@@ -204,7 +238,16 @@ curl -s -o /dev/null -w "%{http_code}\n" https://sikaloc.com/api/cron/purge
 # 3. Elles fonctionnent avec le secret
 curl -X POST https://sikaloc.com/api/cron/cycle-grace \
   -H "Authorization: Bearer $CRON_SECRET"
+
+# 4. La CSP porte un nonce
+curl -sI https://sikaloc.com/connexion | grep -i content-security-policy
+
+# 5. www redirige vers l'apex (308)
+curl -sI https://www.sikaloc.com | head -1
 ```
+
+Dans Sentry, vérifier qu'aucune erreur nouvelle n'apparaît et que les quatre
+crons envoient leur check-in au matin suivant.
 
 Puis, dans l'application : créer un compte de test, aller au bout de
 l'onboarding, enregistrer un paiement et vérifier que la quittance se génère et
@@ -265,7 +308,7 @@ servent :
 | Appelant | Quand |
 |---|---|
 | `/api/abonnement/fedapay` | notification de l'opérateur |
-| `/app/parametres?retour=1` | le bailleur revient du guichet |
+| `/pro/parametres/abonnement?retour=1` | le bailleur revient du guichet |
 
 Aucun n'est fiable seul. Le webhook peut se perdre ; la réconciliation suppose
 que le bailleur revienne sur l'application. Ensemble, ils couvrent l'essentiel.
