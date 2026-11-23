@@ -5,7 +5,8 @@ import {
   maintenanceDecision,
   maintenanceResponseSpec,
 } from '@/lib/maintenance-policy.mjs'
-import { cheminProtege, cheminPublic } from '@/lib/roles'
+import { EN_TETE_NONCE, genererNonce, politiqueCsp } from '@/lib/csp'
+import { cheminProtege, cheminPublic, cheminVitrine } from '@/lib/roles'
 import type { Database } from '@/lib/types/database'
 
 /*
@@ -86,6 +87,23 @@ function reponseMaintenance(request: NextRequest) {
 export default async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname
 
+  // CSP à nonce (SEC-02) : un nonce neuf par requête. Next.js le lit dans
+  // l'en-tête CSP de la requête et l'applique à ses propres scripts.
+  const nonce = genererNonce()
+  const csp = politiqueCsp({ nonce, chemin })
+
+  function poursuivre() {
+    const enTetes = new Headers(request.headers)
+    enTetes.set(EN_TETE_NONCE, nonce)
+    enTetes.set('Content-Security-Policy', csp)
+    return NextResponse.next({ request: { headers: enTetes } })
+  }
+
+  function avecCsp(sortie: NextResponse) {
+    sortie.headers.set('Content-Security-Policy', csp)
+    return sortie
+  }
+
   const decisionMaintenance = maintenanceDecision(
     chemin,
     request.method,
@@ -95,11 +113,18 @@ export default async function proxy(request: NextRequest) {
   // Les endpoints techniques gardent leurs propres contrôles de signature ou
   // de secret. Toute autre navigation, API ou Server Action reçoit un 503.
   if (decisionMaintenance !== 'normal') {
-    if (decisionMaintenance === 'technical') return NextResponse.next({ request })
-    return reponseMaintenance(request)
+    if (decisionMaintenance === 'technical') return avecCsp(poursuivre())
+    return avecCsp(reponseMaintenance(request))
   }
 
-  let reponse = NextResponse.next({ request })
+  // Pages vitrine en lecture : aucune session à rafraîchir ni à garder
+  // (PERF-01). On évite l'aller-retour vers Supabase Auth ; la CSP à nonce
+  // (SEC-02) s'applique comme partout.
+  if ((request.method === 'GET' || request.method === 'HEAD') && cheminVitrine(chemin)) {
+    return avecCsp(poursuivre())
+  }
+
+  let reponse = poursuivre()
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -113,7 +138,7 @@ export default async function proxy(request: NextRequest) {
           for (const { name, value } of cookiesAEcrire) {
             request.cookies.set(name, value)
           }
-          reponse = NextResponse.next({ request })
+          reponse = poursuivre()
           for (const [nom, valeur] of Object.entries(enTetes)) reponse.headers.set(nom, valeur)
           for (const { name, value, options } of cookiesAEcrire) {
             reponse.cookies.set(name, value, options)
@@ -159,7 +184,7 @@ export default async function proxy(request: NextRequest) {
     return rediriger(url)
   }
 
-  return reponse
+  return avecCsp(reponse)
 }
 
 export const config = {

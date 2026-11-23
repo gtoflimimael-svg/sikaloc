@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { locataireCourant } from '@/lib/session'
 import { creerClientServeur } from '@/lib/supabase/serveur'
 import type { EtatFormulaire } from '@/lib/validation'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 /**
  * La seule écriture de Sikaloc_Me.
@@ -35,7 +36,7 @@ export async function definirMesNotifications(
   const { error } = await supabase.rpc('definir_mes_notifications', { p_actif: actif })
 
   if (error) {
-    return { erreur: `Votre préférence n’a pas pu être enregistrée : ${error.message}` }
+    return { erreur: messageErreurUtilisateur(error, 'Votre préférence n’a pas pu être enregistrée', 'actions.preferences-locataire') }
   }
 
   revalidatePath('/me/preferences')

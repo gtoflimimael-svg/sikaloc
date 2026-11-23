@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Plan de mise en production — document préparatoire, non exécuté
 
 ## Préconditions et points d'arrêt

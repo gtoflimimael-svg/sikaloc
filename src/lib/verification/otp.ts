@@ -253,12 +253,30 @@ export async function verifierCodeTelephone(
   }
 
   // Incrémenté d'abord : un abandon de requête ne doit pas rendre l'essai
-  // gratuit.
+  // gratuit. L'écriture est conditionnelle (comparer-puis-échanger) : deux
+  // saisies simultanées lisent la même valeur, une seule peut l'incrémenter.
+  // Sans cette condition, N requêtes parallèles obtenaient N comparaisons
+  // pour un seul essai décompté (SEC-04).
   const tentatives = courant.tentatives + 1
-  await admin
+  const { data: essaiReserve, error: erreurEssai } = await admin
     .from('codes_verification')
     .update({ tentatives })
     .eq('id', courant.id)
+    .eq('tentatives', courant.tentatives)
+    .is('utilise_le', null)
+    .is('invalide_le', null)
+    .select('id')
+    .maybeSingle()
+
+  // Essai pris par une requête concurrente, ou écriture impossible : aucune
+  // comparaison sans essai décompté.
+  if (erreurEssai || !essaiReserve) {
+    return {
+      ok: false,
+      motif: 'code_incorrect',
+      essaisRestants: Math.max(0, TENTATIVES_MAXIMALES - tentatives),
+    }
+  }
 
   if (new Date(courant.expire_le).getTime() < Date.now()) {
     return { ok: false, motif: 'code_expire' }

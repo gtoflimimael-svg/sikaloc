@@ -65,10 +65,16 @@
     "banc:modeles-email": "tsx scripts/banc-modeles-email.ts",
     "banc:chemins": "tsx scripts/banc-chemins.ts",
     "banc:suppressions": "node scripts/banc-suppressions.cjs",
-    "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts"
+    "banc:telephone-bailleur": "tsx scripts/banc-telephone-bailleur.ts",
+    "test:securite": "node --import tsx --test tests/securite-applicative.test.mjs",
+    "verrouiller:migrations": "node scripts/verifier-migrations-statique.mjs --verrouiller",
+    "test": "node scripts/tests-tous.mjs",
+    "test:ux": "node --import tsx --test tests/ux-performance.test.mjs",
+    "test:e2e": "node scripts/e2e/lancer.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
+    "@sentry/nextjs": "11.11.0",
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.112.3",
     "@zxcvbn-ts/core": "^4.2.0",
@@ -76,7 +82,7 @@
     "@zxcvbn-ts/language-fr": "^4.1.2",
     "fflate": "^0.8.3",
     "lucide-react": "^1.32.0",
-    "next": "16.4.2",
+    "next": "16.4.6",
     "pdfjs-dist": "6.3.289",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -84,7 +90,7 @@
     "server-only": "^0.0.1",
     "sharp": "0.35.5",
     "signature_pad": "^5.1.4",
-    "zod": "4.3.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
@@ -92,7 +98,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.4",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.2",
+    "eslint-config-next": "^16.4.6",
     "playwright-core": "^1.62.1",
     "supabase": "2.114.0",
     "tailwindcss": "4.3.3",

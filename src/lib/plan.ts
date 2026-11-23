@@ -1,4 +1,5 @@
 import type { Bailleur, PlanAbonnement } from '@/lib/types/database'
+import { dateDuJourBenin } from '@/lib/format'
 
 /**
  * Limites des plans — spec §4.2.
@@ -34,7 +35,8 @@ export function abonnementActif(bailleur: Pick<Bailleur, 'plan' | 'date_fin_abon
   if (bailleur.plan !== 'Standard') return false
   if (!bailleur.date_fin_abonnement) return false
 
-  return bailleur.date_fin_abonnement >= new Date().toISOString().slice(0, 10)
+  // Jour courant à Cotonou, comme le quota en base (FN-03).
+  return bailleur.date_fin_abonnement >= dateDuJourBenin()
 }
 
 export function capacites(

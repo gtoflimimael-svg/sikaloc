@@ -29,16 +29,69 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Immuabilité des migrations livrées (OPS-06) et structure.
       - run: npm run verifier:migrations
-      - run: npm run test:find-archive
-      - run: npm run test:find-api-revocation
-      - run: node --import tsx tests/schema-objets.test.mjs
-      - run: npm run test:maintenance
-      - run: npm run test:security-mutations
-      - run: npm run test:verification
-      - run: npm run test:email-otp
-      - run: npm run test:loyers
-      - run: npm run test:lot2b
+      # Tous les tests Node du dépôt (auparavant 10 fichiers sur 25).
+      - run: npm test
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+
+  # Base réelle jetable (OPS-03) : toutes les migrations appliquées sur un
+  # Postgres Supabase neuf, puis les scénarios SQL (isolation entre bailleurs,
+  # reçus historiques…). Aucune connexion à un projet hébergé.
+  base-reelle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Démarrer un Postgres Supabase jetable
+        run: npx supabase db start
+      - name: Appliquer toutes les migrations du dépôt
+        run: npx supabase migration up --local
+      - name: Marquer la pile comme jetable
+        run: |
+          ID=$(node -e "console.log(crypto.randomUUID())")
+          echo "SIKALOC_INTEGRATION_INSTANCE_ID=$ID" >> "$GITHUB_ENV"
+          PGPASSWORD=postgres psql -X -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c \
+            "create schema if not exists sikaloc_test_guard;
+             create table if not exists sikaloc_test_guard.instance (id uuid primary key, disposable boolean not null);
+             insert into sikaloc_test_guard.instance values ('$ID', true);"
+      - name: Scénarios SQL d'intégration
+        env:
+          SIKALOC_INTEGRATION_TARGET: ephemeral-local
+          SIKALOC_INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: node scripts/run-isolated-sql-test.mjs
+      - name: Arrêter la pile
+        if: always()
+        run: npx supabase stop --no-backup
+
+  # Parcours de bout en bout (QA-01, FN-01) : navigateur réel contre
+  # l'application en mode production, sur une pile Supabase jetable (SMTP réel
+  # coupé, FedaPay simulé localement). Aucune donnée ni service externe.
+  bout-en-bout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Démarrer une pile Supabase jetable
+        run: node scripts/e2e/pile.mjs demarrer "$RUNNER_TEMP/pile-e2e"
+      - name: Parcours de bout en bout
+        run: npm run test:e2e -- --workdir "$RUNNER_TEMP/pile-e2e"
+      - name: Arrêter la pile
+        if: always()
+        run: node scripts/e2e/pile.mjs arreter "$RUNNER_TEMP/pile-e2e"

@@ -48,7 +48,14 @@ export async function souscrire(_etat: EtatFormulaire): Promise<EtatFormulaire> 
   })
 
   if (!resultat.ok || !resultat.urlPaiement || !resultat.transactionId) {
-    return { erreur: resultat.message ?? 'Le guichet de paiement est indisponible.' }
+    // Le détail FedaPay (réponse d'API, erreur réseau) reste dans les journaux.
+    console.error('[actions.abonnement] ouverture du paiement impossible', {
+      transaction: Boolean(resultat.transactionId),
+      url: Boolean(resultat.urlPaiement),
+    })
+    return {
+      erreur: 'Le guichet de paiement est momentanément indisponible. Réessayez dans quelques minutes ; aucun montant n’a été débité.',
+    }
   }
 
   redirect(resultat.urlPaiement)

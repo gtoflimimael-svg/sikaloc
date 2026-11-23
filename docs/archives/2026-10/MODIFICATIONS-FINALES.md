@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Modifications finales — consolidation locale
 
 Base : `76037c70626c078f34d661d00df047dc321d417c` — branche `codex/consolidation-livraison-3`.

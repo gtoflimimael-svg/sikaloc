@@ -1,48 +1,18 @@
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs/config'
 import { isMaintenanceEnabled } from './src/lib/maintenance-policy.mjs'
-import { getSupabaseCspOrigins } from './src/lib/supabase-csp.mjs'
 
 /**
- * Politique de sécurité du contenu (CSP) — spec §9 « protéger le site contre
- * toute tentative de piratage ».
+ * Politique de sécurité du contenu (CSP) — spec §9.
  *
- * Choix délibéré : PAS de nonce par requête. Un CSP à base de nonce oblige
- * Next.js à rendre chaque page dynamiquement (voir la doc `content-security-
- * policy.md`) — ce qui désactiverait la génération statique et le cache CDN
- * sur les pages publiques (accueil, mentions légales, connexion), à l'exact
- * opposé de la correction §9 « fluidité, que le site réponde vite ». La
- * variante statique ci-dessous garde `'unsafe-inline'` sur les scripts et les
- * styles, mais conserve l'essentiel de la protection : aucune ressource
- * tierce ne peut être chargée (`default-src 'self'`), aucun plugin ni objet
- * intégré (`object-src 'none'`), aucun habillage en iframe par un site tiers
- * (`frame-ancestors 'none'`), aucune soumission de formulaire vers l'extérieur
- * (`form-action 'self'`).
- *
- * `'unsafe-inline'` reste un compromis assumé plutôt qu'un oubli : l'audit du
- * code ne repose plus sur l'injection SVG d'illustrations ; les usages
- * conservés dans `src/app/layout.tsx` sont du balisage statique, jamais une
- * entrée utilisateur.
+ * Elle n'est plus posée ici : le proxy (`src/proxy.ts`) tire un nonce par
+ * requête et pose l'en-tête via `src/lib/csp.ts` (SEC-02). Les scripts n'ont
+ * donc plus `'unsafe-inline'`. Le nonce impose un rendu dynamique ; c'était
+ * déjà le cas de toutes les pages, puisque le proxy lit la session à chaque
+ * requête. Les fichiers statiques exclus du proxy (JS, images) n'en ont pas
+ * besoin.
  */
-const isDev = process.env.NODE_ENV === 'development'
 const maintenanceActive = isMaintenanceEnabled(process.env.SIKALOC_MAINTENANCE_MODE)
-const { httpOrigin: supabaseHttpOrigin, websocketOrigin: supabaseWebsocketOrigin } =
-  getSupabaseCspOrigins(process.env.NEXT_PUBLIC_SUPABASE_URL)
-
-const cspHeader = `
-  default-src 'self';
-  script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: ${supabaseHttpOrigin};
-  font-src 'self';
-  connect-src 'self' ${supabaseHttpOrigin} ${supabaseWebsocketOrigin};
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'none';
-  upgrade-insecure-requests;
-`
-  .replace(/\s{2,}/g, ' ')
-  .trim()
 
 const nextConfig: NextConfig = {
   // @react-pdf/renderer embarque des binaires de police et du code CJS qui ne
@@ -121,9 +91,18 @@ const nextConfig: NextConfig = {
     // Les redirects du fichier de configuration sont exécutées avant Proxy.
     // Les suspendre en maintenance garantit notamment un 503 direct sur les
     // anciennes URL `/app/*`, sans détour ni redirection.
-    if (maintenanceActive) return []
+    // www.sikaloc.com servait le même contenu que l'apex (SEO-01) : une seule
+    // adresse officielle, même en maintenance. 308 préserve la méthode.
+    const versApex = {
+      source: '/:chemin*',
+      has: [{ type: 'host' as const, value: 'www.sikaloc.com' }],
+      destination: 'https://sikaloc.com/:chemin*',
+      permanent: true,
+    }
+    if (maintenanceActive) return [versApex]
 
     return [
+      versApex,
       {
         source: '/app/:chemin*',
         destination: '/pro/:chemin*',
@@ -133,18 +112,12 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    const cspForPublicPdfPreview = cspHeader.replace(
-      "frame-ancestors 'none';",
-      "frame-ancestors 'self';",
-    )
-
     return [
       {
         // Toutes les routes : les API et les pages méritent la même
         // protection contre le sniff de type MIME et le clickjacking.
         source: '/:path*',
         headers: [
-          { key: 'Content-Security-Policy', value: cspHeader },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -172,7 +145,6 @@ const nextConfig: NextConfig = {
       ...['/exemple-quittance', '/exemple-recu'].map((source) => ({
         source,
         headers: [
-          { key: 'Content-Security-Policy', value: cspForPublicPdfPreview },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
         ],
       })),
@@ -180,4 +152,19 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+/**
+ * Sentry (OPS-01). Sans SENTRY_AUTH_TOKEN, aucune source map n'est envoyée et
+ * aucune release n'est créée : le build reste identique, local comme en CI.
+ * Les cartes côté client sont supprimées après envoi.
+ */
+const jetonSentry = process.env.SENTRY_AUTH_TOKEN
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: jetonSentry,
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: { disable: !jetonSentry, deleteSourcemapsAfterUpload: true },
+  release: { create: Boolean(jetonSentry) },
+})

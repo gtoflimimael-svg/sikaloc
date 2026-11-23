@@ -462,6 +462,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "apercu_echeance_paiement",
+    "migration": "20261122140000_apercu_echeance_paiement.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "appliquer_cycle_grace",
     "migration": "20260817000800_cycle_de_grace.sql"
   },
@@ -492,6 +497,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "colonnes_schema",
+    "migration": "20261122170000_colonnes_schema.sql"
+  },
+  {
+    "categorie": "fonction",
+    "nom": "conclure_tentative_connexion",
+    "migration": "20261122150000_limiter_tentatives_connexion.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "consommer_limite_questions",
     "migration": "20261022231507_questions_contact.sql"
   },
@@ -508,7 +523,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "creer_paiement_brouillon",
-    "migration": "20261020185126_fiabiliser_loyers_echeances.sql"
+    "migration": "20261122180000_reutiliser_brouillon_paiement.sql"
   },
   {
     "categorie": "fonction",
@@ -792,6 +807,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "fonction",
+    "nom": "reserver_tentative_connexion",
+    "migration": "20261122150000_limiter_tentatives_connexion.sql"
+  },
+  {
+    "categorie": "fonction",
     "nom": "retirer_candidature",
     "migration": "20260919000700_candidatures.sql"
   },
@@ -848,7 +868,7 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   {
     "categorie": "fonction",
     "nom": "verifier_quota_logements",
-    "migration": "20261020102334_securiser_mutations_metier.sql"
+    "migration": "20261122181000_quota_heure_benin.sql"
   },
   {
     "categorie": "fonction",
@@ -922,6 +942,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "baux_historique_declare_par_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "baux_locataire_id_idx",
     "migration": "20260817000100_schema_initial.sql"
   },
@@ -952,6 +977,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "credits_abonnement_bailleur_id_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "emails_a_envoyer_en_attente_idx",
     "migration": "20260817000800_cycle_de_grace.sql"
   },
@@ -959,6 +989,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "emails_a_envoyer_unicite_palier",
     "migration": "20260817000800_cycle_de_grace.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "emissions_quittance_acteur_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "emissions_quittance_quittance_id_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
   },
   {
     "categorie": "index",
@@ -984,6 +1024,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "inscriptions_guide_statut_idx",
     "migration": "20260824000300_inscriptions_guide.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "invitations_locataire_bailleur_id_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "invitations_locataire_cree_par_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
   },
   {
     "categorie": "index",
@@ -1047,6 +1097,11 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
   },
   {
     "categorie": "index",
+    "nom": "recompenses_parrainage_filleul_id_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
+  },
+  {
+    "categorie": "index",
     "nom": "recompenses_parrainage_parrain_idx",
     "migration": "20260817000100_schema_initial.sql"
   },
@@ -1059,6 +1114,16 @@ export const OBJETS_DECLARES: ObjetDeclare[] = [
     "categorie": "index",
     "nom": "tentatives_connexion_email_idx",
     "migration": "20260817000100_schema_initial.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "tentatives_connexion_ip_idx",
+    "migration": "20261122150000_limiter_tentatives_connexion.sql"
+  },
+  {
+    "categorie": "index",
+    "nom": "versions_quittance_bailleur_id_idx",
+    "migration": "20261122182000_indexer_cles_etrangeres.sql"
   },
   {
     "categorie": "politique",

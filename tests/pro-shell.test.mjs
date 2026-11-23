@@ -115,7 +115,10 @@ test('le détail d’un bail expose son historique de paiements dans une région
 test('la confirmation du paiement garde la propriété SQL et utilise le loyer historisé pour son aperçu', async () => {
   const confirmation = await lire('src/app/pro/(shell)/paiements/[id]/confirmer/page.tsx')
   const actions = await lire('src/lib/actions/paiements.ts')
-  assert.match(confirmation, /\.from\('v_echeances'\)/)
+  const baseApercu = await lire('src/lib/apercu-paiement.ts')
+  assert.match(confirmation, /lireBaseApercuPaiement\(supabase, paiement\)/)
+  assert.match(baseApercu, /rpc\('apercu_echeance_paiement'/)
+  assert.match(baseApercu, /\.from\('v_echeances'\)/)
   assert.match(confirmation, /apercuDocumentPaiement\(/)
   assert.match(confirmation, /Déterminé à la validation/)
   assert.match(actions, /export async function validerPaiement[\s\S]*bailleurAvecEcriture\(\)/)

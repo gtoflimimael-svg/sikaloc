@@ -107,6 +107,13 @@ export function espace(role: Role): Espace {
  * encore le meilleur endroit : elle explique les deux espaces au lieu de
  * renvoyer vers une erreur.
  */
+/**
+ * Destination d'un compte candidat Sikaloc Find, espace archivé le 9/11/2026.
+ * `/entrer` y explique la fermeture au lieu d'un renvoi muet vers l'accueil
+ * (UX-03). Aucun droit Pro ou Me n'en découle.
+ */
+export const DESTINATION_COMPTE_FIND_ARCHIVE = '/entrer?espace=find-archive'
+
 export function destinationApresConnexion(roles: Roles): string {
   // `tableauDeBord` et non `racine` : `/pro` est une page de vente désormais,
   // et y renvoyer quelqu'un qui vient de se connecter serait absurde.
@@ -115,7 +122,7 @@ export function destinationApresConnexion(roles: Roles): string {
   // Le rôle candidat reste historique en base, mais son espace a été archivé.
   // Il ne confère aucun droit Pro/Me ; une destination publique évite les
   // redirections vers une route retirée ou un espace non autorisé.
-  if (roles.estCandidat && !roles.estBailleur && !roles.estLocataire) return '/'
+  if (roles.estCandidat && !roles.estBailleur && !roles.estLocataire) return DESTINATION_COMPTE_FIND_ARCHIVE
   return '/entrer'
 }
 
@@ -194,6 +201,24 @@ export const CHEMINS_PUBLICS: string[] = ['/me/rejoindre', '/me/invitation']
 export const CHEMINS_PUBLICS_EXACTS: string[] = ['/pro']
 
 /** Ce chemin échappe-t-il à la protection de son espace ? */
+/**
+ * Pages vitrine : elles ne lisent jamais la session (PERF-01).
+ *
+ * Le proxy y saute l'appel à Supabase Auth (`getUser`), un aller-retour réseau
+ * qui retardait chaque affichage de l'accueil, du blog ou des pages légales
+ * sans rien leur apporter. Toute page ajoutée ici doit rester sans session :
+ * un banc le vérifie (`tests/ux-performance.test.mjs`).
+ */
+export const CHEMINS_VITRINE_EXACTS: string[] = [
+  '/', '/blog', '/questions', '/robots.txt', '/sitemap.xml', '/exemple-quittance', '/exemple-recu',
+]
+export const CHEMINS_VITRINE: string[] = ['/blog', '/legal', '/guide']
+
+export function cheminVitrine(chemin: string): boolean {
+  if (CHEMINS_VITRINE_EXACTS.includes(chemin)) return true
+  return CHEMINS_VITRINE.some((p) => chemin.startsWith(`${p}/`))
+}
+
 export function cheminPublic(chemin: string): boolean {
   if (CHEMINS_PUBLICS_EXACTS.includes(chemin)) return true
   return CHEMINS_PUBLICS.some((p) => chemin === p || chemin.startsWith(`${p}/`))

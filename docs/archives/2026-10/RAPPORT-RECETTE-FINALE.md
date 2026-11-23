@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Sikaloc — rapport de recette finale, lot 5
 
 Date : 21 octobre 2026. Branche locale `codex/refonte-recette-finale-5`, issue exactement de `4ce5736dfb1a5e4a0bd0e62c5e803f593d93c8a8`. Aucun push, déploiement, changement de production ou migration distante.

@@ -19,6 +19,7 @@ import {
   poserTemoinVerification,
   retirerTemoinInvitation,
 } from '@/lib/verification/temoin'
+import { messageErreurUtilisateur } from '@/lib/erreurs-utilisateur'
 
 /**
  * Rejoindre Sikaloc_Me depuis une invitation.
@@ -136,7 +137,7 @@ export async function rejoindreAvecInvitation(
           'Un compte existe déjà avec cette adresse. Connectez-vous, puis rouvrez le lien de votre invitation.',
       }
     }
-    return { erreur: `La création du compte a échoué : ${error.message}` }
+    return { erreur: messageErreurUtilisateur(error, 'La création du compte a échoué', 'actions.rejoindre') }
   }
 
   // La confirmation d'email est active : aucune session n'est ouverte ici. Le

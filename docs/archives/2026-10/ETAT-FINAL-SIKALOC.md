@@ -1,3 +1,5 @@
+> **Archive — octobre 2026, périmée.** Ne décrit pas l’état actuel. Source d’état : [`ETAT-SIKALOC.md`](../../../ETAT-SIKALOC.md).
+
 # Sikaloc — état final de consolidation locale
 
 Date : 21 octobre 2026  

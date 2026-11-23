@@ -7,6 +7,7 @@ import { GenererDocumentPaiement } from '@/components/app/generer-document-paiem
 import { Alerte, Badge, EnTetePage } from '@/components/ui/retours'
 import { supprimerPaiement, validerPaiement } from '@/lib/actions/paiements'
 import { formaterDate, formaterFCFA, formaterPeriode } from '@/lib/format'
+import { lireBaseApercuPaiement } from '@/lib/apercu-paiement'
 import { apercuDocumentPaiement } from '@/lib/documents-paiement'
 import { montantEnLettresCapitalise } from '@/lib/montant-en-lettres'
 import { estCorrigeable } from '@/lib/paiement-utils'
@@ -67,23 +68,9 @@ export default async function PageConfirmationPaiement({
   const paiementDejaValide = paiement.statut === 'Validé'
   const actionsCorrectionDisponibles = estCorrigeable(paiement.valide_le, paiement.statut)
   const montant = Number(paiement.montant)
-  const { data: echeance, error: erreurEcheance } = paiement.type_paiement === 'Loyer'
-    ? await supabase
-        .from('v_echeances')
-        .select('montant_exigible, montant_paye')
-        .eq('bail_id', paiement.bail_id)
-        .eq('periode_debut', paiement.periode_debut)
-        .maybeSingle()
-    : { data: null, error: null }
-  const loyerApplicable = typeof echeance?.montant_exigible === 'number'
-    ? Number(echeance.montant_exigible)
-    : null
-  const montantPayeAuPrealable = echeance ? Number(echeance.montant_paye) : null
-  // La vue inclut ce paiement s'il est déjà validé mais que l'émission doit
-  // être reprise : ne pas compter son montant deux fois dans l'aperçu.
-  const cumulValideAvant = montantPayeAuPrealable === null
-    ? null
-    : montantPayeAuPrealable - (paiement.statut === 'Validé' ? montant : 0)
+  // Même calcul que la RPC d'émission, y compris pour un loyer payé d'avance.
+  const { loyerApplicable, cumulValideAvant, disponible: apercuDisponible } =
+    await lireBaseApercuPaiement(supabase, paiement)
   const apercu = apercuDocumentPaiement({
     typePaiement: paiement.type_paiement,
     montant,
@@ -123,7 +110,7 @@ export default async function PageConfirmationPaiement({
         </Alerte>
       ) : null}
 
-      {paiement.type_paiement === 'Loyer' && (erreurEcheance || !echeance) ? (
+      {paiement.type_paiement === 'Loyer' && !apercuDisponible ? (
         <Alerte ton="info">
           Le montant exigible de cette période n’est pas disponible dans l’aperçu. Le calcul financier
           et le type de document seront déterminés par la validation sécurisée avant l’émission.

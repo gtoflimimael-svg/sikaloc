@@ -12,29 +12,37 @@ distinct.
 
 ## Contrôles automatiques sans production
 
-La workflow Quality gates exécute, dans cet ordre : contrôle structurel des noms
-de migrations, tests du garde de maintenance, TypeScript, ESLint et build. Les
-variables CI de Supabase sont des placeholders pointant vers localhost ; aucun
-secret Supabase, fournisseur de paiement, email, WhatsApp ou Cron n'est fourni.
-Le contrôle des migrations vérifie seulement les noms, l'unicité des versions et
-les fichiers non vides : il ne parse pas le SQL et ne contacte aucune base.
+La workflow Quality gates (`.github/workflows/quality.yml`) exécute trois jobs
+à chaque PR et à chaque push sur `main`. Aucun secret de production, de
+paiement, d'email ou de Cron n'y est fourni.
+
+| Job | Contenu |
+|---|---|
+| `validate` | `verifier:migrations` (noms, ordre, empreintes des migrations livrées), `npm test`, TypeScript, ESLint, build |
+| `base-reelle` | Postgres Supabase jetable ; application de **toutes** les migrations sur base vierge ; scénarios `tests/*.integration.sql` (isolation entre bailleurs, reçu historique) |
+| `bout-en-bout` | Pile Supabase jetable (`sikaloc-e2e`) ; build de production ; parcours `tests/e2e/*.e2e.mjs` dans Chrome, FedaPay simulé ; pile détruite dans tous les cas |
 
 Les scripts `banc:*`, `verifier:schema` et `verifier:parcours` ne font pas partie
-de la CI par défaut : certains peuvent écrire dans la base configurée. Ne les
-exécuter qu'après validation indépendante de l'URL et de la référence du projet
-Supabase-Test, avec des fixtures jetables et les sessions/RLS réellement testées.
-La CI n'annonce donc pas la validation des paiements, quittances ou purges.
+de la CI : certains peuvent écrire dans la base configurée. Ne les exécuter
+qu'après validation indépendante de l'URL et de la référence du projet
+Sikaloc-Test, avec des fixtures jetables. La CI valide le code sur des piles
+jetables ; elle ne remplace ni la recette sur Sikaloc-Test ni un essai réel
+avec le fournisseur de paiement.
 
 ## Cycle d'une livraison
 
 1. Partir du dernier `main`; garder chaque lot petit, autonome et réversible.
 2. Exécuter les contrôles automatiques et relire le diff du lot.
-3. Tester les flux concernés sur Supabase-Test seulement, après confirmation de
+3. Tester les flux concernés sur Sikaloc-Test seulement, après confirmation de
    la référence, des buckets et des identifiants utilisés.
 4. Vérifier l'aperçu sans secret de production et maintenir le garde actif.
-5. Demander une revue avant fusion. Après fusion, vérifier le déploiement et les
-   journaux. Ne pas appliquer de migration destructive sans plan de retour.
-6. En cas d'échec, revenir au déploiement précédent; si la maintenance doit
+5. Demander une revue avant fusion. Appliquer les nouvelles migrations **avant**
+   la fusion (voir `docs/deploiement.md`, §6), puis vérifier le déploiement, les
+   journaux et Sentry. Ne pas appliquer de migration destructive sans plan de
+   retour.
+6. Après livraison : `npm run verrouiller:migrations` et mise à jour de
+   `ETAT-SIKALOC.md`, source d'état unique.
+7. En cas d'échec, revenir au déploiement précédent; si la maintenance doit
    rester active, promouvoir uniquement le commit de maintenance vérifié.
 
 La branche `main` doit exiger une revue et les contrôles Quality gates avant

@@ -11,6 +11,14 @@ SaaS de gestion locative pour bailleurs individuels au Bénin.
 Construit à partir de `Fichiers de référence/Sika_MVP_Specification_Finale.md`
 (fonctionnel) et `Fichiers de référence/DESIGN-Sika.md` (système de design).
 
+Deux espaces : **Pro** (`/pro/*`, le bailleur) et **Me** (`/me/*`, le
+locataire invité par son bailleur). Le module Find (annonces et candidatures)
+a été retiré du code actif le 9 novembre 2026 ; ses données restent en base.
+
+> **État du projet** (environnements, migrations, réserves ouvertes) :
+> [`ETAT-SIKALOC.md`](ETAT-SIKALOC.md), source unique mise à jour à chaque
+> fusion. Recette page par page : [`MATRICE-PAGES.md`](MATRICE-PAGES.md).
+
 ---
 
 ## Développement local
@@ -54,12 +62,34 @@ Production.
 | `npm run dev` | Pile Supabase locale isolée + serveur de développement |
 | `npm run build` | Build de production |
 | `npm run typecheck` | Vérification TypeScript |
+| `npm run lint` | ESLint |
+| `npm test` | Tous les tests unitaires et statiques (`tests/*.test.mjs`) — ce que lance la CI |
+| `npm run test:e2e` | Parcours de bout en bout sur une pile Supabase jetable et un FedaPay simulé (voir ci-dessous) |
+| `npm run verifier:migrations` | Contrôle des migrations : noms, ordre, et empreinte des migrations déjà livrées |
+| `npm run verrouiller:migrations` | À lancer **après** l'application des migrations en production : met à jour `supabase/migrations.lock.json` |
 | `npm run verifier:quittance` | Vérifie les montants en toutes lettres et produit `apercu-quittance.pdf` / `apercu-recu.pdf` — **sans base de données** |
-| `npm run verifier:parcours` | Parcours bailleur de bout en bout dans un vrai navigateur : connexion → tableau de bord → impayés → saisie → confirmation → quittance → PDF. Nécessite `npm run dev` en parallèle. |
-| `npm run db:reset` | Réapplique migrations + seed |
+| `npm run verifier:parcours` | Parcours bailleur dans un vrai navigateur. Nécessite `npm run dev` en parallèle. |
+| `npm run db:reset` | Réapplique migrations + seed sur la pile locale |
 
 Le déploiement en production est décrit dans **[docs/deploiement.md](docs/deploiement.md)** :
-variables Vercel, DNS Spaceship, redirections Supabase, webhook FedaPay.
+variables Vercel, DNS Spaceship, redirections Supabase, webhook FedaPay, Sentry.
+Le cycle d'une livraison et la CI sont décrits dans
+**[docs/developpement-et-livraison.md](docs/developpement-et-livraison.md)**.
+
+### Tests de bout en bout
+
+```bash
+node scripts/e2e/pile.mjs demarrer /tmp/pile-e2e
+npm run test:e2e -- --workdir /tmp/pile-e2e
+node scripts/e2e/pile.mjs arreter /tmp/pile-e2e
+```
+
+La pile E2E est un projet Supabase distinct (`sikaloc-e2e`, ports 553xx), sans
+envoi d'email ni seed, détruite à l'arrêt. Le lanceur neutralise toutes les
+variables de `.env.example` — `.env.local` peut contenir de vraies clés — et
+pointe FedaPay vers un faux service local. Les données de test refusent toute
+cible qui n'est pas une pile locale jetable (jamais la démo ni un projet
+hébergé).
 
 `verifier:parcours` réutilise un Chromium déjà installé sur la machine (cache
 Playwright ou Chrome système) ; en désigner un autre avec `SIKA_CHROMIUM`.
@@ -73,36 +103,41 @@ Passer un dossier en argument pour y écrire les captures :
 ```
 src/
   app/
-    page.tsx                  Landing (valeur, étapes, tarifs, FAQ)
-    connexion|inscription|…   Écrans d'authentification
-    legal/                    Confidentialité, conditions d'utilisation
-    app/
-      layout.tsx              Garde d'authentification
-      onboarding/             Assistant 3 étapes, plein écran
-      (shell)/                Application : barre latérale + contenu
-        page.tsx              Tableau de bord (4 métriques, impayés, derniers paiements)
+    page.tsx                  Accueil public (valeur, étapes, tarifs, FAQ)
+    pro/page.tsx              Présentation de l'offre Pro
+    connexion|inscription|…   Écrans d'authentification ; entrer/ aiguille par rôle
+    legal/ blog/ guide/ questions/   Pages publiques
+    pro/
+      onboarding/             Assistant de démarrage, plein écran
+      (shell)/                Espace bailleur : barre latérale + contenu
+        tableau-de-bord/      Métriques, impayés, derniers paiements
         impayes/              Retards + relance WhatsApp
-        paiements/            Saisie → confirmation → quittance ; historique
-        baux/ locataires/ logements/    CRUD
+        paiements/            Saisie → confirmation (→ signature) → quittance
+        baux/ locataires/ logements/    Gestion du parc
         quittances/[id]/      Aperçu, téléchargement, envoi au locataire
-        parametres/           Profil, signature, préférences, parrainage, abonnement
+        parametres/           Profil, signature, préférences, parrainage, abonnement, données
+    me/                       Espace locataire : bail, loyers, paiements, préférences, invitation
     api/
       quittances/[id]/pdf     Téléchargement (fichier du coffre)
       abonnement/fedapay      Webhook de paiement FedaPay
-      cron/cycle-grace        Fait progresser les comptes en impayé
-      cron/notifications      Vide la file d'emails via Resend
-      cron/purge              Purge J+90 et efface les fichiers
+      export/                 Export des données du bailleur
+      cron/cycle-grace|notifications|purge|schema   Tâches planifiées (vercel.json)
   lib/
     actions/                  Server Actions (toutes les écritures)
     pdf/                      Template de quittance (@react-pdf/renderer)
     quittance.ts              Rendu, dépôt, empreinte, URL signée
-    montant-en-lettres.ts     Mention légale « montant en lettres »
-    acces.ts                  Droits dérivés du cycle de grâce
-    fedapay.ts                Paiement Mobile Money
+    csp.ts                    Politique CSP à nonce, posée par le proxy
+    rate-limit.ts             Limitation des connexions (fonctions SQL)
+    journal.ts, cron-suivi.ts Journal des échecs et suivi Sentry des crons
+    fedapay.ts, reglement-abonnement.ts   Paiement Mobile Money
     emails.ts                 Gabarits et envoi Resend
     validation.ts             Schémas Zod
-  proxy.ts                    Rafraîchissement de session + garde de routes
+  instrumentation*.ts, sentry.*.config.ts   Sentry, inerte sans DSN
+  proxy.ts                    Session, garde de routes, CSP, maintenance
 supabase/migrations/          Schéma, RLS, vues métier, storage
+supabase/migrations.lock.json Empreintes des migrations livrées en production
+tests/                        Tests unitaires (*.test.mjs), SQL (*.integration.sql), E2E (e2e/)
+scripts/e2e/                  Pile jetable, données fictives, faux FedaPay, lanceur
 ```
 
 ---
@@ -149,17 +184,37 @@ Chaque PDF déposé est haché en SHA-256 et son empreinte enregistrée. Le
 téléchargement sert le fichier du coffre — pas une régénération — pour que le
 document remis corresponde exactement à l'empreinte opposable.
 
-Le PDF est rendu avec Helvetica plutôt qu'Inter : charger une police distante à
+Le PDF est rendu avec Helvetica plutôt qu'avec la police de l'interface (Outfit) : charger une police distante à
 chaque rendu ajouterait un aller-retour réseau au milieu d'une fonction
 serverless.
 
 **Paiement de l'abonnement (FedaPay).** Deux contrôles indépendants sur la
-notification : la signature `X-FEDAPAY-SIGNATURE` si le secret est configuré,
-puis — et c'est le rempart réel — un appel à `GET /transactions/{id}` avec notre
-clé secrète. Le corps d'une requête entrante reste une donnée reçue de
+notification : la signature `X-FEDAPAY-SIGNATURE`, obligatoire (sans
+`FEDAPAY_WEBHOOK_SECRET`, le webhook répond 503 et ne crédite rien), puis — et
+c'est le rempart réel — un appel à `GET /transactions/{id}` avec notre clé
+secrète. Le corps d'une requête entrante reste une donnée reçue de
 l'extérieur ; le crédit d'un abonnement ne doit jamais dépendre de ce qu'elle
 affirme. L'environnement est déduit du préfixe de la clé : une clé
 `sk_sandbox_…` ne peut pas frapper l'API de production.
+
+**Sécurité web.** Le proxy pose une CSP à nonce par requête
+(`src/lib/csp.ts`, `'strict-dynamic'`) : aucun script en ligne sans nonce n'est
+exécuté. Les connexions sont limitées en SQL (`reserver_tentative_connexion`,
+verrou consultatif) : 5 échecs par couple email + IP, 20 par email, 30 par IP,
+sur 15 minutes. Les messages d'erreur renvoyés à l'utilisateur passent par
+`messageErreurUtilisateur` : jamais de message interne.
+
+**Supervision.** Sentry (`@sentry/nextjs`) capte les erreurs serveur et
+navigateur et suit les crons, sans données personnelles, sans replay ni traces ;
+emails, téléphones et paramètres d'URL sont masqués. Sans DSN, rien n'est
+envoyé. Les échecs métier (paiement, quittance, notification) sont journalisés
+par `journaliserEchec`.
+
+**Migrations.** Une migration livrée en production n'est jamais modifiée :
+`supabase/migrations.lock.json` en garde l'empreinte et
+`npm run verifier:migrations` échoue en cas d'écart. Toute correction passe par
+une nouvelle migration. La CI applique toutes les migrations sur un Postgres
+vierge et y rejoue les scénarios `tests/*.integration.sql`.
 
 **Onboarding.** Les trois entités (locataire, logement, bail) sont créées par une
 seule fonction SQL transactionnelle : trois `INSERT` séparés laisseraient un
@@ -237,70 +292,27 @@ statique. À reconsidérer si une pagination devient nécessaire.
 
 ## État de livraison
 
-Conforme à la spécification :
+L'état courant — environnements, migrations à livrer, preuves et réserves
+ouvertes — est tenu dans **[`ETAT-SIKALOC.md`](ETAT-SIKALOC.md)**, et non ici,
+pour qu'il n'existe qu'une seule version datée. Les rapports d'octobre 2026
+sont archivés dans [`docs/archives/2026-10/`](docs/archives/2026-10/README.md).
 
-- [x] Authentification (inscription, connexion, réinitialisation, limitation à 5 tentatives / 15 min)
-- [x] Onboarding guidé en 3 étapes
-- [x] Tableau de bord — 4 métriques temps réel, impayés, derniers paiements
-- [x] CRUD logements, locataires, baux (un seul bail actif par logement)
-- [x] Enregistrement d'un paiement : saisie → récapitulatif → validation → document
+Fonctionnalités livrées :
+
+- [x] Authentification (inscription, connexion, réinitialisation, limitation des tentatives)
+- [x] Onboarding guidé
+- [x] Tableau de bord — métriques, impayés, derniers paiements
+- [x] Gestion des logements, locataires, baux (un seul bail actif par logement)
+- [x] Enregistrement d'un paiement : saisie → récapitulatif → signature si absente → document
 - [x] Fenêtre de correction de 5 minutes, puis paiement figé
 - [x] Détection automatique des impayés avec tolérance paramétrable
-- [x] Quittance / Reçu PDF conforme Bénin, signature incrustée, montant en lettres
-- [x] Stockage privé + lien de téléchargement signé 30 jours
+- [x] Quittance / Reçu PDF, signature incrustée, montant en lettres, numérotation `AAAA-NNNN`, empreinte SHA-256
+- [x] Stockage privé + lien de téléchargement signé
+- [x] Espace locataire Me (bail, loyers, paiements, quittances) sur invitation
 - [x] Relance et envoi WhatsApp par liens `wa.me` (envoi manuel, aucune API)
-- [x] Plans Gratuit / Standard et leurs limites
-- [x] Parrainage (code, lien, récompense d'un mois de part et d'autre)
-- [x] Paramètres : profil, signature, préférences, parrainage, facturation
-- [x] Politique de confidentialité et conditions d'utilisation
+- [x] Plans Gratuit / Standard, abonnement Mobile Money FedaPay, cycle de grâce
+- [x] Parrainage, paramètres, export des données
 - [x] RLS stricte sur toutes les tables
 
-### Vérifié sur la base réelle
-
-- Connexion, tableau de bord, impayés, saisie, confirmation, émission du
-  document et téléchargement du PDF — parcours complet (`verifier:parcours`)
-- Quittance conforme émise, numérotée, horodatée, signature du bailleur
-  incrustée
-- Coffre étanche : accès direct au PDF refusé (HTTP 400), lien signé 30 jours
-  opérationnel
-- **Isolation entre bailleurs** : un second compte créé pour l'occasion ne
-  voyait aucun locataire, logement, bail, paiement, quittance ni impayé de
-  l'autre bailleur ; l'écriture à son nom était rejetée par la RLS, la
-  réaffectation de son profil sans effet, et son PDF inaccessible
-- Détection des impayés, y compris le cas partiel (70 000 payés sur 120 000 →
-  solde de 50 000 correctement isolé)
-- Conversion des montants en toutes lettres : 31 cas, dont les pièges d'accord
-
-### Emails
-
-Le domaine **`sikaloc.com`** est vérifié chez Resend (SPF + DKIM), expéditeur
-`no-reply@sikaloc.com`. La limitation de l'expéditeur de test est levée : un
-rappel de cycle de grâce a été envoyé vers une adresse tierce et confirmé
-`delivered`.
-
-### Corrections v2.1 (validation juridique)
-
-- [x] Mention fiscale nuancée — art. 423 du CGI, LF 2025 : le droit de timbre
-      n'est évoqué que comme *susceptible* de s'appliquer, aux espèces au-delà
-      de 100 000 FCFA, et explicitement écarté pour Mobile Money et virement.
-      Un encart contextuel n'apparaît que lorsque le cas se présente réellement,
-      avec le montant indicatif.
-- [x] Reçu de paiement partiel — titre dédié et ligne « Solde restant dû pour
-      la période »
-- [x] Numérotation `AAAA-NNNN` séquentielle par bailleur, atomique
-- [x] Horodatage serveur et empreinte SHA-256 du fichier déposé
-- [x] Cycle de grâce automatisé (pg_cron + file d'emails Resend)
-- [x] Contrôles d'accès `lecture_seule` / `suspendu`
-- [x] Paiement Mobile Money via FedaPay (sandbox vérifié)
-
-### Restant avant les pilotes
-
-- [ ] **Validation juridique formelle.** Le modèle intègre les corrections
-      issues d'une analyse assistée par IA ; cela ne remplace pas l'avis d'un
-      notaire ou d'un avocat béninois (v2.1 §6).
-- [ ] **Secret du webhook FedaPay** (`FEDAPAY_WEBHOOK_SECRET`) pour activer la
-      vérification de signature, et passage en clés `live` le moment venu.
-- [ ] **Planification des routes cron** (`/api/cron/notifications` et
-      `/api/cron/purge`) une fois l'application déployée — via Vercel Cron ou
-      un ordonnanceur externe.
-- [ ] Instrumentation des KPIs du §12 (activation, TTFV, rétention D30).
+Emails : le domaine `sikaloc.com` est vérifié chez Resend (SPF + DKIM),
+expéditeur `no-reply@sikaloc.com`.

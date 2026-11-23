@@ -42,7 +42,8 @@ test('le précontrôle serveur, limité au bailleur connecté, précède la RPC 
   assert.ok(helperStart >= 0 && helperEnd > helperStart)
   assert.ok(precheckCall >= 0 && precheckCall < preparationCall)
   assert.match(helper, /\.eq\('bailleur_id', acteur\)/)
-  assert.match(helper, /from\('v_echeances'\)/)
+  assert.match(helper, /lireBaseApercuPaiement\(client, paiement\)/)
+  assert.match(helper, /if \(erreur\) throw refusQuittance\('precontrole_echeance'\)/)
   assert.match(helper, /apercuDocumentPaiement\(/)
   assert.match(helper, /apercu\.typeDocument !== 'Quittance'\) return/)
   assert.match(helper, /chargerSignature\(bailleur\.signature_chemin\)/)
@@ -92,6 +93,16 @@ test('la signature persistée reprend exactement l’action initiale, avec retou
   assert.match(dessin, /touch-none/)
   assert.match(action, /profil\?\.signature_chemin !== chemin/)
   assert.match(action, /restaurer|Gardez votre tracé et réessayez/)
+
+  // Une revalidation re-rendrait l'étape, qui redirigerait vers le récapitulatif
+  // avant la reprise : le paiement resterait en brouillon (FN-04).
+  assert.match(etape, /useActionState\(\s*\/\/[^\n]*\n[^\n]*\n\s*televerserSignaturePourQuittance,/)
+  const debut = action.indexOf('export async function televerserSignaturePourQuittance(')
+  assert.ok(debut >= 0)
+  const corps = action.slice(debut, action.indexOf('\n}\n', debut))
+  assert.match(corps, /bailleurAvecEcriture\(\)/)
+  assert.match(corps, /enregistrerSignaturePourBailleur\(/)
+  assert.doesNotMatch(corps, /revalidatePath|redirect\(/)
 })
 
 test('l’émission garde l’idempotence et les anciennes quittances restent consultables', async () => {
