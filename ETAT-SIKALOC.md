@@ -6,14 +6,14 @@
 > environnement hébergé. `tests/documentation.test.mjs` vérifie que les
 > chiffres ci-dessous correspondent au dépôt.
 
-**Date de l'état : 22 novembre 2026.**
+**Date de l'état : 23 novembre 2026.**
 
 ## 1. Environnements
 
 | Environnement | État | Vérifié |
 |---|---|---|
 | Production (`sikaloc.com`) | Code de `main` (`cd737a3`) ; **61 migrations** appliquées | Liste des migrations lue en lecture seule le 22/11/2026. Déploiement Vercel servi non vérifié (accès Vercel non fourni). |
-| Sikaloc-Test (hébergé) | **En pause** | Réactivation prévue après la clôture des lots (décision du 22/11/2026). |
+| Sikaloc-Test (hébergé) | Actif ; **68 migrations** appliquées le 23/11/2026 | Réactivé le 23/11/2026. Sauvegarde chiffrée et restauration isolée vérifiées avant migration (§4). Recette hébergée à faire. |
 | Pile locale de démonstration | Port 54821, 68 migrations | Recette locale des parcours connectés, 22/11/2026. |
 | CI GitHub (`Quality gates`) | Postgres jetable et pile E2E jetable, à chaque PR | Voir §3. |
 
@@ -35,8 +35,10 @@
 | `20261122181000_quota_heure_benin.sql` | 4 | Quotas calculés à l'heure du Bénin (FN-03) |
 | `20261122182000_indexer_cles_etrangeres.sql` | 4 | Index des clés étrangères (DB-01) |
 
-Après l'application en production : `npm run verrouiller:migrations`, puis
-mettre à jour ce tableau.
+Sikaloc-Test les a reçues le 23/11/2026 (une transaction par fichier, version
+exacte inscrite dans l'historique) : aucune ligne de données modifiée, 4
+fonctions ajoutées. Après l'application en production :
+`npm run verrouiller:migrations`, puis mettre à jour ce tableau.
 
 ## 3. Lots de mise à niveau (audit du 22/11/2026, note initiale 66/100)
 
@@ -60,6 +62,7 @@ Aucune de ces PR n'est fusionnée ; rien n'est déployé.
 | 9 parcours de bout en bout | Accès anonyme refusé, CSP à nonce, 13 pages Pro, isolation, premier paiement avec signature puis quittance, brouillon repris, locataire, blocage après 5 échecs, abonnement FedaPay simulé | CI `bout-en-bout` (`tests/e2e/parcours.e2e.mjs`) |
 | Tests de mutation | Le test SQL échoue si la RLS est retirée ; le parcours E2E échoue si FN-04 est réintroduit | Exécutés localement le 22/11/2026 |
 | Recette locale | Parcours connectés Pro et Me, ordinateur et mobile, pile de démonstration | 22/11/2026 ; détail par page dans [`MATRICE-PAGES.md`](MATRICE-PAGES.md) |
+| Sauvegarde et restauration de Sikaloc-Test | `pg_dump` complet et 20 objets Storage, chiffrés (OpenPGP, AES-256) ; restaurés dans un conteneur sans réseau, image identique ; schémas, tables, contraintes, fonctions, déclencheurs, RLS, politiques, comptes Auth et lignes par table identiques ; 20 empreintes Storage conformes. Manifeste accepté par `npm run verifier:sikaloc-test` | 23/11/2026, `~/sikaloc-backups-prives/` (hors dépôt) |
 | Dépendances | `npm audit --omit=dev` : 0 vulnérabilité en production | 22/11/2026 (des avis subsistent dans les outils de développement) |
 
 ## 5. Réserves ouvertes
@@ -68,9 +71,8 @@ Aucune de ces PR n'est fusionnée ; rien n'est déployé.
 
 | Réf. | Réserve | Responsable | Action |
 |---|---|---|---|
-| OPS-02 | Restauration de production jamais démontrée | Équipe + Claude | Sauvegarde chiffrée, puis restauration sur Sikaloc-Test |
-| OPS-04 | Sikaloc-Test en pause | Propriétaire du compte Supabase | Réactiver après la clôture des lots |
-| — | Recette hébergée | Claude | Appliquer les 7 migrations sur Sikaloc-Test, rejouer les parcours |
+| OPS-02 | Procédure éprouvée sur Sikaloc-Test ; restauration de **production** pas encore démontrée | Équipe + Claude | Même procédure sur la production (accès base de production requis) |
+| — | Recette hébergée sur Sikaloc-Test | Claude, avec accord pour l'email de test | Preuve email Auth (boîte contrôlée), puis parcours Pro et Me avec des comptes neufs |
 | SEC-01 | Mots de passe compromis acceptés | Propriétaire du compte Supabase | Activer la protection contre les mots de passe compromis (Dashboard Supabase → Authentication, réglages des mots de passe) |
 | LEG-01 | Mentions légales absentes (`/legal/mentions` répond 404 tant que l'éditeur n'est pas renseigné) | Éditeur du site | Fournir raison sociale, adresse, directeur de publication ; `src/lib/mentions-legales.ts` |
 | OPS-01 | Supervision : code prêt, inerte sans DSN | Propriétaire du compte Sentry | Créer le projet et fournir `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` |
